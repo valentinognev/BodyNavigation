@@ -1,5 +1,9 @@
 # Updates
 
+## 0.4.0 - Table dataclass and JSONC deck load
+- Added `cadac.tables.lookup.Table` / `Datadeck.from_tables` (load only; no `look_up`).
+- Added `cadac.io.deck.load_deck`: JSONC `{title, tables}` via `jsonc.loads`; 1D/2D/3D shape check raises `ValueError`.
+
 ## 0.3.0 - JSONC loader
 - Added `cadac.io.jsonc` (`loads`/`load`): strip `//` and non-nested `/* */`, then stdlib `json.loads`. No trailing commas. String-aware scan.
 
