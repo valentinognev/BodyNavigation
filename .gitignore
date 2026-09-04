@@ -1,0 +1,9 @@
+*.zip
+*.pdf
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+Python/.venv/
+.superpowers/sdd/
