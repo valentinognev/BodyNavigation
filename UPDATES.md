@@ -1,5 +1,9 @@
 # Updates
 
+## 0.13.0 - Newtonian gravity
+- Added `cadac.env.gravity`: `gravity(alt_m) = G*EARTH_MASS/(REARTH+alt_m)**2` with constants from `cadac.constants`.
+- Tests: `Python/tests/unit/test_gravity.py` (alt=3000).
+
 ## 0.12.0 - ISO 62 atmosphere (Round3)
 - Added `cadac.env.iso62`: tropopause split at 11000 m; `iso62(alt_m, dvbe)` returns k, press, rho, vsound, mach, pdynmc. Uses R from constants; no US76, no gravity.
 - Tests: `Python/tests/unit/test_iso62.py` (alt=3000 tropopause; alt=20000 stratosphere).
