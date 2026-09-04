@@ -1,5 +1,9 @@
 # Updates
 
+## 0.12.0 - ISO 62 atmosphere (Round3)
+- Added `cadac.env.iso62`: tropopause split at 11000 m; `iso62(alt_m, dvbe)` returns k, press, rho, vsound, mach, pdynmc. Uses R from constants; no US76, no gravity.
+- Tests: `Python/tests/unit/test_iso62.py` (alt=3000 tropopause; alt=20000 stratosphere).
+
 ## 0.11.0 - US 1976 standard atmosphere
 - Added `cadac.env.us76.atmosphere76`: US76 tables + geopotential with internal `rearth=6369.0` km (not `REARTH`). Returns `(rho, press, tempk)`.
 - Tests: `Python/tests/unit/test_us76.py` (sea level; 11 km geometric).
