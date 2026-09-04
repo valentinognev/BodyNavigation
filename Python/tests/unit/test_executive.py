@@ -176,3 +176,34 @@ def test_modules_follow_module_order():
         int_step=0.1,
     )
     assert log == ["first", "second", "first", "second"]
+
+
+def test_run_loop_adopts_ctx_int_step():
+    vehicle = _Vehicle()
+
+    class _Resize:
+        name = "resize"
+
+        def define(self, vehicle):
+            pass
+
+        def initialize(self, vehicle, ctx):
+            pass
+
+        def execute(self, vehicle, ctx):
+            ctx.int_step = 0.05
+
+        def terminate(self, vehicle, ctx):
+            pass
+
+    times = run_loop(
+        vehicles=[vehicle],
+        modules_by_vehicle={vehicle: [_Resize()]},
+        module_order=["resize"],
+        end_time=0.1,
+        int_step=0.1,
+    )
+    np.testing.assert_allclose(
+        times, [0.0, 0.05, 0.10, 0.15], rtol=1e-12, atol=1e-14
+    )
+    np.testing.assert_allclose(vehicle.event_time, 0.20, rtol=1e-12, atol=1e-14)

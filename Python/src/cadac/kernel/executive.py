@@ -49,6 +49,7 @@ def run_loop(vehicles, modules_by_vehicle, module_order, end_time, int_step):
                 }
                 for name in module_order:
                     named[name].execute(vehicle, ctx)
+                int_step = ctx.int_step
                 com_names = getattr(vehicle, "com_names", None)
                 if com_names:
                     saved = combus[slot].status

@@ -1,5 +1,10 @@
 # Updates
 
+## 0.24.0 - Round3 environment module
+- Added `cadac.eom.round3.Round3Environment` (`name="environment"`): `define` registers time/event_time/int_step_new/out_step_fact/grav/rho/pdynmc/mach/vsound/press; `initialize` sets time=sim_time, int_step_new=int_step; `execute` reads newton `alt`/`dvbe`, writes ISO62 outputs and `grav=gravity(alt)`, copies `ctx.sim_time` to `time`, sets `ctx.int_step` from `int_step_new` and `ctx.out_fact` from `out_step_fact`. Uses `iso62`+`gravity`, not US76.
+- `run_loop` adopts `ctx.int_step` after modules for `event_time +=` and `sim_time +=` (shared C++ local; while condition uses the same variable).
+- Tests: `Python/tests/unit/test_round3_environment.py` (alt=3000, dvbe=250 vs iso62/gravity); `test_run_loop_adopts_ctx_int_step` in `test_executive.py`.
+
 ## 0.23.0 - CADAC-style plot CSV writer
 - Added `cadac.io.plot.write_plot_csv(path, title, columns, rows)`: line 1 title, line 2 `0  0 N`, line 3 `col,col,`, data rows comma-separated with trailing comma (CADAC `plot1.csv` shape). Unix LF. Not wired into the executive (Task 31).
 - Tests: `Python/tests/unit/test_plot_csv.py` (round-trip two rows; parse back `time,alt`).
