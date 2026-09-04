@@ -1,5 +1,9 @@
 # Updates
 
+## 0.29.0 - Cruise3 autothrottle propulsion
+- `Cruise3Propulsion.execute` ports C++ `mprop==2` autothrottle: `if mprop>0` then nested 1/2. `mprop==2`: denom from first spi/ca look_up; `thrst_req=area*cd*qhold/cos(alphax*RAD)`; `throtl_req`; `gainq`; `ethrotl`; throttle; idle/max limiters; spi look_up again; thrust formula. Fuel integrate inside the `mprop>0` wrapper (`mass_flow` only if spi!=0). No forces.
+- Tests: `Python/tests/unit/test_cruise3_prop_auto.py` (qhold=50000, tq=1, alphax=2.5, iso62 rho/pdynmc, cd=0.05, area=557.42; max clip and idle clip; thrust and fuel).
+
 ## 0.28.0 - Cruise3 fixed-throttle propulsion
 - Added `cadac.vehicles.cruise3.propulsion.Cruise3Propulsion(deck)` (`name="propulsion"`). `define` registers C++ `def_propulsion` fields. `initialize` sets `mass=mass0`. `execute`: `mprop==0` → thrust=0, fmassd=0. `mprop==1` → `spi=look_up("spi_vs_throttle_mach", throttle, mach)`, `ca=look_up("ca_vs_alpha_mach", alphax, mach)`, `thrust=spi*0.029*throttle*AGRAV*rho*dvbe*ca*acowl`; `fmassd_next=thrust/(spi*AGRAV)` if spi!=0; `fmasse=integrate(...)`; `mass=mass0-fmasse`; `fmassr=fmass0-fmasse`; if fmassr<=0 then mprop=0. No autothrottle mprop=2 (Task 29). Prop deck `ghame3_prop_deck.asc`.
 - Tests: `Python/tests/unit/test_cruise3_prop_fixed.py` (mprop=0; mprop=1 climb IC throttle=0.2, mass0=136077, fmasse=0, numeric rho/dvbe; fuel cutoff).

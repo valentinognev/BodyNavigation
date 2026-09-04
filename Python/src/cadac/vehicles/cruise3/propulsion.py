@@ -1,4 +1,6 @@
-from cadac.constants import AGRAV
+from math import cos
+
+from cadac.constants import AGRAV, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 
@@ -57,10 +59,33 @@ class Cruise3Propulsion:
         thrust = 0.0
         mass_flow = 0.0
 
-        if mprop == 1:
-            spi = self.deck.look_up("spi_vs_throttle_mach", throttle, mach)
-            ca = self.deck.look_up("ca_vs_alpha_mach", alphax, mach)
-            thrust = spi * 0.029 * throttle * AGRAV * rho * dvbe * ca * acowl
+        if mprop > 0:
+            if mprop == 1 or mprop == 2:
+                spi = self.deck.look_up("spi_vs_throttle_mach", throttle, mach)
+                ca = self.deck.look_up("ca_vs_alpha_mach", alphax, mach)
+            if mprop == 1:
+                thrust = spi * 0.029 * throttle * AGRAV * rho * dvbe * ca * acowl
+            if mprop == 2:
+                pdynmc = store.get("pdynmc")
+                cd = store.get("cd")
+                area = store.get("area")
+                thrtl_max = store.get("thrtl_max")
+                qhold = store.get("qhold")
+                tq = store.get("tq")
+                thrtl_idle = store.get("thrtl_idle")
+                denom = 0.029 * spi * AGRAV * rho * dvbe * ca * acowl
+                if denom != 0:
+                    thrst_req = area * cd * qhold / cos(alphax * RAD)
+                    throtl_req = thrst_req / denom
+                    gainq = 2 * mass / (rho * dvbe * denom * tq)
+                    ethrotl = gainq * (qhold - pdynmc)
+                    throttle = ethrotl + throtl_req
+                if throttle < 0:
+                    throttle = thrtl_idle
+                if throttle > thrtl_max:
+                    throttle = thrtl_max
+                spi = self.deck.look_up("spi_vs_throttle_mach", throttle, mach)
+                thrust = spi * 0.029 * throttle * AGRAV * rho * dvbe * ca * acowl
             if spi != 0:
                 fmassd_next = thrust / (spi * AGRAV)
                 fmasse = integrate(fmassd_next, fmassd, fmasse, ctx.int_step)
