@@ -1,5 +1,10 @@
 # Updates
 
+## 0.33.0 - CADAC 3D table parse and look_up
+- `parse_asc_deck` 3DIM packing matches FALCON5 `read_tables` (x1 rows, x2 blocks, x3 columns). Source: `Falcon5_prop_deck.asc` `ff_vs_thrust_alt_mach` 6×2×4.
+- `Datadeck.look_up(name, x1, x2, x3)` trilinear as HYPER3 3D interpolate (constant upper per axis, slope lower). 1D/2D signatures unchanged.
+- Tests: `Python/tests/unit/test_asc_deck_3d.py`, `Python/tests/unit/test_lookup_3d.py`.
+
 ## 0.32.0 - HYPER3 climb e2e vs plot1.csv
 - `plot_row` emits CADAC plot names/order (`SBEG1` not `sbeg1`): time, FSPV1-3, pdynmc, mach, lonx, latx, alt, dvbe, psivgx, thtvgx, SBEG1-3, VBEG1-3, throttle, mass, thrust, fmassr, cl_ov_cd. `run_scenario` writes `plot.csv` beside the case when `options.plot` and `options.csv`. t=0 row is after init+execute at sim_time=0 (HYPER3). Golden: copy of CADAC `plot1.csv`. Skip sentinel `time=-1`. CSV rtol=1e-5, atol=max(1e-6, 5e-6*|g|).
 - Tests: `Python/tests/e2e/test_hyper3_climb.py` (alt at t=0 and 0.2; full column grid vs golden). `test_plot_csv_written_when_plot_and_csv`.

@@ -28,7 +28,9 @@ def parse_asc_deck(path) -> tuple[str, list[Table]]:
             tables.append(table)
             continue
         if keyword == "3DIM":
-            raise NotImplementedError(f"{keyword} tables are not supported yet")
+            table, i = _parse_3dim(lines, i)
+            tables.append(table)
+            continue
         i += 1
     return title, tables
 
@@ -109,3 +111,36 @@ def _parse_2dim(lines: list[str], i: int) -> tuple[Table, int]:
                 data[offset + ttt] = cur.next_float()
     values = [data[r * nx2 : (r + 1) * nx2] for r in range(nx1)]
     return Table(name=name, dim=2, x1=x1, x2=x2, x3=None, values=values), cur.i
+
+
+def _parse_3dim(lines: list[str], i: int) -> tuple[Table, int]:
+    name = lines[i].split()[1]
+    i += 1
+    dims, i = _read_axis_counts(lines, i, 3)
+    nx1, nx2, nx3 = dims
+    var_dim = [nx1, nx2, nx3]
+    num_rows = max(var_dim)
+    x1 = [0.0] * nx1
+    x2 = [0.0] * nx2
+    x3 = [0.0] * nx3
+    data = [0.0] * (nx1 * nx2 * nx3)
+    cur = _TokenCursor(lines, i)
+    for tt in range(num_rows):
+        if tt < var_dim[0]:
+            x1[tt] = cur.next_float()
+        if tt < var_dim[1] and var_dim[1] != 1:
+            x2[tt] = cur.next_float()
+        if tt < var_dim[2] and var_dim[2] != 1:
+            x3[tt] = cur.next_float()
+        if tt < var_dim[0]:
+            offset = tt * var_dim[1] * var_dim[2]
+            for ttt in range(var_dim[1] * var_dim[2]):
+                data[offset + ttt] = cur.next_float()
+    values = [
+        [
+            data[(r * nx2 + c) * nx3 : (r * nx2 + c + 1) * nx3]
+            for c in range(nx2)
+        ]
+        for r in range(nx1)
+    ]
+    return Table(name=name, dim=3, x1=x1, x2=x2, x3=x3, values=values), cur.i

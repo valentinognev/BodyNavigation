@@ -68,7 +68,13 @@ class Datadeck:
                 return mid
         return max
 
-    def look_up(self, name: str, x1: float, x2: float | None = None) -> float:
+    def look_up(
+        self,
+        name: str,
+        x1: float,
+        x2: float | None = None,
+        x3: float | None = None,
+    ) -> float:
         table = self._tables[name]
         if x2 is None:
             n = len(table.x1)
@@ -80,7 +86,24 @@ class Datadeck:
         n2 = len(table.x2)
         loc1 = self.find_index(n1 - 1, x1, table.x1)
         loc2 = self.find_index(n2 - 1, x2, table.x2)
-        return self._interpolate_2d(table, loc1, loc1 + 1, loc2, loc2 + 1, x1, x2)
+        if x3 is None:
+            return self._interpolate_2d(
+                table, loc1, loc1 + 1, loc2, loc2 + 1, x1, x2
+            )
+        n3 = len(table.x3)
+        loc3 = self.find_index(n3 - 1, x3, table.x3)
+        return self._interpolate_3d(
+            table,
+            loc1,
+            loc1 + 1,
+            loc2,
+            loc2 + 1,
+            loc3,
+            loc3 + 1,
+            x1,
+            x2,
+            x3,
+        )
 
     def _interpolate_1d(self, table: Table, loc: int, val: float) -> float:
         ind1 = loc
@@ -131,3 +154,62 @@ class Datadeck:
         y1 = dumx1 * (y21 - y11) + y11
         y2 = dumx1 * (y22 - y12) + y12
         return float(dumx2 * (y2 - y1) + y1)
+
+    def _interpolate_3d(
+        self,
+        table: Table,
+        ind10: int,
+        ind11: int,
+        ind20: int,
+        ind21: int,
+        ind30: int,
+        ind31: int,
+        value1: float,
+        value2: float,
+        value3: float,
+    ) -> float:
+        dx1 = 0.0
+        dx2 = 0.0
+        dx3 = 0.0
+        dumx1 = 0.0
+        dumx2 = 0.0
+        dumx3 = 0.0
+        var1_dim = len(table.x1)
+        var2_dim = len(table.x2)
+        var3_dim = len(table.x3)
+        diff1 = value1 - table.x1[ind10]
+        diff2 = value2 - table.x2[ind20]
+        diff3 = value3 - table.x3[ind30]
+        if ind10 == var1_dim - 1:
+            ind11 = ind10
+        else:
+            dx1 = float(table.x1[ind11] - table.x1[ind10])
+        if ind20 == var2_dim - 1:
+            ind21 = ind20
+        else:
+            dx2 = float(table.x2[ind21] - table.x2[ind20])
+        if ind30 == var3_dim - 1:
+            ind31 = ind30
+        else:
+            dx3 = float(table.x3[ind31] - table.x3[ind30])
+        if dx1 > EPS:
+            dumx1 = diff1 / dx1
+        if dx2 > EPS:
+            dumx2 = diff2 / dx2
+        if dx3 > EPS:
+            dumx3 = diff3 / dx3
+        y11 = table.values[ind10, ind20, ind30]
+        y12 = table.values[ind11, ind20, ind30]
+        y31 = table.values[ind10, ind20, ind31]
+        y32 = table.values[ind11, ind20, ind31]
+        y1 = dumx1 * (y12 - y11) + y11
+        y3 = dumx1 * (y32 - y31) + y31
+        y21 = dumx3 * (y3 - y1) + y1
+        y11 = table.values[ind10, ind21, ind30]
+        y12 = table.values[ind11, ind21, ind30]
+        y31 = table.values[ind10, ind21, ind31]
+        y32 = table.values[ind11, ind21, ind31]
+        y1 = dumx1 * (y12 - y11) + y11
+        y3 = dumx1 * (y32 - y31) + y31
+        y22 = dumx3 * (y3 - y1) + y1
+        return float(dumx2 * (y22 - y21) + y21)
