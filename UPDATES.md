@@ -1,5 +1,9 @@
 # Updates
 
+## 0.38.0 - FALCON5 Plane5 aerodynamics
+- Added `cadac.vehicles.plane5.aero.Plane5Aero` (`name="aerodynamics"`). `define` registers C++ `def_aerodynamics` (`cl`, `cd`, `cl_ov_cd`, `area` default 27.87, `mac` int, `cla`). Does not define `alphax` (control) or `mach` (environment). `execute` branches on mac 30/35/40; 2D `look_up` of `cl_*MAC_vs_mach_alphax` / `cd_*MAC_vs_mach_alphax`; `cla=(clp-cln)/4` at alphax±2; `cl_ov_cd=cl/cd`. No drag-polar. No `time>0.5` debug. Protocol `vehicle.store`.
+- Tests: `Python/tests/unit/test_plane5_aero.py` (parsed `Falcon5_aero_deck.asc`; mach=0.6, alphax=5 from store; mac 30/35/40 vs look_up replica, rtol 1e-12).
+
 ## 0.37.0 - Flat3 newton step
 - `Flat3Newton.execute` ports FALCON5 `Flat3::newton`: `NEXT_ACC = TBL.T @ FSPV + [0,0,grav]`; stored-slope `integrate` of VBEL then SBEL; `ABEL=NEXT_ACC`; `polar_from_cart`; `TVL=mat2tr`; TBV from `phiavout` (0 if absent); `TBL=TBV@TVL`; `alt=-SBEL[2]`. `FSPV`/`grav` from store (forces/environment; not defined here). `dt` is `ctx.int_step`.
 - Tests: `Python/tests/unit/test_flat3_newton_step.py` (after init sbel=[0,0,-3500], FSPV=0, dt=0.05: SBEL[2] increases toward 0; replica NEXT_ACC matches ABEL).
