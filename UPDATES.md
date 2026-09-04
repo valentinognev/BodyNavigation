@@ -1,5 +1,9 @@
 # Updates
 
+## 0.10.0 - CADAC trapezoidal integrate
+- Added `cadac.kernel.integrate`: stored-slope trapezoid `y + (dydx_new + dydx) * dt / 2` for scalars and ndarrays. No scipy, no RK4.
+- Tests: `Python/tests/unit/test_integrate.py` (scalar 11.0; vec [1, 1]).
+
 ## 0.9.0 - Translate ASC decks to JSONC
 - Added `cadac.io.translate.deck_asc_to_jsonc`: parse ASC, json-dump title+tables with Python lists; `load_deck` reload matches ASC `x1`/`x2`/`values`.
 - Tests: `Python/tests/translate/test_deck_roundtrip.py` (HYPER3 `ghame3_aero_deck.asc` 1D, `ghame3_prop_deck.asc` 2D).
