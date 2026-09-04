@@ -1,5 +1,9 @@
 # Updates
 
+## 0.5.0 - Parse CADAC 1DIM ASC decks
+- Added `cadac.io.asc_deck.parse_asc_deck`: TITLE plus 1DIM `NX1 n` / `x y` rows to `Table`; 2DIM/3DIM raise `NotImplementedError`.
+- Test uses real HYPER3 `ghame3_aero_deck.asc`.
+
 ## 0.4.0 - Table dataclass and JSONC deck load
 - Added `cadac.tables.lookup.Table` / `Datadeck.from_tables` (load only; no `look_up`).
 - Added `cadac.io.deck.load_deck`: JSONC `{title, tables}` via `jsonc.loads`; 1D/2D/3D shape check raises `ValueError`.
