@@ -1,5 +1,8 @@
 # Updates
 
+## 0.31.1 - Reject int_step <= 0
+- `run_scenario` raises `ValueError` with path and key `int_step` if the timing key is missing or `int_step <= 0` (zero would hang `run_loop`). Tests: `test_int_step_zero_raises`, `test_int_step_negative_raises`, `test_missing_int_step_raises`.
+
 ## 0.31.0 - CRUISE3 vehicle + run_scenario
 - Added `cadac.vehicles.cruise3.vehicle.Cruise3`: registers environment, aerodynamics, propulsion, forces, newton. `cadac.cli.run_scenario(path)` loads JSONC, builds CRUISE3 only (ValueError on other types), applies params by name, loads aero/prop decks, define → initialize → `run_loop`. Returns `RunResult.plot_rows` (plot-flagged names; vecs as `name1..3`) on the CADAC `plot_step` grid. `cadac run` CLI wrapper. Export `run_scenario`.
 - Translated HYPER3 `input_climb.asc` + aero/prop decks to `Python/cases/hyper3/` (`end_time` 90). Tests: `Python/tests/unit/test_cruise3_one_step.py` (1.0 s climb: time ≥ 1, mass < mass0, alt > 2999).

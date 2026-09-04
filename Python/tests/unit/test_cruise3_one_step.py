@@ -56,6 +56,36 @@ def test_unknown_vehicle_type_raises(tmp_path: Path):
         run_scenario(path)
 
 
+def _timing_scenario(tmp_path: Path, name: str, timing: str) -> Path:
+    path = tmp_path / name
+    path.write_text(
+        '{ "title": "t", "options": {}, "modules": [], '
+        f'"timing": {timing}, "end_time": 1, '
+        '"vehicles": [ { "type": "CRUISE3", "name": "v", "params": {}, "events": [] } ] }',
+        encoding="utf-8",
+        newline="\n",
+    )
+    return path
+
+
+def test_int_step_zero_raises(tmp_path: Path):
+    path = _timing_scenario(tmp_path, "zero.jsonc", '{ "int_step": 0 }')
+    with pytest.raises(ValueError, match=r": int_step"):
+        run_scenario(path)
+
+
+def test_int_step_negative_raises(tmp_path: Path):
+    path = _timing_scenario(tmp_path, "neg.jsonc", '{ "int_step": -0.01 }')
+    with pytest.raises(ValueError, match=r": int_step"):
+        run_scenario(path)
+
+
+def test_missing_int_step_raises(tmp_path: Path):
+    path = _timing_scenario(tmp_path, "missing.jsonc", "{}")
+    with pytest.raises(ValueError, match=r": int_step"):
+        run_scenario(path)
+
+
 def test_committed_climb_case_is_cruise3_90s():
     cfg = load_scenario(CASES / "input_climb.jsonc")
     assert cfg.end_time == 90

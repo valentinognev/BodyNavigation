@@ -38,7 +38,12 @@ def _plot_row(store):
 def run_scenario(path):
     path = Path(path)
     cfg = load_scenario(path)
-    int_step = float(cfg.timing["int_step"])
+    try:
+        int_step = float(cfg.timing["int_step"])
+    except KeyError as exc:
+        raise ValueError(f"{path}: int_step missing") from exc
+    if int_step <= 0:
+        raise ValueError(f"{path}: int_step {int_step}")
     plot_step = float(cfg.timing.get("plot_step", int_step))
     phases = {module.name: module.phases for module in cfg.modules}
     module_order = [module.name for module in cfg.modules if "exec" in module.phases]
