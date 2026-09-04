@@ -1,5 +1,9 @@
 # Updates
 
+## 0.25.0 - Round3 newton initialize
+- Added `cadac.eom.round3.Round3Newton` (`name="newton"`) in the same `round3.py` as `Round3Environment`. `define` registers C++ `def_newton` fields (lonx, latx, alt, dvbe, psivgx, thtvgx, sbii, vbii, abii, sbeg, vbeg, tgv, tig, tge, weii, …). `initialize` ports `Round3::init_newton` (lon/lat/alt → SBII via `cadtge`/`cadtei`, heading/FPA/speed → VBEG/VBII, WEII skew-sym with `WEII3`). Angles in store are degrees. No `execute` newton step (Task 26). Does not define environment fields; `alt`/`dvbe` belong to newton.
+- Tests: `Python/tests/unit/test_round3_newton_init.py` (HYPER3 ICs lonx=-80.55, latx=28.43, alt=3000, psivgx=90, thtvgx=0, dvbe=250; `cadsph(sbii)` alt; WEII; east VBEG via `polar_from_cart`).
+
 ## 0.24.0 - Round3 environment module
 - Added `cadac.eom.round3.Round3Environment` (`name="environment"`): `define` registers time/event_time/int_step_new/out_step_fact/grav/rho/pdynmc/mach/vsound/press; `initialize` sets time=sim_time, int_step_new=int_step; `execute` reads newton `alt`/`dvbe`, writes ISO62 outputs and `grav=gravity(alt)`, copies `ctx.sim_time` to `time`, sets `ctx.int_step` from `int_step_new` and `ctx.out_fact` from `out_step_fact`. Uses `iso62`+`gravity`, not US76.
 - `run_loop` adopts `ctx.int_step` after modules for `event_time +=` and `sim_time +=` (shared C++ local; while condition uses the same variable).

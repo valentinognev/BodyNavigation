@@ -1,6 +1,11 @@
+import numpy as np
+
+from cadac.constants import RAD, REARTH, WEII3
 from cadac.env.gravity import gravity
 from cadac.env.iso62 import iso62
 from cadac.kernel.state import Field
+from cadac.math.earth import cadtei, cadtge
+from cadac.math.frames import mat2tr
 
 
 class Round3Environment:
@@ -41,6 +46,87 @@ class Round3Environment:
         store.set("mach", atm["mach"])
         store.set("vsound", atm["vsound"])
         store.set("press", atm["press"])
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+class Round3Newton:
+    name = "newton"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        zeros3 = (0.0, 0.0, 0.0)
+        zeros33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+        for field in (
+            Field("psivg", 0.0, "real", "out", "newton"),
+            Field("thtvg", 0.0, "real", "out", "newton"),
+            Field("lonx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
+            Field("latx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
+            Field("alt", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("tgv", zeros33, "mat", "init", "newton"),
+            Field("tig", zeros33, "mat", "init/out", "newton"),
+            Field("dvbe", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("weii", zeros33, "mat", "init", "newton"),
+            Field("psivgx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("thtvgx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("sb0ii", zeros3, "vec", "init", "newton"),
+            Field("sbeg", zeros3, "vec", "state", "newton", ("scrn", "plot", "com")),
+            Field("vbeg", zeros3, "vec", "state", "newton", ("scrn", "plot", "com")),
+            Field("tge", zeros33, "mat", "out", "newton"),
+            Field("altx", 0.0, "real", "diag", "newton"),
+            Field("sbii", zeros3, "vec", "state", "newton", ("com",)),
+            Field("vbii", zeros3, "vec", "state", "newton"),
+            Field("abii", zeros3, "vec", "state", "newton"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        store = vehicle.store
+        dvbe = store.get("dvbe")
+        psivgx = store.get("psivgx")
+        thtvgx = store.get("thtvgx")
+        lonx = store.get("lonx")
+        latx = store.get("latx")
+        alt = store.get("alt")
+
+        sbig = np.array([0.0, 0.0, -(alt + REARTH)])
+        tge = cadtge(lonx * RAD, latx * RAD)
+        teg = tge.T
+        sbie = teg @ sbig
+        tei = cadtei(ctx.sim_time)
+        sbii = tei.T @ sbie
+        sb0ii = sbii.copy()
+
+        psivg = psivgx * RAD
+        thtvg = thtvgx * RAD
+        vbeg = np.array(
+            [
+                dvbe * np.cos(thtvg) * np.cos(psivg),
+                dvbe * np.cos(thtvg) * np.sin(psivg),
+                dvbe * (-np.sin(thtvg)),
+            ]
+        )
+
+        weii = np.zeros((3, 3))
+        weii[0, 1] = -WEII3
+        weii[1, 0] = WEII3
+
+        tig = tei.T @ teg
+        vbii = tig @ vbeg + weii @ sbii
+        tgv = mat2tr(psivg, thtvg).T
+
+        store.set("tgv", tgv)
+        store.set("tig", tig)
+        store.set("weii", weii)
+        store.set("sb0ii", sb0ii)
+        store.set("vbeg", vbeg)
+        store.set("tge", tge)
+        store.set("sbii", sbii)
+        store.set("vbii", vbii)
+
+    def execute(self, vehicle, ctx):
+        pass
 
     def terminate(self, vehicle, ctx):
         pass
