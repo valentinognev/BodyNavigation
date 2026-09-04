@@ -1,5 +1,9 @@
 # Updates
 
+## 0.11.0 - US 1976 standard atmosphere
+- Added `cadac.env.us76.atmosphere76`: US76 tables + geopotential with internal `rearth=6369.0` km (not `REARTH`). Returns `(rho, press, tempk)`.
+- Tests: `Python/tests/unit/test_us76.py` (sea level; 11 km geometric).
+
 ## 0.10.0 - CADAC trapezoidal integrate
 - Added `cadac.kernel.integrate`: stored-slope trapezoid `y + (dydx_new + dydx) * dt / 2` for scalars and ndarrays. No scipy, no RK4.
 - Tests: `Python/tests/unit/test_integrate.py` (scalar 11.0; vec [1, 1]).
