@@ -1,5 +1,9 @@
 # Updates
 
+## 0.14.0 - polar_from_cart and mat2tr
+- Added `cadac.math.frames`: `polar_from_cart(v)` CADAC `pol_from_cart` (d, atan2(v2,v1), elev); `mat2tr(psivg, thtvg)` element-by-element. Returns numpy (3,)/(3,3). No mat3tr/cadtei/cadtge/cadsph.
+- Tests: `Python/tests/unit/test_frames.py` (east [0,250,0]; mat2tr(0,0) identity).
+
 ## 0.13.0 - Newtonian gravity
 - Added `cadac.env.gravity`: `gravity(alt_m) = G*EARTH_MASS/(REARTH+alt_m)**2` with constants from `cadac.constants`.
 - Tests: `Python/tests/unit/test_gravity.py` (alt=3000).
