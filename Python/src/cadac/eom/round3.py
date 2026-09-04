@@ -1,11 +1,12 @@
 import numpy as np
 
-from cadac.constants import RAD, REARTH, WEII3
+from cadac.constants import DEG, RAD, REARTH, WEII3
 from cadac.env.gravity import gravity
 from cadac.env.iso62 import iso62
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.earth import cadtei, cadtge
-from cadac.math.frames import mat2tr
+from cadac.math.earth import cadsph, cadtei, cadtge
+from cadac.math.frames import mat2tr, polar_from_cart
 
 
 class Round3Environment:
@@ -126,7 +127,69 @@ class Round3Newton:
         store.set("vbii", vbii)
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        weii = store.get("weii")
+        sbeg = store.get("sbeg")
+        vbeg = store.get("vbeg")
+        sbii = store.get("sbii")
+        vbii = store.get("vbii")
+        abii = store.get("abii")
+        tgv = store.get("tgv")
+        tig = store.get("tig")
+        fspv = store.get("FSPV")
+        grav = store.get("grav")
+        int_step = ctx.int_step
+
+        grav_vec = np.zeros(3)
+        grav_vec[2] = grav
+
+        abii_new = tig @ ((tgv @ fspv) + grav_vec)
+        vbii_new = integrate(abii_new, abii, vbii, int_step)
+        sbii = integrate(vbii_new, vbii, sbii, int_step)
+        abii = abii_new
+        vbii = vbii_new
+
+        tei = cadtei(ctx.sim_time)
+        sbie = tei @ sbii
+        lon, lat, alt = cadsph(sbie)
+        lonx = lon * DEG
+        latx = lat * DEG
+        altx = alt / 1000.0
+
+        tge = cadtge(lon, lat)
+        tgi = tge @ tei
+        vbeg_new = tgi @ (vbii - weii @ sbii)
+        sbeg = integrate(vbeg_new, vbeg, sbeg, int_step)
+        vbeg = vbeg_new
+
+        polar = polar_from_cart(vbeg)
+        dvbe = float(polar[0])
+        psivg = float(polar[1])
+        thtvg = float(polar[2])
+        psivgx = psivg * DEG
+        thtvgx = thtvg * DEG
+
+        tig = tgi.T
+        tvg = mat2tr(psivg, thtvg)
+        tgv = tvg.T
+
+        store.set("sbeg", sbeg)
+        store.set("vbeg", vbeg)
+        store.set("sbii", sbii)
+        store.set("vbii", vbii)
+        store.set("abii", abii)
+        store.set("tgv", tgv)
+        store.set("tig", tig)
+        store.set("dvbe", dvbe)
+        store.set("psivg", psivg)
+        store.set("thtvg", thtvg)
+        store.set("alt", alt)
+        store.set("psivgx", psivgx)
+        store.set("thtvgx", thtvgx)
+        store.set("lonx", lonx)
+        store.set("latx", latx)
+        store.set("tge", tge)
+        store.set("altx", altx)
 
     def terminate(self, vehicle, ctx):
         pass
