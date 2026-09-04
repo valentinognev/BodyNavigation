@@ -60,3 +60,21 @@ def test_vec_mat_shape():
         s.define(Field("bad_vec", np.zeros(2), "vec", "state", "newton"))
     with pytest.raises(ValueError):
         s.define(Field("bad_mat", np.zeros((3, 2)), "mat", "state", "newton"))
+
+
+def test_define_shape_error_does_not_register_name():
+    s = StateStore()
+    with pytest.raises(ValueError):
+        s.define(Field("bad_vec", np.zeros(2), "vec", "state", "newton"))
+    assert "bad_vec" not in s.names()
+    with pytest.raises(ValueError):
+        s.define(Field("bad_mat", np.zeros((3, 2)), "mat", "state", "newton"))
+    assert "bad_mat" not in s.names()
+
+
+def test_unknown_type_raises_valueerror():
+    s = StateStore()
+    with pytest.raises(ValueError):
+        s.define(Field("sbii", np.zeros(3), "vector", "state", "newton"))
+    assert "sbii" not in s.names()
+

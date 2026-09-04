@@ -1,5 +1,10 @@
 # Updates
 
+## 0.16.1 - Atomic define and unknown Field type
+- `StateStore.define` coerces then inserts so a failed vec/mat shape does not register the name.
+- `_coerce` raises `ValueError` on unknown `type` (not real/int/vec/mat).
+- Tests: `test_define_shape_error_does_not_register_name`, `test_unknown_type_raises_valueerror`.
+
 ## 0.16.0 - Named state store
 - Added `cadac.kernel.state`: `Field(name, value, type, role, module, outputs=())` and `StateStore` with `.define`/`.get`/`.set`/`.names()`. Lookup by name; no `Variable[i]`. Duplicate `define` raises `ValueError`; unknown `get`/`set` raises `KeyError`. Int stored as int; vec `(3,)`, mat `(3,3)`. No `units`.
 - Tests: `Python/tests/unit/test_state.py` (define/get/set, duplicate, unknown, int vs real, vec/mat shape).

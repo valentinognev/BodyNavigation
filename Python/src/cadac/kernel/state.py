@@ -20,8 +20,8 @@ class StateStore:
     def define(self, field):
         if field.name in self._fields:
             raise ValueError(f"duplicate field {field.name!r}")
+        field.value = self._coerce(field.type, field.value)
         self._fields[field.name] = field
-        self.set(field.name, field.value)
 
     def get(self, name):
         return self._fields[name].value
@@ -48,4 +48,4 @@ class StateStore:
             if arr.shape != (3, 3):
                 raise ValueError(f"mat must have shape (3, 3), got {arr.shape}")
             return arr
-        return value
+        raise ValueError(f"unknown type {ftype!r}")
