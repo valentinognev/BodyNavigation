@@ -1,5 +1,9 @@
 # Updates
 
+## 0.23.0 - CADAC-style plot CSV writer
+- Added `cadac.io.plot.write_plot_csv(path, title, columns, rows)`: line 1 title, line 2 `0  0 N`, line 3 `col,col,`, data rows comma-separated with trailing comma (CADAC `plot1.csv` shape). Unix LF. Not wired into the executive (Task 31).
+- Tests: `Python/tests/unit/test_plot_csv.py` (round-trip two rows; parse back `time,alt`).
+
 ## 0.22.0 - Translate CADAC IF/ENDIF events
 - `translate_scenario_asc` maps sequential `IF var op value` … `ENDIF` to ordered vehicle `events`: `when: {var: {op: value}}` plus `set` of assignments. Ops `<` `=` `>`. HYPER3 `input_climb.asc` → two events (`time>10`: mprop=2, qhold=50000, tq, alphax; `time>50`: alphax). Output still loads via `load_scenario` into `EventSpec`. No `asc_scenario.py`. Unix LF.
 - Tests: `Python/tests/translate/test_asc_events.py`.
