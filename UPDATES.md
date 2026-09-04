@@ -1,5 +1,9 @@
 # Updates
 
+## 0.27.0 - Cruise3 drag-polar aerodynamics
+- Added `cadac.vehicles.cruise3.aero.Cruise3Aero(deck)` (`name="aerodynamics"`). `define` registers alphax, area, cl, cd, cla, cl_ov_cd. `execute` reads store `mach` (environment) and `alphax`; `cl=cla0+cla*alphax`, `cd=cd0+ckk*(cl-cl0)**2`, `cl_ov_cd=cl/cd` with tables `cd0_vs_mach`, `cl0_vs_mach`, `cla_vs_mach`, `ckk_vs_mach`, `cla0_vs_mach`. No propulsion/forces. Does not define `phimvx`.
+- Tests: `Python/tests/unit/test_cruise3_aero.py` (parsed `ghame3_aero_deck.asc`; mach=0.760854, alphax=7; expected via look_up then formulas).
+
 ## 0.26.0 - Round3 newton step
 - `Round3Newton.execute` ports HYPER3 `Round3::newton`: `abii_new = TIG @ ((TGV @ FSPV) + grav_vec)` with `grav_vec=[0,0,grav]`; stored-slope trapezoid `integrate` of vbii then sbii (previous `abii` is the slope; then `abii=abii_new`); TGE/TGI/VBEG/SBEG; `polar_from_cart` speed/heading/FPA; TIG=TGI.T, TGV=TVG.T. `FSPV` from store (forces; not defined here), `grav` from store (environment). `cadtei(ctx.sim_time)`. No cruise aero/prop/forces.
 - Tests: `Python/tests/unit/test_round3_newton_step.py` (Task 25 ICs, zero FSPV, dt=0.01; alt finite; sbii changes; vbii/sbii replica of integrate order).
