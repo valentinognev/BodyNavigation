@@ -1,5 +1,9 @@
 # Updates
 
+## 0.35.0 - Flat3 kinematics timing
+- Added `cadac.eom.flat3.Flat3Kinematics` (`name="kinematics"`). `define` registers C++ `def_kinematics` (`time` exec scrn/plot, `event_time` exec). `initialize` sets `time=sim_time`. `execute` copies `ctx.sim_time`/`ctx.event_time` as FALCON5 `Flat3::kinematics` (timing only; no int_step). No newton. Protocol `vehicle.store` (HYPER3).
+- Tests: `Python/tests/unit/test_flat3_kinematics.py` (time=1.5, event_time=0.2).
+
 ## 0.34.0 - Flat3 US76 environment
 - Added `cadac.eom.flat3.Flat3Environment` (`name="environment"`). `define` registers C++ `def_environment` fields (`grav`, `rho`, `pdynmc`, `mach`, `vsound`, `press`). Does not define `alt`/`SBEL`/`dvbe` (newton). `execute` uses `alt=-SBEL[2]`, `atmosphere76`+`gravity`, writes vsound/mach/pdynmc as FALCON5 `Flat3::environment`. No ISO62. No kinematics/newton. Protocol `vehicle.store` (HYPER3).
 - Tests: `Python/tests/unit/test_flat3_environment.py` (SBEL[2]=-3500, dvbe=200 vs US76/gravity; alt not registered).

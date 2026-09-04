@@ -42,3 +42,26 @@ class Flat3Environment:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Flat3Kinematics:
+    name = "kinematics"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        for field in (
+            Field("time", 0.0, "real", "exec", "kinematics", ("scrn", "plot")),
+            Field("event_time", 0.0, "real", "exec", "kinematics"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        vehicle.store.set("time", ctx.sim_time)
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        store.set("time", ctx.sim_time)
+        store.set("event_time", ctx.event_time)
+
+    def terminate(self, vehicle, ctx):
+        pass
