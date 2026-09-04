@@ -1,5 +1,9 @@
 # Updates
 
+## 0.30.0 - Cruise3 specific-force module
+- Added `cadac.vehicles.cruise3.forces.Cruise3Forces` (`name="forces"`). `define` registers `FSPV` (vec, out, plot) and `phimvx` (aero Task 27 omitted it). Skips if the name is already on the store (newton does not define `FSPV`). `execute` ports C++ `Cruise::forces`: `fspv1=(-pdynmc*area*cd+thrust*cos(alpha))/mass`, `fspv2=sin(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`, `fspv3=-cos(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`. No `run_scenario`.
+- Tests: `Python/tests/unit/test_cruise3_forces.py` (pdynmc=28410, area=557.42, cd=0.05, cl=0.2, thrust=239241, mass=136077, alphax=7, phimvx=0; plus phimvx=90 banked).
+
 ## 0.29.0 - Cruise3 autothrottle propulsion
 - `Cruise3Propulsion.execute` ports C++ `mprop==2` autothrottle: `if mprop>0` then nested 1/2. `mprop==2`: denom from first spi/ca look_up; `thrst_req=area*cd*qhold/cos(alphax*RAD)`; `throtl_req`; `gainq`; `ethrotl`; throttle; idle/max limiters; spi look_up again; thrust formula. Fuel integrate inside the `mprop>0` wrapper (`mass_flow` only if spi!=0). No forces.
 - Tests: `Python/tests/unit/test_cruise3_prop_auto.py` (qhold=50000, tq=1, alphax=2.5, iso62 rho/pdynmc, cd=0.05, area=557.42; max clip and idle clip; thrust and fuel).
