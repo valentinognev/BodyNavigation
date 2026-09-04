@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from cadac.kernel.combus import Packet, packet_from_store
+
 
 @dataclass
 class SimContext:
@@ -14,6 +16,15 @@ class SimContext:
 def run_loop(vehicles, modules_by_vehicle, module_order, end_time, int_step):
     sim_time = 0.0
     times = []
+    combus = [
+        Packet(
+            name=getattr(vehicle, "name", ""),
+            type=getattr(vehicle, "type", ""),
+            status=_health(vehicle),
+            vars={},
+        )
+        for vehicle in vehicles
+    ]
     while sim_time <= (end_time + int_step):
         times.append(sim_time)
         for slot, vehicle in enumerate(vehicles):
@@ -24,13 +35,13 @@ def run_loop(vehicles, modules_by_vehicle, module_order, end_time, int_step):
                 if engine.evaluate(store):
                     event_time = 0.0
             vehicle.event_time = event_time
-            if _health(vehicle) == 1:
+            if combus[slot].status == 1:
                 ctx = SimContext(
                     sim_time=sim_time,
                     int_step=int_step,
                     event_time=event_time,
                     out_fact=0.0,
-                    combus=None,
+                    combus=combus,
                     vehicle_slot=slot,
                 )
                 named = {
@@ -38,6 +49,14 @@ def run_loop(vehicles, modules_by_vehicle, module_order, end_time, int_step):
                 }
                 for name in module_order:
                     named[name].execute(vehicle, ctx)
+                com_names = getattr(vehicle, "com_names", None)
+                if com_names:
+                    saved = combus[slot].status
+                    packet = packet_from_store(store, com_names)
+                    packet.name = getattr(vehicle, "name", "")
+                    packet.type = getattr(vehicle, "type", "")
+                    packet.status = saved
+                    combus[slot] = packet
             vehicle.event_time = event_time + int_step
         sim_time += int_step
     return times
