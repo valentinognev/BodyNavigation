@@ -1,5 +1,9 @@
 # Updates
 
+## 0.6.0 - Parse CADAC 2DIM ASC decks
+- Extended `cadac.io.asc_deck.parse_asc_deck` with 2DIM packing matching HYPER3 `Cruise::read_tables` (x1 rows, x2 columns, dangling x2 after the matrix).
+- Test uses real HYPER3 `ghame3_prop_deck.asc` (`ca_vs_alpha_mach` 9x13).
+
 ## 0.5.0 - Parse CADAC 1DIM ASC decks
 - Added `cadac.io.asc_deck.parse_asc_deck`: TITLE plus 1DIM `NX1 n` / `x y` rows to `Table`; 2DIM/3DIM raise `NotImplementedError`.
 - Test uses real HYPER3 `ghame3_aero_deck.asc`.
