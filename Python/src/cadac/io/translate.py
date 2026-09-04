@@ -27,3 +27,153 @@ def deck_asc_to_jsonc(src, dst) -> None:
         encoding="utf-8",
         newline="\n",
     )
+
+
+def _comment_stripped(line: str) -> str:
+    idx = line.find("//")
+    if idx >= 0:
+        line = line[:idx]
+    return line.strip()
+
+
+def _content_lines(path: Path) -> list[str]:
+    lines: list[str] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        stripped = _comment_stripped(raw)
+        if stripped:
+            lines.append(stripped)
+    return lines
+
+
+def _parse_number(token: str):
+    digits = token.lstrip("+-")
+    if digits.isdigit() and token not in {"+", "-", ""}:
+        return int(token)
+    return float(token)
+
+
+def _parse_option(token: str) -> tuple[str, bool]:
+    if token.startswith("y_"):
+        return token[2:], True
+    if token.startswith("n_"):
+        return token[2:], False
+    raise ValueError(f"unknown OPTIONS token {token!r}")
+
+
+def _deck_jsonc(name: str) -> str:
+    return str(Path(name).with_suffix(".jsonc"))
+
+
+def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
+    parts = lines[i].split()
+    vehicle_type, name = parts[0], parts[1]
+    i += 1
+    params: dict = {}
+    aero_deck = None
+    prop_deck = None
+    n = len(lines)
+    while i < n:
+        parts = lines[i].split()
+        token = parts[0]
+        if token == "END":
+            i += 1
+            break
+        if token == "IF":
+            i += 1
+            while i < n and lines[i].split()[0] != "ENDIF":
+                i += 1
+            if i < n and lines[i].split()[0] == "ENDIF":
+                i += 1
+            continue
+        if token == "AERO_DECK":
+            aero_deck = _deck_jsonc(parts[1])
+            i += 1
+            continue
+        if token == "PROP_DECK":
+            prop_deck = _deck_jsonc(parts[1])
+            i += 1
+            continue
+        params[token] = _parse_number(parts[1])
+        i += 1
+    vehicle: dict = {"type": vehicle_type, "name": name}
+    if aero_deck is not None:
+        vehicle["aero_deck"] = aero_deck
+    if prop_deck is not None:
+        vehicle["prop_deck"] = prop_deck
+    vehicle["params"] = params
+    vehicle["events"] = []
+    return vehicle, i
+
+
+def _parse_scenario_asc(src: Path) -> dict:
+    lines = _content_lines(src)
+    i = 0
+    n = len(lines)
+    title = ""
+    options: dict[str, bool] = {}
+    modules: list[dict] = []
+    timing: dict[str, float] = {}
+    vehicles: list[dict] = []
+    end_time = 0.0
+    while i < n:
+        parts = lines[i].split()
+        key = parts[0]
+        if key == "TITLE":
+            title = lines[i].split(None, 1)[1].strip() if len(parts) > 1 else ""
+            i += 1
+        elif key == "OPTIONS":
+            for token in parts[1:]:
+                name, flag = _parse_option(token)
+                options[name] = flag
+            i += 1
+        elif key == "MODULES":
+            i += 1
+            while i < n and lines[i].split()[0] != "END":
+                mparts = lines[i].split()
+                phases = [
+                    phase.strip()
+                    for phase in "".join(mparts[1:]).split(",")
+                    if phase.strip()
+                ]
+                modules.append({"name": mparts[0], "phases": phases})
+                i += 1
+            i += 1
+        elif key == "TIMING":
+            i += 1
+            while i < n and lines[i].split()[0] != "END":
+                tparts = lines[i].split()
+                timing[tparts[0]] = float(tparts[1])
+                i += 1
+            i += 1
+        elif key == "VEHICLES":
+            nveh = int(parts[1])
+            i += 1
+            for _ in range(nveh):
+                vehicle, i = _parse_vehicle(lines, i)
+                vehicles.append(vehicle)
+            if i < n and lines[i].split()[0] == "END":
+                i += 1
+        elif key == "ENDTIME":
+            end_time = float(parts[1])
+            i += 1
+        else:
+            i += 1
+    return {
+        "title": title,
+        "options": options,
+        "modules": modules,
+        "timing": timing,
+        "end_time": end_time,
+        "vehicles": vehicles,
+    }
+
+
+def translate_scenario_asc(src, dst_dir) -> None:
+    src = Path(src)
+    dst_dir = Path(dst_dir)
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    dst_dir.joinpath(f"{src.stem}.jsonc").write_text(
+        json.dumps(_parse_scenario_asc(src), indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
