@@ -1,5 +1,10 @@
 # Updates
 
+## 0.18.0 - Executive loop with dummy module
+- Added `cadac.kernel.module`: `Module` protocol (`name`, `define`, `initialize`, `execute`, `terminate`) and `DummyModule` that sets `store.time` to `ctx.sim_time`.
+- Added `cadac.kernel.executive`: `SimContext(sim_time, int_step, event_time, out_fact, combus, vehicle_slot)` and `run_loop`. CADAC `while sim_time <= end_time+int_step`; per vehicle evaluate events then execute `module_order` if health==1 (default 1; `health`/`status` if present); `event_time += int_step`; `sim_time += int_step`. Returns sim_time at start of each iteration. `combus` is None.
+- Tests: `Python/tests/unit/test_executive.py` (`end_time=0.2`, `int_step=0.1` → `[0.0, 0.1, 0.2, 0.3]`; dummy time; health/status skip; events before modules; module order).
+
 ## 0.17.0 - Sequential event engine
 - Added `cadac.kernel.events`: `EventSpec(when, set)` and `EventEngine.evaluate(store)` (CADAC `event_epoch`). One event armed; ops `<` `=` `>`; int watch as int, float raw compare (no epsilon). Nested `when={"time": {">": 10}}` and `when={"var": ..., "op": "=", "value": ...}`. On fire: `store.set` then advance; after last event, False forever.
 - Tests: `Python/tests/unit/test_events.py` (time then set; var/op/=; less-than; sequential arming).
