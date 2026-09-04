@@ -2,11 +2,12 @@ import math
 
 import numpy as np
 
-from cadac.constants import R, RAD
+from cadac.constants import DEG, R, RAD
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr
+from cadac.math.frames import mat2tr, polar_from_cart
 
 
 class Flat3Environment:
@@ -136,7 +137,50 @@ class Flat3Newton:
         store.set("alt", -sbel[2])
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        fspv = store.get("FSPV")
+        grav = store.get("grav")
+        phiavout = store.get("phiavout") if "phiavout" in store.names() else 0.0
+        tbl = store.get("TBL")
+        sbel = store.get("SBEL")
+        vbel = store.get("VBEL")
+        abel = store.get("ABEL")
+        int_step = ctx.int_step
+
+        gravl = np.array([0.0, 0.0, grav])
+        next_acc = tbl.T @ fspv + gravl
+        next_vel = integrate(next_acc, abel, vbel, int_step)
+        sbel = integrate(next_vel, vbel, sbel, int_step)
+        abel = next_acc
+        vbel = next_vel
+
+        polar = polar_from_cart(vbel)
+        dvbe = float(polar[0])
+        psivl = float(polar[1])
+        thtvl = float(polar[2])
+        tvl = mat2tr(psivl, thtvl)
+
+        tbv = np.eye(3)
+        cphi = math.cos(phiavout)
+        sphi = math.sin(phiavout)
+        tbv[1, 1] = cphi
+        tbv[2, 2] = cphi
+        tbv[1, 2] = sphi
+        tbv[2, 1] = -sphi
+        tbl = tbv @ tvl
+
+        store.set("SBEL", sbel)
+        store.set("VBEL", vbel)
+        store.set("ABEL", abel)
+        store.set("TBL", tbl)
+        store.set("TBV", tbv)
+        store.set("TVL", tvl)
+        store.set("dvbe", dvbe)
+        store.set("psivl", psivl)
+        store.set("thtvl", thtvl)
+        store.set("psivlx", psivl * DEG)
+        store.set("thtvlx", thtvl * DEG)
+        store.set("alt", -sbel[2])
 
     def terminate(self, vehicle, ctx):
         pass

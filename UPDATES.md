@@ -1,5 +1,9 @@
 # Updates
 
+## 0.37.0 - Flat3 newton step
+- `Flat3Newton.execute` ports FALCON5 `Flat3::newton`: `NEXT_ACC = TBL.T @ FSPV + [0,0,grav]`; stored-slope `integrate` of VBEL then SBEL; `ABEL=NEXT_ACC`; `polar_from_cart`; `TVL=mat2tr`; TBV from `phiavout` (0 if absent); `TBL=TBV@TVL`; `alt=-SBEL[2]`. `FSPV`/`grav` from store (forces/environment; not defined here). `dt` is `ctx.int_step`.
+- Tests: `Python/tests/unit/test_flat3_newton_step.py` (after init sbel=[0,0,-3500], FSPV=0, dt=0.05: SBEL[2] increases toward 0; replica NEXT_ACC matches ABEL).
+
 ## 0.36.0 - Flat3 newton initialization
 - Added `cadac.eom.flat3.Flat3Newton` (`name="newton"`). `define` registers C++ `def_newton` (`TBL`/`TBV`/`TVL`, `dvbe`, `SBEL`/`VBEL`/`ABEL`, `psivlx`/`thtvlx`, `sbel1/2/3`, `psivl`/`thtvl`, `alt`). `initialize` ports FALCON5 `Flat3::init_newton`: SBEL from sbel1/2/3, VBEL from `cart_from_pol(dvbe,psivl,thtvl)`, TVL=`mat2tr`, TBV from `phiavout` (0 if absent; FALCON5 never defines it), TBL=TBV@TVL, `alt=-SBEL[2]`. Angles in store are degrees. No `execute` newton step (Task 4). Does not define environment fields; `alt` belongs to newton.
 - Tests: `Python/tests/unit/test_flat3_newton_init.py` (sbel=[0,0,-3500], dvbe=200, psivlx=0, thtvlx=0 → SBEL[2]==-3500, dvbe==200, alt==3500).
