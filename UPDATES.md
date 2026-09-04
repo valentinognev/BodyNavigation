@@ -1,5 +1,10 @@
 # Updates
 
+## 0.20.0 - Scenario JSONC schema
+- Added `cadac.io.scenario`: `load_scenario(path) -> RunConfig` via `cadac.io.jsonc.loads`. Dataclasses `RunConfig`, `VehicleSpec`, `ModuleSpec`; events reuse `EventSpec`.
+- Known `options` keys `scrn`/`events`/`plot`/`doc`/`csv`/`tabout`/`merge`/`comscrn`/`traj`; omitted flags False; unknown keys `ValueError`. Extra `params` keys kept. Relative `aero_deck`/`prop_deck` resolved against scenario parent. `CRUISE3` is a string.
+- Tests: `Python/tests/unit/test_scenario.py` plus fixture `Python/tests/fixtures/minimal_cruise3.jsonc` (one CRUISE3, one time event).
+
 ## 0.19.0 - Combus packets
 - Added `cadac.kernel.combus`: `@dataclass Packet(name, type, status: int, vars: dict)` and `packet_from_store(store, names)` copying named fields. Status 1 alive, 0 dead, -1 hit; builder defaults status=1.
 - `run_loop` initializes `combus` as a list of Packets (health from `vehicle.health` then `vehicle.status`, default 1). Skip execute when `combus[slot].status != 1`. After modules, if vehicle has `com_names`, save health, publish `packet_from_store` at `vehicle_slot`, restore health. `ctx.combus` is that list.

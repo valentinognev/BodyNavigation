@@ -1,0 +1,30 @@
+{
+  "title": "minimal CRUISE3", // one vehicle, one time event
+  "options": {
+    "scrn": true
+  },
+  "modules": [
+    { "name": "environment", "phases": ["def", "init", "exec"] }
+  ],
+  "timing": {
+    "int_step": 0.01
+  },
+  "end_time": 90,
+  "vehicles": [
+    {
+      "type": "CRUISE3",
+      "name": "HYPER3",
+      "aero_deck": "ghame3_aero_deck.jsonc",
+      "prop_deck": "ghame3_prop_deck.jsonc",
+      "params": {
+        "lonx": -80.55
+      },
+      "events": [
+        {
+          "when": { "time": { ">": 10 } },
+          "set": { "mprop": 2 }
+        }
+      ]
+    }
+  ]
+}
