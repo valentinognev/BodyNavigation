@@ -1,5 +1,8 @@
 # Updates
 
+## 0.3.0 - JSONC loader
+- Added `cadac.io.jsonc` (`loads`/`load`): strip `//` and non-nested `/* */`, then stdlib `json.loads`. No trailing commas. String-aware scan.
+
 ## 0.2.0 - CADAC Python design and atomic TDD plans
 - Approved library design: JSONC I/O, named state, CADAC numerics, first slice HYPER3/FALCON5/FALCON6.
 - Spec: `docs/superpowers/specs/2026-09-04-cadac-python-design.md`.
