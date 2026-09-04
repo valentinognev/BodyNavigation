@@ -33,6 +33,9 @@ class StateStore:
     def names(self):
         return list(self._fields)
 
+    def field(self, name):
+        return self._fields[name]
+
     def _coerce(self, ftype, value):
         if ftype == "int":
             return int(value)

@@ -1,5 +1,9 @@
 # Updates
 
+## 0.31.0 - CRUISE3 vehicle + run_scenario
+- Added `cadac.vehicles.cruise3.vehicle.Cruise3`: registers environment, aerodynamics, propulsion, forces, newton. `cadac.cli.run_scenario(path)` loads JSONC, builds CRUISE3 only (ValueError on other types), applies params by name, loads aero/prop decks, define → initialize → `run_loop`. Returns `RunResult.plot_rows` (plot-flagged names; vecs as `name1..3`) on the CADAC `plot_step` grid. `cadac run` CLI wrapper. Export `run_scenario`.
+- Translated HYPER3 `input_climb.asc` + aero/prop decks to `Python/cases/hyper3/` (`end_time` 90). Tests: `Python/tests/unit/test_cruise3_one_step.py` (1.0 s climb: time ≥ 1, mass < mass0, alt > 2999).
+
 ## 0.30.0 - Cruise3 specific-force module
 - Added `cadac.vehicles.cruise3.forces.Cruise3Forces` (`name="forces"`). `define` registers `FSPV` (vec, out, plot) and `phimvx` (aero Task 27 omitted it). Skips if the name is already on the store (newton does not define `FSPV`). `execute` ports C++ `Cruise::forces`: `fspv1=(-pdynmc*area*cd+thrust*cos(alpha))/mass`, `fspv2=sin(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`, `fspv3=-cos(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`. No `run_scenario`.
 - Tests: `Python/tests/unit/test_cruise3_forces.py` (pdynmc=28410, area=557.42, cd=0.05, cl=0.2, thrust=239241, mass=136077, alphax=7, phimvx=0; plus phimvx=90 banked).

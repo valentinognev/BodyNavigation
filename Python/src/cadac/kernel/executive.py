@@ -13,7 +13,9 @@ class SimContext:
     vehicle_slot: int
 
 
-def run_loop(vehicles, modules_by_vehicle, module_order, end_time, int_step):
+def run_loop(
+    vehicles, modules_by_vehicle, module_order, end_time, int_step, on_step=None
+):
     sim_time = 0.0
     times = []
     combus = [
@@ -35,15 +37,15 @@ def run_loop(vehicles, modules_by_vehicle, module_order, end_time, int_step):
                 if engine.evaluate(store):
                     event_time = 0.0
             vehicle.event_time = event_time
+            ctx = SimContext(
+                sim_time=sim_time,
+                int_step=int_step,
+                event_time=event_time,
+                out_fact=0.0,
+                combus=combus,
+                vehicle_slot=slot,
+            )
             if combus[slot].status == 1:
-                ctx = SimContext(
-                    sim_time=sim_time,
-                    int_step=int_step,
-                    event_time=event_time,
-                    out_fact=0.0,
-                    combus=combus,
-                    vehicle_slot=slot,
-                )
                 named = {
                     module.name: module for module in modules_by_vehicle[vehicle]
                 }
@@ -58,6 +60,8 @@ def run_loop(vehicles, modules_by_vehicle, module_order, end_time, int_step):
                     packet.type = getattr(vehicle, "type", "")
                     packet.status = saved
                     combus[slot] = packet
+            if on_step is not None:
+                on_step(vehicle, ctx)
             vehicle.event_time = event_time + int_step
         sim_time += int_step
     return times
