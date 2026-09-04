@@ -6,4 +6,5 @@ __pycache__/
 *.egg-info/
 .venv/
 Python/.venv/
+Python/cases/**/plot.csv
 .superpowers/sdd/

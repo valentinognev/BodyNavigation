@@ -41,6 +41,43 @@ def test_plot_rows_include_plot_flagged_names(tmp_path: Path):
     assert "alt" in row
     assert "mass" in row
     assert "FSPV1" in row
+    assert "SBEG1" in row
+    assert "sbeg1" not in row
+
+
+def test_plot_csv_written_when_plot_and_csv(tmp_path: Path):
+    path = _climb_one_second(tmp_path)
+    run_scenario(path)
+    csv_path = path.parent / "plot.csv"
+    raw = csv_path.read_bytes()
+    assert b"\r" not in raw
+    lines = raw.decode("utf-8").split("\n")
+    columns = [col for col in lines[2].split(",") if col]
+    assert columns == [
+        "time",
+        "FSPV1",
+        "FSPV2",
+        "FSPV3",
+        "pdynmc",
+        "mach",
+        "lonx",
+        "latx",
+        "alt",
+        "dvbe",
+        "psivgx",
+        "thtvgx",
+        "SBEG1",
+        "SBEG2",
+        "SBEG3",
+        "VBEG1",
+        "VBEG2",
+        "VBEG3",
+        "throttle",
+        "mass",
+        "thrust",
+        "fmassr",
+        "cl_ov_cd",
+    ]
 
 
 def test_unknown_vehicle_type_raises(tmp_path: Path):

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from cadac.constants import EPS
 from cadac.io.deck import load_deck
+from cadac.io.plot import PLOT_COLUMNS, plot_row, write_plot_csv
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
@@ -17,22 +18,6 @@ class RunResult:
 
 def _deck(path):
     return Datadeck.from_tables(load_deck(path))
-
-
-def _plot_row(store):
-    row = {}
-    for name in store.names():
-        field = store.field(name)
-        if "plot" not in field.outputs:
-            continue
-        if field.type == "vec":
-            for i, component in enumerate(field.value, start=1):
-                row[f"{name}{i}"] = float(component)
-        else:
-            row[name] = (
-                int(field.value) if field.type == "int" else float(field.value)
-            )
-    return row
 
 
 def run_scenario(path):
@@ -88,7 +73,7 @@ def run_scenario(path):
     def on_step(vehicle, ctx):
         nonlocal plot_time
         if abs(plot_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
-            plot_rows.append(_plot_row(vehicle.store))
+            plot_rows.append(plot_row(vehicle.store))
             if ctx.vehicle_slot == nveh - 1:
                 plot_time += plot_step * (1.0 + ctx.out_fact)
 
@@ -100,6 +85,13 @@ def run_scenario(path):
         int_step,
         on_step=on_step,
     )
+    if cfg.options["plot"] and cfg.options["csv"]:
+        write_plot_csv(
+            path.parent / "plot.csv",
+            cfg.title,
+            list(PLOT_COLUMNS),
+            [[row[column] for column in PLOT_COLUMNS] for row in plot_rows],
+        )
     return RunResult(plot_rows=plot_rows)
 
 

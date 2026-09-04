@@ -1,5 +1,9 @@
 # Updates
 
+## 0.32.0 - HYPER3 climb e2e vs plot1.csv
+- `plot_row` emits CADAC plot names/order (`SBEG1` not `sbeg1`): time, FSPV1-3, pdynmc, mach, lonx, latx, alt, dvbe, psivgx, thtvgx, SBEG1-3, VBEG1-3, throttle, mass, thrust, fmassr, cl_ov_cd. `run_scenario` writes `plot.csv` beside the case when `options.plot` and `options.csv`. t=0 row is after init+execute at sim_time=0 (HYPER3). Golden: copy of CADAC `plot1.csv`. Skip sentinel `time=-1`. CSV rtol=1e-5, atol=max(1e-6, 5e-6*|g|).
+- Tests: `Python/tests/e2e/test_hyper3_climb.py` (alt at t=0 and 0.2; full column grid vs golden). `test_plot_csv_written_when_plot_and_csv`.
+
 ## 0.31.1 - Reject int_step <= 0
 - `run_scenario` raises `ValueError` with path and key `int_step` if the timing key is missing or `int_step <= 0` (zero would hang `run_loop`). Tests: `test_int_step_zero_raises`, `test_int_step_negative_raises`, `test_missing_int_step_raises`.
 
