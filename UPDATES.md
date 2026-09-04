@@ -1,5 +1,9 @@
 # Updates
 
+## 0.36.0 - Flat3 newton initialization
+- Added `cadac.eom.flat3.Flat3Newton` (`name="newton"`). `define` registers C++ `def_newton` (`TBL`/`TBV`/`TVL`, `dvbe`, `SBEL`/`VBEL`/`ABEL`, `psivlx`/`thtvlx`, `sbel1/2/3`, `psivl`/`thtvl`, `alt`). `initialize` ports FALCON5 `Flat3::init_newton`: SBEL from sbel1/2/3, VBEL from `cart_from_pol(dvbe,psivl,thtvl)`, TVL=`mat2tr`, TBV from `phiavout` (0 if absent; FALCON5 never defines it), TBL=TBV@TVL, `alt=-SBEL[2]`. Angles in store are degrees. No `execute` newton step (Task 4). Does not define environment fields; `alt` belongs to newton.
+- Tests: `Python/tests/unit/test_flat3_newton_init.py` (sbel=[0,0,-3500], dvbe=200, psivlx=0, thtvlx=0 → SBEL[2]==-3500, dvbe==200, alt==3500).
+
 ## 0.35.0 - Flat3 kinematics timing
 - Added `cadac.eom.flat3.Flat3Kinematics` (`name="kinematics"`). `define` registers C++ `def_kinematics` (`time` exec scrn/plot, `event_time` exec). `initialize` sets `time=sim_time`. `execute` copies `ctx.sim_time`/`ctx.event_time` as FALCON5 `Flat3::kinematics` (timing only; no int_step). No newton. Protocol `vehicle.store` (HYPER3).
 - Tests: `Python/tests/unit/test_flat3_kinematics.py` (time=1.5, event_time=0.2).
