@@ -1,5 +1,9 @@
 # Updates
 
+## 0.8.0 - CADAC 2D table look_up
+- Extended `Datadeck.look_up(name, x1, x2)` with bilinear interpolate as HYPER3 2D `interpolate`; constant upper per axis, slope lower; `dx>EPS` else dumx=0. 1-arg path unchanged.
+- Tests: `Python/tests/unit/test_lookup_2d.py` (center, upper x1 constant).
+
 ## 0.7.0 - CADAC 1D table look_up
 - Added `Datadeck.find_index` (C++ binary search) and `Datadeck.look_up(name, x1)` with linear interpolate, constant upper extrapolation, slope below min; `dx>EPS` else dumx=0.
 - Tests: `Python/tests/unit/test_lookup_1d.py` (midpoint, upper constant, lower slope, on-node).

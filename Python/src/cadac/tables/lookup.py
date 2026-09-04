@@ -68,13 +68,19 @@ class Datadeck:
                 return mid
         return max
 
-    def look_up(self, name: str, x1: float) -> float:
+    def look_up(self, name: str, x1: float, x2: float | None = None) -> float:
         table = self._tables[name]
-        n = len(table.x1)
-        loc = self.find_index(n - 1, x1, table.x1)
-        if loc == n - 1:
-            return float(table.values[-1])
-        return self._interpolate_1d(table, loc, x1)
+        if x2 is None:
+            n = len(table.x1)
+            loc = self.find_index(n - 1, x1, table.x1)
+            if loc == n - 1:
+                return float(table.values[-1])
+            return self._interpolate_1d(table, loc, x1)
+        n1 = len(table.x1)
+        n2 = len(table.x2)
+        loc1 = self.find_index(n1 - 1, x1, table.x1)
+        loc2 = self.find_index(n2 - 1, x2, table.x2)
+        return self._interpolate_2d(table, loc1, loc1 + 1, loc2, loc2 + 1, x1, x2)
 
     def _interpolate_1d(self, table: Table, loc: int, val: float) -> float:
         ind1 = loc
@@ -87,3 +93,41 @@ class Datadeck:
             dumx = diff / dx
         dy = dumx * dy
         return float(table.values[ind1] + dy)
+
+    def _interpolate_2d(
+        self,
+        table: Table,
+        ind10: int,
+        ind11: int,
+        ind20: int,
+        ind21: int,
+        value1: float,
+        value2: float,
+    ) -> float:
+        dx1 = 0.0
+        dx2 = 0.0
+        dumx1 = 0.0
+        dumx2 = 0.0
+        var1_dim = len(table.x1)
+        var2_dim = len(table.x2)
+        diff1 = value1 - table.x1[ind10]
+        diff2 = value2 - table.x2[ind20]
+        if ind10 == var1_dim - 1:
+            ind11 = ind10
+        else:
+            dx1 = float(table.x1[ind11] - table.x1[ind10])
+        if ind20 == var2_dim - 1:
+            ind21 = ind20
+        else:
+            dx2 = float(table.x2[ind21] - table.x2[ind20])
+        if dx1 > EPS:
+            dumx1 = diff1 / dx1
+        if dx2 > EPS:
+            dumx2 = diff2 / dx2
+        y11 = table.values[ind10, ind20]
+        y12 = table.values[ind10, ind21]
+        y21 = table.values[ind11, ind20]
+        y22 = table.values[ind11, ind21]
+        y1 = dumx1 * (y21 - y11) + y11
+        y2 = dumx1 * (y22 - y12) + y12
+        return float(dumx2 * (y2 - y1) + y1)
