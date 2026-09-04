@@ -35,7 +35,6 @@ def test_translate_input_climb_header_and_params(tmp_path: Path):
     assert "tq" not in v.params
     assert v.aero_deck == tmp_path / "ghame3_aero_deck.jsonc"
     assert v.prop_deck == tmp_path / "ghame3_prop_deck.jsonc"
-    assert v.events == []
 
 
 def test_n_option_maps_to_false(tmp_path: Path):

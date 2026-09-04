@@ -64,11 +64,33 @@ def _deck_jsonc(name: str) -> str:
     return str(Path(name).with_suffix(".jsonc"))
 
 
+_IF_OPS = frozenset({"<", "=", ">"})
+
+
+def _parse_if_event(lines: list[str], i: int) -> tuple[dict, int]:
+    parts = lines[i].split()
+    name, op, raw_value = parts[1], parts[2], parts[3]
+    if op not in _IF_OPS:
+        raise ValueError(f"unknown IF operator {op!r}")
+    assignments: dict = {}
+    i += 1
+    n = len(lines)
+    while i < n:
+        eparts = lines[i].split()
+        if eparts[0] == "ENDIF":
+            i += 1
+            break
+        assignments[eparts[0]] = _parse_number(eparts[1])
+        i += 1
+    return {"when": {name: {op: _parse_number(raw_value)}}, "set": assignments}, i
+
+
 def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
     parts = lines[i].split()
     vehicle_type, name = parts[0], parts[1]
     i += 1
     params: dict = {}
+    events: list = []
     aero_deck = None
     prop_deck = None
     n = len(lines)
@@ -79,11 +101,8 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
             i += 1
             break
         if token == "IF":
-            i += 1
-            while i < n and lines[i].split()[0] != "ENDIF":
-                i += 1
-            if i < n and lines[i].split()[0] == "ENDIF":
-                i += 1
+            event, i = _parse_if_event(lines, i)
+            events.append(event)
             continue
         if token == "AERO_DECK":
             aero_deck = _deck_jsonc(parts[1])
@@ -101,7 +120,7 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
     if prop_deck is not None:
         vehicle["prop_deck"] = prop_deck
     vehicle["params"] = params
-    vehicle["events"] = []
+    vehicle["events"] = events
     return vehicle, i
 
 

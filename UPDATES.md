@@ -1,5 +1,9 @@
 # Updates
 
+## 0.22.0 - Translate CADAC IF/ENDIF events
+- `translate_scenario_asc` maps sequential `IF var op value` … `ENDIF` to ordered vehicle `events`: `when: {var: {op: value}}` plus `set` of assignments. Ops `<` `=` `>`. HYPER3 `input_climb.asc` → two events (`time>10`: mprop=2, qhold=50000, tq, alphax; `time>50`: alphax). Output still loads via `load_scenario` into `EventSpec`. No `asc_scenario.py`. Unix LF.
+- Tests: `Python/tests/translate/test_asc_events.py`.
+
 ## 0.21.0 - Translate input.asc (no events)
 - Added `cadac.io.translate.translate_scenario_asc(src, dst_dir)`: CADAC `input.asc` → `{stem}.jsonc` in `dst_dir`. `y_*`/`n_*` options drop the prefix; MODULES name+phases; TIMING floats; VEHICLES type/name/params; `AERO_DECK`/`PROP_DECK` → `aero_deck`/`prop_deck` `.jsonc` path strings (decks not rewritten). Skips `IF`/`ENDIF` bodies (Task 22). Output loads with `load_scenario`. Unix LF.
 - Tests: `Python/tests/translate/test_asc_scenario.py` (HYPER3 `input_climb.asc`: `CRUISE3`, `lonx==-80.55`, `end_time==90`, `environment`+`init`; IF-body not in params; `n_*` → false).
