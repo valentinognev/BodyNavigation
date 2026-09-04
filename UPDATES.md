@@ -1,5 +1,9 @@
 # Updates
 
+## 0.17.0 - Sequential event engine
+- Added `cadac.kernel.events`: `EventSpec(when, set)` and `EventEngine.evaluate(store)` (CADAC `event_epoch`). One event armed; ops `<` `=` `>`; int watch as int, float raw compare (no epsilon). Nested `when={"time": {">": 10}}` and `when={"var": ..., "op": "=", "value": ...}`. On fire: `store.set` then advance; after last event, False forever.
+- Tests: `Python/tests/unit/test_events.py` (time then set; var/op/=; less-than; sequential arming).
+
 ## 0.16.1 - Atomic define and unknown Field type
 - `StateStore.define` coerces then inserts so a failed vec/mat shape does not register the name.
 - `_coerce` raises `ValueError` on unknown `type` (not real/int/vec/mat).
