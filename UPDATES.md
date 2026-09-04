@@ -1,5 +1,9 @@
 # Updates
 
+## 0.28.0 - Cruise3 fixed-throttle propulsion
+- Added `cadac.vehicles.cruise3.propulsion.Cruise3Propulsion(deck)` (`name="propulsion"`). `define` registers C++ `def_propulsion` fields. `initialize` sets `mass=mass0`. `execute`: `mprop==0` → thrust=0, fmassd=0. `mprop==1` → `spi=look_up("spi_vs_throttle_mach", throttle, mach)`, `ca=look_up("ca_vs_alpha_mach", alphax, mach)`, `thrust=spi*0.029*throttle*AGRAV*rho*dvbe*ca*acowl`; `fmassd_next=thrust/(spi*AGRAV)` if spi!=0; `fmasse=integrate(...)`; `mass=mass0-fmasse`; `fmassr=fmass0-fmasse`; if fmassr<=0 then mprop=0. No autothrottle mprop=2 (Task 29). Prop deck `ghame3_prop_deck.asc`.
+- Tests: `Python/tests/unit/test_cruise3_prop_fixed.py` (mprop=0; mprop=1 climb IC throttle=0.2, mass0=136077, fmasse=0, numeric rho/dvbe; fuel cutoff).
+
 ## 0.27.0 - Cruise3 drag-polar aerodynamics
 - Added `cadac.vehicles.cruise3.aero.Cruise3Aero(deck)` (`name="aerodynamics"`). `define` registers alphax, area, cl, cd, cla, cl_ov_cd. `execute` reads store `mach` (environment) and `alphax`; `cl=cla0+cla*alphax`, `cd=cd0+ckk*(cl-cl0)**2`, `cl_ov_cd=cl/cd` with tables `cd0_vs_mach`, `cl0_vs_mach`, `cla_vs_mach`, `ckk_vs_mach`, `cla0_vs_mach`. No propulsion/forces. Does not define `phimvx`.
 - Tests: `Python/tests/unit/test_cruise3_aero.py` (parsed `ghame3_aero_deck.asc`; mach=0.760854, alphax=7; expected via look_up then formulas).
