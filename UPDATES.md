@@ -1,5 +1,9 @@
 # Updates
 
+## 0.50.0 - CADAC mat3tr Euler DCM
+- Added `mat3tr(psi, tht, phi)` to `cadac.math.frames` next to `mat2tr`: FALCON6/HYPER3 `utility_functions.cpp` element-by-element (zeros then all nine `assign_loc`). Angles in radians. Not a scipy/ZYX helper. `cadtbv` unchanged.
+- Tests: `Python/tests/unit/test_mat3tr.py` (identity at 0,0,0; `mat3tr(0,0,0.1)[1,2]==cos(0)*sin(0.1)`; all nine vs C++). Cruise3/HYPER3/PLANE numerics untouched. No Flat6 EOM. lookup.py untouched.
+
 ## 0.49.1 - FALCON5 e2e golden skip gate
 - Added `Python/tests/e2e/test_falcon5_turning.py`: `pytest.skip` if `tests/e2e/goldens/falcon5/plot.csv` is absent (file not created).
 - If golden exists: `run_scenario` on `Python/cases/falcon5/input_turning_to_IP.jsonc`; compare `alt` at t=0 and plot columns present in both (PLANE plot-flagged names, not HYPER3 23 columns). CSV rtol=1e-5, atol=max(1e-6, 5e-6*|g|); skip sentinel time=-1.

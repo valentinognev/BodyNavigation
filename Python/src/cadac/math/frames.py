@@ -37,6 +37,26 @@ def mat2tr(psivg, thtvg):
     return amat
 
 
+def mat3tr(psi, tht, phi):
+    amat = np.zeros((3, 3))
+    spsi = np.sin(psi)
+    cpsi = np.cos(psi)
+    stht = np.sin(tht)
+    ctht = np.cos(tht)
+    sphi = np.sin(phi)
+    cphi = np.cos(phi)
+    amat[0, 0] = cpsi * ctht
+    amat[1, 0] = cpsi * stht * sphi - spsi * cphi
+    amat[2, 0] = cpsi * stht * cphi + spsi * sphi
+    amat[0, 1] = spsi * ctht
+    amat[1, 1] = spsi * stht * sphi + cpsi * cphi
+    amat[2, 1] = spsi * stht * cphi - cpsi * sphi
+    amat[0, 2] = -stht
+    amat[1, 2] = ctht * sphi
+    amat[2, 2] = ctht * cphi
+    return amat
+
+
 def cadtbv(phi, alpha):
     amat = np.zeros((3, 3))
     salpha = np.sin(alpha)
