@@ -1,5 +1,9 @@
 # Updates
 
+## 0.51.0 - Flat6 environment
+- Added `cadac.eom.flat6.Flat6Environment` (`name="environment"`). `define` registers C++ `def_environment` mwind==0 outputs (mwind, press, rho, vsound, grav, vmach, pdynmc, tempk, VAEL, dvba, VBAL). Does not define hbe/VBEL (newton) or plane mfreeze/mguid/trcode. `execute` ports FALCON6 `Flat6::environment` mwind==0: US76+gravity(hbe), VAEL=0, VBAL=VBEL, dvba=||VBEL||, vmach, pdynmc. mwind!=0 ValueError. No ISO62. No kinematics/euler/newton.
+- Tests: `Python/tests/unit/test_flat6_environment.py` (hbe=1000, ||VBEL||=180, mwind=0 vs atmosphere76/gravity; vmach not mach; mwind 1/2 raises). Cruise3/HYPER3/PLANE untouched.
+
 ## 0.50.0 - CADAC mat3tr Euler DCM
 - Added `mat3tr(psi, tht, phi)` to `cadac.math.frames` next to `mat2tr`: FALCON6/HYPER3 `utility_functions.cpp` element-by-element (zeros then all nine `assign_loc`). Angles in radians. Not a scipy/ZYX helper. `cadtbv` unchanged.
 - Tests: `Python/tests/unit/test_mat3tr.py` (identity at 0,0,0; `mat3tr(0,0,0.1)[1,2]==cos(0)*sin(0.1)`; all nine vs C++). Cruise3/HYPER3/PLANE numerics untouched. No Flat6 EOM. lookup.py untouched.
