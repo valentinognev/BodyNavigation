@@ -76,3 +76,14 @@ def test_define_does_not_register_environment_fields():
     assert "alt" in s.names()
     for name in ("grav", "rho", "pdynmc", "mach", "vsound", "press"):
         assert name not in s.names()
+
+
+def test_define_skips_existing_tbv():
+    from cadac.kernel.state import Field
+
+    s = StateStore()
+    existing = ((1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0))
+    s.define(Field("TBV", existing, "mat", "out", "control"))
+    Flat3Newton().define(SimpleNamespace(store=s))
+    np.testing.assert_array_equal(s.get("TBV"), np.diag([1.0, 2.0, 3.0]))
+    assert s.field("TBV").module == "control"

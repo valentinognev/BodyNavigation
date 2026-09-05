@@ -4,11 +4,17 @@ from pathlib import Path
 
 from cadac.constants import EPS
 from cadac.io.deck import load_deck
-from cadac.io.plot import PLOT_COLUMNS, plot_row, write_plot_csv
+from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns, plot_row, write_plot_csv
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
 from cadac.vehicles.cruise3.vehicle import Cruise3
+from cadac.vehicles.plane5.vehicle import Plane5
+
+_VEHICLE_TYPES = {
+    "CRUISE3": Cruise3,
+    "PLANE": Plane5,
+}
 
 
 @dataclass
@@ -36,11 +42,12 @@ def run_scenario(path):
     vehicles = []
     modules_by_vehicle = {}
     for spec in cfg.vehicles:
-        if spec.type != "CRUISE3":
+        cls = _VEHICLE_TYPES.get(spec.type)
+        if cls is None:
             raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
         if spec.aero_deck is None or spec.prop_deck is None:
-            raise ValueError(f"{path}: CRUISE3 requires aero_deck and prop_deck")
-        vehicle = Cruise3(
+            raise ValueError(f"{path}: {spec.type} requires aero_deck and prop_deck")
+        vehicle = cls(
             spec.name,
             _deck(spec.aero_deck),
             _deck(spec.prop_deck),
@@ -69,11 +76,12 @@ def run_scenario(path):
     plot_rows = []
     plot_time = 0.0
     nveh = len(vehicles)
+    csv_columns = _plot_columns(vehicles[0]) if vehicles else list(PLOT_COLUMNS)
 
     def on_step(vehicle, ctx):
         nonlocal plot_time
         if abs(plot_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
-            plot_rows.append(plot_row(vehicle.store))
+            plot_rows.append(plot_row(vehicle.store, columns=_plot_columns(vehicle)))
             if ctx.vehicle_slot == nveh - 1:
                 plot_time += plot_step * (1.0 + ctx.out_fact)
 
@@ -89,10 +97,16 @@ def run_scenario(path):
         write_plot_csv(
             path.parent / "plot.csv",
             cfg.title,
-            list(PLOT_COLUMNS),
-            [[row[column] for column in PLOT_COLUMNS] for row in plot_rows],
+            csv_columns,
+            [[row[column] for column in csv_columns] for row in plot_rows],
         )
     return RunResult(plot_rows=plot_rows)
+
+
+def _plot_columns(vehicle):
+    if vehicle.type == "CRUISE3":
+        return list(PLOT_COLUMNS)
+    return flagged_plot_columns(vehicle.store)
 
 
 def main(argv=None):

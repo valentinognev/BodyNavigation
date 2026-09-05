@@ -151,6 +151,16 @@ def _ready(
     return vehicle, control
 
 
+def test_define_skips_existing_tbv():
+    vehicle = _Vehicle()
+    store = vehicle.store
+    existing = ((1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0))
+    store.define(Field("TBV", existing, "mat", "diag", "newton"))
+    Plane5Control().define(vehicle)
+    np.testing.assert_array_equal(store.get("TBV"), np.diag([1.0, 2.0, 3.0]))
+    assert store.field("TBV").module == "newton"
+
+
 def test_define_registers_lateral_mcontrol_fields():
     vehicle = _Vehicle()
     Plane5Control().define(vehicle)

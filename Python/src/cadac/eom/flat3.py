@@ -95,7 +95,8 @@ class Flat3Newton:
             Field("thtvl", 0.0, "real", "out", "newton"),
             Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
         ):
-            store.define(field)
+            if field.name not in store.names():
+                store.define(field)
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store

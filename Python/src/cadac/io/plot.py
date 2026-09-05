@@ -39,16 +39,36 @@ _VEC_COMPONENT = {
 }
 
 
-def plot_row(store):
+def flagged_plot_columns(store):
+    columns = []
+    for name in store.names():
+        field = store.field(name)
+        if "plot" not in field.outputs:
+            continue
+        if field.type == "vec":
+            columns.extend([f"{name}1", f"{name}2", f"{name}3"])
+        elif field.type != "mat":
+            columns.append(name)
+    return columns
+
+
+def plot_row(store, columns=None):
+    if columns is None:
+        columns = PLOT_COLUMNS
     row = {}
-    for column in PLOT_COLUMNS:
+    for column in columns:
         spec = _VEC_COMPONENT.get(column)
-        if spec is None:
-            value = store.get(column)
-            row[column] = int(value) if type(value) is int else float(value)
-        else:
+        if spec is not None:
             name, index = spec
             row[column] = float(store.get(name)[index])
+            continue
+        if column and column[-1] in "123":
+            name = column[:-1]
+            if name in store.names() and store.field(name).type == "vec":
+                row[column] = float(store.get(name)[int(column[-1]) - 1])
+                continue
+        value = store.get(column)
+        row[column] = int(value) if type(value) is int else float(value)
     return row
 
 

@@ -1,5 +1,13 @@
 # Updates
 
+## 0.49.0 - FALCON5 PLANE from JSONC
+- Added `cadac.vehicles.plane5.vehicle.Plane5` (`type="PLANE"`, health=1). Modules in turning-to-IP ASC order: environment, kinematics, aerodynamics, propulsion, guidance, control, forces, newton, intercept.
+- TBV skip-if-exists on `Plane5Control` and `Flat3Newton` (Cruise3 FSPV pattern). Control owns the Field; both still `set` TBV in execute.
+- `run_scenario` type map `PLANE -> Plane5` (CRUISE3 kept). Require aero_deck and prop_deck for PLANE. Unknown types still ValueError.
+- `plot_row(store, columns=None)` defaults to HYPER3 `PLOT_COLUMNS`. PLANE uses plot-flagged fields (vecs as `NAME1/2/3`); `time` and `alt` in plot_rows. CRUISE3/HYPER3 e2e unchanged.
+- Translated `input_turning_to_IP.asc` + Falcon5 aero/prop decks to `Python/cases/falcon5/` (`end_time` 160, type `PLANE`).
+- Tests: `Python/tests/unit/test_plane5_one_step.py` (1.0 s: time≈1, alt finite heading toward 3000; plot columns; committed 160 s case). No FALCON6. No sys.exit.
+
 ## 0.48.0 - FALCON5 intercept stop_run
 - Added `cadac.vehicles.plane5.intercept.Plane5Intercept` (`name="intercept"`). `define` registers C++ `def_intercept` `stop_run` only (int, data, default 0). Does not define write/mguidance/wp_flag/SWBL/time/psivlx/thtvlx.
 - `execute` ports FALCON5 `Plane::intercept`: if write, then mguidance 30 or 40 with wp_flag==-1 computes horizontal miss and clears write; mguidance 33 with wp_flag==-1 computes 3D miss and clears write. If stop_run==1 under those triggers: `vehicle.health=0` and `ctx.combus[ctx.vehicle_slot].status=0` (C++ `exit(1)`; no sys.exit). stop_run==0 still clears write, does not kill. Always writes `write` back. Skip cout.
