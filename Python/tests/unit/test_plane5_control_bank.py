@@ -19,9 +19,7 @@ BANK_FIELDS = {
 
 NOT_YET = (
     "mcontrol",
-    "alphax",
     "TBV",
-    "ancomx",
     "alcomx",
     "altcom",
     "psivlcx",
@@ -70,11 +68,10 @@ def test_name_is_control():
     assert Plane5Control().name == "control"
 
 
-def test_define_registers_bank_fields_only():
+def test_define_registers_bank_fields():
     vehicle = _Vehicle()
     Plane5Control().define(vehicle)
     store = vehicle.store
-    assert tuple(store.names()) == tuple(BANK_FIELDS)
     for name, (ftype, role, outputs) in BANK_FIELDS.items():
         field = store.field(name)
         assert field.type == ftype

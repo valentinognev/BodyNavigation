@@ -1,5 +1,11 @@
 # Updates
 
+## 0.42.0 - FALCON5 load-factor control
+- Added `cadtbv(phi, alpha)` to `cadac.math.frames`: C++ zeros then `assign_loc`; `(1,0)` stays 0. Used by load-factor control.
+- `Plane5Control.define` adds load-factor fields from C++ `def_control` used by `control_load` (anposlimx, anneglimx, gacp, ta, alphax, alpposlimx, alpneglimx, xi, xid, alp, alpd, anx, qq, tip, ancomx). Does not register mcontrol/TBV/alcomx/altitude/heading.
+- `control_load(vehicle, ancomx, int_step)` ports FALCON5 `Plane::control_load`: TBV=`cadtbv(phimvx*RAD, alphax*RAD)`, FSPB=TBV@FSPV, clip ancomx to [anneglimx, anposlimx], anx=-FSPB[2]/grav, P-I (`gr` starts 0; if ta<=0 then xi=0 and qq=0), incidence lag, clip returned alpx. Writes xi,xid,alp,alpd,anx,qq,tip; returns alpx; does not write alphax. `execute` remains the bank wrap.
+- Tests: `Python/tests/unit/test_plane5_control_load.py` (cadtbv (1,0)==0; turning_to_IP gacp=10, ta=0.8, anposlimx=3, anneglimx=-1, alpposlimx=15, alpneglimx=-10; one-step vs C++ replica; ta<=0; ancomx/alpx clips; execute still bank-only). Plant FSPV/grav/mass/dvbe/pdynmc/thrust/area/cla registered by tests.
+
 ## 0.41.0 - FALCON5 bank-angle control
 - Added `cadac.vehicles.plane5.control.Plane5Control` (`name="control"`). `define` registers bank fields from C++ `def_control` used by `control_bank`: phimvx (out, scrn/plot), phicx (data, scrn/plot), phix (state, plot), phixd (state), philimx, tphi. Does not register the rest of `def_control`. `control_bank(vehicle, phicx, int_step)` ports FALCON5 `Plane::control_bank`: clip phicx to ±philimx (local), `phixd_new=(phicx-phix)/tphi`, stored-slope `integrate`, writes phix/phixd, returns phix. `execute` wraps `phimvx = control_bank(vehicle, store.phicx, ctx.int_step)`. Protocol `vehicle.store`. No load/altitude/heading/mcontrol.
 - Tests: `Python/tests/unit/test_plane5_control_bank.py` (turning_to_IP philimx=70, tphi=1, int_step=0.05; one- and two-step lag; limiter phicx=90 and -90).

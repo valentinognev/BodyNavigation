@@ -35,3 +35,20 @@ def mat2tr(psivg, thtvg):
     amat[2, 1] = amat[0, 2] * amat[1, 0]
     amat[1, 2] = 0.0
     return amat
+
+
+def cadtbv(phi, alpha):
+    amat = np.zeros((3, 3))
+    salpha = np.sin(alpha)
+    calpha = np.cos(alpha)
+    sphi = np.sin(phi)
+    cphi = np.cos(phi)
+    amat[0, 0] = calpha
+    amat[0, 1] = sphi * salpha
+    amat[0, 2] = -cphi * salpha
+    amat[1, 1] = cphi
+    amat[1, 2] = sphi
+    amat[2, 0] = salpha
+    amat[2, 1] = -sphi * calpha
+    amat[2, 2] = cphi * calpha
+    return amat
