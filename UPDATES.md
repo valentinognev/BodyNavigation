@@ -1,5 +1,11 @@
 # Updates
 
+## 0.45.0 - FALCON5 mcontrol dispatcher
+- `Plane5Control.define` adds lateral/dispatcher fields from C++ `def_control` used by `control_lateral` / `Plane::control` (mcontrol int, TBV 3x3 zeros mat out, alcomx, allimx, gcp, alx). Heading/altitude/load/bank fields remain.
+- `control_lateral(vehicle, alcomx)` ports FALCON5 `Plane::control_lateral`: TBV=`cadtbv(phimvx*RAD, alphax*RAD)`, FSPB=TBV@FSPV, clip alcomx to ±allimx, sign=1 if anx>=0 else -1 (anx=-FSPB[2]/grav), phic=gcp*sign/(fabs(anx)+.001)*alcomx, phicx=phic*DEG, alx=FSPV[1]/grav. Writes alx; returns phicx; does not write phicx/TBV.
+- `execute` is the mcontrol dispatcher for turning-to-IP modes only: 46 lateral+bank+altitude+load; 44 lateral+bank+load with store ancomx. Then TBV=`cadtbv(phimvx*RAD, alphax*RAD)`; writes phicx, TBV, alphax, phimvx, ancomx. Any other mcontrol (0, 3, 6, 16, …) raises ValueError. Cruise3/HYPER3 untouched.
+- Tests: `Python/tests/unit/test_plane5_mcontrol.py` (turning_to_IP alcomx=0.5, gcp=2, allimx=1; mcontrol=46 finite ancomx/phimvx; unknown raises; one-step vs C++ replica; clip; negative anx sign; `.001`; 44 no altitude). Bank/load/altitude/heading execute-as-bank-wrap tests now call `control_bank`. Plant FSPV/grav plus chained-controller fields registered by tests.
+
 ## 0.44.0 - FALCON5 heading and flight-path control
 - `Plane5Control.define` adds heading/FPA fields from C++ `def_control` used by `control_heading`/`control_flightpath` (gain_thtvg, gain_psivg, psivlcx, thtvgcx, avx). alphax/anx/alpposlimx/alpneglimx already from Task 9. Does not register mcontrol/TBV/alcomx/lateral.
 - `control_heading(vehicle, psivlcx)` ports FALCON5 `Plane::control_heading`: south singularity if fabs(psivlcx)<=135 then psivgx_comp=psivlx; else if same sign: psivlx; else wrap 360-psivlx*sign. psivlx is degrees. Returns bank command; does not write phimvx/phicx. Gains from mcontrol_11: gain_psivg=12.0.

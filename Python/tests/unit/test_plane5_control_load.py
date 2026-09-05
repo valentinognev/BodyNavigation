@@ -1,7 +1,6 @@
 import numpy as np
 
 from cadac.constants import DEG, RAD
-from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import cadtbv
@@ -45,27 +44,10 @@ LOAD_FIELDS = {
     "ancomx": ("real", "data", ("plot",)),
 }
 
-NOT_YET = (
-    "mcontrol",
-    "TBV",
-    "alcomx",
-)
-
 
 class _Vehicle:
     def __init__(self):
         self.store = StateStore()
-
-
-def _ctx(int_step=INT_STEP):
-    return SimContext(
-        sim_time=0.0,
-        int_step=int_step,
-        event_time=0.0,
-        out_fact=0.0,
-        combus=None,
-        vehicle_slot=0,
-    )
 
 
 def _expected_cadtbv(phi, alpha):
@@ -213,8 +195,6 @@ def test_define_registers_load_factor_fields():
         assert field.module == "control"
         assert field.outputs == outputs
         assert store.get(name) == 0.0
-    for name in NOT_YET:
-        assert name not in store.names()
 
 
 def test_control_load_one_step_matches_cpp_equations():
@@ -431,7 +411,7 @@ def test_control_load_does_not_write_alphax():
     assert vehicle.store.get("alphax") == alphax_before
 
 
-def test_execute_still_bank_wrap_only():
+def test_control_bank_does_not_write_load_states():
     phicx = 30.0
     vehicle, control = _ready()
     store = vehicle.store
@@ -440,11 +420,13 @@ def test_execute_still_bank_wrap_only():
     store.set("tphi", 1.0)
     alphax_before = store.get("alphax")
     ancomx_before = store.get("ancomx")
+    phimvx_before = store.get("phimvx")
 
-    control.execute(vehicle, _ctx())
+    phix = control.control_bank(vehicle, phicx, INT_STEP)
 
-    assert store.get("phimvx") == 0.75
+    assert phix == 0.75
     assert store.get("phix") == 0.75
+    assert store.get("phimvx") == phimvx_before
     assert store.get("alphax") == alphax_before
     assert store.get("ancomx") == ancomx_before
     assert store.get("alp") == 0.0

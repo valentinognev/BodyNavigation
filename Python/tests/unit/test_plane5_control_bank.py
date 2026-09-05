@@ -1,4 +1,3 @@
-from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import StateStore
 from cadac.vehicles.plane5.control import Plane5Control
@@ -17,27 +16,10 @@ BANK_FIELDS = {
     "tphi": ("real", "data", ()),
 }
 
-NOT_YET = (
-    "mcontrol",
-    "TBV",
-    "alcomx",
-)
-
 
 class _Vehicle:
     def __init__(self):
         self.store = StateStore()
-
-
-def _ctx(int_step=INT_STEP):
-    return SimContext(
-        sim_time=0.0,
-        int_step=int_step,
-        event_time=0.0,
-        out_fact=0.0,
-        combus=None,
-        vehicle_slot=0,
-    )
 
 
 def _expected_bank(phicx, phix, phixd, philimx, tphi, int_step):
@@ -76,30 +58,28 @@ def test_define_registers_bank_fields():
         assert field.module == "control"
         assert field.outputs == outputs
         assert store.get(name) == 0.0
-    for name in NOT_YET:
-        assert name not in store.names()
 
 
-def test_execute_steps_command_to_phimvx():
+def test_control_bank_steps_command():
     phicx = 30.0
     vehicle, control = _ready(phicx)
     expected, expected_d = _expected_bank(phicx, 0.0, 0.0, PHILIMX, TPHI, INT_STEP)
 
-    control.execute(vehicle, _ctx())
+    phix = control.control_bank(vehicle, phicx, INT_STEP)
 
     store = vehicle.store
-    assert store.get("phimvx") == expected
+    assert phix == expected
     assert store.get("phix") == expected
     assert store.get("phixd") == expected_d
     assert store.get("phicx") == phicx
     assert expected == 0.75
+    assert store.get("phimvx") == 0.0
 
 
-def test_execute_second_step_uses_stored_slope():
+def test_control_bank_second_step_uses_stored_slope():
     phicx = 30.0
     vehicle, control = _ready(phicx)
-    ctx = _ctx()
-    control.execute(vehicle, ctx)
+    control.control_bank(vehicle, phicx, INT_STEP)
     store = vehicle.store
     expected, expected_d = _expected_bank(
         phicx,
@@ -110,11 +90,12 @@ def test_execute_second_step_uses_stored_slope():
         INT_STEP,
     )
 
-    control.execute(vehicle, ctx)
+    phix = control.control_bank(vehicle, phicx, INT_STEP)
 
-    assert store.get("phimvx") == expected
+    assert phix == expected
     assert store.get("phix") == expected
     assert store.get("phixd") == expected_d
+    assert store.get("phimvx") == 0.0
 
 
 def test_limiter_clips_command_above_philimx():
@@ -123,15 +104,16 @@ def test_limiter_clips_command_above_philimx():
     expected, expected_d = _expected_bank(phicx, 0.0, 0.0, PHILIMX, TPHI, INT_STEP)
     unlimited, _ = _expected_bank(phicx, 0.0, 0.0, phicx, TPHI, INT_STEP)
 
-    control.execute(vehicle, _ctx())
+    phix = control.control_bank(vehicle, phicx, INT_STEP)
 
     store = vehicle.store
-    assert store.get("phimvx") == expected
+    assert phix == expected
     assert store.get("phix") == expected
     assert store.get("phixd") == expected_d
     assert store.get("phicx") == phicx
     assert expected != unlimited
     assert expected == 1.75
+    assert store.get("phimvx") == 0.0
 
 
 def test_limiter_clips_command_below_neg_philimx():
@@ -139,14 +121,15 @@ def test_limiter_clips_command_below_neg_philimx():
     vehicle, control = _ready(phicx)
     expected, expected_d = _expected_bank(phicx, 0.0, 0.0, PHILIMX, TPHI, INT_STEP)
 
-    control.execute(vehicle, _ctx())
+    phix = control.control_bank(vehicle, phicx, INT_STEP)
 
     store = vehicle.store
-    assert store.get("phimvx") == expected
+    assert phix == expected
     assert store.get("phix") == expected
     assert store.get("phixd") == expected_d
     assert store.get("phicx") == phicx
     assert expected == -1.75
+    assert store.get("phimvx") == 0.0
 
 
 def test_control_bank_returns_phix_without_writing_phimvx():

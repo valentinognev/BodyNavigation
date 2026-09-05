@@ -1,4 +1,4 @@
-from math import cos
+from math import cos, fabs
 
 from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
@@ -43,6 +43,18 @@ class Plane5Control:
             Field("psivlcx", 0.0, "real", "data", "control", ("plot",)),
             Field("thtvgcx", 0.0, "real", "data", "control", ("plot",)),
             Field("avx", 0.0, "real", "diag", "control", ("scrn", "plot")),
+            Field("mcontrol", 0, "int", "data", "control", ("scrn",)),
+            Field(
+                "TBV",
+                ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+                "mat",
+                "out",
+                "control",
+            ),
+            Field("alcomx", 0.0, "real", "data", "control", ("plot",)),
+            Field("allimx", 0.0, "real", "data", "control"),
+            Field("gcp", 0.0, "real", "data", "control"),
+            Field("alx", 0.0, "real", "diag", "control", ("plot",)),
         ):
             store.define(field)
 
@@ -51,8 +63,26 @@ class Plane5Control:
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
-        phimvx = self.control_bank(vehicle, store.get("phicx"), ctx.int_step)
+        mcontrol = store.get("mcontrol")
+        dt = ctx.int_step
+        if mcontrol == 46:
+            phicx = self.control_lateral(vehicle, store.get("alcomx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = self.control_altitude(vehicle, store.get("altcom"), phimvx)
+            alphax = self.control_load(vehicle, ancomx, dt)
+        elif mcontrol == 44:
+            phicx = self.control_lateral(vehicle, store.get("alcomx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = store.get("ancomx")
+            alphax = self.control_load(vehicle, ancomx, dt)
+        else:
+            raise ValueError(f"unknown mcontrol {mcontrol}")
+        tbv = cadtbv(phimvx * RAD, alphax * RAD)
+        store.set("phicx", phicx)
+        store.set("TBV", tbv)
+        store.set("alphax", alphax)
         store.set("phimvx", phimvx)
+        store.set("ancomx", ancomx)
 
     def control_bank(self, vehicle, phicx, int_step):
         store = vehicle.store
@@ -164,6 +194,34 @@ class Plane5Control:
 
         store.set("altd", altd)
         return ancomx
+
+    def control_lateral(self, vehicle, alcomx):
+        store = vehicle.store
+        allimx = store.get("allimx")
+        phimvx = store.get("phimvx")
+        alphax = store.get("alphax")
+        gcp = store.get("gcp")
+        fspv = store.get("FSPV")
+        grav = store.get("grav")
+
+        alpha = alphax * RAD
+        phimv = phimvx * RAD
+        tbv = cadtbv(phimv, alpha)
+        fspb = tbv @ fspv
+        anx = -fspb[2] / grav
+
+        if alcomx > allimx:
+            alcomx = allimx
+        if alcomx < -allimx:
+            alcomx = -allimx
+
+        sign = 1 if anx >= 0 else -1
+        phic = gcp * sign / (fabs(anx) + .001) * alcomx
+        phicx = phic * DEG
+        alx = fspv[1] / grav
+
+        store.set("alx", alx)
+        return phicx
 
     def control_heading(self, vehicle, psivlcx):
         store = vehicle.store
