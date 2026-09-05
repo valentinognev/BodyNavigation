@@ -1,5 +1,10 @@
 # Updates
 
+## 0.49.1 - FALCON5 e2e golden skip gate
+- Added `Python/tests/e2e/test_falcon5_turning.py`: `pytest.skip` if `tests/e2e/goldens/falcon5/plot.csv` is absent (file not created).
+- If golden exists: `run_scenario` on `Python/cases/falcon5/input_turning_to_IP.jsonc`; compare `alt` at t=0 and plot columns present in both (PLANE plot-flagged names, not HYPER3 23 columns). CSV rtol=1e-5, atol=max(1e-6, 5e-6*|g|); skip sentinel time=-1.
+- Covering tests: skip helper, sentinel, t=0 alt tolerances, shared-column intersection. Cruise3/HYPER3 unchanged.
+
 ## 0.49.0 - FALCON5 PLANE from JSONC
 - Added `cadac.vehicles.plane5.vehicle.Plane5` (`type="PLANE"`, health=1). Modules in turning-to-IP ASC order: environment, kinematics, aerodynamics, propulsion, guidance, control, forces, newton, intercept.
 - TBV skip-if-exists on `Plane5Control` and `Flat3Newton` (Cruise3 FSPV pattern). Control owns the Field; both still `set` TBV in execute.
