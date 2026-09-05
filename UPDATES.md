@@ -1,5 +1,9 @@
 # Updates
 
+## 0.41.0 - FALCON5 bank-angle control
+- Added `cadac.vehicles.plane5.control.Plane5Control` (`name="control"`). `define` registers bank fields from C++ `def_control` used by `control_bank`: phimvx (out, scrn/plot), phicx (data, scrn/plot), phix (state, plot), phixd (state), philimx, tphi. Does not register the rest of `def_control`. `control_bank(vehicle, phicx, int_step)` ports FALCON5 `Plane::control_bank`: clip phicx to ±philimx (local), `phixd_new=(phicx-phix)/tphi`, stored-slope `integrate`, writes phix/phixd, returns phix. `execute` wraps `phimvx = control_bank(vehicle, store.phicx, ctx.int_step)`. Protocol `vehicle.store`. No load/altitude/heading/mcontrol.
+- Tests: `Python/tests/unit/test_plane5_control_bank.py` (turning_to_IP philimx=70, tphi=1, int_step=0.05; one- and two-step lag; limiter phicx=90 and -90).
+
 ## 0.40.0 - FALCON5 Plane5 forces
 - Added `cadac.vehicles.plane5.forces.Plane5Forces` (`name="forces"`). `define` registers C++ `def_forces` `FSPV` only (vec, out, plot). Does not define `phimvx` (control) or `alphax`. No skip-if-FSPV-exists (Flat3 newton does not define FSPV). `execute` ports FALCON5 `Plane::forces`: `fspv1=(-pdynmc*area*cd+thrust*cos(alpha))/mass`, `fspv2=sin(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`, `fspv3=-cos(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass` with `phimv=phimvx*RAD`, `alpha=alphax*RAD`. Protocol `vehicle.store`.
 - Tests: `Python/tests/unit/test_plane5_forces.py` (pdynmc=17000, area=27.87, mass=12701, alphax=5; phimvx=0, 90, 30 vs C++ formulas).
