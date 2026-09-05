@@ -1,5 +1,9 @@
 # Updates
 
+## 0.40.0 - FALCON5 Plane5 forces
+- Added `cadac.vehicles.plane5.forces.Plane5Forces` (`name="forces"`). `define` registers C++ `def_forces` `FSPV` only (vec, out, plot). Does not define `phimvx` (control) or `alphax`. No skip-if-FSPV-exists (Flat3 newton does not define FSPV). `execute` ports FALCON5 `Plane::forces`: `fspv1=(-pdynmc*area*cd+thrust*cos(alpha))/mass`, `fspv2=sin(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`, `fspv3=-cos(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass` with `phimv=phimvx*RAD`, `alpha=alphax*RAD`. Protocol `vehicle.store`.
+- Tests: `Python/tests/unit/test_plane5_forces.py` (pdynmc=17000, area=27.87, mass=12701, alphax=5; phimvx=0, 90, 30 vs C++ formulas).
+
 ## 0.39.0 - FALCON5 Plane5 propulsion
 - Added `cadac.vehicles.plane5.propulsion.Plane5Propulsion` (`name="propulsion"`). Constructor takes Datadeck. `define` registers C++ `def_propulsion` (mprop, fidle, thrust_com, thrust, treqd/treq, fmassed/fmasse, fuelmass, mach_com, gfthm, tfth, mass, tav, mass_init, fuel_init, ff). Does not define pdynmc/mach/alt/cd/area/alphax. No unused C++ local `cg`. `initialize` sets mass=mass_init. `execute`: mprop==0 local thrust/ff=0 and return without writing; 1 commanded, 2 idle (`iff_vs_alt`), 3 max; mprop>3 Mach hold (forces 4, then 5/6 idle/max clips). Mach hold uses `integrate` and `RAD`. Fuel integrate; mass=mass_init-fmasse; fuelmass<=0 zeros thrust (mprop unchanged). Protocol `vehicle.store`.
 - Tests: `Python/tests/unit/test_plane5_propulsion.py` (parsed `Falcon5_prop_deck.asc`; turning_to_IP IC mass_init=12701, fuel_init=4461, gfthm=893620, tfth=1; mprop 0/1/2/3/4/5/6 and fuel cutoff).
