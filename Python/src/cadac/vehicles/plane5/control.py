@@ -38,6 +38,11 @@ class Plane5Control:
             Field("gv", 0.0, "real", "data", "control"),
             Field("altd", 0.0, "real", "diag", "control", ("plot",)),
             Field("altcom", 0.0, "real", "data", "control", ("plot",)),
+            Field("gain_thtvg", 0.0, "real", "data", "control"),
+            Field("gain_psivg", 0.0, "real", "data", "control"),
+            Field("psivlcx", 0.0, "real", "data", "control", ("plot",)),
+            Field("thtvgcx", 0.0, "real", "data", "control", ("plot",)),
+            Field("avx", 0.0, "real", "diag", "control", ("scrn", "plot")),
         ):
             store.define(field)
 
@@ -159,6 +164,45 @@ class Plane5Control:
 
         store.set("altd", altd)
         return ancomx
+
+    def control_heading(self, vehicle, psivlcx):
+        store = vehicle.store
+        gain_psivg = store.get("gain_psivg")
+        psivlx = store.get("psivlx")
+        if abs(psivlcx) <= 135:
+            psivgx_comp = psivlx
+        else:
+            if psivlx * psivlcx >= 0:
+                psivgx_comp = psivlx
+            else:
+                if psivlx >= 0:
+                    sign_psivgx = 1
+                else:
+                    sign_psivgx = -1
+                psivgx_comp = 360 - psivlx * sign_psivgx
+        return gain_psivg * (psivlcx - psivgx_comp)
+
+    def control_flightpath(self, vehicle, thtvgcx, phimvx):
+        store = vehicle.store
+        gain_thtvg = store.get("gain_thtvg")
+        alpposlimx = store.get("alpposlimx")
+        alpneglimx = store.get("alpneglimx")
+        pdynmc = store.get("pdynmc")
+        thtvl = store.get("thtvl")
+        grav = store.get("grav")
+        mass = store.get("mass")
+        area = store.get("area")
+        cla = store.get("cla")
+        avx = gain_thtvg * (thtvgcx * RAD - thtvl)
+        anx = avx / cos(phimvx * RAD)
+        alphax = (anx * mass * grav) / (pdynmc * area * cla)
+        if alphax > alpposlimx:
+            alphax = alpposlimx
+        if alphax < alpneglimx:
+            alphax = alpneglimx
+        store.set("anx", anx)
+        store.set("avx", avx)
+        return alphax
 
     def terminate(self, vehicle, ctx):
         pass

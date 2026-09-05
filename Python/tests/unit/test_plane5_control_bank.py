@@ -21,8 +21,6 @@ NOT_YET = (
     "mcontrol",
     "TBV",
     "alcomx",
-    "psivlcx",
-    "thtvgcx",
 )
 
 

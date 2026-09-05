@@ -1,5 +1,11 @@
 # Updates
 
+## 0.44.0 - FALCON5 heading and flight-path control
+- `Plane5Control.define` adds heading/FPA fields from C++ `def_control` used by `control_heading`/`control_flightpath` (gain_thtvg, gain_psivg, psivlcx, thtvgcx, avx). alphax/anx/alpposlimx/alpneglimx already from Task 9. Does not register mcontrol/TBV/alcomx/lateral.
+- `control_heading(vehicle, psivlcx)` ports FALCON5 `Plane::control_heading`: south singularity if fabs(psivlcx)<=135 then psivgx_comp=psivlx; else if same sign: psivlx; else wrap 360-psivlx*sign. psivlx is degrees. Returns bank command; does not write phimvx/phicx. Gains from mcontrol_11: gain_psivg=12.0.
+- `control_flightpath(vehicle, thtvgcx, phimvx)` ports FALCON5 `Plane::control_flightpath`: avx=gain_thtvg*(thtvgcx*RAD-thtvl); anx=avx/cos(phimvx*RAD); alphax=anx*mass*grav/(pdynmc*area*cla); clip alpposlimx/alpneglimx. thtvl is radians; thtvgcx is degrees. Writes anx,avx; returns alphax; does not write alphax. gain_thtvg=30. `execute` remains the bank wrap.
+- Tests: `Python/tests/unit/test_plane5_control_heading.py` (mcontrol_11 gains; one-step vs C++ replica; |psivlcx|>135 opposite-sign wrap; same-sign no wrap; alphax clip; banked RAD; thtvl radians; execute still bank-only). Plant psivlx/thtvl/pdynmc/grav/mass/area/cla registered by tests.
+
 ## 0.43.0 - FALCON5 altitude control
 - `Plane5Control.define` adds altitude-hold fields from C++ `def_control` used by `control_altitude` (altdlim, gh, gv, altd, altcom). anposlimx/anneglimx already from Task 9. Does not register mcontrol/TBV/alcomx/heading/lateral.
 - `control_altitude(vehicle, altcom, phimvx)` ports FALCON5 `Plane::control_altitude`: ealt=gh*(altcom-alt) clipped to ±altdlim; altd=-VBEL[2]; ancomx=(gv*(ealt-altd)/grav+1)*(1/cos(phimvx*RAD)) with cadac.constants.RAD; clip to [anneglimx, anposlimx]. Writes altd; returns ancomx; does not write ancomx. No 1/cos guard at 90° bank. `execute` remains the bank wrap.
