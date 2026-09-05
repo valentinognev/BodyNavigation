@@ -1,5 +1,9 @@
 # Updates
 
+## 0.39.0 - FALCON5 Plane5 propulsion
+- Added `cadac.vehicles.plane5.propulsion.Plane5Propulsion` (`name="propulsion"`). Constructor takes Datadeck. `define` registers C++ `def_propulsion` (mprop, fidle, thrust_com, thrust, treqd/treq, fmassed/fmasse, fuelmass, mach_com, gfthm, tfth, mass, tav, mass_init, fuel_init, ff). Does not define pdynmc/mach/alt/cd/area/alphax. No unused C++ local `cg`. `initialize` sets mass=mass_init. `execute`: mprop==0 local thrust/ff=0 and return without writing; 1 commanded, 2 idle (`iff_vs_alt`), 3 max; mprop>3 Mach hold (forces 4, then 5/6 idle/max clips). Mach hold uses `integrate` and `RAD`. Fuel integrate; mass=mass_init-fmasse; fuelmass<=0 zeros thrust (mprop unchanged). Protocol `vehicle.store`.
+- Tests: `Python/tests/unit/test_plane5_propulsion.py` (parsed `Falcon5_prop_deck.asc`; turning_to_IP IC mass_init=12701, fuel_init=4461, gfthm=893620, tfth=1; mprop 0/1/2/3/4/5/6 and fuel cutoff).
+
 ## 0.38.0 - FALCON5 Plane5 aerodynamics
 - Added `cadac.vehicles.plane5.aero.Plane5Aero` (`name="aerodynamics"`). `define` registers C++ `def_aerodynamics` (`cl`, `cd`, `cl_ov_cd`, `area` default 27.87, `mac` int, `cla`). Does not define `alphax` (control) or `mach` (environment). `execute` branches on mac 30/35/40; 2D `look_up` of `cl_*MAC_vs_mach_alphax` / `cd_*MAC_vs_mach_alphax`; `cla=(clp-cln)/4` at alphax±2; `cl_ov_cd=cl/cd`. No drag-polar. No `time>0.5` debug. Protocol `vehicle.store`.
 - Tests: `Python/tests/unit/test_plane5_aero.py` (parsed `Falcon5_aero_deck.asc`; mach=0.6, alphax=5 from store; mac 30/35/40 vs look_up replica, rtol 1e-12).
