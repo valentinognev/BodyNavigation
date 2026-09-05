@@ -1,5 +1,10 @@
 # Updates
 
+## 0.43.0 - FALCON5 altitude control
+- `Plane5Control.define` adds altitude-hold fields from C++ `def_control` used by `control_altitude` (altdlim, gh, gv, altd, altcom). anposlimx/anneglimx already from Task 9. Does not register mcontrol/TBV/alcomx/heading/lateral.
+- `control_altitude(vehicle, altcom, phimvx)` ports FALCON5 `Plane::control_altitude`: ealt=gh*(altcom-alt) clipped to ±altdlim; altd=-VBEL[2]; ancomx=(gv*(ealt-altd)/grav+1)*(1/cos(phimvx*RAD)) with cadac.constants.RAD; clip to [anneglimx, anposlimx]. Writes altd; returns ancomx; does not write ancomx. No 1/cos guard at 90° bank. `execute` remains the bank wrap.
+- Tests: `Python/tests/unit/test_plane5_control_altitude.py` (turning_to_IP gh=0.3, gv=1.0, altdlim=50, altcom=3000, anposlimx=3, anneglimx=-1; one-step vs C++ replica; rate-limiter |gh*(altcom-alt)|>altdlim; banked RAD; no ancomx write; execute still bank-only). Plant alt/grav/VBEL registered by tests.
+
 ## 0.42.0 - FALCON5 load-factor control
 - Added `cadtbv(phi, alpha)` to `cadac.math.frames`: C++ zeros then `assign_loc`; `(1,0)` stays 0. Used by load-factor control.
 - `Plane5Control.define` adds load-factor fields from C++ `def_control` used by `control_load` (anposlimx, anneglimx, gacp, ta, alphax, alpposlimx, alpneglimx, xi, xid, alp, alpd, anx, qq, tip, ancomx). Does not register mcontrol/TBV/alcomx/altitude/heading.
