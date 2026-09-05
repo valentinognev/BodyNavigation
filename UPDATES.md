@@ -1,5 +1,10 @@
 # Updates
 
+## 0.48.0 - FALCON5 intercept stop_run
+- Added `cadac.vehicles.plane5.intercept.Plane5Intercept` (`name="intercept"`). `define` registers C++ `def_intercept` `stop_run` only (int, data, default 0). Does not define write/mguidance/wp_flag/SWBL/time/psivlx/thtvlx.
+- `execute` ports FALCON5 `Plane::intercept`: if write, then mguidance 30 or 40 with wp_flag==-1 computes horizontal miss and clears write; mguidance 33 with wp_flag==-1 computes 3D miss and clears write. If stop_run==1 under those triggers: `vehicle.health=0` and `ctx.combus[ctx.vehicle_slot].status=0` (C++ `exit(1)`; no sys.exit). stop_run==0 still clears write, does not kill. Always writes `write` back. Skip cout.
+- Tests: `Python/tests/unit/test_plane5_intercept.py` (SimContext combus Packet status=1; 30/40/33 stop; stop_run 0/2 no kill; write=0 and wp_flag!=-1 and other mguidance no stop). Cruise3/HYPER3 untouched. No vehicle.py.
+
 ## 0.47.0 - FALCON5 line guidance
 - `Plane5Guidance.define` adds C++ `def_guidance` line fields: line_gain, nl_gain_fact (default 1), decrement, psiflx, thtflx (data); nl_gain, VBEF (dia). Point fields unchanged.
 - `guidance_line(vehicle)` ports FALCON5 `Plane::guidance_line`: TFL=mat2tr(psiflx*RAD, thtflx*RAD); SWBL=SWEL-SBEL; polar/mat2tr LOS as point; VBEO=TOL@VBEL; VBEF=TFL@VBEL; nl_gain=nl_gain_fact*(1-exp(-wp_sltrange/decrement)) unsimplified; algv1=grav*sin(thtvlx*RAD); algv2=line_gain*(-vbeo2+nl_gain*vbef2); algv3=line_gain*(-vbeo3+nl_gain*vbef3)-grav*cos(thtvlx*RAD). Same wp_flag/write/rad_min as point (CADAC sign). Writes write, wp_sltrange, nl_gain, VBEO, VBEF, wp_grdrange, SWBL, rad_min, wp_flag; returns ALGV.
