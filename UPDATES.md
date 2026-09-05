@@ -1,5 +1,11 @@
 # Updates
 
+## 0.47.0 - FALCON5 line guidance
+- `Plane5Guidance.define` adds C++ `def_guidance` line fields: line_gain, nl_gain_fact (default 1), decrement, psiflx, thtflx (data); nl_gain, VBEF (dia). Point fields unchanged.
+- `guidance_line(vehicle)` ports FALCON5 `Plane::guidance_line`: TFL=mat2tr(psiflx*RAD, thtflx*RAD); SWBL=SWEL-SBEL; polar/mat2tr LOS as point; VBEO=TOL@VBEL; VBEF=TFL@VBEL; nl_gain=nl_gain_fact*(1-exp(-wp_sltrange/decrement)) unsimplified; algv1=grav*sin(thtvlx*RAD); algv2=line_gain*(-vbeo2+nl_gain*vbef2); algv3=line_gain*(-vbeo3+nl_gain*vbef3)-grav*cos(thtvlx*RAD). Same wp_flag/write/rad_min as point (CADAC sign). Writes write, wp_sltrange, nl_gain, VBEO, VBEF, wp_grdrange, SWBL, rad_min, wp_flag; returns ALGV.
+- `execute` keeps 0 and 40; adds 30 (ALGV=guidance_line(), alcomx=ALGV[1]/grav, ancomx stays 0) and 33 (also ancomx=-ALGV[2]/grav). Then same clips and phicx/ancomx/alcomx writes. Other mguidance still ValueError (no 3/43). Cruise3/HYPER3 untouched.
+- Tests: `Python/tests/unit/test_plane5_guidance_line.py` (turning-to-IP line ICs line_gain=1.5, nl_gain_fact=0.4, decrement=800, psiflx=180, thtflx=-30 for 33; one-step vs C++ replica; nl_gain exponential not constant; 30/33 clips; wp_flag; unknown 3/43/99). Point unknown list no longer includes 30/33.
+
 ## 0.46.0 - FALCON5 point guidance
 - Added `cadac.vehicles.plane5.guidance.Plane5Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` fields used by point + dispatcher (mguidance, swel1/2/3, point_gain, wp_sltrange, VBEO, wp_grdrange, SWBL, rad_min, write, wp_flag). Does not register line_gain/nl_gain_fact/decrement/psiflx/thtflx/nl_gain/VBEF.
 - `guidance_point(vehicle)` ports FALCON5 `Plane::guidance_point`: SWEL-SBEL, `polar_from_cart`/`mat2tr` LOS TM, wp_grdrange=hypot, VBEO=TOL@VBEL, APGV steering with `point_gain` and gravity terms, rad_min=dvbe**2/(grav*tan(philimx*RAD)), wp_flag CADAC sign(VH·SH) inside 2*rad_min else 0 (sign never 0). Writes write, wp_sltrange, VBEO, wp_grdrange, SWBL, rad_min, wp_flag; returns APGV.

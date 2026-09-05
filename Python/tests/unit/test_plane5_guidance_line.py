@@ -9,11 +9,16 @@ from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat2tr, polar_from_cart
 from cadac.vehicles.plane5.guidance import Plane5Guidance
 
-# turning_to_IP waypoint #1 / origin heading 0
+# turning_to_IP waypoint #1 / origin heading 0; line ICs from later events
 SWEL1 = 5000.0
 SWEL2 = 2000.0
 SWEL3 = 0.0
-POINT_GAIN = 1.0
+LINE_GAIN = 1.5
+NL_GAIN_FACT = 0.4
+DECREMENT = 800.0
+PSIFLX = 180.0
+THTFLX_30 = 0.0
+THTFLX_33 = -30.0
 PHILIMX = 70.0
 GRAV = 9.81
 THTVLX = 0.0
@@ -24,20 +29,16 @@ ANNEGLIMX = -1.0
 ALLIMX = 1.0
 PHICX = 0.0
 
-POINT_FIELDS = {
-    "mguidance": ("int", "data", ("scrn",)),
-    "swel1": ("real", "data", ()),
-    "swel2": ("real", "data", ()),
-    "swel3": ("real", "data", ()),
-    "point_gain": ("real", "data", ()),
-    "wp_sltrange": ("real", "dia", ()),
-    "VBEO": ("vec", "dia", ()),
-    "wp_grdrange": ("real", "dia", ("scrn", "plot")),
-    "SWBL": ("vec", "out", ()),
-    "rad_min": ("real", "dia", ()),
-    "write": ("int", "save", ("scrn", "plot")),
-    "wp_flag": ("int", "dia", ("plot", "scrn")),
+LINE_FIELDS = {
+    "line_gain": ("real", "data", (), 0.0),
+    "nl_gain_fact": ("real", "data", (), 1.0),
+    "decrement": ("real", "data", (), 0.0),
+    "psiflx": ("real", "data", (), 0.0),
+    "thtflx": ("real", "data", (), 0.0),
+    "nl_gain": ("real", "dia", (), 0.0),
+    "VBEF": ("vec", "dia", (), np.zeros(3)),
 }
+
 
 class _Vehicle:
     def __init__(self):
@@ -61,7 +62,21 @@ def _cadac_sign(variable):
     return 1
 
 
-def _expected_point(swel, sbel, vbel, point_gain, grav, thtvlx, philimx, write):
+def _expected_line(
+    swel,
+    sbel,
+    vbel,
+    line_gain,
+    nl_gain_fact,
+    decrement,
+    psiflx,
+    thtflx,
+    grav,
+    thtvlx,
+    philimx,
+    write,
+):
+    tfl = mat2tr(psiflx * RAD, thtflx * RAD)
     swbl = swel - sbel
     polar = polar_from_cart(swbl)
     wp_sltrange = polar[0]
@@ -70,10 +85,12 @@ def _expected_point(swel, sbel, vbel, point_gain, grav, thtvlx, philimx, write):
     tol = mat2tr(psiol, thtol)
     wp_grdrange = math.hypot(swbl[0], swbl[1])
     vbeo = tol @ vbel
-    apgv1 = grav * math.sin(thtvlx * RAD)
-    apgv2 = point_gain * (-vbeo[1])
-    apgv3 = point_gain * (-vbeo[2]) - grav * math.cos(thtvlx * RAD)
-    apgv = np.array([apgv1, apgv2, apgv3])
+    vbef = tfl @ vbel
+    nl_gain = nl_gain_fact * (1 - math.exp(-wp_sltrange / decrement))
+    algv1 = grav * math.sin(thtvlx * RAD)
+    algv2 = line_gain * (-vbeo[1] + nl_gain * vbef[1])
+    algv3 = line_gain * (-vbeo[2] + nl_gain * vbef[2]) - grav * math.cos(thtvlx * RAD)
+    algv = np.array([algv1, algv2, algv3])
     dvbe = math.sqrt(float(vbel[0] ** 2 + vbel[1] ** 2 + vbel[2] ** 2))
     rad_min = dvbe * dvbe / (grav * math.tan(philimx * RAD))
     if wp_grdrange < 2 * rad_min:
@@ -84,9 +101,11 @@ def _expected_point(swel, sbel, vbel, point_gain, grav, thtvlx, philimx, write):
             write = 1
     else:
         wp_flag = 0
-    return apgv, {
+    return algv, {
         "wp_sltrange": wp_sltrange,
+        "nl_gain": nl_gain,
         "VBEO": vbeo,
+        "VBEF": vbef,
         "wp_grdrange": wp_grdrange,
         "SWBL": swbl,
         "rad_min": rad_min,
@@ -96,11 +115,16 @@ def _expected_point(swel, sbel, vbel, point_gain, grav, thtvlx, philimx, write):
 
 
 def _ready(
-    mguidance=40,
+    mguidance=30,
     swel1=SWEL1,
     swel2=SWEL2,
     swel3=SWEL3,
-    point_gain=POINT_GAIN,
+    line_gain=LINE_GAIN,
+    nl_gain_fact=NL_GAIN_FACT,
+    decrement=DECREMENT,
+    psiflx=PSIFLX,
+    thtflx=THTFLX_30,
+    point_gain=1.0,
     sbel=SBEL,
     vbel=VBEL,
     grav=GRAV,
@@ -135,58 +159,63 @@ def _ready(
     store.set("swel2", swel2)
     store.set("swel3", swel3)
     store.set("point_gain", point_gain)
+    store.set("line_gain", line_gain)
+    store.set("nl_gain_fact", nl_gain_fact)
+    store.set("decrement", decrement)
+    store.set("psiflx", psiflx)
+    store.set("thtflx", thtflx)
     store.set("write", write)
     store.set("wp_flag", wp_flag)
     return vehicle, guidance
 
 
-def test_name_is_guidance():
-    assert Plane5Guidance().name == "guidance"
-
-
-def test_define_registers_point_guidance_fields():
+def test_define_registers_line_guidance_fields():
     vehicle = _Vehicle()
     Plane5Guidance().define(vehicle)
     store = vehicle.store
-    for name, (ftype, role, outputs) in POINT_FIELDS.items():
+    for name, (ftype, role, outputs, default) in LINE_FIELDS.items():
+        assert name in store.names()
         field = store.field(name)
         assert field.type == ftype
         assert field.role == role
         assert field.module == "guidance"
         assert field.outputs == outputs
-    assert store.get("mguidance") == 0
-    assert type(store.get("mguidance")) is int
-    assert store.get("swel1") == 0.0
-    assert store.get("swel2") == 0.0
-    assert store.get("swel3") == 0.0
-    assert store.get("point_gain") == 0.0
-    assert store.get("wp_sltrange") == 999999.0
-    np.testing.assert_array_equal(store.get("VBEO"), np.zeros(3))
-    assert store.get("wp_grdrange") == 999999.0
-    np.testing.assert_array_equal(store.get("SWBL"), np.zeros(3))
-    assert store.get("rad_min") == 0.0
-    assert store.get("write") == 0
-    assert type(store.get("write")) is int
-    assert store.get("wp_flag") == 0
-    assert type(store.get("wp_flag")) is int
+        if ftype == "vec":
+            np.testing.assert_array_equal(store.get(name), default)
+        else:
+            assert store.get(name) == default
 
 
-def test_mguidance_40_origin_heading_0_swel_5000_2000_finite_commands():
-    vehicle, guidance = _ready()
+def test_mguidance_30_origin_heading_0_finite_alcomx_zero_ancomx():
+    vehicle, guidance = _ready(mguidance=30)
+    guidance.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert math.isfinite(store.get("alcomx"))
+    assert store.get("alcomx") != 0.0
+    assert store.get("ancomx") == 0.0
+
+
+def test_mguidance_33_origin_heading_0_finite_alcomx_and_ancomx():
+    vehicle, guidance = _ready(mguidance=33, thtflx=THTFLX_33)
     guidance.execute(vehicle, _ctx())
     store = vehicle.store
     assert math.isfinite(store.get("alcomx"))
     assert math.isfinite(store.get("ancomx"))
     assert store.get("alcomx") != 0.0
+    assert store.get("ancomx") != 0.0
 
 
 def test_wp_flag_zero_outside_two_rad_min_at_origin_ne_waypoint():
     vehicle, guidance = _ready()
-    apgv, expected = _expected_point(
+    _, expected = _expected_line(
         np.array([SWEL1, SWEL2, SWEL3]),
         SBEL,
         VBEL,
-        POINT_GAIN,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_30,
         GRAV,
         THTVLX,
         PHILIMX,
@@ -198,17 +227,20 @@ def test_wp_flag_zero_outside_two_rad_min_at_origin_ne_waypoint():
     guidance.execute(vehicle, _ctx())
 
     assert vehicle.store.get("wp_flag") == 0
-    assert math.isfinite(apgv[1] / GRAV)
 
 
 def test_wp_flag_plus_one_when_closing_inside_two_rad_min():
     swel1, swel2, swel3 = 500.0, 200.0, 0.0
     vehicle, guidance = _ready(swel1=swel1, swel2=swel2, swel3=swel3)
-    _, expected = _expected_point(
+    _, expected = _expected_line(
         np.array([swel1, swel2, swel3]),
         SBEL,
         VBEL,
-        POINT_GAIN,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_30,
         GRAV,
         THTVLX,
         PHILIMX,
@@ -226,11 +258,15 @@ def test_wp_flag_plus_one_when_closing_inside_two_rad_min():
 def test_wp_flag_minus_one_when_fleeting_inside_two_rad_min():
     swel1, swel2, swel3 = -200.0, 50.0, 0.0
     vehicle, guidance = _ready(swel1=swel1, swel2=swel2, swel3=swel3)
-    _, expected = _expected_point(
+    _, expected = _expected_line(
         np.array([swel1, swel2, swel3]),
         SBEL,
         VBEL,
-        POINT_GAIN,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_30,
         GRAV,
         THTVLX,
         PHILIMX,
@@ -248,11 +284,15 @@ def test_wp_flag_minus_one_when_fleeting_inside_two_rad_min():
 def test_cadac_sign_zero_horizontal_dot_is_plus_one():
     swel1, swel2, swel3 = 0.0, 100.0, 0.0
     vehicle, guidance = _ready(swel1=swel1, swel2=swel2, swel3=swel3)
-    _, expected = _expected_point(
+    _, expected = _expected_line(
         np.array([swel1, swel2, swel3]),
         SBEL,
         VBEL,
-        POINT_GAIN,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_30,
         GRAV,
         THTVLX,
         PHILIMX,
@@ -274,7 +314,9 @@ def test_mguidance_0_returns_without_writing():
     store.set("rad_min", 3.0)
     store.set("wp_flag", 5)
     store.set("write", 7)
+    store.set("nl_gain", 0.25)
     store.set("VBEO", np.array([1.0, 2.0, 3.0]))
+    store.set("VBEF", np.array([7.0, 8.0, 9.0]))
     store.set("SWBL", np.array([4.0, 5.0, 6.0]))
 
     guidance.execute(vehicle, _ctx())
@@ -287,7 +329,9 @@ def test_mguidance_0_returns_without_writing():
     assert store.get("rad_min") == 3.0
     assert store.get("wp_flag") == 5
     assert store.get("write") == 7
+    assert store.get("nl_gain") == 0.25
     np.testing.assert_array_equal(store.get("VBEO"), np.array([1.0, 2.0, 3.0]))
+    np.testing.assert_array_equal(store.get("VBEF"), np.array([7.0, 8.0, 9.0]))
     np.testing.assert_array_equal(store.get("SWBL"), np.array([4.0, 5.0, 6.0]))
     assert store.get("mguidance") == 0
 
@@ -299,25 +343,31 @@ def test_unknown_mguidance_raises_valueerror(mguidance):
         guidance.execute(vehicle, _ctx())
 
 
-def test_guidance_point_one_step_matches_cpp_equations():
+def test_guidance_line_one_step_matches_cpp_equations():
     vehicle, guidance = _ready()
-    expected_apgv, expected = _expected_point(
+    expected_algv, expected = _expected_line(
         np.array([SWEL1, SWEL2, SWEL3]),
         SBEL,
         VBEL,
-        POINT_GAIN,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_30,
         GRAV,
         THTVLX,
         PHILIMX,
         0,
     )
 
-    got = guidance.guidance_point(vehicle)
+    got = guidance.guidance_line(vehicle)
 
     store = vehicle.store
-    np.testing.assert_allclose(got, expected_apgv)
+    np.testing.assert_allclose(got, expected_algv)
     assert store.get("wp_sltrange") == expected["wp_sltrange"]
+    assert store.get("nl_gain") == expected["nl_gain"]
     np.testing.assert_allclose(store.get("VBEO"), expected["VBEO"])
+    np.testing.assert_allclose(store.get("VBEF"), expected["VBEF"])
     assert store.get("wp_grdrange") == expected["wp_grdrange"]
     np.testing.assert_allclose(store.get("SWBL"), expected["SWBL"])
     assert store.get("rad_min") == expected["rad_min"]
@@ -327,21 +377,40 @@ def test_guidance_point_one_step_matches_cpp_equations():
     assert store.get("alcomx") == 0.0
 
 
-def test_mguidance_40_writes_clipped_alcomx_zero_ancomx_unchanged_phicx():
+def test_nl_gain_is_range_exponential_not_constant_factor():
+    swel1, swel2, swel3 = 500.0, 0.0, -3500.0
+    vehicle, guidance = _ready(swel1=swel1, swel2=swel2, swel3=swel3)
+    swel = np.array([swel1, swel2, swel3])
+    swbl = swel - SBEL
+    wp_sltrange = polar_from_cart(swbl)[0]
+    expected_nl = NL_GAIN_FACT * (1 - math.exp(-wp_sltrange / DECREMENT))
+    assert abs(expected_nl - NL_GAIN_FACT) > 0.05
+
+    guidance.guidance_line(vehicle)
+
+    assert vehicle.store.get("nl_gain") == pytest.approx(expected_nl)
+    assert vehicle.store.get("nl_gain") != pytest.approx(NL_GAIN_FACT)
+
+
+def test_mguidance_30_writes_clipped_alcomx_zero_ancomx_unchanged_phicx():
     phicx = 12.0
     allimx = 0.01
-    vehicle, guidance = _ready(phicx=phicx, allimx=allimx, ancomx=1.5)
-    apgv, _ = _expected_point(
+    vehicle, guidance = _ready(mguidance=30, phicx=phicx, allimx=allimx, ancomx=1.5)
+    algv, _ = _expected_line(
         np.array([SWEL1, SWEL2, SWEL3]),
         SBEL,
         VBEL,
-        POINT_GAIN,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_30,
         GRAV,
         THTVLX,
         PHILIMX,
         0,
     )
-    alcomx = apgv[1] / GRAV
+    alcomx = algv[1] / GRAV
     if alcomx > allimx:
         alcomx = allimx
     if alcomx < -allimx:
@@ -351,7 +420,7 @@ def test_mguidance_40_writes_clipped_alcomx_zero_ancomx_unchanged_phicx():
         ancomx = ANPOSLIMX
     if ancomx < ANNEGLIMX:
         ancomx = ANNEGLIMX
-    assert abs(apgv[1] / GRAV) > allimx
+    assert abs(algv[1] / GRAV) > allimx
 
     guidance.execute(vehicle, _ctx())
 
@@ -359,6 +428,98 @@ def test_mguidance_40_writes_clipped_alcomx_zero_ancomx_unchanged_phicx():
     assert store.get("alcomx") == alcomx
     assert store.get("ancomx") == ancomx
     assert store.get("phicx") == phicx
+
+
+def test_mguidance_33_writes_clipped_alcomx_and_ancomx_from_algv():
+    phicx = 12.0
+    allimx = 0.01
+    anposlimx = 0.01
+    anneglimx = -0.01
+    vehicle, guidance = _ready(
+        mguidance=33,
+        thtflx=THTFLX_33,
+        phicx=phicx,
+        allimx=allimx,
+        anposlimx=anposlimx,
+        anneglimx=anneglimx,
+        ancomx=1.5,
+    )
+    algv, _ = _expected_line(
+        np.array([SWEL1, SWEL2, SWEL3]),
+        SBEL,
+        VBEL,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_33,
+        GRAV,
+        THTVLX,
+        PHILIMX,
+        0,
+    )
+    alcomx = algv[1] / GRAV
+    if alcomx > allimx:
+        alcomx = allimx
+    if alcomx < -allimx:
+        alcomx = -allimx
+    ancomx = -algv[2] / GRAV
+    if ancomx > anposlimx:
+        ancomx = anposlimx
+    if ancomx < anneglimx:
+        ancomx = anneglimx
+    assert abs(algv[1] / GRAV) > allimx
+    assert abs(-algv[2] / GRAV) > anposlimx
+
+    guidance.execute(vehicle, _ctx())
+
+    store = vehicle.store
+    assert store.get("alcomx") == alcomx
+    assert store.get("ancomx") == ancomx
+    assert store.get("phicx") == phicx
+
+
+def test_mguidance_33_ancomx_uses_neg_algv3_over_grav():
+    vehicle, guidance = _ready(
+        mguidance=33,
+        thtflx=THTFLX_33,
+        allimx=100.0,
+        anposlimx=100.0,
+        anneglimx=-100.0,
+    )
+    algv, _ = _expected_line(
+        np.array([SWEL1, SWEL2, SWEL3]),
+        SBEL,
+        VBEL,
+        LINE_GAIN,
+        NL_GAIN_FACT,
+        DECREMENT,
+        PSIFLX,
+        THTFLX_33,
+        GRAV,
+        THTVLX,
+        PHILIMX,
+        0,
+    )
+    expected_ancomx = -algv[2] / GRAV
+    expected_alcomx = algv[1] / GRAV
+    assert expected_ancomx != 0.0
+    assert expected_ancomx != algv[2] / GRAV
+
+    guidance.execute(vehicle, _ctx())
+
+    store = vehicle.store
+    assert store.get("ancomx") == pytest.approx(expected_ancomx)
+    assert store.get("alcomx") == pytest.approx(expected_alcomx)
+
+
+def test_mguidance_40_still_point_guidance():
+    vehicle, guidance = _ready(mguidance=40, ancomx=1.5)
+    guidance.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert math.isfinite(store.get("alcomx"))
+    assert store.get("alcomx") != 0.0
+    assert store.get("ancomx") == 0.0
 
 
 def test_write_stays_set_when_fleeting_after_close():
