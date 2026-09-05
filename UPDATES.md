@@ -1,5 +1,11 @@
 # Updates
 
+## 0.46.0 - FALCON5 point guidance
+- Added `cadac.vehicles.plane5.guidance.Plane5Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` fields used by point + dispatcher (mguidance, swel1/2/3, point_gain, wp_sltrange, VBEO, wp_grdrange, SWBL, rad_min, write, wp_flag). Does not register line_gain/nl_gain_fact/decrement/psiflx/thtflx/nl_gain/VBEF.
+- `guidance_point(vehicle)` ports FALCON5 `Plane::guidance_point`: SWEL-SBEL, `polar_from_cart`/`mat2tr` LOS TM, wp_grdrange=hypot, VBEO=TOL@VBEL, APGV steering with `point_gain` and gravity terms, rad_min=dvbe**2/(grav*tan(philimx*RAD)), wp_flag CADAC sign(VH·SH) inside 2*rad_min else 0 (sign never 0). Writes write, wp_sltrange, VBEO, wp_grdrange, SWBL, rad_min, wp_flag; returns APGV.
+- `execute`: mguidance==0 local zeros and return without writing (mprop==0 pattern); ==40 APGV=guidance_point(), alcomx=APGV[1]/grav, clip ancomx/alcomx, write phicx (unchanged), ancomx, alcomx; other mguidance ValueError (Task 14 adds 30/33). Cruise3/HYPER3 untouched.
+- Tests: `Python/tests/unit/test_plane5_guidance_point.py` (swel=[5000,2000] origin heading 0 finite commands; wp_flag 0 outside, +1 closing, -1 fleeting; CADAC sign zero-dot +1; mguidance 0 no write; unknown raises; one-step vs C++ replica; clip; write latch). Plant SBEL/VBEL/grav/thtvlx/philimx plus control ancomx/alcomx/limits/phicx registered by tests.
+
 ## 0.45.0 - FALCON5 mcontrol dispatcher
 - `Plane5Control.define` adds lateral/dispatcher fields from C++ `def_control` used by `control_lateral` / `Plane::control` (mcontrol int, TBV 3x3 zeros mat out, alcomx, allimx, gcp, alx). Heading/altitude/load/bank fields remain.
 - `control_lateral(vehicle, alcomx)` ports FALCON5 `Plane::control_lateral`: TBV=`cadtbv(phimvx*RAD, alphax*RAD)`, FSPB=TBV@FSPV, clip alcomx to ±allimx, sign=1 if anx>=0 else -1 (anx=-FSPB[2]/grav), phic=gcp*sign/(fabs(anx)+.001)*alcomx, phicx=phic*DEG, alx=FSPV[1]/grav. Writes alx; returns phicx; does not write phicx/TBV.
