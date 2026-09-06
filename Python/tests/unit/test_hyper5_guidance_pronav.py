@@ -140,8 +140,8 @@ def test_define_does_not_register_seeker_tbg_or_unused_locals():
             store.get(name)
 
 
-def test_execute_is_pass():
-    vehicle, guidance = _ready()
+def test_execute_mguidance_0_does_not_write():
+    vehicle, guidance = _ready(mguidance=0)
     store = vehicle.store
     woeb = store.get("WOEB").copy()
     utbb = store.get("UTBB").copy()
@@ -151,7 +151,7 @@ def test_execute_is_pass():
     assert store.get("bias") == BIAS
     assert store.get("closing_speed") == CLOSING_SPEED
     assert store.get("range_go") == RANGE_GO
-    assert store.get("mguidance") == 66
+    assert store.get("mguidance") == 0
     np.testing.assert_array_equal(store.get("WOEB"), woeb)
     np.testing.assert_array_equal(store.get("UTBB"), utbb)
     np.testing.assert_array_equal(store.get("TBG"), tbg)

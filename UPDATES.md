@@ -1,5 +1,10 @@
 # Updates
 
+## 0.77.0 - HYPER5 mguidance dispatcher
+- `Hyper5Guidance.execute` is the mguidance dispatcher for `{0,44,66,70}` only. `0` zeros local alcomx/ancomx and returns without writing (C++ return before `gets`). `44` APGV=`guidance_point()`; alcomx=APGV[1]/grav; ancomx=-APGV[2]/grav. `66` APNB=`guidance_pronav()`; same mapping. `70` phicx=`guidance_arc()`. Else including unused C++ 30/33/3/6/40/43/60/99 → ValueError. Then clip ancomx to [anneglimx, anposlimx] and alcomx to ±allimx; write phicx, ancomx, alcomx (control-owned; tests register limiters).
+- `guidance_arc(vehicle)` ports `Hyper::guidance_arc` including `if(dwbh<0.2*rad_min)` (not commented 2*rad_min), CADAC sign, local CADAC `angle()` (EPS from constants; not added to `cadac.constants`), `asin` guard `denom!=0` plus `|argument|<=1` so Python matches C++ NaN-else. Returns phicx; writes SWBG, wp_grdrange, rad_min, wp_flag. Round3 names time/FSPV/grav/tig/dvbe/vbeg/sbii. Does not read unused C++ local psivgx. No `if(time>49)` debug. Protocol `vehicle.store`. No vehicle. No Plane5 import.
+- Tests: `Python/tests/unit/test_hyper5_mguidance.py` (Demo 4.7 mguidance=66 finite clipped commands; 0 no write; 30/33/99/3/6/40/43/60 raise; 44 point; 70 arc Demo 5.12 phicx and zeroed loads; arc vs C++ rtol=1e-12, atol=1e-14; 0.2*rad_min wp_flag). Tasks 11–12 execute-is-pass now assert mguidance=0 no write.
+
 ## 0.76.0 - HYPER5 pro-nav guidance
 - `Hyper5Guidance.define` adds C++ `def_guidance` pronav fields: pronav_gain, bias (data). Does not define seeker names (WOEB, UTBB, closing_speed, range_go) or TBG (control). Does not define unused C++ locals psisbx/thtsbx. Line/arc extras still omitted. `execute` still pass until Task 13 dispatcher.
 - `guidance_pronav(vehicle)` ports `Hyper::guidance_pronav`: GRAV_G=[0,0,grav+bias]; APNB=`_skew(WOEB)@UTBB*(pronav_gain*closing_speed)-TBG@GRAV_G`. Local CADAC row-major cross-product `_skew` (same layout as Flat6; not imported). Does not read unused C++ locals range_go/psisbx/thtsbx. Returns APNB; does not write alcomx/ancomx. Protocol `vehicle.store`. No vehicle. No Plane5/Flat6 import.

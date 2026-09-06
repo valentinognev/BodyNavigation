@@ -1,11 +1,11 @@
-from math import cos, hypot, sin, sqrt, tan
+from math import acos, asin, cos, hypot, sin, sqrt, tan
 
 import numpy as np
 
-from cadac.constants import RAD
+from cadac.constants import DEG, EPS, RAD
 from cadac.kernel.state import Field
 from cadac.math.earth import cadine
-from cadac.math.frames import mat2tr, polar_from_cart
+from cadac.math.frames import cadtbv, mat2tr, polar_from_cart
 
 
 def _skew(vec):
@@ -18,6 +18,28 @@ def _skew(vec):
         ],
         dtype=float,
     )
+
+
+def _sign(variable):
+    if variable < 0:
+        return -1
+    return 1
+
+
+def _angle(vec1, vec2):
+    scalar = float(vec1[0] * vec2[0] + vec1[1] * vec2[1] + vec1[2] * vec2[2])
+    abs1 = sqrt(float(vec1[0] ** 2 + vec1[1] ** 2 + vec1[2] ** 2))
+    abs2 = sqrt(float(vec2[0] ** 2 + vec2[1] ** 2 + vec2[2] ** 2))
+    dum = abs1 * abs2
+    if dum > EPS:
+        argument = scalar / dum
+    else:
+        argument = 1.0
+    if argument > 1.0:
+        argument = 1.0
+    if argument < -1.0:
+        argument = -1.0
+    return acos(argument)
 
 
 class Hyper5Guidance:
@@ -47,7 +69,42 @@ class Hyper5Guidance:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        mguidance = store.get("mguidance")
+        alcomx = 0.0
+        ancomx = 0.0
+        if mguidance == 0:
+            return
+        if mguidance == 44:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            apgv = self.guidance_point(vehicle)
+            alcomx = apgv[1] / grav
+            ancomx = -apgv[2] / grav
+        elif mguidance == 66:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            apnb = self.guidance_pronav(vehicle)
+            alcomx = apnb[1] / grav
+            ancomx = -apnb[2] / grav
+        elif mguidance == 70:
+            phicx = self.guidance_arc(vehicle)
+        else:
+            raise ValueError(f"unknown mguidance {mguidance}")
+        anposlimx = store.get("anposlimx")
+        anneglimx = store.get("anneglimx")
+        allimx = store.get("allimx")
+        if ancomx > anposlimx:
+            ancomx = anposlimx
+        if ancomx < anneglimx:
+            ancomx = anneglimx
+        if alcomx > allimx:
+            alcomx = allimx
+        if alcomx < -allimx:
+            alcomx = -allimx
+        store.set("phicx", phicx)
+        store.set("ancomx", ancomx)
+        store.set("alcomx", alcomx)
 
     def guidance_point(self, vehicle):
         store = vehicle.store
@@ -107,6 +164,65 @@ class Hyper5Guidance:
         utbb = store.get("UTBB")
         grav_g = np.array([0.0, 0.0, grav + bias])
         return _skew(woeb) @ utbb * (pronav_gain * closing_speed) - tbg @ grav_g
+
+    def guidance_arc(self, vehicle):
+        store = vehicle.store
+        wp_lonx = store.get("wp_lonx")
+        wp_latx = store.get("wp_latx")
+        wp_alt = store.get("wp_alt")
+        time = store.get("time")
+        fspv = store.get("FSPV")
+        grav = store.get("grav")
+        tig = store.get("tig")
+        dvbe = store.get("dvbe")
+        vbeg = store.get("vbeg")
+        sbii = store.get("sbii")
+        alphax = store.get("alphax")
+        phimvx = store.get("phimvx")
+        philimx = store.get("philimx")
+
+        swii = cadine(wp_lonx * RAD, wp_latx * RAD, wp_alt, time)
+        swbg = tig.T @ (swii - sbii)
+        swbg1 = float(swbg[0])
+        swbg2 = float(swbg[1])
+        sh = np.array([swbg1, swbg2, 0.0])
+        dwbh = sqrt(swbg1 * swbg1 + swbg2 * swbg2)
+        vbeg1 = float(vbeg[0])
+        vbeg2 = float(vbeg[1])
+        vh = np.array([vbeg1, vbeg2, 0.0])
+        uv = _skew(vh) @ sh
+        psiwvx = DEG * _angle(vh, sh)
+        zz = np.array([0.0, 0.0, 1.0])
+        psiwvx = psiwvx * _sign(float(uv[0] * zz[0] + uv[1] * zz[1] + uv[2] * zz[2]))
+        alpha = alphax * RAD
+        phimv = phimvx * RAD
+        tbv = cadtbv(phimv, alpha)
+        fspb = tbv @ fspv
+        fspb3 = float(fspb[2])
+        argument = 0.0
+        if abs(psiwvx) < 90:
+            num = -2 * dvbe * dvbe * sin(psiwvx * RAD)
+            denom = fspb3 * dwbh
+            if denom != 0:
+                argument = num / denom
+            if abs(argument) <= 1.0 and abs(asin(argument)) < philimx * RAD:
+                phicx = DEG * asin(argument)
+            else:
+                phicx = philimx * _sign(argument)
+        else:
+            phicx = philimx * _sign(psiwvx)
+        rad_min = dvbe * dvbe / (grav * tan(philimx * RAD))
+        if dwbh < 0.2 * rad_min:
+            wp_flag = _sign(float(vh[0] * sh[0] + vh[1] * sh[1] + vh[2] * sh[2]))
+        else:
+            wp_flag = 0
+        wp_grdrange = dwbh
+
+        store.set("SWBG", swbg)
+        store.set("wp_grdrange", wp_grdrange)
+        store.set("rad_min", rad_min)
+        store.set("wp_flag", wp_flag)
+        return phicx
 
     def terminate(self, vehicle, ctx):
         pass

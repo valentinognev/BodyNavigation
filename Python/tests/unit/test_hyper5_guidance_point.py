@@ -228,8 +228,8 @@ def test_define_does_not_register_pronav_line_arc_philimx_or_round3():
             store.get(name)
 
 
-def test_execute_is_pass():
-    vehicle, guidance = _ready()
+def test_execute_mguidance_0_does_not_write():
+    vehicle, guidance = _ready(mguidance=0)
     store = vehicle.store
     store.set("wp_sltrange", 1.0)
     store.set("wp_grdrange", 2.0)
@@ -244,7 +244,7 @@ def test_execute_is_pass():
     assert store.get("wp_flag") == 5
     np.testing.assert_array_equal(store.get("VBEO"), np.array([1.0, 2.0, 3.0]))
     np.testing.assert_array_equal(store.get("SWBG"), np.array([4.0, 5.0, 6.0]))
-    assert store.get("mguidance") == 44
+    assert store.get("mguidance") == 0
 
 
 def test_guidance_point_demo_46_waypoint_offset_finite_apgv():
