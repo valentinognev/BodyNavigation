@@ -68,9 +68,8 @@ class Sam6Rcs:
                 f"mrcs_moment={mrcs_moment!r} mrcs_force={mrcs_force!r} "
                 "not supported in this slice"
             )
-        zeros = np.zeros(3)
-        store.set("FMRCS", zeros)
-        store.set("FARCS", zeros)
+        store.set("FMRCS", np.zeros(3))
+        store.set("FARCS", np.zeros(3))
 
     def terminate(self, vehicle, ctx):
         pass

@@ -1,5 +1,8 @@
 # Updates
 
+## 0.118.1 - SAM6 TVC/RCS distinct zero vectors
+- `Sam6Tvc.execute` / `Sam6Rcs.execute` write a fresh `np.zeros(3)` per output (`FPB`/`FMPB`, `FMRCS`/`FARCS`) so `StateStore` does not alias them.
+
 ## 0.118.0 - SAM6 TVC/RCS off stubs
 - Added `cadac.vehicles.sam6.tvc.Sam6Tvc` (`name="tvc"`) and `cadac.vehicles.sam6.rcs.Sam6Rcs` (`name="rcs"`). Port of SAM6 `tvc.cpp`/`rcs.cpp` field tables only. `define` C++ `def_tvc`/`def_rcs` including `FPB`/`FMPB`/`FMRCS`/`FARCS` zeros. Does not define plant names (`thrust`/`mprop`/`maut`/`dqcx`, INS `WBECB`/`FSPCB`, control `ancomx`/`alcomx`).
 - `execute`: `mtvc==0` writes zero `FPB`/`FMPB`; else `ValueError`. `mrcs_moment==0` and `mrcs_force==0` write zero `FMRCS`/`FARCS`; else `ValueError`. No nozzle/Schmitt dynamics this slice. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.

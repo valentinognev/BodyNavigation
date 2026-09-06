@@ -45,9 +45,8 @@ class Sam6Tvc:
         mtvc = store.get("mtvc")
         if mtvc != 0:
             raise ValueError(f"mtvc={mtvc!r} not supported in this slice")
-        zeros = np.zeros(3)
-        store.set("FPB", zeros)
-        store.set("FMPB", zeros)
+        store.set("FPB", np.zeros(3))
+        store.set("FMPB", np.zeros(3))
 
     def terminate(self, vehicle, ctx):
         pass

@@ -340,12 +340,11 @@ def test_tvc_initialize_is_pass():
 def test_mtvc_zero_execute_leaves_fpb_zero():
     vehicle, tvc = _ready_tvc(mtvc=0)
     tvc.execute(vehicle, _ctx())
-    np.testing.assert_allclose(
-        vehicle.store.get("FPB"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
-    np.testing.assert_allclose(
-        vehicle.store.get("FMPB"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
+    fpb = vehicle.store.get("FPB")
+    fmpb = vehicle.store.get("FMPB")
+    np.testing.assert_allclose(fpb, np.zeros(3), rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(fmpb, np.zeros(3), rtol=RTOL, atol=ATOL)
+    assert fpb is not fmpb
     assert _approx(vehicle.store.get("gtvc"), 0.0)
     assert _approx(vehicle.store.get("etax"), 0.0)
     assert _approx(vehicle.store.get("zetx"), 0.0)
@@ -356,12 +355,13 @@ def test_mtvc_zero_rewrites_dirty_fpb_to_zero():
     vehicle.store.set("FPB", (9.0, 8.0, 7.0))
     vehicle.store.set("FMPB", (6.0, 5.0, 4.0))
     tvc.execute(vehicle, _ctx())
-    np.testing.assert_allclose(
-        vehicle.store.get("FPB"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
-    np.testing.assert_allclose(
-        vehicle.store.get("FMPB"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
+    fpb = vehicle.store.get("FPB")
+    fmpb = vehicle.store.get("FMPB")
+    np.testing.assert_allclose(fpb, np.zeros(3), rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(fmpb, np.zeros(3), rtol=RTOL, atol=ATOL)
+    assert fpb is not fmpb
+    fpb[0] = 1.0
+    np.testing.assert_allclose(fmpb, np.zeros(3), rtol=RTOL, atol=ATOL)
 
 
 def test_mtvc_one_raises():
@@ -439,12 +439,11 @@ def test_rcs_initialize_is_pass():
 def test_rcs_flags_zero_leave_farcs_zero():
     vehicle, rcs = _ready_rcs(mrcs_moment=0, mrcs_force=0)
     rcs.execute(vehicle, _ctx())
-    np.testing.assert_allclose(
-        vehicle.store.get("FARCS"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
-    np.testing.assert_allclose(
-        vehicle.store.get("FMRCS"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
+    farcs = vehicle.store.get("FARCS")
+    fmrcs = vehicle.store.get("FMRCS")
+    np.testing.assert_allclose(farcs, np.zeros(3), rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(fmrcs, np.zeros(3), rtol=RTOL, atol=ATOL)
+    assert farcs is not fmrcs
     assert _approx(vehicle.store.get("rcs_fmass"), 0.0)
 
 
@@ -453,12 +452,13 @@ def test_rcs_flags_zero_rewrite_dirty_vectors_to_zero():
     vehicle.store.set("FARCS", (11.0, 12.0, 13.0))
     vehicle.store.set("FMRCS", (21.0, 22.0, 23.0))
     rcs.execute(vehicle, _ctx())
-    np.testing.assert_allclose(
-        vehicle.store.get("FARCS"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
-    np.testing.assert_allclose(
-        vehicle.store.get("FMRCS"), np.zeros(3), rtol=RTOL, atol=ATOL
-    )
+    farcs = vehicle.store.get("FARCS")
+    fmrcs = vehicle.store.get("FMRCS")
+    np.testing.assert_allclose(farcs, np.zeros(3), rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(fmrcs, np.zeros(3), rtol=RTOL, atol=ATOL)
+    assert farcs is not fmrcs
+    farcs[0] = 1.0
+    np.testing.assert_allclose(fmrcs, np.zeros(3), rtol=RTOL, atol=ATOL)
 
 
 def test_mrcs_force_one_raises():
