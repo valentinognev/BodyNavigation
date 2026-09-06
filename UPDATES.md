@@ -1,5 +1,11 @@
 # Updates
 
+## 0.54.0 - Flat6 newton
+- Added `cadac.eom.flat6.Flat6Newton` (`name="newton"`) in the same `flat6.py` as environment/kinematics/euler. `define` registers C++ `def_newton` (time exec scrn/plot/com, halt, VBEBD/VBEB/SBELD/SBEL state, sbel1/2/3, SBELM, groundrange, FSPB, VBEL, dvbe in/out plot, alpha0x/beta0x, hbe, psivlx/thtvlx, alx/anx/ayx, ATB, mfreeze_newt/dvbef). Does not define TBL (kinematics), grav (environment), WBEB (euler), FAPB (forces), vmass/mfreeze (plane).
+- `initialize` ports `Flat6::init_newton`: VBEB=[calp*cbet, sbet, salp*cbet]*dvbe with alpha0x/beta0x in degrees * RAD; VBEL=TBL.T@VBEB; flight path psivl=0 if vbel1=vbel2=0 else atan2, thtvl=atan2(-vbel3, hypot); SBEL from sbel1/2/3; hbe=-SBEL[2]; SBELM=SBEL. Does not write VBEBD/SBELD/time.
+- `execute` ports `Flat6::newton`: time=ctx.sim_time; ATB=skew(WBEB)@VBEB; FSPB=FAPB/vmass; VBEBD_NEW=FSPB-ATB+TBL@GRAVL; stored-slope `integrate` of VBEB then SBEL (slope VBEL=TBL.T@VBEB); dvbe=||VBEL||; hbe=-SBEL[2]; anx/ayx/alx (mat2tr); groundrange with DELSBEL vertical zeroed. Skip mfreeze latch if `mfreeze` not on the store. `dt=ctx.int_step`. No aero/vehicle. Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_flat6_newton.py` (sbel3=-1000, dvbe=180, dt=0.001: init hbe==1000, one step near 1000; TBL transpose; stored-slope; ATB skew; groundrange; mfreeze skip/latch).
+
 ## 0.53.0 - Flat6 Euler equations
 - Added `cadac.eom.flat6.Flat6Euler` (`name="euler"`) in the same `flat6.py` as environment/kinematics. `define` registers C++ `def_euler` (ppx/qqx/rrx init/out plot, WBEB/WBEBD state). Does not define IBBB/eng_ang_mom (plane) or FMB (forces).
 - `initialize` ports `Flat6::init_euler`: `WBEB=[ppx,qqx,rrx]*RAD` (store rates in deg/s). Does not write WBEBD.

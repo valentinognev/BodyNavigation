@@ -7,7 +7,7 @@ from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat3tr
+from cadac.math.frames import mat2tr, mat3tr
 
 
 def _cadac_sign(variable):
@@ -320,6 +320,160 @@ class Flat6Euler:
         store.set("ppx", wbeb[0] * DEG)
         store.set("qqx", wbeb[1] * DEG)
         store.set("rrx", wbeb[2] * DEG)
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+def _flight_path_angles(vbel):
+    vbel1 = float(vbel[0])
+    vbel2 = float(vbel[1])
+    vbel3 = float(vbel[2])
+    if vbel1 == 0.0 and vbel2 == 0.0:
+        psivl = 0.0
+    else:
+        psivl = math.atan2(vbel2, vbel1)
+    thtvl = math.atan2(-vbel3, math.sqrt(vbel1 * vbel1 + vbel2 * vbel2))
+    return psivl, thtvl
+
+
+class Flat6Newton:
+    name = "newton"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        zeros3 = (0.0, 0.0, 0.0)
+        for field in (
+            Field("time", 0.0, "real", "exec", "newton", ("scrn", "plot", "com")),
+            Field("halt", 0, "int", "exec", "newton"),
+            Field("VBEBD", zeros3, "vec", "state", "newton"),
+            Field("VBEB", zeros3, "vec", "state", "newton", ("plot",)),
+            Field("SBELD", zeros3, "vec", "state", "newton"),
+            Field("SBEL", zeros3, "vec", "state", "newton", ("plot", "com")),
+            Field("sbel1", 0.0, "real", "data", "newton"),
+            Field("sbel2", 0.0, "real", "data", "newton"),
+            Field("sbel3", 0.0, "real", "data", "newton"),
+            Field("SBELM", zeros3, "vec", "save", "newton"),
+            Field("groundrange", 0.0, "real", "diag", "newton"),
+            Field("FSPB", zeros3, "vec", "out", "newton"),
+            Field("VBEL", zeros3, "vec", "out", "newton", ("com", "scrn", "plot")),
+            Field("dvbe", 0.0, "real", "in/out", "newton", ("plot",)),
+            Field("alpha0x", 0.0, "real", "data", "newton"),
+            Field("beta0x", 0.0, "real", "data", "newton"),
+            Field("hbe", 0.0, "real", "out", "newton", ("scrn", "plot")),
+            Field("psivlx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
+            Field("thtvlx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
+            Field("alx", 0.0, "real", "diag", "newton", ("plot",)),
+            Field("anx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
+            Field("ayx", 0.0, "real", "diag", "newton", ("plot",)),
+            Field("ATB", zeros3, "vec", "diag", "newton"),
+            Field("mfreeze_newt", 0, "int", "save", "newton"),
+            Field("dvbef", 0.0, "real", "save", "newton"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        store = vehicle.store
+        sbel1 = store.get("sbel1")
+        sbel2 = store.get("sbel2")
+        sbel3 = store.get("sbel3")
+        dvbe = store.get("dvbe")
+        alpha0x = store.get("alpha0x")
+        beta0x = store.get("beta0x")
+        tbl = store.get("TBL")
+        salp = math.sin(alpha0x * RAD)
+        calp = math.cos(alpha0x * RAD)
+        sbet = math.sin(beta0x * RAD)
+        cbet = math.cos(beta0x * RAD)
+        vbeb = np.array(
+            [calp * cbet * dvbe, sbet * dvbe, salp * cbet * dvbe], dtype=float
+        )
+        vbel = tbl.T @ vbeb
+        psivl, thtvl = _flight_path_angles(vbel)
+        sbel = np.array([sbel1, sbel2, sbel3], dtype=float)
+        store.set("VBEB", vbeb)
+        store.set("SBEL", sbel)
+        store.set("SBELM", sbel)
+        store.set("VBEL", vbel)
+        store.set("hbe", -float(sbel[2]))
+        store.set("psivlx", psivl * DEG)
+        store.set("thtvlx", thtvl * DEG)
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        mfreeze_newt = store.get("mfreeze_newt")
+        dvbef = store.get("dvbef")
+        sbelm = store.get("SBELM")
+        groundrange = store.get("groundrange")
+        grav = store.get("grav")
+        tbl = store.get("TBL")
+        wbeb = store.get("WBEB")
+        fapb = store.get("FAPB")
+        vmass = store.get("vmass")
+        vbebd = store.get("VBEBD")
+        vbeb = store.get("VBEB")
+        sbeld = store.get("SBELD")
+        sbel = store.get("SBEL")
+        int_step = ctx.int_step
+
+        time = ctx.sim_time
+        atb = _skew(wbeb) @ vbeb
+        gravl = np.array([0.0, 0.0, grav], dtype=float)
+        fspb = fapb * (1.0 / vmass)
+        vbebd_new = fspb - atb + tbl @ gravl
+        vbeb = integrate(vbebd_new, vbebd, vbeb, int_step)
+        vbebd = vbebd_new
+        vbel = tbl.T @ vbeb
+        sbeld_new = vbel
+        sbel = integrate(sbeld_new, sbeld, sbel, int_step)
+        sbeld = sbeld_new
+
+        psivl, thtvl = _flight_path_angles(vbel)
+        psivlx = psivl * DEG
+        thtvlx = thtvl * DEG
+        dvbe = float(np.linalg.norm(vbel))
+        hbe = -float(sbel[2])
+        anx = -fspb[2] / grav
+        ayx = fspb[1] / grav
+        tvl = mat2tr(psivl, thtvl)
+        tvb = tvl @ tbl.T
+        fspv = tvb @ fspb
+        alx = fspv[1] / grav
+
+        if "mfreeze" in store.names():
+            mfreeze = store.get("mfreeze")
+            if mfreeze == 0:
+                mfreeze_newt = 0
+            else:
+                if mfreeze != mfreeze_newt:
+                    mfreeze_newt = mfreeze
+                    dvbef = dvbe
+                dvbe = dvbef
+
+        del_sbel = np.asarray(sbel - sbelm, dtype=float).copy()
+        del_sbel[2] = 0.0
+        groundrange = groundrange + float(np.linalg.norm(del_sbel))
+        sbelm = sbel
+
+        store.set("VBEBD", vbebd)
+        store.set("VBEB", vbeb)
+        store.set("SBELD", sbeld)
+        store.set("SBEL", sbel)
+        store.set("SBELM", sbelm)
+        store.set("groundrange", groundrange)
+        store.set("mfreeze_newt", mfreeze_newt)
+        store.set("dvbef", dvbef)
+        store.set("time", time)
+        store.set("FSPB", fspb)
+        store.set("VBEL", vbel)
+        store.set("dvbe", dvbe)
+        store.set("hbe", hbe)
+        store.set("psivlx", psivlx)
+        store.set("thtvlx", thtvlx)
+        store.set("alx", alx)
+        store.set("anx", anx)
+        store.set("ayx", ayx)
+        store.set("ATB", atb)
 
     def terminate(self, vehicle, ctx):
         pass
