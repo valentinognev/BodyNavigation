@@ -1,5 +1,10 @@
 # Updates
 
+## 0.119.0 - Translate WEATHER_DECK and stochastic means
+- Shared `_parse_vehicle` maps `WEATHER_DECK` → `weather_deck` jsonc path (same as AERO_DECK/PROP_DECK). `GAUSS`/`MARKOV`/`RAYL` store the mean/value only (`GAUSS biasal 0 5` → `biasal=0`; `MARKOV randal 2 5` → `randal=2`; `RAYL dvae 5` → `dvae=5`); prefixes are not skipped and not sampled.
+- `VehicleSpec.weather_deck: Path | None` default `None`. `load_scenario` resolves it relative to the JSONC parent. `translate_scenario_asc(..., family=None)` and `VehicleSpec.family` unchanged.
+- Tests: `Python/tests/unit/test_agm6_translate_weather.py`. Existing AERO_DECK/PROP_DECK translate tests kept green.
+
 ## 0.118.0 - AGM6 weather deck wind and Dryden
 - `Agm6Environment.execute` ports C++ atmosphere/wind/turbulence decode. `matmo==2` look_up `density`/`pressure`/`temperature` vs `hbe` (`tempk=tempc+273.16`, `vsound=sqrt(1.4*R*tempk)`). `mwind==1` constant `dvw=dvae`; `mwind==2` look_up `speed`/`direction`; smooth `VAELS` with `twind` as C++. `mwind==0` `VAEL=0`. `mturb==1` Dryden with injected `gauss_value` (store if present, else 0; no `rand()`). `mturb==0` no add. Always `VBAL=VBEL-VAEL`. Unknown matmo/mturb/mwind digits → `ValueError`. Does not modify `cadac.eom.flat6`.
 - Tests: `Python/tests/unit/test_agm6_weather.py` (parse `weather_deck.asc`; mair=200 rho vs look_up at hbe=7000; mair=1 dvae=5 psiwdx=0 VAEL north `-dvw*cos` smoothed; mair=212 gauss_value=0 finite VAEL). Task 17 `test_agm6_environment.py` mair=212 no longer raises with a weather deck. rtol=1e-12, atol=1e-14.
