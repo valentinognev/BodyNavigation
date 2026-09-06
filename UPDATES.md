@@ -1,5 +1,10 @@
 # Updates
 
+## 0.104.0 - AGM6 missile forces FAPB/FMB
+- Added `cadac.vehicles.agm6.forces.Agm6Forces` (`name="forces"`). `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out only). Does not define aero/prop/newton names (`pdynmc`, `thrust`, `refa`/`refl`, `ca`/`cy`/`cn`/`cll`/`clm`/`cln`, `FSPB`). `initialize`/`terminate` pass.
+- `execute` ports `Missile::forces`: `FAPB=[-pdynmc*refa*ca+thrust, pdynmc*refa*cy, -pdynmc*refa*cn]`; `FMB=pdynmc*refa*refl*[cll,clm,cln]`. Does not write newton-owned `FSPB`. No Hyper6/Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_forces.py` (pdynmc=12000, refa=0.196, refl=0.5, ca=0.3, cy=0, cn=0.5, cll=0, clm=-0.1, cln=0, thrust=10000 vs C++ rtol=1e-12, atol=1e-14; FSPB sentinel unchanged).
+
 ## 0.103.0 - AGM6 analytic rocket propulsion
 - Added `cadac.vehicles.agm6.propulsion.Agm6Propulsion` (`name="propulsion"`). Constructor takes no deck. `define` registers C++ `def_propulsion` (`mprop`,`aexit`,`vmass`,`thrust`,`vmass0`,`ai11`,`ai33`,`spi`,`throtl`,`thrsl`,`fmass0`,`fmasse`,`fmassed`, freeze saves) plus `IBBB` mat and `eng_ang_mom` real (for `Flat6Euler`). Does not define `press`/`mfreeze`.
 - `initialize`: `vmass=vmass0` (inertia stays ASC data). `execute`: `mprop==1` `fmassed_new=thrsl*throtl/(spi*9.81)` (literal 9.81, not `AGRAV`); stored-slope `integrate` of `fmasse`; `vmass=vmass0-fmasse`; `thrust=thrsl*throtl+(101325-press)*aexit`. `mprop==0` `thrust=0` without integrating fuel. `fmasse>=fmass0` → `mprop=0`. Else including -1 → `ValueError`. Writes `IBBB=diag(ai11,ai33,ai33)`, `eng_ang_mom=0`. Skip `mfreeze` latch if `mfreeze` absent. Vehicle not registered.
