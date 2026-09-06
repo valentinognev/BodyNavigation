@@ -1,5 +1,10 @@
 # Updates
 
+## 0.110.0 - AGM6 datalink named aircraft tracks
+- Added `cadac.vehicles.agm6.datalink.Agm6Datalink` (`name="datalink"`). `define` registers C++ `def_datalink` (`mnav`,`STCEL`,`VTCEL`,`tgt_pos`,`SAEL`,`VAEL`). Does not define `tgt_num` (sensor; tests register it).
+- `execute`: first `Packet.type=="AIRCRAFT3"` (not CADAC id `a1` or slot `2*tgt_num+5`). Copy named `STCEL{tgt_num}`/`VTCEL{tgt_num}` plus `SAEL`/`VAEL` from that packet. `abs(||STCEL||-tgt_pos)>EPS` → `mnav=3` and save `tgt_pos`. No AIRCRAFT3 → STCEL zeros, `mnav=0`, no raise. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_datalink.py` (STCEL1=[33000,10000,-100] copies; second execute mnav==0; moved STCEL1 → mnav==3; no aircraft zeros; tgt_num=2 uses STCEL2; first AIRCRAFT3 wins).
+
 ## 0.109.0 - AGM6 mid pronav and terminal compensated guidance
 - Added `cadac.vehicles.agm6.guidance.Agm6Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` (mguid/gnav/commands, grav_bias, line-guide slots, WOELC/UTBLC, STELM/VTELC/STELC/STBLC). Does not define INS/datalink/sensor names (`TBLC`,`SBELC`,`VBELC`,`FSPCB`,`mnav`,`STCEL`,`VTCEL`,`STEL`,`psipb`/`thtpb`/`sigdpy`/`sigdpz`). Tests plant them.
 - `execute` C++ order: `mnav==3` latches `epchta`/`STELM=STCEL`/`VTELC=VTCEL` then extrapolates `STELC=STELM+VTELC*dtime` (and `STBLC`) even when `mguid==0`. `mguid==0` returns without writing `ancomx`/`alcomx`. In-scope: `30` mid-3 datalink `guidance_mid_pronav`; `40` mid-4 `STBLC=STEL-SBELC`; `6` `guidance_term_comp`. Else `ValueError` (20/5/2). `mguid>0` circular limiter vs `gmax` then `alcomx`/`ancomx`. Does not write `mnav` onto `grav_bias`. Absent `launch_time` → `ctx.sim_time`. Local CADAC `SMALL`. No Plane6/Hyper5/Hyper6 import. Vehicle not registered.
