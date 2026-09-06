@@ -1,5 +1,10 @@
 # Updates
 
+## 0.118.0 - SAM6 TVC/RCS off stubs
+- Added `cadac.vehicles.sam6.tvc.Sam6Tvc` (`name="tvc"`) and `cadac.vehicles.sam6.rcs.Sam6Rcs` (`name="rcs"`). Port of SAM6 `tvc.cpp`/`rcs.cpp` field tables only. `define` C++ `def_tvc`/`def_rcs` including `FPB`/`FMPB`/`FMRCS`/`FARCS` zeros. Does not define plant names (`thrust`/`mprop`/`maut`/`dqcx`, INS `WBECB`/`FSPCB`, control `ancomx`/`alcomx`).
+- `execute`: `mtvc==0` writes zero `FPB`/`FMPB`; else `ValueError`. `mrcs_moment==0` and `mrcs_force==0` write zero `FMRCS`/`FARCS`; else `ValueError`. No nozzle/Schmitt dynamics this slice. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_tvc_rcs.py` (mtvc=0 `FPB` all 0 rtol=1e-12; mtvc=1 raises; both RCS flags 0 `FARCS` 0; mrcs_force=1 raises).
+
 ## 0.117.0 - SAM6 intercept halt/ground without sys.exit
 - Added `cadac.vehicles.sam6.intercept.Sam6Intercept` (`name="intercept"`). Port of SAM6 `intercept.cpp` without `sys.exit`/`print`. Does not define kinematics/newton/sensor/guidance/control/prop names (`time`, `stop`, `SBEL`/`VBEL`/`alt`/`hbe`, `STEL`/`VTEL`/`tgt_slot`/`mseek`, `trcond`, `mguide`/`ip_sltrange`/`SIBLC`, `maut`, `mprop`).
 - `execute`: `stop&&trcond` → `vehicle.health=0`, `ctx.combus[slot].status=0`. Ground `alt<=0` or `hbe<=0` with `write` latch. IP `ip_sltrange<500` and `UIBL·VBEL<0` latches write and kills missile. `skr_mode==4` and `dbt<500` closest-approach: `mterm==0` L-frame interpolation, `mterm==1` intercept-plane miss; kills missile and `tgt_slot` packet. `mterm==2` `ValueError`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper5 intercept import.
