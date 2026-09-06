@@ -1,5 +1,12 @@
 # Updates
 
+## 0.100.0 - run HYPER6 from JSONC climb
+- Added `cadac.vehicles.hyper6.vehicle.Hyper6` (`type="HYPER6"`, health=1). Constructor `(name, aero_deck, prop_deck, events=None)`. Modules in climb ASC order: kinematics, environment, aerodynamics, propulsion, ins, guidance, control, actuator, forces, newton, euler (Round6 EOM + Hyper6 modules). Skip-if-exists on name collisions (Plane6 pattern).
+- `run_scenario` maps `HYPER6 -> Hyper6`; both decks required (PLANE6 path, not HYPER5). Plot columns: flagged like PLANE6; CRUISE3 path unchanged. Radar/Satellite/Ground0 not registered. Unknown-type sentinel is `AIM5`.
+- Translated climb case `Python/cases/hyper6/` from `input_climb.asc` + GHAME decks. Event `time>10` → `thtvdcomx=10`. `end_time` 60.
+- `Round6Environment.initialize` copies `dvba=dvbe` (C++ `init_environment`) so first kinematics exec has nonzero airspeed.
+- Tests: `Python/tests/unit/test_hyper6_one_step.py` (0.1 s smoke, `alt` near 10000; JSONC type HYPER6; AIM5 still raises). Retargeted unknown-type tests in plane5, cruise3, hyper5 from `"HYPER6"` to `"AIM5"`.
+
 ## 0.99.0 - HYPER6 ideal INS
 - Added `cadac.vehicles.hyper6.ins.Hyper6Ins` (`name="ins"`). `define` registers C++ `def_ins` (mins/frax, computed `SBIIC`/`VBIIC`/`TBIC`/`WBICB`/`WBICI`/`FSPCB`, lon/lat/alt/Euler/flight-path `*c` names, gyro/accel error data zeros not CADAC gauss, states `RICI`/`ESBI` plot). Does not define kinematics/newton/euler truth names (`TBI`, `FSPB`, `SBII`, `VBII`, `WBIB`, `WBII`, `time`). No GPS/star fields.
 - `initialize` no-op for `mins==0`. `execute` copies `TBI`→`TBIC`, `FSPB`→`FSPCB`, `SBII`→`SBIIC`, `VBII`→`VBIIC`, `WBIB`→`WBICB`, `WBII`→`WBICI`, then C++ common geographic/incidence/Euler path (`cad_geo84_in`/`cad_tdi84`). `mins!=0` → `ValueError`. Skip GPS/star if absent. No gyro/accl/grav helpers. Local CADAC sign. No vehicle. No Plane6 import.

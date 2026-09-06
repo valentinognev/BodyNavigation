@@ -97,9 +97,9 @@ def test_unknown_vehicle_type_still_raises(tmp_path: Path):
     path.write_text(
         '{ "title": "t", "options": {}, "modules": [], '
         '"timing": { "int_step": 0.01, "plot_step": 0.2 }, "end_time": 0, '
-        '"vehicles": [ { "type": "HYPER6", "name": "p", "params": {}, "events": [] } ] }',
+        '"vehicles": [ { "type": "AIM5", "name": "p", "params": {}, "events": [] } ] }',
         encoding="utf-8",
         newline="\n",
     )
-    with pytest.raises(ValueError, match="HYPER6"):
+    with pytest.raises(ValueError, match="AIM5"):
         run_scenario(path)

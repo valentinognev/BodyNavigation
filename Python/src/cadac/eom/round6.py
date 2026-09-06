@@ -66,7 +66,8 @@ class Round6Environment:
             store.define(field)
 
     def initialize(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        store.set("dvba", store.get("dvbe"))
 
     def execute(self, vehicle, ctx):
         store = vehicle.store

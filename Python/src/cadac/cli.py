@@ -12,6 +12,7 @@ from cadac.vehicles.cruise3.vehicle import Cruise3
 from cadac.vehicles.hyper5.satellite import Satellite3
 from cadac.vehicles.hyper5.target import Target3
 from cadac.vehicles.hyper5.vehicle import Hyper5
+from cadac.vehicles.hyper6.vehicle import Hyper6
 from cadac.vehicles.plane5.vehicle import Plane5
 from cadac.vehicles.plane6.vehicle import Plane6
 
@@ -20,6 +21,7 @@ _VEHICLE_TYPES = {
     "PLANE": Plane5,
     "PLANE6": Plane6,
     "HYPER5": Hyper5,
+    "HYPER6": Hyper6,
     "TARGET3": Target3,
     "SATELLITE3": Satellite3,
 }

@@ -232,11 +232,11 @@ def test_satellite3_run_scenario_without_decks(tmp_path: Path):
     assert result.plot_rows is not None
 
 
-def test_unknown_vehicle_type_still_hyper6(tmp_path: Path):
+def test_unknown_vehicle_type_still_aim5(tmp_path: Path):
     path = _jsonc(
         tmp_path,
         "unknown.jsonc",
-        [{"type": "HYPER6", "name": "p", "params": {}, "events": []}],
+        [{"type": "AIM5", "name": "p", "params": {}, "events": []}],
     )
-    with pytest.raises(ValueError, match="HYPER6"):
+    with pytest.raises(ValueError, match="AIM5"):
         run_scenario(path)
