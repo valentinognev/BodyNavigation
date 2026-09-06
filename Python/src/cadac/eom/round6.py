@@ -2,12 +2,15 @@ import math
 
 import numpy as np
 
-from cadac.constants import DEG, EPS, PI, R, RAD, WEII3
+from cadac.constants import AGRAV, DEG, EPS, PI, R, RAD, REARTH, WEII3
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat3tr, polar_from_cart
-from cadac.math.wgs84 import cad_grav84, cad_in_geo84, cad_tdi84, cad_tgi84
+from cadac.math.frames import mat2tr, mat3tr, polar_from_cart
+from cadac.math.wgs84 import cad_geo84_in, cad_grav84, cad_in_geo84, cad_tdi84, cad_tgi84
+
+FOOT = 3.280834
+NMILES = 5.399568e-4
 
 
 def _cadac_sign(variable):
@@ -472,7 +475,90 @@ class Round6Newton:
         store.set("psibdx", psibdx)
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        tdi = store.get("TDI")
+        tgi = store.get("TGI")
+        weii = store.get("WEII")
+        grndtrck = store.get("grndtrck")
+        mfreeze_newt = store.get("mfreeze_newt")
+        dvbef = store.get("dvbef")
+        sbii = store.get("SBII")
+        vbii = store.get("VBII")
+        abii = store.get("ABII")
+        time = store.get("time")
+        gravg = store.get("GRAVG")
+        tbi = store.get("TBI")
+        fapb = store.get("FAPB")
+        vmass = store.get("vmass")
+        int_step = ctx.int_step
+
+        fspb = fapb * (1.0 / vmass)
+        next_acc = tbi.T @ fspb + tgi.T @ gravg
+        next_vel = integrate(next_acc, abii, vbii, int_step)
+        sbii = integrate(next_vel, vbii, sbii, int_step)
+        abii = next_acc
+        vbii = next_vel
+        dvbi = float(np.linalg.norm(vbii))
+        dbi = float(np.linalg.norm(sbii))
+
+        lon, lat, alt = cad_geo84_in(sbii, time)
+        tdi = cad_tdi84(lon, lat, alt, time)
+        tgi = cad_tgi84(lon, lat, alt, time)
+        lonx = lon * DEG
+        latx = lat * DEG
+        altx = 0.001 * alt * FOOT
+
+        vbed = tdi @ (vbii - weii @ sbii)
+        polar = polar_from_cart(vbed)
+        dvbe = float(polar[0])
+        psivdx = DEG * float(polar[1])
+        thtvdx = DEG * float(polar[2])
+        tvd = mat2tr(psivdx * RAD, thtvdx * RAD)
+
+        ayx = fspb[1] / AGRAV
+        anx = -fspb[2] / AGRAV
+        grndtrck = (
+            grndtrck
+            + math.sqrt(vbed[0] * vbed[0] + vbed[1] * vbed[1]) * int_step * REARTH / dbi
+        )
+        gndtrkmx = 0.001 * grndtrck
+        gndtrnmx = NMILES * grndtrck
+
+        names = store.names()
+        if "mfreeze" in names:
+            mfreeze = store.get("mfreeze")
+            if mfreeze == 0:
+                mfreeze_newt = 0
+            else:
+                if mfreeze != mfreeze_newt:
+                    mfreeze_newt = mfreeze
+                    dvbef = dvbe
+                dvbe = dvbef
+
+        store.set("SBII", sbii)
+        store.set("VBII", vbii)
+        store.set("ABII", abii)
+        store.set("grndtrck", grndtrck)
+        store.set("mfreeze_newt", mfreeze_newt)
+        store.set("dvbef", dvbef)
+        store.set("lonx", lonx)
+        store.set("latx", latx)
+        store.set("alt", alt)
+        store.set("TVD", tvd)
+        store.set("TDI", tdi)
+        store.set("dvbe", dvbe)
+        store.set("dvbi", dvbi)
+        store.set("TGI", tgi)
+        store.set("VBED", vbed)
+        store.set("FSPB", fspb)
+        store.set("psivdx", psivdx)
+        store.set("thtvdx", thtvdx)
+        store.set("dbi", dbi)
+        store.set("altx", altx)
+        store.set("ayx", ayx)
+        store.set("anx", anx)
+        store.set("gndtrkmx", gndtrkmx)
+        store.set("gndtrnmx", gndtrnmx)
 
     def terminate(self, vehicle, ctx):
         pass

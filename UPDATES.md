@@ -1,5 +1,9 @@
 # Updates
 
+## 0.90.0 - Round6 newton step
+- `Round6Newton.execute` ports HYPER6 `Round6::newton`. `FSPB=FAPB/vmass`; `ABII = TBI.T@FSPB + TGI.T@GRAVG` (C++ `NEXT_ACC`); stored-slope `integrate` VBII then SBII. Then WGS84 `cad_geo84_in` / `cad_tdi84` / `cad_tgi84`; `VBED=TDI@(VBII-WEII@SBII)`; polar `psivdx`/`thtvdx` degrees; `TVD=mat2tr`. `vmass`/`FAPB`/`TBI`/`GRAVG` from store (not defined here). Skip `mfreeze` latch if `mfreeze` absent. Module-level `FOOT`/`NMILES` (not `cadac.constants`). No spherical earth / `gravity(alt)`.
+- Tests: `Python/tests/unit/test_round6_newton_step.py` (Task 5 climb ICs, FAPB=0, dt=0.01; alt finite; SBII changes; replica NEXT_ACC matches ABII rtol=1e-12; nonzero FAPB → FSPB=[1,0,0]).
+
 ## 0.89.0 - Round6 newton initialization
 - Added `cadac.eom.round6.Round6Newton` (`name="newton"`). Port of HYPER6 `Round6::def_newton` / `init_newton` **minit==0 only**. `define` registers C++ newton fields including newton-owned `FSPB`. Does not define kinematics/euler/environment names (`time`, `TBI`, `GRAVG`, Euler angles) or hyper waypoints. `ABII` role save (C++).
 - Init: `SBII=cad_in_geo84(lonx*RAD,latx*RAD,alt,time)`; VBEB from `alpha0x`/`beta0x`/`dvbe`; `VBED=TBD.T@VBEB`; `VBII=TDI.T@VBED+WEII@SBII`; `TDI`/`TGI` from WGS84; flight-path `psivdx`/`thtvdx` degrees. Does not write `ABII` (stays zeros) or `FSPB`. `minit!=0` → ValueError. `execute` pass until newton step.
