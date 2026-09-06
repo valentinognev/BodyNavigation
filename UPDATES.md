@@ -1,5 +1,11 @@
 # Updates
 
+## 0.58.0 - F-16 second-order actuators
+- Added `cadac.vehicles.plane6.actuator.Plane6Actuator` (`name="actuator"`). `define` registers C++ `def_actuator` (mact/dlimx/ddlimx/wnact/zetact, delax/delex/delrx, DXD/DX/DDXD/DDX). Does not define delacx/delecx/delrcx. DXD/DX/DDXD/DDX are vec (3,). `initialize` is pass (no C++ `init_actuator`).
+- `execute` ports `Plane::actuator`: mact 0 copies ACTCX then position-limits with CADAC sign (`<0 → -1`, else `+1`); 2 calls `actuator_scnd`; else ValueError (C++ case 1 not implemented). Local `_sign`; no `np.sign`; no `flat6._cadac_sign`. `dt=ctx.int_step`. Protocol `vehicle.store`. No control/forces/vehicle. Cruise3/HYPER3/PLANE untouched.
+- `actuator_scnd` all deg: position stop zeros same-sign rate; rate limit sets iflag; CADAC `integrate` of DX then DDX; `DDXD_NEW=wnact*wnact*edx-2.*zetact*wnact*DXD`; iflag zeros DDXD if same-sign. Returns DX as ACTX.
+- Tests: `Python/tests/unit/test_plane6_actuator.py` (input_gamma mact=2 delecx=1 dt=0.001 lags and |delex|<=dlimx; full vs CADAC rtol 1e-12; mact 0 limit; mact 1/other raise; position/rate stops; CADAC sign 0→+1; stored-slope).
+
 ## 0.57.0 - F-16 propulsion
 - Added `cadac.vehicles.plane6.propulsion.Plane6Propulsion` (`name="propulsion"`). Constructor takes Datadeck. `define` registers C++ `def_propulsion` (mprop/vmachcom/throttle/gmach, thrustf/thrust/thrust_req, mfreeze_prop, powerd/power, power_com/tpower, idle/mil/max). Does not define vmach/pdynmc/alphax/refa/cdrag/hbe/time/mfreeze. No fuel-flow fields; C++ neglects mass change and never looks up `ff_vs_thrust_alt_mach`. FOOT=3.280834 and NT=4.448 are module-level, not in `cadac.constants`.
 - `initialize` is pass (no C++ `init_propulsion`; power/powerd start 0 from define). `execute` ports `Plane::propulsion`: mprop 1 manual throttle; 2 Mach hold `throttle=clip(gmach*(vmachcom-vmach),[0,0.77])` plus `thrust_req=cdrag*pdynmc*refa/cos(alphax*RAD)`; else thrust=0 without integrating power. `propulsion_thrust` power lag via CADAC `integrate`; 2D idle/mil/max look_up(vmach, hbe*FOOT)*NT; blend at power 50. Skip mfreeze latch if `mfreeze` not on the store. Protocol `vehicle.store`. No actuator/control/forces/vehicle. Cruise3/HYPER3/PLANE untouched.
