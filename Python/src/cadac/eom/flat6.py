@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from cadac.constants import DEG, EPS, PI, R
+from cadac.constants import DEG, EPS, PI, R, RAD
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
@@ -14,6 +14,18 @@ def _cadac_sign(variable):
     if variable < 0.0:
         return -1
     return 1
+
+
+def _skew(vec):
+    x, y, z = vec
+    return np.array(
+        [
+            [0.0, -z, y],
+            [z, 0.0, -x],
+            [-y, x, 0.0],
+        ],
+        dtype=float,
+    )
 
 
 class Flat6Environment:
@@ -262,6 +274,52 @@ class Flat6Kinematics:
         store.set("erq", erq)
         store.set("etbl", etbl)
         store.set("TLB", tlb)
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+class Flat6Euler:
+    name = "euler"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        zeros3 = (0.0, 0.0, 0.0)
+        for field in (
+            Field("ppx", 0.0, "real", "init/out", "euler", ("plot",)),
+            Field("qqx", 0.0, "real", "init/out", "euler", ("plot",)),
+            Field("rrx", 0.0, "real", "init/out", "euler", ("plot",)),
+            Field("WBEB", zeros3, "vec", "state", "euler"),
+            Field("WBEBD", zeros3, "vec", "state", "euler"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        store = vehicle.store
+        ppx = store.get("ppx")
+        qqx = store.get("qqx")
+        rrx = store.get("rrx")
+        store.set("WBEB", np.array([ppx * RAD, qqx * RAD, rrx * RAD], dtype=float))
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        fmb = store.get("FMB")
+        ibbb = store.get("IBBB")
+        eng_ang_mom = store.get("eng_ang_mom")
+        wbeb = store.get("WBEB")
+        wbebd = store.get("WBEBD")
+        int_step = ctx.int_step
+        l_engine = np.array([eng_ang_mom, 0.0, 0.0], dtype=float)
+        wacc_next = np.linalg.inv(ibbb) @ (
+            fmb - _skew(wbeb) @ (ibbb @ wbeb + l_engine)
+        )
+        wbeb = integrate(wacc_next, wbebd, wbeb, int_step)
+        wbebd = wacc_next
+        store.set("WBEB", wbeb)
+        store.set("WBEBD", wbebd)
+        store.set("ppx", wbeb[0] * DEG)
+        store.set("qqx", wbeb[1] * DEG)
+        store.set("rrx", wbeb[2] * DEG)
 
     def terminate(self, vehicle, ctx):
         pass

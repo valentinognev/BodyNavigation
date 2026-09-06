@@ -1,5 +1,11 @@
 # Updates
 
+## 0.53.0 - Flat6 Euler equations
+- Added `cadac.eom.flat6.Flat6Euler` (`name="euler"`) in the same `flat6.py` as environment/kinematics. `define` registers C++ `def_euler` (ppx/qqx/rrx init/out plot, WBEB/WBEBD state). Does not define IBBB/eng_ang_mom (plane) or FMB (forces).
+- `initialize` ports `Flat6::init_euler`: `WBEB=[ppx,qqx,rrx]*RAD` (store rates in deg/s). Does not write WBEBD.
+- `execute` ports `Flat6::euler`: `L_ENGINE=[eng_ang_mom,0,0]`; `WACC_NEXT=inv(IBBB)@(FMB-skew(WBEB)@(IBBB@WBEB+L_ENGINE))` with CADAC skew (row-major cross-product matrix); stored-slope `integrate`; `WBEBD=WACC_NEXT`; `ppx,qqx,rrx=WBEB*DEG`. `dt=ctx.int_step`. `np.linalg.inv` for 3x3 IBBB. No scipy. No newton. Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_flat6_euler.py` (zero FMB, F-16 IBBB, ppx=10, dt=0.001 vs C++ replica; gyroscopic qqx change; spherical I holds rates; stored-slope second step).
+
 ## 0.52.0 - Flat6 kinematics
 - Added `cadac.eom.flat6.Flat6Kinematics` (`name="kinematics"`) in the same `flat6.py` as environment. `define` registers C++ `def_kinematics` (ck default 50, quaternion states, TBL/TLB, Euler, alphax/betax/alpp/phip, erq/etbl). Does not define WBEB/dvba/VBAL (euler/environment) or plane trcode/tralppx/tralpnx/trbetx.
 - `initialize` ports `Flat6::init_kinematics`: half-angle quats with `sin(psiblx/(2.*DEG))` etc; `TBL=mat3tr(psiblx/DEG, thtblx/DEG, phiblx/DEG)`. Euler in degrees on store. Does not write alphax.
