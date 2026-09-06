@@ -1,5 +1,10 @@
 # Updates
 
+## 0.64.1 - FALCON6 e2e skip-if-missing golden
+- Added `Python/tests/e2e/test_falcon6_gamma.py`: `pytest.skip` if `tests/e2e/goldens/falcon6/plot.csv` is absent (file not created).
+- If golden exists: `run_scenario` on `Python/cases/falcon6/input_gamma.jsonc`; compare `hbe` at t=0 and `hbe`/`vmach` at shared times (Flat6 names, not `alt`/`mach`). CSV rtol=1e-5, atol=max(1e-6, 5e-6*|g|); skip sentinel time=-1.
+- Covering tests: skip helper, sentinel, t=0 hbe tolerances, shared-column intersection (`hbe`/`vmach` on both; `mach` is not `vmach`). Cruise3/HYPER3/PLANE production unchanged. FALCON5 e2e still skips without its golden.
+
 ## 0.64.0 - FALCON6 PLANE6 from JSONC
 - Added `cadac.vehicles.plane6.vehicle.Plane6` (`type="PLANE6"`, health=1). Modules in gamma ASC order plus guidance: environment, kinematics, aerodynamics, propulsion, guidance, forces, control, actuator, euler, newton. `define` skip-if-exists (FALCON5 TBV / Cruise3 FSPV); last execute writer owns the plotted value. Guidance `define` still runs if MODULES omits it.
 - `run_scenario` type map adds `PLANE6 -> Plane6`. CRUISE3 and PLANE kept. aero_deck and prop_deck still required. `_plot_columns`: CRUISE3 still `PLOT_COLUMNS`; PLANE6 uses the existing non-CRUISE3 flagged path (no HYPER3 special case).
