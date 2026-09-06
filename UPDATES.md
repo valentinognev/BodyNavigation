@@ -1,5 +1,10 @@
 # Updates
 
+## 0.111.0 - SAM6 actuator mact position-limit and second-order
+- Added `cadac.vehicles.sam6.actuator.Sam6Actuator` (`name="actuator"`). Port of SAM6 `actuator.cpp` / `actuator_scnd`. Local CADAC sign (`<0 → -1` else `+1`). `define` registers C++ `def_actuator` (four-fin scalars, not 3-vec `DX`). Does not define control commands `dpcx`/`dqcx`/`drcx` or unused C++ local `time`.
+- `execute`: cross-fin mix `delcx1=-dpcx-drcx`, `delcx2=-dpcx+dqcx`, `delcx3=-dpcx+drcx`, `delcx4=-dpcx-dqcx`. **`mact<2`** (includes **1**) position-limit only; **`mact==2`** second-order with rate/position limits and stored-slope `integrate`; else `ValueError`. Mix back `dpx=0.25*(-delx1-delx2-delx3-delx4)`, `dqx=0.5*(delx2-delx4)`, `drx=0.5*(-delx1+delx3)`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper6 import.
+- Tests: `Python/tests/unit/test_sam6_actuator.py` (mact=0 dlimx=28 dpcx=10 dqcx=drcx=0 → delx all -10, `dpx==10`; mact=1 same path; mact=2 wnact=600 zetact=0.7 states 0 → `delx1` finite, first-step `ddx1==-1800`; mact=3 raises; CADAC sign 0 → +1).
+
 ## 0.110.0 - SAM6 missile forces FAPB/FMB
 - Added `cadac.vehicles.sam6.forces.Sam6Forces` (`name="forces"`). Port of SAM6 `forces.cpp`. `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out). Does not define aero/prop/tvc/rcs/newton names (`pdynmc`, `thrust`, `refa`/`refl`, `ca`/`cy`/`cn`/`cll`/`clm`/`cln`, `mtvc`, `FARCS`/`FMRCS`, `FSPB`).
 - `execute`: `FAPB=[-pdynmc*refa*ca, pdynmc*refa*cy, -pdynmc*refa*cn]`; `FMB=pdynmc*refa*refl*[cll,clm,cln]`. `mtvc==0` (or absent) adds `thrust` to `FAPB[0]`. `mtvc!=0` → `ValueError` (no `FPB`/`FMPB`). Missing `FARCS`/`FMRCS` treated as 0; if present, add them. Does not write newton-owned `FSPB`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
