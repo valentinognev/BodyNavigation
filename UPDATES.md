@@ -1,5 +1,10 @@
 # Updates
 
+## 0.109.0 - AGM6 mid pronav and terminal compensated guidance
+- Added `cadac.vehicles.agm6.guidance.Agm6Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` (mguid/gnav/commands, grav_bias, line-guide slots, WOELC/UTBLC, STELM/VTELC/STELC/STBLC). Does not define INS/datalink/sensor names (`TBLC`,`SBELC`,`VBELC`,`FSPCB`,`mnav`,`STCEL`,`VTCEL`,`STEL`,`psipb`/`thtpb`/`sigdpy`/`sigdpz`). Tests plant them.
+- `execute` C++ order: `mnav==3` latches `epchta`/`STELM=STCEL`/`VTELC=VTCEL` then extrapolates `STELC=STELM+VTELC*dtime` (and `STBLC`) even when `mguid==0`. `mguid==0` returns without writing `ancomx`/`alcomx`. In-scope: `30` mid-3 datalink `guidance_mid_pronav`; `40` mid-4 `STBLC=STEL-SBELC`; `6` `guidance_term_comp`. Else `ValueError` (20/5/2). `mguid>0` circular limiter vs `gmax` then `alcomx`/`ancomx`. Does not write `mnav` onto `grav_bias`. Absent `launch_time` → `ctx.sim_time`. Local CADAC `SMALL`. No Plane6/Hyper5/Hyper6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_guidance.py` (mguid=0 mnav=3 latches STELM, no command write; mguid=30/6 vs C++ ACBX+limiter rtol=1e-12; mguid=40 uses STEL; mguid=20/5/2 raise).
+
 ## 0.108.0 - AGM6 INS ideal and deterministic errors
 - Added `cadac.vehicles.agm6.ins.Agm6Ins` (`name="ins"`). `define` registers C++ `def_ins` (error-data vectors default zeros, not CADAC `gauss()`). Does not define kinematics/newton truth names (`TBL`,`FSPB`,`WBEB`,`SBEL`,`VBEL`,`dvbe`,`phiblx`). Control names `WBECB`/`FSPCB`/`phiblcx` live here.
 - `initialize`: `mins==0` copy `SBELC=SBEL`, `VBELC=VBEL`. `mins==1` Cholesky of C++ `PP0` times zero Gauss vector (all `XX_INIT=0`) so `SBELC=SBEL`. Else `ValueError`.
