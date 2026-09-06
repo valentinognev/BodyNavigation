@@ -1,5 +1,10 @@
 # Updates
 
+## 0.102.0 - CADAC Flat0 kinematics and fixed-site newton
+- Added `cadac.eom.flat0.Flat0Kinematics` (`name="kinematics"`). `define` registers C++ `def_kinematics` (`time` out+com, `launch_delay` data, `launch_epoch` init, `launch_time` out). `initialize`: `time=ctx.sim_time`, `launch_epoch=launch_delay`. `execute`: `launch_time=sim_time-launch_epoch`, `time=sim_time`.
+- Added `cadac.eom.flat0.Flat0Newton` (`name="newton"`). `define` `srel1/2/3` data, `SREL` vec out. `initialize` packs `SREL`. `execute` no-op (fixed site). No radar/vehicle. No `flat6` import.
+- Tests: `Python/tests/unit/test_flat0_kinematics.py`, `Python/tests/unit/test_flat0_newton.py`.
+
 ## 0.101.0 - CADAC family vehicle registry
 - `VehicleSpec.family` is the source of truth (`None` when omitted). Scenario-level `"family"` copies onto vehicles that omit it; vehicle key wins. No `RunConfig.family`. Optional `sam_deck` / `srmb_deck`.
 - `_VEHICLE_FAMILIES` + `register_family_type`: same class twice is a no-op; different class for an occupied pair is `ValueError`. Never writes `_VEHICLE_TYPES`. Map created empty (no SAM6 pairs).
