@@ -1,5 +1,10 @@
 # Updates
 
+## 0.102.0 - AGM6 aerodynamics tables and der
+- Added `cadac.vehicles.agm6.aero.Agm6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (refs, body coeffs, table diags, dimensional der, termination, `stmarg`/`gmax` plot). Does not define kinematics/env/propulsion/actuator/control names (`vmach`,`pdynmc`,`alppx`,`phip`,`ppx`,`qqx`,`rrx`,`dvba`,`vmass`,`ai11`,`ai33`,`dpx`,`dqx`,`drx`,`alimit`).
+- `initialize` ports `init_aerodynamics`: `refl=0.5`, `refa=0.196`, `trmach=0.4`, `trdynm=10e3`, `trload=0.5`, `tralp=1`, `trcond=0`. `execute` ports `Missile::aerodynamics` then `aerodynamics_der`. 1D look_up vs Mach; 2D vs Mach and alpha. Absent `dpx`/`dqx`/`drx`/`alimit` treated as 0. Skip der update when `alppx >= alplimx-3`. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_aero.py` (vmach=0.85, alppx=3, hbe=7000 US76 pdynmc; `ca`/`cn`/`clm` vs C++ rtol=1e-12; `dna` finite; der skip leaves `stmarg` unchanged). Parses `AGM6_aero_deck.asc`.
+
 ## 0.101.0 - CADAC family vehicle registry
 - Added empty `_VEHICLE_FAMILIES` and `_resolve_vehicle(family, vtype)`. Non-empty family looks up only `_VEHICLE_FAMILIES`; else only `_VEHICLE_TYPES`. Missing → `ValueError` with the type token (and family when set).
 - `VehicleSpec.family` / `RunConfig.family`. `load_scenario` copies scenario JSONC `"family"` onto vehicles unless the vehicle sets its own. `translate_scenario_asc(..., family=None)` writes scenario `"family"` when given.
