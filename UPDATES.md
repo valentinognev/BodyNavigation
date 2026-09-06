@@ -1,5 +1,10 @@
 # Updates
 
+## 0.83.0 - HYPER5 satellite targeting
+- `Hyper5Targeting.execute`: `mtargeting==0` return; `==1` ports C++ `targeting` / `targeting_satellite` / `targeting_grnd_ranges`; else including 2 ValueError. Writes `wp_lonx`/`wp_latx`/`wp_alt` from closest TARGET3 (guidance-owned; not defined here) plus `clost_tgt_slot`/`tgtng_sat_slot`. Skip cout/`out_count`.
+- Identify SATELLITE3/TARGET3 by `Packet.type` (not CADAC `id.find`). Kinematics from packet.vars `lonx`/`latx`/`alt`/`sbii`; Hyper store `del_radius`/`lonx`/`latx`/`sbii`. `LARGE=1e10` module-level; not in `cadac.constants`. Local CADAC `angle()` (EPS; not Flat6). Port `angle(SBII,STII)` as written. No Plane5 import.
+- Tests: `Python/tests/unit/test_hyper5_targeting.py` (one Hyper+Target+Satellite; mtargeting=1 waypoint vs target lon/lat/alt; mtargeting=2 raises; type not id; closest by ground range; rtol=1e-12, atol=1e-14). Task 16 noop: mtargeting=1 no longer raises.
+
 ## 0.82.1 - Satellite3 sat_thrust default 0
 - `Satellite3Forces.define`: `sat_thrust` default 0 (C++ `satellite[4].init("sat_thrust",0)`). `sat_mass` stays 100. Demo ICs omit sat_thrust → FSPV[0]=0.
 

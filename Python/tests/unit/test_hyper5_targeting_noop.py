@@ -136,7 +136,7 @@ def test_execute_mtargeting_zero_does_not_require_combus_or_waypoints():
         assert name not in store.names()
 
 
-@pytest.mark.parametrize("mtargeting", (1, 2, 99, -1))
+@pytest.mark.parametrize("mtargeting", (2, 99, -1))
 def test_execute_mtargeting_nonzero_raises(mtargeting):
     vehicle, targeting = _ready(mtargeting=mtargeting)
     store = vehicle.store
