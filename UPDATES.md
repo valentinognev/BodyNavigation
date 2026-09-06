@@ -1,5 +1,10 @@
 # Updates
 
+## 0.75.0 - HYPER5 point guidance
+- Added `cadac.vehicles.hyper5.guidance.Hyper5Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` point+dispatcher fields: mguidance (int, data, scrn), wp_lonx/wp_latx/wp_alt, point_gain (data), wp_sltrange (diag, scrn/plot, default 999999), VBEO (vec, diag), wp_grdrange (diag, scrn/plot, default 999999), SWBG (vec, out), rad_min (diag), wp_flag (int, diag). C++ `dia` → `"diag"`. Does not define pronav/line/arc extras or philimx. `initialize` pass (no C++ `init_guidance`). `execute` pass until Task 13 dispatcher.
+- `guidance_point(vehicle)` ports `Hyper::guidance_point`: SWII=`cadine(wp_lonx*RAD, wp_latx*RAD, wp_alt, time)`; SWBG=`tig.T@(SWII-sbii)`; polar_from_cart/mat2tr LOS; wp_grdrange=hypot; VBEO=TOG@vbeg; APGV steering with point_gain and gravity terms on **thtvgx** (deg); rad_min=`dvbe**2/(grav*tan(philimx*RAD))` with dvbe=||vbeg||; wp_flag CADAC sign(VH·SH) inside 2*rad_min else 0 (`<0 → -1` else `+1`, never 0). Writes listed diagnostics; returns APGV. Round3 names lowercase (`time`/`grav`/`tig`/`thtvgx`/`vbeg`/`sbii`). No C++ `time>54` debug. Protocol `vehicle.store`. No vehicle. No Plane5Guidance import.
+- Tests: `Python/tests/unit/test_hyper5_guidance_point.py` (Demo 4.6 waypoint lon/lat/alt offset finite APGV; wp_flag 0 outside, +1 closing, -1 fleeting; CADAC sign zero-dot +1; one-step vs C++ replica; execute pass; rtol=1e-12, atol=1e-14). Plant time/grav/tig/thtvgx/vbeg/sbii/philimx registered by the test.
+
 ## 0.74.1 - Hyper5Control reads Round3 tgv
 - `Hyper5Control.execute` reads store `tgv` (Round3 Newton name), not `TGV`. No Round3 alias. Hyper-owned `TBV`/`TBG` unchanged. Tests plant `tgv`.
 
