@@ -1,5 +1,10 @@
 # Updates
 
+## 0.109.0 - SAM6 kinematics msl_time and VBEB incidence
+- Added `cadac.vehicles.sam6.kinematics.Sam6Kinematics` (`name="kinematics"`). Port of SAM6 `kinematics.cpp`; copies quaternion algebra locally (not `Flat6Kinematics`, does not edit `flat6.py`). Extra/exec fields: `time`, `launch_delay` default 99999, `launch_epoch`, `launch_time`, `msl_time`, `stop`, `lconv`, `int_step_new`, `out_step_fact`.
+- Init: `launch_epoch=launch_delay`, quaternions from Euler, `TBL=mat3tr`. Exec: `time=ctx.sim_time`; `ctx.int_step=int_step_new`; quaternion stored-slope `integrate`; TBL; Euler; incidence from **VBEB** (`alphax`/`betax`/`alpp`/`phip`); `trortho`→`trcond=1`, `alpp>tralp`→`trcond=2` if those names exist. `msl_time` from RADAR0 com `lnch_delay_m{k+1}` for k-th `MISSILE6` among that type (`Packet.type`); no radar → `lnch_delay=0`; `msl_time=max(0, sim_time-lnch_delay)`. Local CADAC sign; `SMALL=1e-7`. Protocol `vehicle.store`.
+- Tests: `Python/tests/unit/test_sam6_kinematics.py` (no radar t=5 → `msl_time==5`; radar `lnch_delay_m1=2` first MISSILE6 → 3; identity VBEB alphax/betax 0; VBEB pitch → alphax 10 rtol=1e-12; trortho → trcond 1; not a Flat6 subclass).
+
 ## 0.108.0 - SAM6 environment from environment.cpp
 - Added `cadac.vehicles.sam6.environment.Sam6Environment` (`name="environment"`). Port of SAM6 `environment.cpp`, not `Flat6Environment`. `define` registers C++ `def_environment` (`press`/`rho`/`grav`/`tempk` out, `vsound` diag, `vmach`/`pdynmc` out+scrn/plot/com, `mfreeze_environ`/`pdynmcf`/`machf` save). Does not define `alt`/`dvbe`/`hbe`/`VBEL`, wind (`mwind`/`VAEL`/`VBAL`/`dvba`), or missile `mguide`/`trcond`/`trdynm`/`mfreeze`.
 - `execute` reads newton `alt` (C++; newton keeps `hbe=alt`) and `dvbe`. US76 `atmosphere76(alt)`; gravity `G*EARTH_MASS/(REARTH+alt)**2`; `vmach=abs(dvbe/vsound)` (C++ `mach`); `pdynmc=0.5*rho*dvbe*dvbe`. No wind. Skip `mfreeze` latch if `mfreeze` absent. `guid_term==6` and `pdynmc<=trdynm` → `trcond=3` (`mguide%10`). Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import. Does not edit `flat6.py`.
