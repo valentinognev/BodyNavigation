@@ -50,7 +50,10 @@ def run_loop(
                     module.name: module for module in modules_by_vehicle[vehicle]
                 }
                 for name in module_order:
-                    named[name].execute(vehicle, ctx)
+                    module = named.get(name)
+                    if module is None:
+                        continue
+                    module.execute(vehicle, ctx)
                 int_step = ctx.int_step
                 com_names = getattr(vehicle, "com_names", None)
                 if com_names:

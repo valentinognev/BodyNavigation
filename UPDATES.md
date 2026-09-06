@@ -1,5 +1,10 @@
 # Updates
 
+## 0.66.0 - Skip missing modules; plot vehicle 0
+- `run_loop` skips module names absent on a vehicle (`named.get` / continue); no KeyError when HYPER5 Target shares MODULES with Hyper.
+- `make_plot_on_step` records plot rows only for `vehicle_slot == 0`; still advances `plot_time` once per tick on the last slot. Single-vehicle CRUISE3/PLANE/PLANE6 unchanged. `_plot_columns` CRUISE3 special case kept.
+- Tests: `test_skip_module_absent_on_vehicle`; `test_plot_rows_only_vehicle_slot_0`.
+
 ## 0.65.0 - CADAC cadine lon/lat/alt to inertial
 - Added `cadine(lon_rad, lat_rad, alt_m, time)` to `cadac.math.earth` next to `cadtei`/`cadtge`/`cadsph`. Ports HYPER5 C++ `cadine`: spherical radius `alt+REARTH`, celestial longitude `lon+WEII3*time`, inertial position `[rad*clat*clon, rad*clat*slon, rad*slat]`. ndarray `(3,)`. Constants from `cadac.constants`. No scipy. No guidance.
 - Tests: `Python/tests/unit/test_cadine.py` (equator t=0 → `[REARTH,0,0]`; celestial-longitude formula rtol 1e-12). `cadtei`/`cadtge`/`cadsph` numerics unchanged.

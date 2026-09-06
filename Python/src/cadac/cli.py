@@ -28,6 +28,22 @@ def _deck(path):
     return Datadeck.from_tables(load_deck(path))
 
 
+def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
+    if columns_fn is None:
+        columns_fn = _plot_columns
+    plot_time = 0.0
+
+    def on_step(vehicle, ctx):
+        nonlocal plot_time
+        if abs(plot_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
+            if ctx.vehicle_slot == 0:
+                plot_rows.append(plot_row(vehicle.store, columns=columns_fn(vehicle)))
+            if ctx.vehicle_slot == nveh - 1:
+                plot_time += plot_step * (1.0 + ctx.out_fact)
+
+    return on_step
+
+
 def run_scenario(path):
     path = Path(path)
     cfg = load_scenario(path)
@@ -76,16 +92,9 @@ def run_scenario(path):
         modules_by_vehicle[vehicle] = vehicle.modules
 
     plot_rows = []
-    plot_time = 0.0
     nveh = len(vehicles)
     csv_columns = _plot_columns(vehicles[0]) if vehicles else list(PLOT_COLUMNS)
-
-    def on_step(vehicle, ctx):
-        nonlocal plot_time
-        if abs(plot_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
-            plot_rows.append(plot_row(vehicle.store, columns=_plot_columns(vehicle)))
-            if ctx.vehicle_slot == nveh - 1:
-                plot_time += plot_step * (1.0 + ctx.out_fact)
+    on_step = make_plot_on_step(plot_rows, plot_step, nveh)
 
     run_loop(
         vehicles,

@@ -207,3 +207,17 @@ def test_run_loop_adopts_ctx_int_step():
         times, [0.0, 0.05, 0.10, 0.15], rtol=1e-12, atol=1e-14
     )
     np.testing.assert_allclose(vehicle.event_time, 0.20, rtol=1e-12, atol=1e-14)
+
+
+def test_skip_module_absent_on_vehicle():
+    a = _Vehicle()
+    b = _Vehicle()
+    dummy = DummyModule()
+    run_loop(
+        vehicles=[a, b],
+        modules_by_vehicle={a: [dummy], b: []},
+        module_order=["dummy"],
+        end_time=0.0,
+        int_step=0.1,
+    )
+    assert a.store.get("time") == 0.1
