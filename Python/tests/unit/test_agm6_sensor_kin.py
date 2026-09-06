@@ -324,10 +324,25 @@ def test_mseek_2_outside_racq_stays_enabled():
     np.testing.assert_allclose(store.get("dbtk"), dbtk, rtol=RTOL, atol=ATOL)
 
 
-def test_skr_dyn_1_raises_until_dynamic_iir():
+def test_skr_dyn_1_uses_dynamic_iir_without_raise():
     vehicle, sensor, combus = _ready(mseek=2, skr_dyn=1)
-    with pytest.raises(ValueError):
-        sensor.execute(vehicle, _ctx(combus))
+    store = vehicle.store
+    store.define(Field("WBECB", (0.1, 0.05, -0.03), "vec", "out", "ins"))
+    store.define(Field("trcond", 0, "int", "diag", "aerodynamics"))
+    store.define(Field("mguid", 0, "int", "data", "guidance"))
+    store.define(Field("trtht", 1.2, "real", "data", "aerodynamics"))
+    store.define(Field("trthtd", 20.0, "real", "data", "aerodynamics"))
+    store.define(Field("trphid", 20.0, "real", "data", "aerodynamics"))
+    store.define(Field("trate", 2.0, "real", "data", "aerodynamics"))
+    store.set("gk", 10.0)
+    store.set("zetak", 0.9)
+    store.set("wnk", 100.0)
+    store.set("fovyaw", 0.035)
+    store.set("fovpitch", 0.035)
+    store.set("THB", np.eye(3))
+    store.set("TPB", np.eye(3))
+    sensor.execute(vehicle, _ctx(combus))
+    assert store.get("mseek") == 3
 
 
 def test_tgt_num_selects_target3_by_combus_order_not_cadac_id():

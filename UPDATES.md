@@ -1,5 +1,10 @@
 # Updates
 
+## 0.112.0 - AGM6 dynamic IIR sensor
+- `Agm6Sensor.execute` `skr_dyn==1` ports C++ `sensor_ir_dyn` / `sensor_ir_aimp` / `sensor_ir_uthpb` / `sensor_ir_thb`. `skr_dyn==0` kinematic unchanged; else including 2 → `ValueError` (mseek 0/5 still skip). Image/gimbal errors at stored means (no gauss). Kalman 2nd-order lags stored-slope `integrate`. TTL identity unless `TTL` planted (C++ `sensor()` identity shortcut; not `VTEL.mat()`).
+- `mseek==3` dyn: FOV `fabs(ehz)<=fovyaw` and `fabs(ehy)<=fovpitch` after `dtimac` → `mseek=4`, else `trcond=5`. `mseek==4` dyn: break-lock `mseek=2`/`mguid=40`/`trcond` 6–9; `dbtk<dblind` → `mseek=5` (hold; C++ zeros pointing/LOS next cycle). Writes `trcond`/`mguid` only if planted. Skip `fovlimx`/IRS if absent. Local CADAC `SMALL`. No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_sensor_dyn.py` (skr_dyn=1, mseek=4, dbtk=5000, wnk=100, zetak=0.9, gk=10, dt=0.001, frozen SBTL/TBL/WBECB; sigdpy finite vs C++ replica rtol=1e-12; dbtk<dblind → mseek=5; eh>trate → mseek=2/mguid=40). Kin `test_skr_dyn_1_uses_dynamic_iir_without_raise` replaces the Task 11 raise.
+
 ## 0.111.0 - AGM6 kinematic IIR sensor
 - Added `cadac.vehicles.agm6.sensor.Agm6Sensor` (`name="sensor"`). `define` registers C++ `def_sensor` plus undeclared execute slots `timeac`/`dbtk`. Does not define kinematics/newton/guidance names (`time`,`SBEL`,`VBEL`,`TBL`,`trcond`,`mguid`) or absent C++ `fovlimx`/IRS.
 - `execute`: TARGET3 by 1-based `tgt_num` among `Packet.type=="TARGET3"` (not CADAC `t{n}`). Copy `SAEL→STEL`,`VAEL→VTEL` (fallback `SBEL`/`VBEL`). `mseek==0` writes STEL/VTEL, no mode change. `mseek==2` and `dbtk<racq` → `mseek=3`. `mseek==3` kinematic `sensor_ir_kin`; `timeac>dtimac` → `mseek=4`. `mseek==4` LOS rates `sigdpy`/`sigdpz`. `mseek==5` hold (download, no mode change, no raise). Else including 1 → `ValueError`. `skr_dyn==1` → `ValueError` until dynamic IIR. Skip `fovlimx`/IRS if absent. Writes `dvbtc` by name (C++ wrongly stores into `BIASSC`). No Plane6 import. Vehicle not registered.

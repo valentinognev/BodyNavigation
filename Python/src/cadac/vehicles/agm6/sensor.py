@@ -1,8 +1,9 @@
-from math import acos, atan2, cos, fabs, sin, tan
+from math import acos, atan2, cos, fabs, sin, sqrt, tan
 
 import numpy as np
 
 from cadac.constants import DEG
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr, polar_from_cart
 
@@ -155,6 +156,151 @@ class Agm6Sensor:
         store.set("dvbtc", dvbtc)
         return thtpb, psipb, float(woep[1]), float(woep[2])
 
+    def sensor_ir_aimp(self, vehicle, thl, ttl, dbtk):
+        store = vehicle.store
+        daim = store.get("daim")
+        biasai = np.asarray(store.get("BIASAI"), dtype=float)
+        biassc = np.asarray(store.get("BIASSC"), dtype=float)
+        randsc = np.asarray(store.get("RANDSC"), dtype=float)
+        tht = thl @ ttl.T
+        if dbtk < daim:
+            return tht @ biasai
+        return tht @ (biassc + randsc)
+
+    def sensor_ir_dyn(self, vehicle, sbtl, dbtk, int_step, mseek, mguid, thb, trcond):
+        store = vehicle.store
+        dblind = store.get("dblind")
+        gk = store.get("gk")
+        zetak = store.get("zetak")
+        wnk = store.get("wnk")
+        biast = store.get("biast")
+        randt = store.get("randt")
+        biasp = store.get("biasp")
+        randp = store.get("randp")
+        biaseh = store.get("biaseh")
+        randeh = store.get("randeh")
+        tpb = np.array(store.get("TPB"), dtype=float, copy=True)
+        tbl = np.asarray(store.get("TBL"), dtype=float)
+        wbecb = np.asarray(store.get("WBECB"), dtype=float)
+        trtht = store.get("trtht")
+        trthtd = store.get("trthtd")
+        trphid = store.get("trphid")
+        trate = store.get("trate")
+        wlq1d = store.get("wlq1d")
+        wlq1 = store.get("wlq1")
+        wlqd = store.get("wlqd")
+        wlq = store.get("wlq")
+        wlr1d = store.get("wlr1d")
+        wlr1 = store.get("wlr1")
+        wlrd = store.get("wlrd")
+        wlr = store.get("wlr")
+        wlq2d = store.get("wlq2d")
+        wlq2 = store.get("wlq2")
+        wlr2d = store.get("wlr2d")
+        wlr2 = store.get("wlr2")
+        if "TTL" in store.names():
+            ttl = np.asarray(store.get("TTL"), dtype=float)
+        else:
+            ttl = np.eye(3)
+
+        thl = thb @ tbl
+        sbth = thl @ sbtl
+        sath = self.sensor_ir_aimp(vehicle, thl, ttl, dbtk)
+        sabh = sath - sbth
+        ey = atan2(-sabh[2], sabh[0])
+        ez = atan2(sabh[1], sabh[0])
+        ehy = ey + biaseh + randeh
+        ehz = ez + biaseh + randeh
+        eahh = np.array([0.0, ehz, -ehy])
+        tbh = thb.T
+        tph = tpb @ tbh
+        thp = tph.T
+        u1pp = np.array([1.0, 0.0, 0.0])
+        u1hh = np.array([1.0, 0.0, 0.0])
+        ephh = thp @ u1pp - u1hh
+        eaph = eahh - ephh
+        eapp = tph @ eaph
+        epy = float(-eapp[2])
+        epz = float(eapp[1])
+
+        wsq = wnk * wnk
+        gg = gk * wsq
+        wlr1d_new = wlr2
+        wlr1 = integrate(wlr1d_new, wlr1d, wlr1, int_step)
+        wlr1d = wlr1d_new
+        wlr2d_new = gg * epz - 2.0 * zetak * wnk * wlr1d - wsq * wlr1
+        wlr2 = integrate(wlr2d_new, wlr2d, wlr2, int_step)
+        wlr2d = wlr2d_new
+        wlq1d_new = wlq2
+        wlq1 = integrate(wlq1d_new, wlq1d, wlq1, int_step)
+        wlq1d = wlq1d_new
+        wlq2d_new = gg * epy - 2.0 * zetak * wnk * wlq1d - wsq * wlq1
+        wlq2 = integrate(wlq2d_new, wlq2d, wlq2, int_step)
+        wlq2d = wlq2d_new
+        sigdz = wlr1
+        sigdy = wlq1
+
+        wbep = tpb @ wbecb
+        wlrd_new = wlr1 - wbep[2]
+        wlr = integrate(wlrd_new, wlrd, wlr, int_step)
+        wlrd = wlrd_new
+        psipb = wlr
+        psipbd = wlrd
+        wlqd_new = wlq1 - wbep[1]
+        wlq = integrate(wlqd_new, wlqd, wlq, int_step)
+        wlqd = wlqd_new
+        thtpb = wlq
+        thtpbd = wlqd
+        tpb = mat2tr(psipb, thtpb)
+        ththbc, phihbc = _sensor_ir_uthpb(psipb, thtpb)
+        ththb = ththbc + biast + randt
+        phihb = phihbc + biasp + randp
+        thb = _sensor_ir_thb(ththb, phihb)
+
+        if mseek == 4:
+            ibreak = 0
+            phihbd = -thtpbd * sin(psipb)
+            eh = sqrt(ehy * ehy + ehz * ehz)
+            if fabs(ththb) > trtht:
+                trcond = 6
+                ibreak = 1
+            elif fabs(thtpbd) > trthtd:
+                trcond = 7
+                ibreak = 1
+            elif fabs(phihbd) > trphid:
+                trcond = 8
+                ibreak = 1
+            elif eh > trate:
+                trcond = 9
+                ibreak = 1
+            if ibreak == 1:
+                mseek = 2
+                mguid = 40
+            if dbtk < dblind:
+                mseek = 5
+
+        store.set("wlq1d", wlq1d)
+        store.set("wlq1", wlq1)
+        store.set("wlqd", wlqd)
+        store.set("wlq", wlq)
+        store.set("wlr1d", wlr1d)
+        store.set("wlr1", wlr1)
+        store.set("wlrd", wlrd)
+        store.set("wlr", wlr)
+        store.set("wlq2d", wlq2d)
+        store.set("wlq2", wlq2)
+        store.set("wlr2d", wlr2d)
+        store.set("wlr2", wlr2)
+        store.set("epy", epy)
+        store.set("epz", epz)
+        store.set("ththb", ththb)
+        store.set("phihb", phihb)
+        store.set("TPB", tpb)
+        store.set("EAHH", eahh)
+        store.set("EPHH", ephh)
+        store.set("EAPH", eaph)
+        return mseek, mguid, thtpb, psipb, sigdy, sigdz, ehz, ehy, thb, trcond
+
     def execute(self, vehicle, ctx):
         store = vehicle.store
         tgt_num = store.get("tgt_num")
@@ -168,6 +314,9 @@ class Agm6Sensor:
         thb = np.array(store.get("THB"), dtype=float, copy=True)
         time = store.get("time")
         sbel = np.asarray(store.get("SBEL"), dtype=float)
+        names = store.names()
+        trcond = store.get("trcond") if "trcond" in names else 0
+        mguid = store.get("mguid") if "mguid" in names else 0
 
         stel = np.zeros(3)
         vtel = np.zeros(3)
@@ -191,10 +340,13 @@ class Agm6Sensor:
         sigdz = 0.0
         sigdpy = 0.0
         sigdpz = 0.0
+        ehz = 0.0
+        ehy = 0.0
+        int_step = ctx.int_step
 
         if mseek not in (0, 2, 3, 4, 5):
             raise ValueError(f"unknown mseek {mseek}")
-        if skr_dyn != 0 and mseek not in (0, 5):
+        if skr_dyn not in (0, 1) and mseek not in (0, 5):
             raise ValueError(f"unknown skr_dyn {skr_dyn}")
 
         if mseek == 2:
@@ -210,12 +362,56 @@ class Agm6Sensor:
                 thb = _sensor_ir_thb(ththb, phihb)
                 isets1 = 0
                 epchac = time
-            thtpb, psipb, sigdy, sigdz = self.sensor_ir_kin(vehicle, sbtl, vtel, dbtk)
-            timeac = time - epchac
-            if timeac > dtimac:
-                mseek = 4
+            if skr_dyn == 1:
+                (
+                    mseek,
+                    mguid,
+                    thtpb,
+                    psipb,
+                    sigdy,
+                    sigdz,
+                    ehz,
+                    ehy,
+                    thb,
+                    trcond,
+                ) = self.sensor_ir_dyn(
+                    vehicle, sbtl, dbtk, int_step, mseek, mguid, thb, trcond
+                )
+                timeac = time - epchac
+                if timeac > dtimac:
+                    fovyaw = store.get("fovyaw")
+                    fovpitch = store.get("fovpitch")
+                    if fabs(ehz) <= fovyaw and fabs(ehy) <= fovpitch:
+                        mseek = 4
+                    else:
+                        trcond = 5
+            else:
+                thtpb, psipb, sigdy, sigdz = self.sensor_ir_kin(
+                    vehicle, sbtl, vtel, dbtk
+                )
+                timeac = time - epchac
+                if timeac > dtimac:
+                    mseek = 4
         if mseek == 4:
-            thtpb, psipb, sigdy, sigdz = self.sensor_ir_kin(vehicle, sbtl, vtel, dbtk)
+            if skr_dyn == 1:
+                (
+                    mseek,
+                    mguid,
+                    thtpb,
+                    psipb,
+                    sigdy,
+                    sigdz,
+                    ehz,
+                    ehy,
+                    thb,
+                    trcond,
+                ) = self.sensor_ir_dyn(
+                    vehicle, sbtl, dbtk, int_step, mseek, mguid, thb, trcond
+                )
+            else:
+                thtpb, psipb, sigdy, sigdz = self.sensor_ir_kin(
+                    vehicle, sbtl, vtel, dbtk
+                )
             sigdpy = sigdy
             sigdpz = sigdz
 
@@ -235,3 +431,7 @@ class Agm6Sensor:
         store.set("thtpbx", thtpb * DEG)
         store.set("psipbx", psipb * DEG)
         store.set("SBTL", sbtl)
+        if "trcond" in names:
+            store.set("trcond", trcond)
+        if "mguid" in names:
+            store.set("mguid", mguid)
