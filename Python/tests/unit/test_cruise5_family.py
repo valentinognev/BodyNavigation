@@ -4,11 +4,13 @@ from pathlib import Path
 import pytest
 
 from cadac import run_scenario
-from cadac.cli import _plot_columns
+from cadac.cli import _build_vehicle, _plot_columns
 from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns
 from cadac.io.scenario import load_scenario
 from cadac.io.translate import translate_scenario_asc
 from cadac.kernel.state import Field, StateStore
+from cadac.vehicles.cruise3.vehicle import Cruise3
+from cadac.vehicles.cruise5.vehicle import Cruise5
 
 ROOT = Path(__file__).resolve().parents[3]
 HYPER3 = ROOT / "CADAC_Simulations/HYPER3_250114/HYPER3"
@@ -112,9 +114,10 @@ def test_family_set_does_not_fall_through_to_global_cruise3(tmp_path):
     (tmp_path / "p.jsonc").write_text(
         '{ "title": "p", "tables": [] }\n', encoding="utf-8", newline="\n"
     )
-    with pytest.raises(ValueError, match="CRUISE3") as excinfo:
-        run_scenario(path)
-    assert "cruise5" in str(excinfo.value)
+    cfg = load_scenario(path)
+    vehicle = _build_vehicle(path, cfg.vehicles[0])
+    assert type(vehicle) is Cruise5
+    assert type(vehicle) is not Cruise3
 
 
 def test_family_none_hyper5_target3_still_works(tmp_path):

@@ -9,6 +9,9 @@ from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
 from cadac.vehicles.cruise3.vehicle import Cruise3
+from cadac.vehicles.cruise5.satellite import Cruise5Satellite
+from cadac.vehicles.cruise5.target import Cruise5Target
+from cadac.vehicles.cruise5.vehicle import Cruise5
 from cadac.vehicles.hyper5.satellite import Satellite3
 from cadac.vehicles.hyper5.target import Target3
 from cadac.vehicles.hyper5.vehicle import Hyper5
@@ -27,6 +30,9 @@ _VEHICLE_TYPES = {
 }
 if "_VEHICLE_FAMILIES" not in globals():
     _VEHICLE_FAMILIES = {}
+_VEHICLE_FAMILIES[("cruise5", "CRUISE3")] = Cruise5
+_VEHICLE_FAMILIES[("cruise5", "TARGET3")] = Cruise5Target
+_VEHICLE_FAMILIES[("cruise5", "SATELLITE3")] = Cruise5Satellite
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
 
 
