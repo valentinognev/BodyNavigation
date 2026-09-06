@@ -1,5 +1,12 @@
 # Updates
 
+## 0.115.0 - AGM6 AIRCRAFT3 flight path
+- Added `cadac.vehicles.agm6.aircraft` (`Agm6AircraftGuidance`/`Agm6AircraftControl`/`Agm6AircraftForces`/`Agm6AircraftSensor`/`Agm6Aircraft`). One file matching C++ `aircraft_modules.cpp`. Reuses Task 14 `Agm6Flat3Environment`/`Agm6Flat3Newton`/`Flat3Kinematics`.
+- Guidance `acft_option==0` `ACOML=[0,0,-grav]`; `==1` `ACOMV=[0,gturn*grav,-grav]`, `ACOML=TVL.T@ACOMV`; `==2` escape vs first `Packet.type=="TARGET3"` `SAEL`/`VAEL`; else `ValueError`.
+- Control ports C++ lags (`tphi`,`tanx`), bank limit `philimx`, `phiavout`, `anx`. Local CADAC sign. Forces `FSPA=[acc_longx*grav,0,-anx*grav]`; `FSPV=FSPA`. Dummy `Agm6AircraftSensor` `define` registers C++ `def_sensor` (`com` on STCEL1–3/VTCEL1–3; no commented `track_on`); `execute` is `pass` until Task 16.
+- `Agm6Aircraft.type=="AIRCRAFT3"`. Constructor `(name, events=None)`. Modules: env, kinematics, guidance, control, forces, newton wrapper, sensor. `com_names` from `"com"` flags. Not registered. No Hyper5/Plane6/SAM6 imports.
+- Tests: `Python/tests/unit/test_agm6_aircraft.py` (acft_option=0 grav=9.81 ACOML[2]==-grav; tphi=0.5 philimx=60 finite phiavout vs C++; FSPA[2]==-anx*grav; acft_option=3 raises; first TARGET3 not id; rtol=1e-12, atol=1e-14).
+
 ## 0.114.0 - AGM6 TARGET3 Flat3 ground target
 - Added `cadac.vehicles.agm6.flat3io.copy_in`/`copy_out`: `sael*→sbel*`, `dvae→dvbe`, `FSPA→FSPV`, `SAEL→SBEL` (zeros SAEL rebuilt from `sael*`); after newton `SBEL→SAEL`, `VBEL→VAEL`, `dvbe→dvae`, `TBL→TAL`, `sbel1=SBEL[0]` etc. `Agm6Flat3Environment`/`Agm6Flat3Newton` wrap `Flat3Environment`/`Flat3Newton` via copy_in/delegate/copy_out. Reuse `Flat3Kinematics`. Do not modify `cadac.eom.flat3`.
 - Added `cadac.vehicles.agm6.target.Agm6Target` (`type="TARGET3"`). Constructor `(name, events=None)`. Modules: Agm6Flat3Environment, Flat3Kinematics, Agm6TargetForces, Agm6Flat3Newton. Forces `FSPA=[acc_longx*grav, acc_latx*grav, -grav]`; `FSPV=FSPA`; diags `aax`/`alx`/`anx` (`com`). `com_names` from `"com"` flags include `SAEL`/`VAEL`. Not registered. No Hyper5 `Target3` import.
