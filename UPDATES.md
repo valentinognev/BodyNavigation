@@ -1,5 +1,10 @@
 # Updates
 
+## 0.62.0 - F-16 forces
+- Added `cadac.vehicles.plane6.forces.Plane6Forces` (`name="forces"`). `define` registers C++ `def_forces` only: FAPB and FMB vec out. Does not define pdynmc/thrust/refa/refb/refc/cxt/cyt/czt/clt/cmt/cnt (tests register), FSPB/vmass (newton), or unused C++ local time. `initialize` pass (no C++ `init_forces`).
+- `execute` ports `Plane::forces`: FAPB=[pdynmc*refa*cxt+thrust, pdynmc*refa*cyt, pdynmc*refa*czt]; FMB=[pdynmc*refa*refb*clt, pdynmc*refa*refc*cmt, pdynmc*refa*refb*cnt]. No FSPB. Protocol `vehicle.store`. No guidance/vehicle. Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_plane6_forces.py` (frozen aero/thrust vs CADAC rtol 1e-12; define-only FAPB/FMB; initialize pass; FSPB/vmass/time not written or required).
+
 ## 0.61.0 - F-16 maut dispatcher
 - `Plane6Control.execute` ports C++ `Plane::control` for `input_gamma.asc` / `input_roll.asc` only: maut 0 returns without writing commands; 1 roll-only (`mauty=0`,`mautp=1`); 24 yaw SAS + gamma then roll (`mauty=2`,`mautp=4`); else including -1 ValueError. Decode `mauty=maut//10`, `mautp=maut%10`. Does not implement mauty 3/4 or mautp 2/3/5. `mroll` 0 clamps `phicomx` by `philimx` with CADAC sign then `control_roll`; 1 `control_roll_rate`; else ValueError. Limit `|del*|` by `d*limx` with CADAC sign. Stores delacx/delecx/delrcx/ancomx/phicomx. `dt` unused except C++ signature. Gamma omits mroll (define default 0). Cruise3/HYPER3/PLANE untouched. No forces/vehicle.
 - Tests: `Python/tests/unit/test_plane6_maut.py` (frozen aero/kinematics/rates/dvbe; maut 24 vs CADAC rtol 1e-12; maut -1/unknown raise; maut 0 no write; maut 1 roll-only; mroll 1; philimx/surface limiters CADAC sign). Task 11/12 execute-is-pass tests now assert dispatcher.
