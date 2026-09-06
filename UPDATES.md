@@ -1,5 +1,11 @@
 # Updates
 
+## 0.101.0 - Family dispatch and weather-deck translate
+- `VehicleSpec.family` / `weather_deck` (defaults `None`, trailing fields). `load_scenario` resolves family from vehicle JSONC key else scenario key else None; no `RunConfig.family`.
+- `cli._VEHICLE_FAMILIES` created empty iff missing (never overwrite a live dict). `_build_vehicle`: family set → lookup `(family, type)` only; else type table. Miss includes path, family, and type. Did not register Rocket6 or retarget `HYPER6`/`AIM5`.
+- `translate_scenario_asc(..., family=)` writes scenario-level `"family"` only. Parses `WEATHER_DECK` like `AERO_DECK`; `GAUSS`/`RAYL`/`MARKOV` before generic params (`mair 012` → 12).
+- Tests: `tests/unit/test_rocket6_family.py`, `tests/translate/test_rocket6_asc.py`.
+
 ## 0.100.1 - HYPER6 e2e skip without golden
 - Added `Python/tests/e2e/test_hyper6_climb.py`. Skip if `tests/e2e/goldens/hyper6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live climb `run_scenario` calls `require_golden` first.
 

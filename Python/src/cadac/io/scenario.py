@@ -31,6 +31,8 @@ class VehicleSpec:
     prop_deck: Path | None
     params: dict
     events: list[EventSpec]
+    family: str | None = None
+    weather_deck: Path | None = None
 
 
 @dataclass
@@ -57,11 +59,12 @@ def _deck_path(parent: Path, value) -> Path | None:
     return parent / Path(value)
 
 
-def _vehicle(parent: Path, raw: dict) -> VehicleSpec:
+def _vehicle(parent: Path, raw: dict, scenario_family=None) -> VehicleSpec:
     events = [
         EventSpec(when=event["when"], set=event["set"])
         for event in raw.get("events") or []
     ]
+    family = raw["family"] if "family" in raw else scenario_family
     return VehicleSpec(
         type=raw["type"],
         name=raw["name"],
@@ -69,6 +72,8 @@ def _vehicle(parent: Path, raw: dict) -> VehicleSpec:
         prop_deck=_deck_path(parent, raw.get("prop_deck")),
         params=dict(raw.get("params") or {}),
         events=events,
+        family=family,
+        weather_deck=_deck_path(parent, raw.get("weather_deck")),
     )
 
 
@@ -85,5 +90,7 @@ def load_scenario(path) -> RunConfig:
         ],
         timing={key: float(value) for key, value in (data.get("timing") or {}).items()},
         end_time=float(data["end_time"]),
-        vehicles=[_vehicle(parent, vehicle) for vehicle in data["vehicles"]],
+        vehicles=[
+            _vehicle(parent, vehicle, data.get("family")) for vehicle in data["vehicles"]
+        ],
     )

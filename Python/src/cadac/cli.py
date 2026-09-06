@@ -25,6 +25,8 @@ _VEHICLE_TYPES = {
     "TARGET3": Target3,
     "SATELLITE3": Satellite3,
 }
+if "_VEHICLE_FAMILIES" not in globals():
+    _VEHICLE_FAMILIES = {}
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
 
 
@@ -54,8 +56,15 @@ def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
 
 
 def _build_vehicle(path, spec):
-    cls = _VEHICLE_TYPES.get(spec.type)
+    if spec.family is not None:
+        cls = _VEHICLE_FAMILIES.get((spec.family, spec.type))
+    else:
+        cls = _VEHICLE_TYPES.get(spec.type)
     if cls is None:
+        if spec.family is not None:
+            raise ValueError(
+                f"{path}: unknown vehicle family {spec.family!r} type {spec.type!r}"
+            )
         raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
     if spec.type in _NO_DECK_TYPES:
         return cls(spec.name, spec.events)
