@@ -1,5 +1,10 @@
 # Updates
 
+## 0.105.0 - AGM6 four-fin actuators
+- Added `cadac.vehicles.agm6.actuator.Agm6Actuator` (`name="actuator"`). `define` registers C++ `def_actuator` (`mact`,`dlimx`,`ddlimx`,`wnact`,`zetact`,`dpx`/`dqx`/`drx` out+plot, fin diags `delx*`/`delcx*`, scalar states `dx*`/`ddx*`). Does not define control commands (`dpcx`/`dqcx`/`drcx`). `initialize`/`terminate` pass.
+- `execute` ports `Missile::actuator`: mix `delcx1=-dpcx+dqcx-drcx` (and 2/3/4). `mact<2` position-limit `dlimx` then back-convert `dpx,dqx,drx`. `mact==2` `actuator_scnd` (stored-slope `integrate`, rate/position limits). Else ValueError. `dt=ctx.int_step`. Local CADAC sign. No Plane6/Hyper6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_actuator.py` (mact=0, dlimx=20, dpcx=0, dqcx=5, drcx=0 → |dqx|<=20 mix round-trip; mact=2 wnact=62.8 zetact=0.7 ddlimx=600 dt=0.001 finite fins vs C++ rtol=1e-12, atol=1e-14; mact=3 raises).
+
 ## 0.104.0 - AGM6 missile forces FAPB/FMB
 - Added `cadac.vehicles.agm6.forces.Agm6Forces` (`name="forces"`). `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out only). Does not define aero/prop/newton names (`pdynmc`, `thrust`, `refa`/`refl`, `ca`/`cy`/`cn`/`cll`/`clm`/`cln`, `FSPB`). `initialize`/`terminate` pass.
 - `execute` ports `Missile::forces`: `FAPB=[-pdynmc*refa*ca+thrust, pdynmc*refa*cy, -pdynmc*refa*cn]`; `FMB=pdynmc*refa*refl*[cll,clm,cln]`. Does not write newton-owned `FSPB`. No Hyper6/Plane6 import. Vehicle not registered.
