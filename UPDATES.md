@@ -1,5 +1,9 @@
 # Updates
 
+## 0.56.0 - F-16 aero derivatives
+- `Plane6Aero.execute` now calls `aerodynamics_der()` at the end, as C++ `Plane::aerodynamics`. Finite-diff cz/cm/cn ±1.5 deg; local `cla=-cza` and `cmde` not stored (store `cla`/`cmde` stay 0). Stored `cma`/`clnb` include CG shift. Dimensional pitch/lateral/roll derivs and pitch/yaw rigid-mode roots as C++. `stmarg=-cma/cla` if local `cla`. Uses stored `clde`/`cyb`/`cydr`/`cllda`/`cllp`/`cmq`/`clndr`/`clnr` from `aerodynamics()`.
+- Tests: `Python/tests/unit/test_plane6_aero_der.py` (Task 7 FC finite; `dla=duml*(-cza)`, `dma=dumm*cma/RAD`; full der vs CADAC rtol 1e-12; CG shift; store `cla`/`cmde` stay 0). Task 7 `test_unassigned_table_locals_stay_zero` keeps aero-unassigned zeros, no longer asserts der fields stay 0. Cruise3/HYPER3/PLANE untouched. No propulsion/vehicle.
+
 ## 0.55.0 - F-16 aerodynamics tables
 - Added `cadac.vehicles.plane6.aero.Plane6Aero` (`name="aerodynamics"`). Constructor takes Datadeck. `define` registers C++ `def_aerodynamics` (refa/refb/refc, force/moment coeffs, prepared derivs, gmax/gminx, termination, vmass/IBBB/eng_ang_mom, xcg/xcgr). Does not define time/alphax/betax/vmach/pdynmc/dvba/ppx/qqx/rrx/delax/delex/delrx.
 - `initialize` ports `Plane::init_aerodynamics`: refa=27.87, refb=9.14, refc=3.45, vmass=9496, IBBB diag 12875/75673/85551 with Ixz=Izx=-1331.4, eng_ang_mom=70000, trmach=0.8, trdynm=10e3, trload=3, tralppx=21, tralpnx=-6, trbetx=5, trcode=0, tmcode=0. xcg/xcgr/alplimpx/alplimnx stay define zeros.

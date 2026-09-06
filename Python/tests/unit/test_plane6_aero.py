@@ -152,35 +152,6 @@ UNASSIGNED_LOCALS = (
     "clldr",
 )
 
-DER_ONLY = (
-    "stmarg",
-    "dla",
-    "dlde",
-    "dma",
-    "dmq",
-    "dmde",
-    "dyb",
-    "dydr",
-    "dnb",
-    "dnr",
-    "dndr",
-    "dllp",
-    "dllda",
-    "cma",
-    "clnb",
-    "realp1",
-    "realp2",
-    "wnp",
-    "zetp",
-    "rpreal",
-    "realy1",
-    "realy2",
-    "wny",
-    "zety",
-    "ryreal",
-)
-
-
 class _Vehicle:
     def __init__(self):
         self.store = StateStore()
@@ -507,13 +478,11 @@ def test_diagnostic_cl_is_rolling_moment_lookup_not_lift():
     assert _approx(store.get("clift"), want["clift"])
 
 
-def test_unassigned_locals_and_der_fields_stay_zero():
+def test_unassigned_table_locals_stay_zero():
     _, vehicle, aero = _ready(alphax=1.0, betax=2.0, delex=4.0, delax=5.0, delrx=3.0, ppx=10.0, qqx=5.0, rrx=8.0)
     aero.execute(vehicle, _ctx())
     store = vehicle.store
     for name in UNASSIGNED_LOCALS:
-        assert store.get(name) == 0.0, name
-    for name in DER_ONLY:
         assert store.get(name) == 0.0, name
 
 

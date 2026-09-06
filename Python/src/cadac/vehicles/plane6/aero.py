@@ -1,4 +1,4 @@
-from math import cos, sin
+from math import cos, sin, sqrt
 
 import numpy as np
 
@@ -262,6 +262,173 @@ class Plane6Aero:
         store.set("clovercd", clovercd)
         store.set("clift", clift)
         store.set("trcode", trcode)
+
+        self.aerodynamics_der(vehicle)
+
+    def aerodynamics_der(self, vehicle):
+        store = vehicle.store
+        look_up = self.deck.look_up
+
+        stmarg = 0.0
+        dla = 0.0
+        dlde = 0.0
+        dma = 0.0
+        dmq = 0.0
+        dmde = 0.0
+        dyb = 0.0
+        dydr = 0.0
+        dnb = 0.0
+        dnr = 0.0
+        dndr = 0.0
+        dllp = 0.0
+        dllda = 0.0
+        realp1 = 0.0
+        realp2 = 0.0
+        wnp = 0.0
+        zetp = 0.0
+        rpreal = 0.0
+        realy1 = 0.0
+        realy2 = 0.0
+        wny = 0.0
+        zety = 0.0
+        ryreal = 0.0
+        cma = 0.0
+        clnb = 0.0
+
+        refa = store.get("refa")
+        refb = store.get("refb")
+        refc = store.get("refc")
+        xcg = store.get("xcg")
+        xcgr = store.get("xcgr")
+        pdynmc = store.get("pdynmc")
+        dvba = store.get("dvba")
+        alphax = store.get("alphax")
+        betax = store.get("betax")
+        vmass = store.get("vmass")
+        ibbb = store.get("IBBB")
+        delex = store.get("delex")
+        cla = store.get("cla")
+        clde = store.get("clde")
+        cyb = store.get("cyb")
+        cydr = store.get("cydr")
+        cllda = store.get("cllda")
+        cllp = store.get("cllp")
+        cmde = store.get("cmde")
+        cmq = store.get("cmq")
+        clndr = store.get("clndr")
+        clnr = store.get("clnr")
+
+        czp = look_up("cz_vs_alpha", alphax + 1.5)
+        czn = look_up("cz_vs_alpha", alphax - 1.5)
+        cza = (czp - czn) / 3
+        cla = -cza
+
+        cmp = look_up("cm_vs_elev_alpha", delex, alphax + 1.5)
+        cmn = look_up("cm_vs_elev_alpha", delex, alphax - 1.5)
+        dum = (cmp - cmn) / 3
+        cma = dum + cza * (xcgr - xcg) / refc
+
+        cmp = look_up("cm_vs_elev_alpha", delex + 1.5, alphax)
+        cmn = look_up("cm_vs_elev_alpha", delex - 1.5, alphax)
+        cmde = (cmp - cmn) / 3
+
+        cnp = look_up("cn_vs_beta_alpha", betax + 1.5, alphax)
+        cnn = look_up("cn_vs_beta_alpha", betax - 1.5, alphax)
+        dum = (cnp - cnn) / 3
+        clnb = dum - cyb * (xcgr - xcg) / refb
+
+        ibbb11 = ibbb[0, 0]
+        ibbb22 = ibbb[1, 1]
+        ibbb33 = ibbb[2, 2]
+
+        duml = (pdynmc * refa / vmass) / RAD
+        dla = duml * cla
+        dlde = duml * clde
+        dumm = pdynmc * refa * refc / ibbb22
+        dma = dumm * cma / RAD
+        dmq = dumm * (refc / (2.0 * dvba)) * cmq
+        dmde = dumm * cmde / RAD
+
+        dumy = pdynmc * refa / vmass
+        dyb = dumy * cyb / RAD
+        dydr = dumy * cydr / RAD
+        dumn = pdynmc * refa * refb / ibbb33
+        dnb = dumn * clnb / RAD
+        dnr = dumn * (refb / (2.0 * dvba)) * clnr
+        dndr = dumn * clndr / RAD
+
+        dumll = pdynmc * refa * refb / ibbb11
+        dllp = dumll * (refb / (2.0 * dvba)) * cllp
+        dllda = dumll * cllda / RAD
+
+        if cla:
+            stmarg = -cma / cla
+
+        a11 = dmq
+        a12 = dma / dla
+        a21 = dla
+        a22 = -dla / dvba
+
+        arg = (a11 + a22) ** 2 - 4.0 * (a11 * a22 - a12 * a21)
+        if arg >= 0.0:
+            wnp = 0.0
+            zetp = 0.0
+            dum = a11 + a22
+            realp1 = (dum + sqrt(arg)) / 2.0
+            realp2 = (dum - sqrt(arg)) / 2.0
+            rpreal = (realp1 + realp2) / 2.0
+        else:
+            realp1 = 0.0
+            realp2 = 0.0
+            wnp = sqrt(a11 * a22 - a12 * a21)
+            zetp = -(a11 + a22) / (2.0 * wnp)
+            rpreal = -zetp * wnp
+
+        a11 = dnr
+        a12 = dnb / dyb
+        a21 = -dyb
+        a22 = dyb / dvba
+
+        arg = (a11 + a22) ** 2 - 4.0 * (a11 * a22 - a12 * a21)
+        if arg >= 0.0:
+            wny = 0.0
+            zety = 0.0
+            dum = a11 + a22
+            realy1 = (dum + sqrt(arg)) / 2.0
+            realy2 = (dum - sqrt(arg)) / 2.0
+            ryreal = (realy1 + realy2) / 2.0
+        else:
+            realy1 = 0.0
+            realy2 = 0.0
+            wny = sqrt(a11 * a22 - a12 * a21)
+            zety = -(a11 + a22) / (2.0 * wny)
+            ryreal = -zety * wny
+
+        store.set("dla", dla)
+        store.set("dlde", dlde)
+        store.set("dma", dma)
+        store.set("dmq", dmq)
+        store.set("dmde", dmde)
+        store.set("dyb", dyb)
+        store.set("dydr", dydr)
+        store.set("dnb", dnb)
+        store.set("dnr", dnr)
+        store.set("dndr", dndr)
+        store.set("dllp", dllp)
+        store.set("dllda", dllda)
+        store.set("cma", cma)
+        store.set("clnb", clnb)
+        store.set("stmarg", stmarg)
+        store.set("realp1", realp1)
+        store.set("realp2", realp2)
+        store.set("wnp", wnp)
+        store.set("zetp", zetp)
+        store.set("rpreal", rpreal)
+        store.set("realy1", realy1)
+        store.set("realy2", realy2)
+        store.set("wny", wny)
+        store.set("zety", zety)
+        store.set("ryreal", ryreal)
 
     def terminate(self, vehicle, ctx):
         pass
