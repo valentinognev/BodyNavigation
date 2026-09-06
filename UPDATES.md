@@ -1,5 +1,10 @@
 # Updates
 
+## 0.116.0 - SAM6 RF/IR sensor by Packet.type
+- Added `cadac.vehicles.sam6.sensor.Sam6Sensor` (`name="sensor"`). Port of SAM6 `sensor.cpp` RF/IR mode machine, `sensor_kin`, `sensor_rf_dyn`/`glint`, `sensor_ir_dyn`/`aimp`/`uthpb`/`thb`. Does not define kinematics/INS/aero/guidance names (`time`, `SBEL`, `TBL`, `VBEL`, `WBECB`, `trcond`, `mguide`). Extra save `timeac` (C++ `missile[238]` undeclared).
+- `execute`: `mseek==0` return. `mtarget==1` `ROCKET5`; `==2` `AIRCRAFT3`; else `ValueError`. k-th `MISSILE6` among that type → k-th target of that type (`Packet.type`/names, not `"r1"`/`"a1"`). Reads `SAEL`/`VAEL` by name; `dta` by name else 0. `skr_type==1` RF mode 2 acquire `dbtk<racq_rf` → 3 then 4 lock as C++; `skr_type==2` IR as C++; other `skr_type` `ValueError`. `skr_dyn==1` with bias/random 0; glint/MARKOV 0. Writes `STEL`/`VTEL`/`tgt_slot`/`dta`/`SBTL`/`dbtk`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_sensor.py` (mseek=12 aircraft inside `racq_rf=7000` → mode 3 or 4; mseek=0 no raise; mtarget=0 raises; mseek=32 raises; rocket type; type-index not slot; kin replica rtol=1e-12).
+
 ## 0.115.0 - SAM6 guidance line and pronav
 - Added `cadac.vehicles.sam6.guidance.Sam6Guidance` (`name="guidance"`). Port of SAM6 `guidance.cpp` `guidance_line` / `guidance_term_comp` / `guidance_term_pronav`. Does not define INS/newton/aero/sensor names (`gmax`, `TBLC`/`VBELC`/`SBELC`/`thtvlcx`/`psivlcx`/`FSPCB`, `grav`, `SBEL`/`sbel1/2/3`, `STEL`/`VTEL`/`thtpb`/`psipb`/`sigdy`/`sigdz`, `ddab`/`psisb`/`thtsb`/`lamdqb`/`lamdrb`). No `guidance_mid_pronav`.
 - `execute`: `guid_mid=mguide//10`, `guid_term=mguide%10`. `guid_mid==2` IP from `RADAR0` `SIEL{k+1}` minus `SBELC` (k-th `MISSILE6` among that type; `Packet.type`/names, not `"f1"`). `guid_term==6`/`7` as C++. `guid_mid==3` `ValueError`. Always circular limiter vs `gmax` (mguide=0 still writes `ancomx`/`alcomx` from zero ACBX). Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
