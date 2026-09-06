@@ -1,5 +1,11 @@
 # Updates
 
+## 0.52.0 - Flat6 kinematics
+- Added `cadac.eom.flat6.Flat6Kinematics` (`name="kinematics"`) in the same `flat6.py` as environment. `define` registers C++ `def_kinematics` (ck default 50, quaternion states, TBL/TLB, Euler, alphax/betax/alpp/phip, erq/etbl). Does not define WBEB/dvba/VBAL (euler/environment) or plane trcode/tralppx/tralpnx/trbetx.
+- `initialize` ports `Flat6::init_kinematics`: half-angle quats with `sin(psiblx/(2.*DEG))` etc; `TBL=mat3tr(psiblx/DEG, thtblx/DEG, phiblx/DEG)`. Euler in degrees on store. Does not write alphax.
+- `execute` ports `Flat6::kinematics`: stored-slope `integrate` of four quaternion derivatives (ck*erq orthogonalizing); TBL from nine quat assigns starting zeros; etbl from diagonal of TLB@TBL (not C++ `UBL[0]` which assigns `num_col=1`); Euler extract with |tbl13|<1 vs `PI/2*sign`, cpsi/cphi clamp to `(1-EPS)*sign`; CADAC sign `<0 → -1` else `+1`; VBAB=TBL@VBAL, alpha=atan2, beta=asin, alpp/phip as C++ (EPS, PI). Skip plane trcode termination if those names are absent. No euler/newton. No RK4.
+- Tests: `Python/tests/unit/test_flat6_kinematics.py` (thtblx=1, VBAL=TBL.T@VBEB from alpha0x=1, beta0x=0, dvbe=180, WBEB=0 → TBL finite, alphax≈1; stored-slope; etbl diagonal; trcode skip/5/6/7). Cruise3/HYPER3/PLANE untouched.
+
 ## 0.51.0 - Flat6 environment
 - Added `cadac.eom.flat6.Flat6Environment` (`name="environment"`). `define` registers C++ `def_environment` mwind==0 outputs (mwind, press, rho, vsound, grav, vmach, pdynmc, tempk, VAEL, dvba, VBAL). Does not define hbe/VBEL (newton) or plane mfreeze/mguid/trcode. `execute` ports FALCON6 `Flat6::environment` mwind==0: US76+gravity(hbe), VAEL=0, VBAL=VBEL, dvba=||VBEL||, vmach, pdynmc. mwind!=0 ValueError. No ISO62. No kinematics/euler/newton.
 - Tests: `Python/tests/unit/test_flat6_environment.py` (hbe=1000, ||VBEL||=180, mwind=0 vs atmosphere76/gravity; vmach not mach; mwind 1/2 raises). Cruise3/HYPER3/PLANE untouched.
