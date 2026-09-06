@@ -70,7 +70,16 @@ class Sraam6Control:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        maut = vehicle.store.get("maut")
+        if maut == 0:
+            return
+        if maut not in (1, 2, 3):
+            raise ValueError(f"unknown maut {maut}")
+        self.control_roll(vehicle)
+        if maut == 2:
+            self.control_rate(vehicle)
+        if maut == 3:
+            self.control_accel(vehicle, ctx)
 
     def control_roll(self, vehicle):
         store = vehicle.store
