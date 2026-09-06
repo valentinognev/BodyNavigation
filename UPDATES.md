@@ -1,5 +1,8 @@
 # Updates
 
+## 0.120.1 - AGM6 free-flight e2e skip-without-golden
+- Added `Python/tests/e2e/test_agm6_freeflight.py`. Skip if `tests/e2e/goldens/agm6/plot.csv` is absent (file not created). Else `run_scenario` on `Python/cases/agm6/input_freeflight.jsonc`; compare plot-flagged `hbe`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live free-flight `run_scenario` calls `require_golden` first.
+
 ## 0.120.0 - Run AGM6 MISSILE6 from JSONC free flight
 - `Agm6Missile` (`type="MISSILE6"`) constructor `(name, aero_deck, events=None, weather_deck=None)`. Modules: free-flight ASC order then ins/datalink/sensor/guidance/control/actuator/intercept so define always runs. Skip-if-exists; `com_names` from `"com"` flags.
 - `_VEHICLE_FAMILIES[("agm6","MISSILE6"|"TARGET3"|"AIRCRAFT3")]`. Not in `_VEHICLE_TYPES`. `_build_vehicle`: family `agm6` MISSILE6 requires aero (prop ignored, weather passed); TARGET3/AIRCRAFT3 `(name, events)`. Global `_NO_DECK_TYPES` only when `family is None`.
