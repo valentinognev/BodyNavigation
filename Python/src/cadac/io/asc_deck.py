@@ -1,6 +1,11 @@
+import re
 from pathlib import Path
 
 from cadac.tables.lookup import Table
+
+# C++ `operator>>` stops a float at a sign that is not an exponent, so
+# CADAC decks may glue values like `-9.582-14.563` or `5.439-11.696`.
+_FLOAT_TOKEN = re.compile(r"[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?")
 
 
 def parse_asc_deck(path) -> tuple[str, list[Table]]:
@@ -75,6 +80,19 @@ def _read_axis_counts(lines: list[str], i: int, ndim: int) -> tuple[list[int], i
     return dims, i
 
 
+def _cadac_float_tokens(line: str) -> list[str]:
+    tokens: list[str] = []
+    for part in line.split():
+        if part.startswith("//"):
+            break
+        pieces = _FLOAT_TOKEN.findall(part)
+        if pieces:
+            tokens.extend(pieces)
+        else:
+            tokens.append(part)
+    return tokens
+
+
 class _TokenCursor:
     def __init__(self, lines: list[str], i: int) -> None:
         self.lines = lines
@@ -84,7 +102,7 @@ class _TokenCursor:
     def next_float(self) -> float:
         while not self._buf:
             self.i = _skip_blank(self.lines, self.i)
-            self._buf = self.lines[self.i].split()
+            self._buf = _cadac_float_tokens(self.lines[self.i])
             self.i += 1
         return float(self._buf.pop(0))
 
