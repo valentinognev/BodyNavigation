@@ -281,6 +281,22 @@ def test_initialize_is_pass():
             assert vehicle.store.get(name) == 0.0
 
 
+def test_terminate_exists_and_is_pass():
+    vehicle = _Vehicle()
+    seeker = Hyper5Seeker()
+    seeker.define(vehicle)
+    store = vehicle.store
+    store.set("mseeker", 1)
+    store.set("acq_range", 6000.0)
+    store.set("range_go", 123.0)
+    store.set("acquisition", 1)
+    seeker.terminate(vehicle, _ctx([]))
+    assert store.get("mseeker") == 1
+    assert store.get("acq_range") == 6000.0
+    assert store.get("range_go") == 123.0
+    assert store.get("acquisition") == 1
+
+
 def test_demo47_ground_range_is_inside_acq_range():
     range_m = _ground_range(LONX, LATX, TGT_LONX, TGT_LATX)
     assert range_m < ACQ_RANGE

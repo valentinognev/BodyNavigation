@@ -44,6 +44,9 @@ class Hyper5Seeker:
     def initialize(self, vehicle, ctx):
         pass
 
+    def terminate(self, vehicle, ctx):
+        pass
+
     def seeker_grnd_ranges(self, vehicle, combus):
         store = vehicle.store
         lon_c = store.get("lonx") * RAD

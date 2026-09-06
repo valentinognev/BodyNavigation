@@ -1,5 +1,8 @@
 # Updates
 
+## 0.78.1 - Hyper5Seeker terminate pass
+- `Hyper5Seeker.terminate` is `pass` like the Module protocol / DummyModule. Does not write. Test: `test_terminate_exists_and_is_pass`.
+
 ## 0.78.0 - HYPER5 seeker acquire and track
 - Added `cadac.vehicles.hyper5.seeker.Hyper5Seeker` (`name="seeker"`). `define` registers C++ `def_seeker`: mseeker (int, data/save, scrn), acq_range (data), range_go (out, plot/scrn), STBG (vec, out, plot), WOEB (vec, out), closing_speed (out), time_go (out, plot/scrn), psisbx/thtsbx (out, plot/scrn), targ_com_slot (int, save), UTBB (vec, out), acquisition (int, init/save, scrn). Does not define mcontrol/mguidance (control/guidance). Does not define plant time/tig/vbeg/sbii/TBG/lonx/latx. `initialize` pass (no C++ `init_seeker`).
 - `execute` ports `Hyper::seeker`: `mseeker==0` return without writing. `1` acquire if TARGET3 ground range `< acq_range` then mseeker=3 and acquisition=1 (Demo 4.7 acq_range=6000). Same execute then tracks if mseeker became 3. `3` track: STBG, range_go, WOEB=`TBG@_skew(UTBG)@VTBG*inv_dtb`, closing_speed, UTBB, time_go, psisbx/thtsbx. Else including 2/99 ValueError. Writes mseeker/acquisition/targ_com_slot; does not write mcontrol/mguidance. Skip cout.
