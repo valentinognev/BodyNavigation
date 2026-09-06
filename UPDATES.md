@@ -1,8 +1,11 @@
 # Updates
 
+## 0.82.1 - Satellite3 sat_thrust default 0
+- `Satellite3Forces.define`: `sat_thrust` default 0 (C++ `satellite[4].init("sat_thrust",0)`). `sat_mass` stays 100. Demo ICs omit sat_thrust → FSPV[0]=0.
+
 ## 0.82.0 - HYPER5 SATELLITE3 forces
 - Added `cadac.vehicles.hyper5.satellite`: `Satellite3Forces` (`name="forces"`), `Satellite3` (`type="SATELLITE3"`, health=1). Constructor `(name, events=None)` — no decks. Modules: Round3Environment, Satellite3Forces, Round3Newton (C++ MODULES order; forces before newton). No seeker. `com_names` from store fields with `"com"` in outputs. Not registered in cli (Task 20).
-- Forces: C++ `def_forces` FSPV (vec out, skip-if-exists), sat_thrust/sat_mass (data, default 100 per plan; C++ sat_thrust init is 0). `execute` ports `Satellite::forces`: `FSPV=[sat_thrust/sat_mass, 0, 0]`. Round3 lowercase names. `initialize`/`terminate` pass. Does not import Hyper5Forces/Cruise3/Plane5.
+- Forces: C++ `def_forces` FSPV (vec out, skip-if-exists), sat_thrust (data, default 0), sat_mass (data, default 100). `execute` ports `Satellite::forces`: `FSPV=[sat_thrust/sat_mass, 0, 0]`. Round3 lowercase names. `initialize`/`terminate` pass. Does not import Hyper5Forces/Cruise3/Plane5.
 - Tests: `Python/tests/unit/test_satellite3_forces.py` (sat_thrust=0, sat_mass=100 → FSPV[0]==0; sat_thrust=100 → FSPV[0]==1; rtol=1e-12, atol=1e-14).
 
 ## 0.81.0 - HYPER5 TARGET3 vehicle

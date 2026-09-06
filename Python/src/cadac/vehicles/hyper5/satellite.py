@@ -12,7 +12,7 @@ class Satellite3Forces:
         store = vehicle.store
         if "FSPV" not in store.names():
             store.define(Field("FSPV", (0.0, 0.0, 0.0), "vec", "out", "forces"))
-        store.define(Field("sat_thrust", 100.0, "real", "data", "forces"))
+        store.define(Field("sat_thrust", 0.0, "real", "data", "forces"))
         store.define(Field("sat_mass", 100.0, "real", "data", "forces"))
 
     def initialize(self, vehicle, ctx):

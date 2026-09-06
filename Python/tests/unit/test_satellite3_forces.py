@@ -14,7 +14,7 @@ ATOL = 1e-14
 
 FORCES_FIELDS = {
     "FSPV": ("vec", "out", (0.0, 0.0, 0.0), ()),
-    "sat_thrust": ("real", "data", 100.0, ()),
+    "sat_thrust": ("real", "data", 0.0, ()),
     "sat_mass": ("real", "data", 100.0, ()),
 }
 
@@ -121,7 +121,7 @@ def test_define_skips_existing_fspv():
     np.testing.assert_array_equal(store.get("FSPV"), sentinel)
     field = store.field("FSPV")
     assert field.module == "newton"
-    assert store.get("sat_thrust") == 100.0
+    assert store.get("sat_thrust") == 0.0
     assert store.get("sat_mass") == 100.0
 
 
@@ -175,7 +175,7 @@ def test_satellite3_type_health_constructor_and_modules():
     for name in COM_AT_LEAST:
         assert name in vehicle.com_names
         assert "com" in vehicle.store.field(name).outputs
-    assert vehicle.store.get("sat_thrust") == 100.0
+    assert vehicle.store.get("sat_thrust") == 0.0
     assert vehicle.store.get("sat_mass") == 100.0
 
 
@@ -185,7 +185,7 @@ def test_satellite3_default_thrust_over_mass():
     named = {m.name: m for m in vehicle.modules}
     named["forces"].execute(vehicle, _ctx())
     fspv = vehicle.store.get("FSPV")
-    np.testing.assert_allclose(fspv[0], 1.0, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(fspv[0], 0.0, rtol=RTOL, atol=ATOL)
     np.testing.assert_allclose(fspv[1:], 0.0, rtol=RTOL, atol=ATOL)
 
 
