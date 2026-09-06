@@ -1,5 +1,11 @@
 # Updates
 
+## 0.121.0 - AGM6 test-case JSONC smoke
+- Checked-in `Python/cases/agm6/input_testcase.jsonc` + `weather_deck.jsonc` from `input_2_1 AGM6 Test Case.asc` (`family="agm6"`, three vehicles, `mair=212`, weather/stoch means, events `time>3` and `mseek=4`). Reuses `AGM6_aero_deck.jsonc`.
+- `Agm6Environment` Dryden reads Flat6 `TBL` when CADAC `TBD` is absent.
+- Unit `Python/tests/unit/test_agm6_testcase_smoke.py`: translate bindings; `run_scenario` `end_time` 0.05 three vehicles, missile `hbe` finite, all `health==1`; family TARGET3 is `Agm6Target` not Hyper5 `Target3`.
+- E2E `Python/tests/e2e/test_agm6_testcase.py` skips if `tests/e2e/goldens/agm6/test_case_plot.csv` is absent (file not created).
+
 ## 0.120.1 - AGM6 free-flight e2e skip-without-golden
 - Added `Python/tests/e2e/test_agm6_freeflight.py`. Skip if `tests/e2e/goldens/agm6/plot.csv` is absent (file not created). Else `run_scenario` on `Python/cases/agm6/input_freeflight.jsonc`; compare plot-flagged `hbe`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live free-flight `run_scenario` calls `require_golden` first.
 
