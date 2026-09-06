@@ -1,5 +1,9 @@
 # Updates
 
+## 0.60.0 - F-16 gamma controller
+- Added `Plane6Control.control_gamma(vehicle, thtvlcomx) -> delecx`. Ports C++ `Plane::control_gamma`: pole-placement DP/DD (`pgam`/`wgam`/`zgam`), `GAINGAM=inv(DP)@DD` shape (3,), `DUM33=AA-outer(BB,GAINGAM)`, `gainff=-1/(HH·(inv(DUM33)@BB))` with HH=[0,0,1], then `thtc/qqf/thtblf/thtvlf` in rad and `delecx=delec*DEG`. Stores GAINGAM and gainff. Does not write delecx. Does not read unused C++ locals `time`/`pdynmc`. C++ `if(dvbe==0)dvbe=dvbe` no-op omitted. CADAC row-major AA/BB/DP; `np.linalg.inv` as with IBBB. RAD/DEG from constants. `execute` still pass (no maut dispatcher). Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_plane6_control_gamma.py` (input_gamma poles pgam=10 wgam=3 zgam=0.5, thtvlcomx=1 deg, frozen nonzero dvbe/dla/dmde; finite elevator vs CADAC rtol 1e-12; no time/pdynmc; execute pass).
+
 ## 0.59.0 - F-16 roll and rate SAS
 - Added `cadac.vehicles.plane6.control.Plane6Control` (`name="control"`). `define` registers full C++ `def_control` (maut/mroll/mfreeze, limiters, wrcl/zrcl/tp/zetlagr, delacx/delecx/delrcx, gkp/gkphi, zrate/grate/wnlagr, GAINFP/GAINGAM vec (3,), isetc2 real init). Does not define kinematics/aero names these functions read (phiblx, ppx, dllp, dllda, dla, …, dvbe, qqx, rrx). `initialize` pass (no C++ `init_control`). `execute` pass until Task 13 maut dispatcher.
 - Methods port C++ as written: `control_roll` pole-placement gkp/gkphi, RAD/DEG; `control_roll_rate` kp=(1/tp+dllp)/dllda; `control_pitch_rate` zrate/aa/bb, radix clamp 0, |dmde|<SMALL then SMALL*sign; `control_yaw_rate` similar with dyb/dydr/dnb/dnr/dndr, stores zrate/grate/wnlagr. Local `_sign` (`<0 → -1` else `+1`); SMALL=1.e-7 module-level, not in `cadac.constants`. RAD/DEG from constants. Returns commands; does not write delacx/delecx/delrcx. No control_gamma, maut dispatcher, forces, vehicle. Cruise3/HYPER3/PLANE untouched.

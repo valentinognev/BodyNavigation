@@ -1,5 +1,7 @@
 from math import sqrt
 
+import numpy as np
+
 from cadac.constants import DEG, RAD
 from cadac.kernel.state import Field
 
@@ -175,6 +177,72 @@ class Plane6Control:
         store.set("grate", grate)
         store.set("wnlagr", wnlagr)
         return delrcx
+
+    def control_gamma(self, vehicle, thtvlcomx):
+        store = vehicle.store
+        pgam = store.get("pgam")
+        wgam = store.get("wgam")
+        zgam = store.get("zgam")
+        thtblx = store.get("thtblx")
+        qqx = store.get("qqx")
+        thtvlx = store.get("thtvlx")
+        dvbe = store.get("dvbe")
+        dla = store.get("dla")
+        dlde = store.get("dlde")
+        dma = store.get("dma")
+        dmq = store.get("dmq")
+        dmde = store.get("dmde")
+
+        aa = np.array(
+            [
+                [dmq, dma, -dma],
+                [1.0, 0.0, 0.0],
+                [0.0, dla / dvbe, -dla / dvbe],
+            ],
+            dtype=float,
+        )
+        bb = np.array([dmde, 0.0, dlde / dvbe], dtype=float)
+
+        am = 2.0 * zgam * wgam + pgam
+        bm = wgam * wgam + 2.0 * zgam * wgam * pgam
+        cm = wgam * wgam * pgam
+        v11 = dmde
+        v12 = 0.0
+        v13 = dlde / dvbe
+        v21 = dmde * dla / dvbe - dlde * dma / dvbe
+        v22 = dmde
+        v23 = -dmq * dlde / dvbe
+        v31 = 0.0
+        v32 = v21
+        v33 = v21
+        dp = np.array(
+            [
+                [v11, v12, v13],
+                [v21, v22, v23],
+                [v31, v32, v33],
+            ],
+            dtype=float,
+        )
+        dd = np.array(
+            [am + dmq - dla / dvbe, bm + dma + dmq * dla / dvbe, cm],
+            dtype=float,
+        )
+        gaingam = np.linalg.inv(dp) @ dd
+        dum33 = aa - np.outer(bb, gaingam)
+        dum3 = np.linalg.inv(dum33) @ bb
+        hh = np.array([0.0, 0.0, 1.0], dtype=float)
+        gainff = -1.0 / (hh @ dum3)
+
+        thtc = gainff * thtvlcomx * RAD
+        qqf = gaingam[0] * qqx * RAD
+        thtblf = gaingam[1] * thtblx * RAD
+        thtvlf = gaingam[2] * thtvlx * RAD
+        delec = thtc - (qqf + thtblf + thtvlf)
+        delecx = delec * DEG
+
+        store.set("GAINGAM", gaingam)
+        store.set("gainff", gainff)
+        return delecx
 
     def terminate(self, vehicle, ctx):
         pass
