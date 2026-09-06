@@ -1,5 +1,11 @@
 # Updates
 
+## 0.73.0 - HYPER5 heading and flight-path control
+- `Hyper5Control.define` adds C++ `def_control` fields used by `control_heading` / `control_flightpath`: gain_thtvg, gain_psivg, psivgcx, thtvgcx, avx. alphax/anx/alpposlimx/alpneglimx already from Task 7. Skip-if-exists. Does not register mcontrol/TBV/TBG/alcomx/lateral. Bank, load, altitude fields unchanged. `execute` still pass.
+- `control_heading(vehicle, psivgcx)` ports `Hyper::control_heading`: reads geographic **psivgx** (deg), not Flat3 psivlx. Wrap: if fabs(psivgcx)<=135 then psivgx_comp=psivgx; else if psivgx*psivgcx>=0: psivgx; else wrap `360-psivgx*sign` with C++ `if(psivgx>=0) sign=1 else sign=-1`. Returns bank command; does not write phimvx/phicx. Protocol `vehicle.store`. No vehicle. No Plane5Control import.
+- `control_flightpath(vehicle, thtvgcx, phimvx)` ports `Hyper::control_flightpath`: reads **thtvg in radians** (Round3 `round3[18]`); command `thtvgcx*RAD`. avx=gain_thtvg*(thtvgcx*RAD-thtvg); anx=avx/cos(phimvx*RAD); alphax=anx*mass*grav/(pdynmc*area*cla); clip alpposlimx/alpneglimx. Writes anx,avx; returns alphax; does not write alphax.
+- Tests: `Python/tests/unit/test_hyper5_control_heading.py` (Demo 5.1 gain_psivg=2; heading wrap `|psivgcx|>135` opposite-sign; Demo 4.7 alpposlimx=6/alpneglimx=-4 alphax clip vs C++ replica; thtvg radians not degrees; execute pass via existing bank/load/altitude tests; rtol=1e-12, atol=1e-14). Plant psivgx/thtvg/pdynmc/grav/mass/area/cla registered by the test.
+
 ## 0.72.0 - HYPER5 altitude control
 - `Hyper5Control.define` adds C++ `def_control` fields used by `control_altitude`: altdlim, gh, gv (data), altd (diag, plot), altcom (data, plot). anposlimx/anneglimx already from Task 7. Skip-if-exists. Does not register alt/grav/VBEG (newton/environment). Does not register mcontrol, TBV/TBG, heading, lateral. Bank and load fields unchanged. `execute` still pass.
 - `control_altitude(vehicle, altcom, phimvx)` ports `Hyper::control_altitude`: ealt=gh*(altcom-alt) clipped ±altdlim; altd=-VBEG[2]; ancomx=(gv*(ealt-altd)/grav+1)*(1/cos(phimvx*RAD)); clip [anneglimx, anposlimx]. Writes altd; returns ancomx; does not write ancomx. Protocol `vehicle.store`. No vehicle. No Plane5Control import. Does not use VBEL.

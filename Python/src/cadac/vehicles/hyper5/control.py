@@ -39,6 +39,11 @@ class Hyper5Control:
             Field("gv", 0.0, "real", "data", "control"),
             Field("altd", 0.0, "real", "diag", "control", ("plot",)),
             Field("altcom", 0.0, "real", "data", "control", ("plot",)),
+            Field("gain_thtvg", 0.0, "real", "data", "control"),
+            Field("gain_psivg", 0.0, "real", "data", "control"),
+            Field("psivgcx", 0.0, "real", "data", "control", ("plot",)),
+            Field("thtvgcx", 0.0, "real", "data", "control", ("plot",)),
+            Field("avx", 0.0, "real", "diag", "control", ("scrn", "plot")),
         ):
             if field.name not in store.names():
                 store.define(field)
@@ -162,3 +167,42 @@ class Hyper5Control:
 
         store.set("altd", altd)
         return ancomx
+
+    def control_heading(self, vehicle, psivgcx):
+        store = vehicle.store
+        gain_psivg = store.get("gain_psivg")
+        psivgx = store.get("psivgx")
+        if abs(psivgcx) <= 135:
+            psivgx_comp = psivgx
+        else:
+            if psivgx * psivgcx >= 0:
+                psivgx_comp = psivgx
+            else:
+                if psivgx >= 0:
+                    sign_psivgx = 1
+                else:
+                    sign_psivgx = -1
+                psivgx_comp = 360 - psivgx * sign_psivgx
+        return gain_psivg * (psivgcx - psivgx_comp)
+
+    def control_flightpath(self, vehicle, thtvgcx, phimvx):
+        store = vehicle.store
+        gain_thtvg = store.get("gain_thtvg")
+        alpposlimx = store.get("alpposlimx")
+        alpneglimx = store.get("alpneglimx")
+        pdynmc = store.get("pdynmc")
+        thtvg = store.get("thtvg")
+        grav = store.get("grav")
+        mass = store.get("mass")
+        area = store.get("area")
+        cla = store.get("cla")
+        avx = gain_thtvg * (thtvgcx * RAD - thtvg)
+        anx = avx / cos(phimvx * RAD)
+        alphax = (anx * mass * grav) / (pdynmc * area * cla)
+        if alphax > alpposlimx:
+            alphax = alpposlimx
+        if alphax < alpneglimx:
+            alphax = alpneglimx
+        store.set("anx", anx)
+        store.set("avx", avx)
+        return alphax

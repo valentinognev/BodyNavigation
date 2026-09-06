@@ -38,14 +38,9 @@ LATER_FIELDS = (
     "alcomx",
     "TBV",
     "TBG",
-    "gain_psivg",
-    "gain_thtvg",
-    "psivgcx",
-    "thtvgcx",
     "allimx",
     "gcp",
     "alx",
-    "avx",
 )
 
 PLANT_FIELDS = ("alt", "grav", "VBEG", "VBEL")
