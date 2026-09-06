@@ -164,8 +164,26 @@ def gps_quadriga(
     return ssii_quad, vsii_quad, gdop, mgps
 
 
+def _skew(vec):
+    x, y, z = vec
+    return np.array(
+        [
+            [0.0, -z, y],
+            [z, 0.0, -x],
+            [-y, x, 0.0],
+        ],
+        dtype=float,
+    )
+
+
 class Rocket6Gps:
     name = "gps"
+
+    def __init__(self):
+        self.PP = np.zeros((8, 8))
+        self.PHI = np.zeros((8, 8))
+        self.FF = np.zeros((8, 8))
+        self.sv_init_data, self.rsi, self.wsi, self.incl = gps_sv_init()
 
     def define(self, vehicle):
         store = vehicle.store
@@ -253,4 +271,220 @@ class Rocket6Gps:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        mgps = store.get("mgps")
+        if mgps not in (0, 1, 2, 3):
+            raise ValueError(f"unknown mgps {mgps}")
+        if mgps == 0:
+            return
+
+        int_step = ctx.int_step
+        time = store.get("time")
+        almanac_time = store.get("almanac_time")
+        del_rearth = store.get("del_rearth")
+        gps_acqtime = store.get("gps_acqtime")
+        gps_step = store.get("gps_step")
+        ucfreq_noise = store.get("ucfreq_noise")
+        ucbias_error = store.get("ucbias_error")
+        pr_bias = np.array(
+            [
+                store.get("pr1_bias"),
+                store.get("pr2_bias"),
+                store.get("pr3_bias"),
+                store.get("pr4_bias"),
+            ],
+            dtype=float,
+        )
+        pr_noise = np.array(
+            [
+                store.get("pr1_noise"),
+                store.get("pr2_noise"),
+                store.get("pr3_noise"),
+                store.get("pr4_noise"),
+            ],
+            dtype=float,
+        )
+        dr_noise = np.array(
+            [
+                store.get("dr1_noise"),
+                store.get("dr2_noise"),
+                store.get("dr3_noise"),
+                store.get("dr4_noise"),
+            ],
+            dtype=float,
+        )
+        uctime_cor = store.get("uctime_cor")
+        ppos = store.get("ppos")
+        pvel = store.get("pvel")
+        pclockb = store.get("pclockb")
+        pclockf = store.get("pclockf")
+        qpos = store.get("qpos")
+        qvel = store.get("qvel")
+        qclockb = store.get("qclockb")
+        qclockf = store.get("qclockf")
+        rpos = store.get("rpos")
+        rvel = store.get("rvel")
+        factp = store.get("factp")
+        factq = store.get("factq")
+        factr = store.get("factr")
+        gps_epoch = store.get("gps_epoch")
+        gps_acq = store.get("gps_acq")
+        ucfreqm = store.get("ucfreqm")
+        slotsum = store.get("slotsum")
+        c2_pos_meas = store.get("c2_pos_meas")
+        c2_vel_meas = store.get("c2_vel_meas")
+        state_pos = store.get("state_pos")
+        state_vel = store.get("state_vel")
+        c2_range_err = store.get("c2_range_err")
+        c2_delta_err = store.get("c2_delta_err")
+        sxh = np.asarray(store.get("SXH"), dtype=float).copy()
+        vxh = np.asarray(store.get("VXH"), dtype=float).copy()
+        cxh = np.asarray(store.get("CXH"), dtype=float).copy()
+
+        gdop = 0.0
+        ucfreq_error = 0.0
+        std_pos = 0.0
+        std_vel = 0.0
+        std_ucbias = 0.0
+
+        if mgps == 1:
+            self.sv_init_data, self.rsi, self.wsi, self.incl = gps_sv_init()
+            for i in range(3):
+                self.PP[i, i] = (ppos * (1.0 + factp)) ** 2
+                self.PP[i + 3, i + 3] = (pvel * (1.0 + factp)) ** 2
+            self.PP[6, 6] = (pclockb * (1.0 + factp)) ** 2
+            self.PP[7, 7] = (pclockf * (1.0 + factp)) ** 2
+            self.FF[:, :] = 0.0
+            self.FF[0, 3] = 1.0
+            self.FF[1, 4] = 1.0
+            self.FF[2, 5] = 1.0
+            self.FF[6, 7] = 1.0
+            self.FF[7, 7] = -1.0 / uctime_cor
+            self.PHI = (
+                np.eye(8)
+                + self.FF * int_step
+                + (self.FF @ self.FF) * (int_step * int_step / 2.0)
+            )
+            gps_acq = 1
+            gps_epoch = time
+            mgps = 2
+
+        if mgps == 2:
+            if gps_acq:
+                dtime_gps = gps_acqtime
+            else:
+                dtime_gps = gps_step
+            time_gps = time - gps_epoch
+            if time_gps >= dtime_gps:
+                mgps = 3
+            ucfreq_error = ucfreq_noise
+            ucbias_error = ucbias_error + (ucfreq_error + ucfreqm) * (int_step / 2.0)
+            ucfreqm = ucfreq_error
+            qq = np.zeros((8, 8))
+            for i in range(3):
+                qq[i, i] = (qpos * (1.0 + factq)) ** 2
+                qq[i + 3, i + 3] = (qvel * (1.0 + factq)) ** 2
+            qq[6, 6] = (qclockb * (1.0 + factq)) ** 2
+            qq[7, 7] = (qclockf * (1.0 + factq)) ** 2
+            self.PP = (
+                self.PHI @ (self.PP + qq * (int_step / 2.0)) @ self.PHI.T
+                + qq * (int_step / 2.0)
+            )
+            std_pos = math.sqrt(self.PP[0, 0])
+            std_vel = math.sqrt(self.PP[3, 3])
+            std_ucbias = math.sqrt(self.PP[6, 6])
+
+        if mgps == 3:
+            gps_acq = 0
+            gps_epoch = time
+            sbii = np.asarray(store.get("SBII"), dtype=float)
+            vbii = np.asarray(store.get("VBII"), dtype=float)
+            wbii = np.asarray(store.get("WBII"), dtype=float)
+            sbiic = np.asarray(store.get("SBIIC"), dtype=float)
+            vbiic = np.asarray(store.get("VBIIC"), dtype=float)
+            wbici = np.asarray(store.get("WBICI"), dtype=float)
+            ssii_quad, vsii_quad, gdop, mgps = gps_quadriga(
+                self.sv_init_data,
+                self.rsi,
+                self.wsi,
+                self.incl,
+                almanac_time,
+                del_rearth,
+                time,
+                sbii,
+                mgps,
+            )
+            zz = np.zeros(8)
+            hh = np.zeros((8, 8))
+            slotm = 0.0
+            wbii_skew = _skew(wbii)
+            wbici_skew = _skew(wbici)
+            for i in range(4):
+                ssii = ssii_quad[i, :3]
+                ssbi = ssii - sbii
+                dsb = math.sqrt(ssbi[0] * ssbi[0] + ssbi[1] * ssbi[1] + ssbi[2] * ssbi[2])
+                dsb_meas = dsb + pr_bias[i] + pr_noise[i] + ucbias_error
+                if i == 0:
+                    c2_range_err = dsb_meas - dsb
+                vsii = vsii_quad[i]
+                vsbi = vsii - vbii - wbii_skew @ ssbi
+                ussbi = ssbi * (1.0 / dsb)
+                dvsb = float(vsbi[0] * ussbi[0] + vsbi[1] * ussbi[1] + vsbi[2] * ussbi[2])
+                dvsb_meas = dvsb + dr_noise[i] + ucfreq_error
+                if i == 0:
+                    c2_delta_err = dvsb_meas - dvsb
+                ssbic = ssii - sbiic
+                dsbc = math.sqrt(
+                    ssbic[0] * ssbic[0] + ssbic[1] * ssbic[1] + ssbic[2] * ssbic[2]
+                )
+                vsbic = vsii - vbiic - wbici_skew @ ssbic
+                ussbic = ssbic * (1.0 / dsb)
+                dvsbc = float(
+                    vsbic[0] * ussbic[0] + vsbic[1] * ussbic[1] + vsbic[2] * ussbic[2]
+                )
+                zz[i] = dsb_meas - dsbc
+                zz[i + 4] = dvsb_meas - dvsbc
+                hh[i, :3] = ussbi
+                hh[i + 4, 3:6] = ussbi * gps_step
+                hh[i, 6] = 1.0
+                hh[i + 4, 7] = gps_step
+                slotm = slotm + ssii_quad[i, 3]
+            if slotsum != slotm:
+                slotsum = slotm
+            rr = np.zeros((8, 8))
+            for i in range(4):
+                rr[i, i] = (rpos * (1.0 + factr)) ** 2
+                rr[i + 4, i + 4] = (rvel * (1.0 + factr)) ** 2
+            kk = self.PP @ hh.T @ np.linalg.inv(hh @ self.PP @ hh.T + rr)
+            xh = kk @ zz
+            self.PP = (np.eye(8) - kk @ hh) @ self.PP
+            ucbias_error = ucbias_error - xh[6]
+            c2_pos_meas = float(zz[0])
+            c2_vel_meas = float(zz[4])
+            sxh = np.array([xh[0], xh[1], xh[2]], dtype=float)
+            vxh = np.array([xh[3], xh[4], xh[5]], dtype=float)
+            cxh[0] = xh[6]
+            cxh[1] = xh[7]
+            state_pos = math.sqrt(sxh[0] * sxh[0] + sxh[1] * sxh[1] + sxh[2] * sxh[2])
+            state_vel = math.sqrt(vxh[0] * vxh[0] + vxh[1] * vxh[1] + vxh[2] * vxh[2])
+
+        store.set("mgps", mgps)
+        store.set("gps_epoch", gps_epoch)
+        store.set("gps_acq", gps_acq)
+        store.set("ucbias_error", ucbias_error)
+        store.set("ucfreqm", ucfreqm)
+        store.set("slotsum", slotsum)
+        store.set("SXH", sxh)
+        store.set("VXH", vxh)
+        store.set("CXH", cxh)
+        store.set("gdop", gdop)
+        store.set("ucfreq_error", ucfreq_error)
+        store.set("std_pos", std_pos)
+        store.set("std_vel", std_vel)
+        store.set("std_ucbias", std_ucbias)
+        store.set("c2_pos_meas", c2_pos_meas)
+        store.set("c2_vel_meas", c2_vel_meas)
+        store.set("state_pos", state_pos)
+        store.set("state_vel", state_vel)
+        store.set("c2_range_err", c2_range_err)
+        store.set("c2_delta_err", c2_delta_err)
