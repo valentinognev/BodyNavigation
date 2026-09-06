@@ -1,5 +1,10 @@
 # Updates
 
+## 0.87.0 - Round6 kinematics DCM
+- Added `cadac.eom.round6.Round6Kinematics` (`name="kinematics"`). Port of HYPER6 `Round6::def_kinematics` / `init_kinematics` / `kinematics` (DCM, not Flat6 quaternions). `define` registers C++ kinematics fields (`time`, `event_time`, `int_step_new`, `out_step_fact`, `TBD`/`TBI`/`TBID`, `ortho_error`, Euler `psibd*`/`thtbd*`/`phibd*`, `alppx`/`phipx`/`alphax`/`betax`/`alphaix`/`betaix`). Does not define newton `lonx`/`latx`/`alt`/`SBII`/`VBED`/`VBII`, euler `WBIB`, unused `ck`, or hyper `trcode`.
+- Init: `time=ctx.sim_time`, `int_step_new=ctx.int_step`; `TBD=mat3tr(psibdx*RAD, thtbdx*RAD, phibdx*RAD)`; `TDI=cad_tdi84(lonx*RAD, latx*RAD, alt, time)`; `TBI=TBD@TDI`. Execute: stored-slope `integrate` of `TBID_NEW=(-skew(WBIB))@TBI`; orthonormalize as C++; Euler from TBD; aero/inertial incidence as C++. Local CADAC sign (`<0 → -1` else `+1`). Skip `trcode` if absent. Timing `ctx.int_step`/`out_fact` like Round3.
+- Tests: `Python/tests/unit/test_round6_kinematics.py` (climb ICs `thtbdx=2.5`, `lonx=latx=10`, `alt=10000`; TBD finite; `WBIB=0` orthonormal `ortho_error`; TBD/TBI vs `mat3tr`/`cad_tdi84` rtol=1e-12).
+
 ## 0.86.0 - Round6 environment US76
 - Added `cadac.eom.round6.Round6Environment` (`name="environment"`). `define` registers C++ `def_environment` fields used by the mair==0 execute path (`mair`, `press`, `rho`, `vsound`, `vmach`, `pdynmc`, `tempk`, freeze saves, `GRAVG`, `grav`, wind data/state, `VAED`, `dvba`). Does not define newton `alt`/`SBII`/`VBED`, kinematics `time`, or hyper `trcode`/`mfreeze`. Does not define Dryden-only fields.
 - `execute` decodes `matmo=mair//100`, `mturb=(mair-matmo*100)//10`, `mwind=(mair-matmo*100)%10`. All-zero: US76 (`atmosphere76`) + `GRAVG=cad_grav84(SBII,time)`, `grav=||GRAVG||`, `VAED=0`, `dvba=||VBED||`. `vmach` not `mach`. Other mair including 100 → ValueError. Skip `trcode`/`mfreeze` latch if those names are absent. `initialize`/`terminate` pass.
