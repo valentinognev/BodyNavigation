@@ -384,21 +384,30 @@ def test_initialize_is_pass():
     assert store.get("wnlagr") == 0.0
 
 
-def test_execute_is_pass_until_maut_dispatcher():
+def test_execute_dispatches_maut_24():
     vehicle, ctrl = _ready()
     store = vehicle.store
+    store.define(Field("thtbdcx", 2.5, "real", "out", "ins"))
+    store.define(Field("thtvdcx", 0.0, "real", "out", "ins"))
+    store.define(Field("dvbe", 1000.0, "real", "out", "newton"))
+    store.set("pgam", 4.0)
+    store.set("wgam", 2.0)
+    store.set("zgam", 0.7)
+    store.set("dalimx", 1.0e6)
+    store.set("delimx", 1.0e6)
+    store.set("drlimx", 1.0e6)
+    store.set("philimx", 60.0)
+    store.set("thtvdcomx", 0.0)
     store.set("maut", 24)
     store.set("phicomx", PHICOMX)
-    want, _gkp, _gkphi = _control_roll(store, PHICOMX)
-    assert want != 0.0
+    want, gkp, gkphi = _control_roll(store, PHICOMX)
     ctrl.execute(vehicle, _ctx())
-    assert store.get("delacx") == 0.0
-    assert store.get("delecx") == 0.0
-    assert store.get("delrcx") == 0.0
-    assert store.get("gkp") == 0.0
-    assert store.get("gkphi") == 0.0
-    assert store.get("zrate") == 0.0
-    assert store.get("grate") == 0.0
+    assert _approx(store.get("delacx"), want)
+    assert store.get("delacx") != 0.0
+    assert store.get("delecx") != 0.0
+    assert store.get("delrcx") != 0.0
+    assert _approx(store.get("gkp"), gkp)
+    assert _approx(store.get("gkphi"), gkphi)
 
 
 def test_control_roll_matches_cadac_formulas():

@@ -1,5 +1,9 @@
 # Updates
 
+## 0.96.0 - HYPER6 maut dispatcher
+- `Hyper6Control.execute` ports C++ `Hyper::control` decode `mauty=maut//10`, `mautp=maut%10`. Modes `{0, 24}` only (climb 24: yaw SAS + gamma + roll). Unknown including -1 → `ValueError`. Limit `|del*|` and `philimx` with CADAC sign. Writes `delacx`/`delecx`/`delrcx`/`ancomx`/`phicomx`. maut=0 returns without writing. No unused mauty/mautp branches. No Plane6 import.
+- Tests: `Python/tests/unit/test_hyper6_maut.py` (maut=24 vs C++ rtol=1e-12; maut=0 no write; maut=-1 raises). Task 10/11 execute-is-pass tests now dispatch maut=24.
+
 ## 0.95.0 - HYPER6 gamma controller
 - `Hyper6Control.control_gamma` ports C++ climb `mautp=4` pole-placement (`pgam`/`wgam`/`zgam`, `thtvdcomx`). Reads INS `qqcx`/`thtbdcx`/`thtvdcx`/`dvbec` (dvbec==0 → `dvbe`). `np.linalg.inv` for DP and (AA-BB*~GAINGAM). Returns `delecx`; writes `GAINGAM`/`gainff`; does not write `delecx`. No Plane6 import. `execute` still pass.
 - Tests: `Python/tests/unit/test_hyper6_control_gamma.py` (climb pgam=4 wgam=2 zgam=0.7, thtvdcomx=0; finite elevator vs C++ rtol=1e-12; execute remains pass).

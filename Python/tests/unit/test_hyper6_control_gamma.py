@@ -198,19 +198,35 @@ def test_control_gamma_does_not_write_delecx():
     assert store.get("delecx") == 7.0
 
 
-def test_execute_is_pass_until_maut_dispatcher():
+def test_execute_dispatches_maut_24_with_gamma_inputs():
     vehicle, ctrl = _ready()
     store = vehicle.store
+    store.define(Field("phibdcx", 0.0, "real", "out", "ins"))
+    store.define(Field("ppcx", 3.0, "real", "out", "ins"))
+    store.define(Field("dllp", -2.5, "real", "out", "aerodynamics"))
+    store.define(Field("dllda", 18.0, "real", "out", "aerodynamics"))
+    store.define(Field("dyb", -6.0, "real", "out", "aerodynamics"))
+    store.define(Field("dydr", 4.0, "real", "out", "aerodynamics"))
+    store.define(Field("dnb", 1.5, "real", "out", "aerodynamics"))
+    store.define(Field("dnr", -0.8, "real", "out", "aerodynamics"))
+    store.define(Field("dndr", -3.0, "real", "out", "aerodynamics"))
+    store.define(Field("rrcx", 2.0, "real", "out", "ins"))
+    store.set("wrcl", 8.0)
+    store.set("zrcl", 0.9)
+    store.set("zetlagr", 1.1)
+    store.set("dalimx", 1.0e6)
+    store.set("delimx", 1.0e6)
+    store.set("drlimx", 1.0e6)
+    store.set("philimx", 60.0)
     store.set("maut", 24)
     store.set("thtvdcomx", THTVDCOMX_EVENT)
-    want, _gaingam, _gainff = _control_gamma(store, THTVDCOMX_EVENT)
-    assert want != 0.0
     ctrl.execute(vehicle, _ctx())
-    assert store.get("delecx") == 0.0
-    assert store.get("gainff") == 0.0
-    np.testing.assert_array_equal(store.get("GAINGAM"), np.zeros(3))
-    assert store.get("delacx") == 0.0
-    assert store.get("delrcx") == 0.0
+    want, want_gaingam, want_gainff = _control_gamma(store, THTVDCOMX_EVENT)
+    assert isfinite(store.get("delecx"))
+    assert _approx(store.get("delecx"), want)
+    np.testing.assert_allclose(store.get("GAINGAM"), want_gaingam, rtol=RTOL, atol=ATOL)
+    assert _approx(store.get("gainff"), want_gainff)
+    assert store.get("delecx") != 0.0
 
 
 def test_control_gamma_reads_ins_qqcx_thtbdcx_thtvdcx_dvbec():
