@@ -1,5 +1,9 @@
 # Updates
 
+## 0.105.0 - Rocket6 vehicle JSONC + e2e gate
+- `Rocket6` (`type="HYPER6"`, `family="rocket6"`) is runnable from JSONC `Python/cases/rocket6/` insertion (`end_time` 190; aero required; weather deck for `mair=12`; Radar/Satellite/Ground not applicable).
+- Added `Python/tests/e2e/test_rocket6_insertion.py`. Skip if `tests/e2e/goldens/rocket6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live insertion `run_scenario` calls `require_golden` first. Golden is MONTE-off (`nmonte==0`) + Dryden `gauss_value=0`, not raw `input.asc` plot.csv.
+
 ## 0.104.0 - Rocket6 SLV aerodynamics
 - Added `cadac.vehicles.rocket6.aero.Rocket6Aero` (`name="aerodynamics"`). Constructor takes Datadeck. `define` registers C++ `def_aerodynamics` (`maero`, `refa`/`refd`/`xcg_ref`, body `cx`/`cz`, SLV table coeffs, dimensional der, `gnmax`/`gymax`; C++ holes `cndr`/`cnr` as diag). Does not define kinematics/env/propulsion/actuator/TVC names (`alppx`/`phipx`/`alphax`, `vmach`, `pdynmc`, `dvba`, `vmass`, `IBBB`, `xcg`, `mprop`).
 - `initialize` ports `Hyper::init_aerodynamics`: termination `trmach`/`trdynm`/`trload`/`tralp`/`trcode`/`tmcode` only. Does not hardcode GHAME `refa`/`refb`/`refc`.
