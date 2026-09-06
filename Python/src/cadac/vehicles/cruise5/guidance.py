@@ -108,3 +108,48 @@ class Cruise5Guidance:
         store.set("rad_min", rad_min)
         store.set("wp_flag", wp_flag)
         return algv
+
+    def guidance_point(self, vehicle):
+        store = vehicle.store
+        wp_lonx = store.get("wp_lonx")
+        wp_latx = store.get("wp_latx")
+        wp_alt = store.get("wp_alt")
+        point_gain = store.get("point_gain")
+        time = store.get("time")
+        grav = store.get("grav")
+        tig = store.get("tig")
+        thtvgx = store.get("thtvgx")
+        vbeg = store.get("vbeg")
+        sbii = store.get("sbii")
+        philimx = store.get("philimx")
+
+        swii = cadine(wp_lonx * RAD, wp_latx * RAD, wp_alt, time)
+        swbg = tig.T @ (swii - sbii)
+        polar = polar_from_cart(swbg)
+        wp_sltrange = float(polar[0])
+        tog = mat2tr(float(polar[1]), float(polar[2]))
+        vbeo = tog @ vbeg
+        apgv = np.array(
+            [
+                grav * sin(thtvgx * RAD),
+                point_gain * (-vbeo[1]),
+                point_gain * (-vbeo[2]) - grav * cos(thtvgx * RAD),
+            ]
+        )
+        wp_grdrange = hypot(float(swbg[0]), float(swbg[1]))
+        dvbe = sqrt(float(vbeg @ vbeg))
+        rad_min = dvbe * dvbe / (grav * tan(philimx * RAD))
+        if wp_grdrange < 2 * rad_min:
+            sh = np.array([swbg[0], swbg[1], 0.0])
+            vh = np.array([vbeg[0], vbeg[1], 0.0])
+            wp_flag = _sign(float(vh @ sh))
+        else:
+            wp_flag = 0
+
+        store.set("wp_sltrange", wp_sltrange)
+        store.set("VBEO", vbeo)
+        store.set("wp_grdrange", wp_grdrange)
+        store.set("SWBG", swbg)
+        store.set("rad_min", rad_min)
+        store.set("wp_flag", wp_flag)
+        return apgv
