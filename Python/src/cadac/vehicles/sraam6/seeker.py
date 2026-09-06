@@ -1,8 +1,9 @@
-from math import acos, atan2, cos, sin, tan
+from math import acos, atan2, cos, sin, sqrt, tan
 
 import numpy as np
 
 from cadac.constants import DEG
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr, polar_from_cart
 
@@ -259,13 +260,151 @@ class Sraam6Seeker:
         return thtpb, psipb, sigdy, sigdz
 
     def seeker_dyn(self, vehicle, mseek, mguid, thb, sbtl, dbt, int_step):
-        vtel = vehicle.store.get("VTEL")
-        thtpb, psipb, sigdy, sigdz = self.seeker_kin(vehicle, sbtl, vtel, dbt)
-        ehy = 0.0
-        ehz = 0.0
-        ththb, phihb = self.seeker_uthpb(psipb, thtpb)
+        store = vehicle.store
+        dblind = store.get("dblind")
+        gk = store.get("gk")
+        zetak = store.get("zetak")
+        wnk = store.get("wnk")
+        biast = store.get("biast")
+        randt = store.get("randt")
+        biasp = store.get("biasp")
+        randp = store.get("randp")
+        biaseh = store.get("biaseh")
+        randeh = store.get("randeh")
+        tpb = np.array(store.get("TPB"), dtype=float, copy=True)
+        ttl = np.array(store.get("TTL"), dtype=float, copy=True)
+        tbl = np.array(store.get("TBL"), dtype=float, copy=True)
+        wbeb = np.asarray(store.get("WBEB"), dtype=float)
+        trcond = store.get("trcond")
+        trtht = store.get("trtht")
+        trthtd = store.get("trthtd")
+        trphid = store.get("trphid")
+        trate = store.get("trate")
+        wlq1d = store.get("wlq1d")
+        wlq1 = store.get("wlq1")
+        wlqd = store.get("wlqd")
+        wlq = store.get("wlq")
+        wlr1d = store.get("wlr1d")
+        wlr1 = store.get("wlr1")
+        wlrd = store.get("wlrd")
+        wlr = store.get("wlr")
+        wlq2d = store.get("wlq2d")
+        wlq2 = store.get("wlq2")
+        wlr2d = store.get("wlr2d")
+        wlr2 = store.get("wlr2")
+
+        thl = thb @ tbl
+        sbth = thl @ np.asarray(sbtl, dtype=float)
+        sath = self.seeker_aimp(vehicle, thl, ttl, dbt)
+        sabh = sath - sbth
+        ey = atan2(-sabh[2], sabh[0])
+        ez = atan2(sabh[1], sabh[0])
+        ehy = ey + biaseh + randeh
+        ehz = ez + biaseh + randeh
+        eahh = np.array([0.0, ehz, -ehy])
+        tbh = thb.T
+        tph = tpb @ tbh
+        thp = tph.T
+        u1pp = np.array([1.0, 0.0, 0.0])
+        u1hh = np.array([1.0, 0.0, 0.0])
+        ephh = thp @ u1pp - u1hh
+        eaph = eahh - ephh
+        eapp = tph @ eaph
+        epy = -float(eapp[2])
+        epz = float(eapp[1])
+
+        wsq = wnk * wnk
+        gg = gk * wsq
+        wlr1d_new = wlr2
+        wlr1 = integrate(wlr1d_new, wlr1d, wlr1, int_step)
+        wlr1d = wlr1d_new
+        wlr2d_new = gg * epz - 2.0 * zetak * wnk * wlr1d - wsq * wlr1
+        wlr2 = integrate(wlr2d_new, wlr2d, wlr2, int_step)
+        wlr2d = wlr2d_new
+        wlq1d_new = wlq2
+        wlq1 = integrate(wlq1d_new, wlq1d, wlq1, int_step)
+        wlq1d = wlq1d_new
+        wlq2d_new = gg * epy - 2.0 * zetak * wnk * wlq1d - wsq * wlq1
+        wlq2 = integrate(wlq2d_new, wlq2d, wlq2, int_step)
+        wlq2d = wlq2d_new
+        sigdz = wlr1
+        sigdy = wlq1
+
+        wbep = tpb @ wbeb
+        wlrd_new = wlr1 - float(wbep[2])
+        wlr = integrate(wlrd_new, wlrd, wlr, int_step)
+        wlrd = wlrd_new
+        psipb = wlr
+        wlqd_new = wlq1 - float(wbep[1])
+        wlq = integrate(wlqd_new, wlqd, wlq, int_step)
+        wlqd = wlqd_new
+        thtpb = wlq
+        thtpbd = wlqd
+        tpb = mat2tr(psipb, thtpb)
+        ththbc, phihbc = self.seeker_uthpb(psipb, thtpb)
+        ththb = ththbc + biast + randt
+        phihb = phihbc + biasp + randp
         thb = self.seeker_thb(ththb, phihb)
+        ththbx = ththb * DEG
+        phihbx = phihb * DEG
+
+        if mseek == 4:
+            ibreak = 0
+            phihbd = -thtpbd * sin(psipb)
+            eh = sqrt(ehy * ehy + ehz * ehz)
+            if abs(ththb) > trtht:
+                trcond = 6
+                ibreak = 1
+            elif abs(thtpbd) > trthtd:
+                trcond = 7
+                ibreak = 1
+            elif abs(phihbd) > trphid:
+                trcond = 8
+                ibreak = 1
+            elif eh > trate:
+                trcond = 9
+                ibreak = 1
+            if ibreak == 1:
+                mseek = 2
+                mguid = 3
+            if dbt < dblind:
+                mseek = 5
+
+        store.set("wlq1d", wlq1d)
+        store.set("wlq1", wlq1)
+        store.set("wlqd", wlqd)
+        store.set("wlq", wlq)
+        store.set("wlr1d", wlr1d)
+        store.set("wlr1", wlr1)
+        store.set("wlrd", wlrd)
+        store.set("wlr", wlr)
+        store.set("wlq2d", wlq2d)
+        store.set("wlq2", wlq2)
+        store.set("wlr2d", wlr2d)
+        store.set("wlr2", wlr2)
+        store.set("trcond", trcond)
+        store.set("epy", epy)
+        store.set("epz", epz)
+        store.set("ththb", ththb)
+        store.set("phihb", phihb)
+        store.set("ththbx", ththbx)
+        store.set("phihbx", phihbx)
+        store.set("TPB", tpb)
+        store.set("EAHH", eahh)
+        store.set("EPHH", ephh)
+        store.set("EAPH", eaph)
         return mseek, mguid, thtpb, psipb, sigdy, sigdz, ehz, ehy, thb
+
+    def seeker_aimp(self, vehicle, thl, ttl, dbt):
+        store = vehicle.store
+        daim = store.get("daim")
+        biasai = np.asarray(store.get("BIASAI"), dtype=float)
+        biassc = np.asarray(store.get("BIASSC"), dtype=float)
+        randsc = np.asarray(store.get("RANDSC"), dtype=float)
+        tht = thl @ np.asarray(ttl, dtype=float).T
+        if dbt < daim:
+            return tht @ biasai
+        return tht @ (biassc + randsc)
 
     def seeker_uthpb(self, psipb, thtpb):
         ththb = acos(cos(thtpb) * cos(psipb))
