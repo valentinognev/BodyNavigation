@@ -1,5 +1,11 @@
 # Updates
 
+## 0.108.0 - AGM6 INS ideal and deterministic errors
+- Added `cadac.vehicles.agm6.ins.Agm6Ins` (`name="ins"`). `define` registers C++ `def_ins` (error-data vectors default zeros, not CADAC `gauss()`). Does not define kinematics/newton truth names (`TBL`,`FSPB`,`WBEB`,`SBEL`,`VBEL`,`dvbe`,`phiblx`). Control names `WBECB`/`FSPCB`/`phiblcx` live here.
+- `initialize`: `mins==0` copy `SBELC=SBEL`, `VBELC=VBEL`. `mins==1` Cholesky of C++ `PP0` times zero Gauss vector (all `XX_INIT=0`) so `SBELC=SBEL`. Else `ValueError`.
+- `execute`: `mins==0` copy truth into `TBLC`/`FSPCB`/`WBECB`/`SBELC`/`VBELC`/`dvbec`/`phiblcx` then common `psivlcx`/`thtvlcx`/`thtblcx`/`phiblcx` from `VBELC`/`TBLC` as C++. `mins==1` Widnall ODEs with instrument errors at stored means (zeros → computed ≈ truth). Else `ValueError`. `ins_alt`: `hbem=hbe+biasal+randal`. No random/gauss. No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_ins.py` (mins=0 SBEL→SBELC rtol=1e-12; mins=1 zero errors SBELC≈SBEL; mins=2 raises; control names defined; ins_alt 7000+10+2=7012).
+
 ## 0.107.0 - AGM6 accel control and maut dispatcher
 - `Agm6Control.execute` is the maut dispatcher: `maut==0` return without writing `dpcx`/`dqcx`/`drcx`. `maut in {1,2,3}`: always `control_roll`; `2` also `control_rate`; `3` also `control_accel`. Else including -1 → `ValueError`.
 - `control_accel(vehicle, int_step)` ports C++ pole-placement + circular `alimit` + stored-slope `integrate` of `yy`/`zz`. Reads INS `FSPCB`/`WBECB` and guidance `ancomx`/`alcomx` (tests register them). Writes `dqcx`/`drcx`/`GAINFB` and states. Limit `|dqcx|<=dqlimx`, `|drcx|<=drlimx` with CADAC sign inside the helper as C++ (not in the dispatcher). Locals `ancomx`/`alcomx` not written back. `dt=ctx.int_step`. Local CADAC sign. No Plane6 import. Vehicle not registered.
