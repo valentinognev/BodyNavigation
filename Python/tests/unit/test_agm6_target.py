@@ -251,5 +251,7 @@ def test_hyper5_target3_class_not_imported():
         assert "from cadac.vehicles.hyper5" not in src
 
 
-def test_target3_not_registered_in_families():
-    assert ("agm6", "TARGET3") not in _VEHICLE_FAMILIES
+def test_target3_registered_in_families():
+    from cadac.vehicles.agm6.target import Agm6Target
+
+    assert _VEHICLE_FAMILIES[("agm6", "TARGET3")] is Agm6Target

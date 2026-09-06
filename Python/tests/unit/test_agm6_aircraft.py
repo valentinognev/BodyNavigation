@@ -516,5 +516,7 @@ def test_hyper5_plane6_sam6_not_imported():
     assert "from cadac.vehicles.sam6" not in src
 
 
-def test_aircraft3_not_registered_in_families():
-    assert ("agm6", "AIRCRAFT3") not in _VEHICLE_FAMILIES
+def test_aircraft3_registered_in_families():
+    from cadac.vehicles.agm6.aircraft import Agm6Aircraft
+
+    assert _VEHICLE_FAMILIES[("agm6", "AIRCRAFT3")] is Agm6Aircraft

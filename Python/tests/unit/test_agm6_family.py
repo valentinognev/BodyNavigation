@@ -18,9 +18,9 @@ def test_family_set_does_not_fall_back_to_global():
         _resolve_vehicle("agm6", "PLANE6")
 
 
-def test_unknown_family_type_raises():
+def test_no_family_missile6_still_unknown():
     with pytest.raises(ValueError, match="MISSILE6"):
-        _resolve_vehicle("agm6", "MISSILE6")
+        _resolve_vehicle(None, "MISSILE6")
 
 
 def test_load_scenario_family_defaults_onto_vehicle(tmp_path):

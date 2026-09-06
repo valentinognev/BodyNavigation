@@ -8,6 +8,9 @@ from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns, plot_row, write_pl
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
+from cadac.vehicles.agm6.aircraft import Agm6Aircraft
+from cadac.vehicles.agm6.target import Agm6Target
+from cadac.vehicles.agm6.vehicle import Agm6Missile
 from cadac.vehicles.cruise3.vehicle import Cruise3
 from cadac.vehicles.hyper5.satellite import Satellite3
 from cadac.vehicles.hyper5.target import Target3
@@ -25,8 +28,13 @@ _VEHICLE_TYPES = {
     "TARGET3": Target3,
     "SATELLITE3": Satellite3,
 }
-_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {}
+_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
+    ("agm6", "MISSILE6"): Agm6Missile,
+    ("agm6", "TARGET3"): Agm6Target,
+    ("agm6", "AIRCRAFT3"): Agm6Aircraft,
+}
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
+_AGM6_NO_DECK_TYPES = frozenset({"TARGET3", "AIRCRAFT3"})
 
 
 def _resolve_vehicle(family, vtype):
@@ -71,8 +79,15 @@ def _build_vehicle(path, spec):
         cls = _resolve_vehicle(spec.family, spec.type)
     except ValueError as exc:
         raise ValueError(f"{path}: {exc}") from exc
-    if spec.type in _NO_DECK_TYPES:
+    if spec.family == "agm6" and spec.type in _AGM6_NO_DECK_TYPES:
         return cls(spec.name, spec.events)
+    if spec.family is None and spec.type in _NO_DECK_TYPES:
+        return cls(spec.name, spec.events)
+    if spec.family == "agm6" and spec.type == "MISSILE6":
+        if spec.aero_deck is None:
+            raise ValueError(f"{path}: {spec.type} requires aero_deck")
+        weather = _deck(spec.weather_deck) if spec.weather_deck is not None else None
+        return cls(spec.name, _deck(spec.aero_deck), spec.events, weather)
     if spec.type == "HYPER5":
         if spec.aero_deck is None:
             raise ValueError(f"{path}: {spec.type} requires aero_deck")

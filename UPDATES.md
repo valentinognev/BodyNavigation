@@ -1,5 +1,11 @@
 # Updates
 
+## 0.120.0 - Run AGM6 MISSILE6 from JSONC free flight
+- `Agm6Missile` (`type="MISSILE6"`) constructor `(name, aero_deck, events=None, weather_deck=None)`. Modules: free-flight ASC order then ins/datalink/sensor/guidance/control/actuator/intercept so define always runs. Skip-if-exists; `com_names` from `"com"` flags.
+- `_VEHICLE_FAMILIES[("agm6","MISSILE6"|"TARGET3"|"AIRCRAFT3")]`. Not in `_VEHICLE_TYPES`. `_build_vehicle`: family `agm6` MISSILE6 requires aero (prop ignored, weather passed); TARGET3/AIRCRAFT3 `(name, events)`. Global `_NO_DECK_TYPES` only when `family is None`.
+- Case `Python/cases/agm6/input_freeflight.jsonc` (`family="agm6"`, `end_time` 30, `alpha0x=3`, `mprop=1`, `sbel3=-7000`, `dvbe=293`, no mair). family=None MISSILE6 still ValueError; HYPER5 TARGET3 without family still constructs.
+- Tests: `Python/tests/unit/test_agm6_one_step.py`.
+
 ## 0.119.0 - Translate WEATHER_DECK and stochastic means
 - Shared `_parse_vehicle` maps `WEATHER_DECK` → `weather_deck` jsonc path (same as AERO_DECK/PROP_DECK). `GAUSS`/`MARKOV`/`RAYL` store the mean/value only (`GAUSS biasal 0 5` → `biasal=0`; `MARKOV randal 2 5` → `randal=2`; `RAYL dvae 5` → `dvae=5`); prefixes are not skipped and not sampled.
 - `VehicleSpec.weather_deck: Path | None` default `None`. `load_scenario` resolves it relative to the JSONC parent. `translate_scenario_asc(..., family=None)` and `VehicleSpec.family` unchanged.
