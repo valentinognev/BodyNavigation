@@ -1,4 +1,5 @@
 import inspect
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -7,8 +8,10 @@ import pytest
 from cadac.constants import R
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
+from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
+from cadac.tables.lookup import Datadeck
 from cadac.vehicles.agm6.environment import Agm6Environment
 
 RTOL = 1e-12
@@ -22,6 +25,8 @@ HBE = 7000.0
 VBEL = np.array([293.0, 0.0, 0.0], dtype=float)
 DVBE = 293.0
 MAIR_WEATHER = 212
+AGM6 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/AGM6_250217/AGM6"
+WEATHER_ASC = AGM6 / "weather_deck.asc"
 
 # C++ Flat6::def_environment order, plus VBAL for reused Flat6Kinematics.
 FIELDS = {
@@ -86,11 +91,24 @@ def _plant_newton(store, *, hbe=HBE, vbel=VBEL, dvbe=DVBE):
     store.define(Field("dvbe", dvbe, "real", "out", "newton"))
 
 
-def _ready(*, mair=0, hbe=HBE, vbel=VBEL, dvbe=DVBE):
+def _weather_deck():
+    _, tables = parse_asc_deck(WEATHER_ASC)
+    return Datadeck.from_tables(tables)
+
+
+def _plant_kinematics(store):
+    store.define(Field("TBD", np.eye(3), "mat", "out", "kinematics"))
+    store.define(Field("alppx", 0.0, "real", "out", "kinematics"))
+    store.define(Field("phipx", 0.0, "real", "out", "kinematics"))
+
+
+def _ready(*, mair=0, hbe=HBE, vbel=VBEL, dvbe=DVBE, weather_deck=None, kinematics=False):
     vehicle = SimpleNamespace(store=StateStore())
-    env = Agm6Environment()
+    env = Agm6Environment(weather_deck=weather_deck)
     env.define(vehicle)
     _plant_newton(vehicle.store, hbe=hbe, vbel=vbel, dvbe=dvbe)
+    if kinematics:
+        _plant_kinematics(vehicle.store)
     vehicle.store.set("mair", mair)
     env.initialize(vehicle, _ctx())
     return vehicle, env
@@ -172,15 +190,26 @@ def test_mair_0_us76_vbal_equals_vbel():
     assert store.get("mair") == 0
 
 
-def test_mair_212_raises():
-    vehicle, env = _ready(mair=MAIR_WEATHER)
-    with pytest.raises(ValueError):
-        env.execute(vehicle, _ctx())
+def test_mair_212_no_longer_raises_with_weather_deck():
+    vehicle, env = _ready(
+        mair=MAIR_WEATHER,
+        weather_deck=_weather_deck(),
+        kinematics=True,
+    )
+    vehicle.store.set("turb_length", 100.0)
+    vehicle.store.set("turb_sigma", 0.5)
+    vehicle.store.set("gauss_value", 0.0)
+    env.execute(vehicle, _ctx())
+    vael = vehicle.store.get("VAEL")
+    assert np.all(np.isfinite(vael))
+    np.testing.assert_allclose(
+        vehicle.store.get("VBAL"), vehicle.store.get("VBEL") - vael, rtol=RTOL, atol=ATOL
+    )
 
 
-@pytest.mark.parametrize("mair", [1, 10, 100, 200, 211, 2])
-def test_other_mair_raises(mair):
-    vehicle, env = _ready(mair=mair)
+@pytest.mark.parametrize("mair", [100, 20, 3, 300])
+def test_unknown_mair_digits_raise(mair):
+    vehicle, env = _ready(mair=mair, weather_deck=_weather_deck(), kinematics=True)
     with pytest.raises(ValueError):
         env.execute(vehicle, _ctx())
 
