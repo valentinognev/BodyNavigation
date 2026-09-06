@@ -3,14 +3,27 @@ import math
 import numpy as np
 
 from cadac.constants import DEG, EPS, PI, WEII3
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.wgs84 import cad_geo84_in, cad_tdi84
+from cadac.math.wgs84 import GM, cad_geo84_in, cad_tdi84
 
 
 def _cadac_sign(variable):
     if variable < 0.0:
         return -1
     return 1
+
+
+def _skew(vec):
+    x, y, z = vec
+    return np.array(
+        [
+            [0.0, -z, y],
+            [z, 0.0, -x],
+            [-y, x, 0.0],
+        ],
+        dtype=float,
+    )
 
 
 class Rocket6Ins:
@@ -79,32 +92,153 @@ class Rocket6Ins:
 
     def initialize(self, vehicle, ctx):
         mins = vehicle.store.get("mins")
-        if mins != 0:
-            raise ValueError(f"unknown mins {mins}")
+        if mins == 0:
+            return
+        if mins == 1:
+            zeros = np.zeros(3)
+            vehicle.store.set("ESBI", zeros)
+            vehicle.store.set("EVBI", zeros)
+            vehicle.store.set("RICI", zeros)
+            return
+        raise ValueError(f"unknown mins {mins}")
+
+    def ins_gyro(self, vehicle, int_step):
+        store = vehicle.store
+        ewalkg = np.asarray(store.get("EWALKG"), dtype=float)
+        emibg = np.asarray(store.get("EMISG"), dtype=float)
+        escalg = np.asarray(store.get("ESCALG"), dtype=float)
+        ebiasg = np.asarray(store.get("EBIASG"), dtype=float)
+        eunbg_s = store.get("eunbg")
+        wbib = np.asarray(store.get("WBIB"), dtype=float)
+        fspb = np.asarray(store.get("FSPB"), dtype=float)
+        egb = np.diag(escalg) + _skew(emibg)
+        emiscg = egb @ wbib
+        emsbg = ebiasg + emiscg
+        eunbg = np.array([eunbg_s, eunbg_s, eunbg_s], dtype=float)
+        eug = np.array(
+            [eunbg[0] * fspb[0], eunbg[1] * fspb[1], eunbg[2] * fspb[2]],
+            dtype=float,
+        )
+        ewg = ewalkg * (1.0 / math.sqrt(int_step))
+        ewbib = emsbg + eug + ewg
+        wbicb = wbib + ewbib
+        store.set("EUG", eug)
+        store.set("EWG", ewg)
+        return ewbib, wbicb
+
+    def ins_accl(self, vehicle):
+        store = vehicle.store
+        emisa = np.asarray(store.get("EMISA"), dtype=float)
+        escala = np.asarray(store.get("ESCALA"), dtype=float)
+        ebiasa = np.asarray(store.get("EBIASA"), dtype=float)
+        fspb = np.asarray(store.get("FSPB"), dtype=float)
+        eab = np.diag(escala) + _skew(emisa)
+        return ebiasa + eab @ fspb
+
+    def ins_grav(self, vehicle, esbi, sbiic):
+        dbi = vehicle.store.get("dbi")
+        dbic = float(np.linalg.norm(sbiic))
+        ed = dbic - dbi
+        dum = GM / dbic**3
+        return np.asarray(esbi, dtype=float) * (-dum) - np.asarray(
+            sbiic, dtype=float
+        ) * (3.0 * ed * dum / dbic)
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
         mins = store.get("mins")
-        if mins != 0:
+        if mins not in (0, 1):
             raise ValueError(f"unknown mins {mins}")
 
-        tbi = store.get("TBI")
-        fspb = store.get("FSPB")
-        wbib = store.get("WBIB")
-        wbii = store.get("WBII")
-        sbii = store.get("SBII")
-        vbii = store.get("VBII")
+        tbi = np.asarray(store.get("TBI"), dtype=float)
+        fspb = np.asarray(store.get("FSPB"), dtype=float)
+        wbib = np.asarray(store.get("WBIB"), dtype=float)
+        wbii = np.asarray(store.get("WBII"), dtype=float)
+        sbii = np.asarray(store.get("SBII"), dtype=float)
+        vbii = np.asarray(store.get("VBII"), dtype=float)
         time = store.get("time")
         names = store.names()
         mroll = store.get("mroll") if "mroll" in names else 0
+        int_step = ctx.int_step
 
-        tbic = np.asarray(tbi, dtype=float).copy()
-        fspcb = np.asarray(fspb, dtype=float).copy()
-        wbici = np.asarray(wbii, dtype=float).copy()
-        wbicb = np.asarray(wbib, dtype=float).copy()
-        sbiic = np.asarray(sbii, dtype=float).copy()
-        vbiic = np.asarray(vbii, dtype=float).copy()
-        dbic = float(np.linalg.norm(sbiic))
+        if mins == 0:
+            tbic = tbi.copy()
+            fspcb = fspb.copy()
+            wbici = wbii.copy()
+            wbicb = wbib.copy()
+            sbiic = sbii.copy()
+            vbiic = vbii.copy()
+            dbic = float(np.linalg.norm(sbiic))
+            ewbib = np.zeros(3)
+            efspb = np.zeros(3)
+            ins_pos_err = 0.0
+            ins_vel_err = 0.0
+            ins_tilt_err = 0.0
+        else:
+            esbi = np.asarray(store.get("ESBI"), dtype=float).copy()
+            evbi = np.asarray(store.get("EVBI"), dtype=float).copy()
+            rici = np.asarray(store.get("RICI"), dtype=float).copy()
+            ricid = np.asarray(store.get("RICID"), dtype=float).copy()
+            evbid = np.asarray(store.get("EVBID"), dtype=float).copy()
+            esbid = np.asarray(store.get("ESBID"), dtype=float).copy()
+            ewalka = np.asarray(store.get("EWALKA"), dtype=float)
+            vbiic = np.asarray(store.get("VBIIC"), dtype=float).copy()
+
+            sbiic = esbi + sbii
+            dbic = float(np.linalg.norm(sbiic))
+
+            ewbib, wbicb = self.ins_gyro(vehicle, int_step)
+            ricid_new = tbi.T @ ewbib
+            rici = integrate(ricid_new, ricid, rici, int_step)
+            ricid = ricid_new
+
+            if "mstar" in names and store.get("mstar") == 3 and "URIC" in names:
+                rici = rici - np.asarray(store.get("URIC"), dtype=float)
+                store.set("mstar", 2)
+
+            tiic = np.eye(3) - _skew(rici)
+            tbic = tbi @ tiic
+
+            efspb = self.ins_accl(vehicle)
+            fspcb = ewalka + efspb + fspb
+            egravi = self.ins_grav(vehicle, esbi, sbiic)
+            ticb = tbic.T
+            evbid_new = ticb @ efspb - _skew(rici) @ ticb @ fspcb + egravi
+            evbi = integrate(evbid_new, evbid, evbi, int_step)
+            evbid = evbid_new
+
+            esbid_new = evbi.copy()
+            esbi = integrate(esbid_new, esbid, esbi, int_step)
+            esbid = esbid_new
+
+            if (
+                "mgps" in names
+                and store.get("mgps") == 3
+                and "SXH" in names
+                and "VXH" in names
+            ):
+                sxh = np.asarray(store.get("SXH"), dtype=float)
+                vxh = np.asarray(store.get("VXH"), dtype=float)
+                sbiic = sbiic - sxh
+                vbiic = vbiic - vxh
+                esbi = esbi - sxh
+                evbi = evbi - vxh
+                store.set("mgps", 2)
+
+            sbiic = esbi + sbii
+            vbiic = evbi + vbii
+            wbici = tbic.T @ wbicb
+
+            ins_pos_err = float(np.linalg.norm(esbi))
+            ins_vel_err = float(np.linalg.norm(evbi))
+            ins_tilt_err = float(np.linalg.norm(rici))
+
+            store.set("RICID", ricid)
+            store.set("RICI", rici)
+            store.set("EVBID", evbid)
+            store.set("EVBI", evbi)
+            store.set("ESBID", esbid)
+            store.set("ESBI", esbi)
 
         veic = np.array(
             [-WEII3 * sbiic[1], WEII3 * sbiic[0], 0.0],
@@ -210,12 +344,12 @@ class Rocket6Ins:
         store.set("thtbdcx", thtbdcx)
         store.set("psibdcx", psibdcx)
         store.set("alppcx", alppcx)
-        store.set("EWBIB", np.zeros(3))
-        store.set("EFSPB", np.zeros(3))
+        store.set("EWBIB", ewbib)
+        store.set("EFSPB", efspb)
         store.set("phipcx", phipcx)
-        store.set("ins_pos_err", 0.0)
-        store.set("ins_vel_err", 0.0)
-        store.set("ins_tilt_err", 0.0)
+        store.set("ins_pos_err", ins_pos_err)
+        store.set("ins_vel_err", ins_vel_err)
+        store.set("ins_tilt_err", ins_tilt_err)
 
     def terminate(self, vehicle, ctx):
         pass

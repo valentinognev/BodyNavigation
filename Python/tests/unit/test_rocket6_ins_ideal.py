@@ -94,7 +94,6 @@ EXTERNALS = (
 )
 GPS_STAR = ("mgps", "mstar", "SXH", "VXH", "URIC")
 ERROR_STATES = ("RICID", "RICI", "EVBID", "EVBI", "ESBID", "ESBI")
-NO_HELPERS = ("ins_gyro", "ins_accl", "ins_grav")
 HYPER6_ONLY = ("frax",)
 
 
@@ -344,11 +343,11 @@ def test_initialize_mins_zero_is_noop():
         np.testing.assert_array_equal(vehicle.store.get(name), np.zeros(3))
 
 
-def test_initialize_mins_nonzero_raises():
-    vehicle, ins = _defined(mins=1)
+def test_initialize_mins_two_raises():
+    vehicle, ins = _defined(mins=2)
     with pytest.raises(ValueError, match="unknown mins"):
         ins.initialize(vehicle, _ctx())
-    vehicle.store.set("mins", 2)
+    vehicle.store.set("mins", -1)
     with pytest.raises(ValueError, match="unknown mins"):
         ins.initialize(vehicle, _ctx())
 
@@ -362,12 +361,6 @@ def test_terminate_exists_and_is_pass():
     ins.terminate(vehicle, _ctx())
     assert store.get("mins") == 0
     np.testing.assert_array_equal(store.get("SBIIC"), sentinel)
-
-
-def test_no_error_ins_helpers():
-    ins = Rocket6Ins()
-    for name in NO_HELPERS:
-        assert not hasattr(ins, name)
 
 
 def test_module_does_not_import_hyper6():
@@ -469,7 +462,7 @@ def test_execute_mins_two_raises():
     np.testing.assert_array_equal(vehicle.store.get("SBII"), truth["SBII"])
 
 
-@pytest.mark.parametrize("mins", (1, 2, -1, 99))
+@pytest.mark.parametrize("mins", (2, -1, 99))
 def test_execute_unknown_mins_raises(mins):
     vehicle, ins, _truth = _ready(mins=0)
     vehicle.store.set("mins", mins)
