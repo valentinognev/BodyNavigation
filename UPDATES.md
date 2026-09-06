@@ -1,5 +1,10 @@
 # Updates
 
+## 0.92.0 - HYPER6 propulsion mprop 0-2
+- Added `cadac.vehicles.hyper6.propulsion.Hyper6Propulsion` (`name="propulsion"`). Constructor takes `Datadeck`. `define` registers C++ `def_propulsion` (including `mprop`, cowl/throttle/q-hold, `vmass`/`IBBB` and burn-out tensors, fuel state, `ca`/`spi`/`thrust`, rocket/exo slots, `mfreeze` saves). `throttle` default 0.05 as C++. Does not define env/aero names (`vmach`, `pdynmc`, `cd`/`cx`, `area`/`refa`, `alphax`, `time`, `rho`, `dvba`).
+- `initialize` ports `Hyper::init_propulsion`: `vmass=vmass0`; GHAME `IBBB0`/`IBBB1`; `IBBB=IBBB0`; `vmass0_st`/`fmass0_st` 0. `execute`: `mprop` 0/1/2 only (climb is 2); else including 3/4 → ValueError (no rocket/LTG). Tables from `ghame6_prop_deck.asc`. Autothrottle q-hold and fuel/mass/`IBBB` interpolate as C++; stored-slope `integrate` of `fmasse`. Skip `mfreeze` latch if `mfreeze` absent.
+- Tests: `Python/tests/unit/test_hyper6_propulsion.py` (climb `mprop=2`, vmach~3.3, qhold=200000; throttle in (0, thrtl_max]; mprop=0 thrust 0; mprop=4 raises; formulas vs C++ rtol=1e-12).
+
 ## 0.91.0 - HYPER6 GHAME aerodynamics
 - Added `cadac.vehicles.hyper6.aero.Hyper6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (including `maero`, GHAME refs, `cx`/`cz`, table coeffs, dimensional der, `tralp`; `cd`/`cl` role `"dia"` as C++). Does not define kinematics/env/propulsion/actuator names (`alphax`, `vmach`, `pdynmc`, `dvba`, `vmass`, `IBBB`, `delax`/`delex`/`delrx`).
 - `initialize` ports `Hyper::init_aerodynamics`: `refa=557.42`, `refb=24.38`, `refc=22.86`, termination `trmach`/`trdynm`/`trload`/`tralp`, `refa_st=7`, `caa=0.4`. `execute`: `maero==1` GHAME tables from ASC + body `cx`/`cz` + `aerodynamics_der` as C++. Else including 2 → ValueError (no transfer vehicle). Tests parse `ghame6_aero_deck.asc` (JSONC in Task 16).
