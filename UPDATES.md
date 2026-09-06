@@ -1,5 +1,16 @@
 # Updates
 
+## 0.102.0 - MAGSIX Rotor from JSONC
+- Family API: optional `VehicleSpec.family` (vehicle key else scenario `"family"` else `None`); `translate_scenario_asc(..., family=None)` stamps vehicles; `_build_vehicle` uses `_VEHICLE_FAMILIES[(family, type)]` only when family is set (no type-table fallthrough). Unknown `ValueError` includes type and family when set. AIM5 Task 1 is now idempotent.
+- Added `cadac.eom.rotor`: `RotorEnvironment` (US76 + `gravity(hbe)`, `mwind==0`), `RotorTrajectory` (DNU ICs/step, `SBEL` dt=`int_step*tau`, ground impact `health=0` + combus status 0, no `sys.exit`), `RotorAttitude` (CADAC beta→phi→psi order; `nonlinear` in `{0,1}`). Module-level `RPM=9.5493`, `RHO_SL=1.225`. Not Flat6/Round6.
+- `Rotor` (`type="ROTOR"`, constructor `(name, events=None)`, no decks). Modules environment/trajectory/attitude. Registered `_VEHICLE_TYPES["ROTOR"]` and `_VEHICLE_FAMILIES[("magsix","ROTOR")]`. `"ROTOR"` in `_NO_DECK_TYPES`. Unknown-type sentinel `"NO_SUCH_TYPE"`.
+- Cases `Python/cases/magsix/`: attitude RECT.MR1 `input.jsonc` (`end_time` 0.35, `int_step` 0.0001, `plot_step` 0.005) and trajectory `input_trajectoryMR1.jsonc` (`end_time` 50, `int_step` 0.001, `plot_step` 0.01). E2E skip without goldens (`tests/e2e/goldens/magsix/plot.csv` and `.../trajectory/plot.csv`).
+
+## 0.101.0 - Remaining CADAC program plans
+- Spec + TDD plan for each program not yet in Python: AIM5, CRUISE5, MAGSIX, ROCKET6, SAM6, SRAAM6, AGM6 (`docs/superpowers/specs/2026-09-06-cadac-*-design.md`, `docs/superpowers/plans/2026-09-06-cadac-*.md`). Grok writer + Grok reviewer per file.
+- Kernel ruling: optional `VehicleSpec.family`; family set → `_VEHICLE_FAMILIES[(family, type)]` only (no fallthrough). AIM5 plan introduces it; later Task 1 is idempotent. Unknown-type sentinel after AIM5: `"NO_SUCH_TYPE"` (not `"ROTOR"`).
+- First cases: AIM5 `input_hori.asc`; CRUISE5 `input_1.asc`; MAGSIX `input.asc` attitude; ROCKET6 `input.asc` insertion; SAM6 `input_SAM_autopilot.asc`; SRAAM6 `input_1v1.asc`; AGM6 `input_3_1` free flight.
+
 ## 0.100.1 - HYPER6 e2e skip without golden
 - Added `Python/tests/e2e/test_hyper6_climb.py`. Skip if `tests/e2e/goldens/hyper6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live climb `run_scenario` calls `require_golden` first.
 
