@@ -256,3 +256,62 @@ class RotorTrajectory:
     def terminate(self, vehicle, ctx):
         pass
 
+
+class RotorAttitude:
+    name = "attitude"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        for field in (
+            Field("nonlinear", 0, "int", "data", "attitude"),
+            Field("moi_trans", 0.0, "real", "data", "attitude"),
+            Field("cyb", 0.0, "real", "data", "attitude"),
+            Field("cyb3", 0.0, "real", "data", "attitude"),
+            Field("clwb", 0.0, "real", "data", "attitude"),
+            Field("clp", 0.0, "real", "data", "attitude"),
+            Field("clwb3", 0.0, "real", "data", "attitude"),
+            Field("clp3", 0.0, "real", "data", "attitude"),
+            Field("clwb2p", 0.0, "real", "data", "attitude"),
+            Field("clwbp2", 0.0, "real", "data", "attitude"),
+            Field("cnb", 0.0, "real", "data", "attitude"),
+            Field("cnr", 0.0, "real", "data", "attitude"),
+            Field("cnb3", 0.0, "real", "data", "attitude"),
+            Field("cnr3", 0.0, "real", "data", "attitude"),
+            Field("cnb2r", 0.0, "real", "data", "attitude"),
+            Field("cnbr2", 0.0, "real", "data", "attitude"),
+            Field("beta", 0.0, "real", "state", "attitude"),
+            Field("betad", 0.0, "real", "state", "attitude"),
+            Field("phi", 0.0, "real", "state", "attitude"),
+            Field("phid", 0.0, "real", "state", "attitude"),
+            Field("phidd", 0.0, "real", "state", "attitude"),
+            Field("psi", 0.0, "real", "state", "attitude"),
+            Field("psid", 0.0, "real", "state", "attitude"),
+            Field("psidd", 0.0, "real", "state", "attitude"),
+            Field("betax", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+            Field("phix", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+            Field("ppx", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+            Field("psix", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+            Field("rrx", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        store = vehicle.store
+        betax = store.get("betax")
+        phix = store.get("phix")
+        ppx = store.get("ppx")
+        psix = store.get("psix")
+        rrx = store.get("rrx")
+        tau = store.get("tau")
+        store.set("beta", betax * RAD)
+        store.set("phi", phix * RAD)
+        store.set("phid", ppx * RAD * tau)
+        store.set("psi", psix * RAD)
+        store.set("psid", rrx * RAD * tau)
+
+    def execute(self, vehicle, ctx):
+        pass
+
+    def terminate(self, vehicle, ctx):
+        pass
+
