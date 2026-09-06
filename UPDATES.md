@@ -1,5 +1,10 @@
 # Updates
 
+## 0.82.0 - HYPER5 SATELLITE3 forces
+- Added `cadac.vehicles.hyper5.satellite`: `Satellite3Forces` (`name="forces"`), `Satellite3` (`type="SATELLITE3"`, health=1). Constructor `(name, events=None)` — no decks. Modules: Round3Environment, Satellite3Forces, Round3Newton (C++ MODULES order; forces before newton). No seeker. `com_names` from store fields with `"com"` in outputs. Not registered in cli (Task 20).
+- Forces: C++ `def_forces` FSPV (vec out, skip-if-exists), sat_thrust/sat_mass (data, default 100 per plan; C++ sat_thrust init is 0). `execute` ports `Satellite::forces`: `FSPV=[sat_thrust/sat_mass, 0, 0]`. Round3 lowercase names. `initialize`/`terminate` pass. Does not import Hyper5Forces/Cruise3/Plane5.
+- Tests: `Python/tests/unit/test_satellite3_forces.py` (sat_thrust=0, sat_mass=100 → FSPV[0]==0; sat_thrust=100 → FSPV[0]==1; rtol=1e-12, atol=1e-14).
+
 ## 0.81.0 - HYPER5 TARGET3 vehicle
 - Added `cadac.vehicles.hyper5.target`: `Target3Forces` (`name="forces"`), `Target3Intercept` (`name="intercept"`), `Target3` (`type="TARGET3"`, health=1). Constructor `(name, events=None)` — no decks. Modules: Round3Environment, Target3Forces, Round3Newton, Target3Intercept (C++ MODULES order; forces before newton). `com_names` from store fields with `"com"` in outputs. Not registered in cli (Task 20).
 - Forces: C++ `def_forces` FSPV (vec out, skip-if-exists), fwd_accel/side_accel (data), CORIO_V/CENTR_V (vec diag). `execute` ports `Target::forces`: TVG=tgv.T, TGI=tig.T, TEG=tge.T, WEIG=tge@weii@TEG, CORIO_V=TVG@WEIG@vbeg*2, CENTR_V=TVG@WEIG@WEIG@TGI@sbii, GRAV_G=[0,0,grav], ACC_V=CORIO+CENTR-GRAV_V, FSPV += fwd_accel/side_accel. Round3 lowercase names. Does not read unused C++ local thtvgx. Does not import Hyper5Forces/Cruise3/Plane5. `initialize`/`terminate` pass.
