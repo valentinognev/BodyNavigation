@@ -1,9 +1,12 @@
+from math import atan2, cos, sin, sqrt, tan
+
 import numpy as np
 
 from cadac.constants import AGRAV, DEG
 from cadac.kernel.state import Field
 from cadac.math.frames import polar_from_cart
 
+SMALL = 1e-7
 _ZEROS3 = (0.0, 0.0, 0.0)
 
 
@@ -142,7 +145,64 @@ class Sraam6Guidance:
         store.set("thtobcx", thtobcx)
 
     def guidance_term(self, vehicle):
-        pass
+        store = vehicle.store
+        gnav = store.get("gnav")
+        time = store.get("time")
+        stel = np.asarray(store.get("STEL"), dtype=float)
+        vtel = np.asarray(store.get("VTEL"), dtype=float)
+        thtpb = store.get("thtpb")
+        psipb = store.get("psipb")
+        sigdpy = store.get("sigdpy")
+        sigdpz = store.get("sigdpz")
+        tbl = np.asarray(store.get("TBL"), dtype=float)
+        fspb = np.asarray(store.get("FSPB"), dtype=float)
+        gmax = store.get("gmax")
+        trcond = store.get("trcond")
+        trcvel = store.get("trcvel")
+        sbel = np.asarray(store.get("SBEL"), dtype=float)
+        vbel = np.asarray(store.get("VBEL"), dtype=float)
+
+        sbtl = sbel - stel
+        dbt = float(np.sqrt(float(sbtl @ sbtl)))
+        dum = float(sbtl @ (vbel - vtel))
+        dcvel = abs(dum / dbt)
+
+        if time > 3.0:
+            if dcvel < trcvel:
+                trcond = 1
+
+        fspcb1 = float(fspb[0])
+        adely = fspcb1 * tan(psipb) / AGRAV
+        adelz = fspcb1 * tan(thtpb) / (cos(psipb) * AGRAV)
+
+        gravb = tbl @ np.array([0.0, 0.0, 1.0])
+
+        gn = gnav * dcvel
+        apny = gn * sigdpz / (cos(psipb) * AGRAV)
+        apnz = gn * (sigdpz * tan(thtpb) * tan(psipb) + sigdpy / cos(thtpb)) / AGRAV
+        all_ = apny + adely - float(gravb[1])
+        ann = apnz + adelz + float(gravb[2])
+
+        aa = sqrt(all_ * all_ + ann * ann)
+        if aa > gmax:
+            aa = gmax
+        if abs(ann) < SMALL and abs(all_) < SMALL:
+            phi = 0.0
+        else:
+            phi = atan2(ann, all_)
+        alcomx = aa * cos(phi)
+        ancomx = aa * sin(phi)
+
+        store.set("ancomx", ancomx)
+        store.set("alcomx", alcomx)
+        store.set("trcond", trcond)
+        store.set("gn", gn)
+        store.set("apny", apny)
+        store.set("apnz", apnz)
+        store.set("adely", adely)
+        store.set("adelz", adelz)
+        store.set("all", all_)
+        store.set("ann", ann)
 
     def terminate(self, vehicle, ctx):
         pass

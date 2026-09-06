@@ -303,17 +303,20 @@ def test_mnav0_keeps_snapshot_and_extrapolates():
     np.testing.assert_allclose(store.get("range"), polar[0], rtol=RTOL, atol=ATOL)
 
 
-def test_mguid_6_calls_guidance_term_pass():
-    vehicle, guidance, ctx = _ready(
-        mguid=6,
-        mnav=0,
-        plant_tbl=False,
-        plant_vbel=False,
-    )
+def test_mguid_6_calls_guidance_term():
+    vehicle, guidance, ctx = _ready(mguid=6, mnav=0)
     store = vehicle.store
-    store.set("ancomx", 1.0)
-    store.set("alcomx", 2.0)
+    store.define(Field("thtpb", 0.0, "real", "out", "seeker"))
+    store.define(Field("psipb", 0.0, "real", "out", "seeker"))
+    store.define(Field("sigdpy", 0.0, "real", "out", "seeker"))
+    store.define(Field("sigdpz", 0.0, "real", "out", "seeker"))
+    store.define(Field("FSPB", (0.0, 0.0, 0.0), "vec", "out", "newton"))
+    store.define(Field("gmax", 50.0, "real", "diag", "aerodynamics"))
+    store.define(Field("trcond", 0, "int", "diag", "aerodynamics"))
+    store.define(Field("trcvel", 10e-4, "real", "data", "aerodynamics"))
+    store.set("ancomx", 99.0)
+    store.set("alcomx", 99.0)
     guidance.execute(vehicle, ctx)
     assert store.get("mguid") == 6
-    assert store.get("ancomx") == 1.0
-    assert store.get("alcomx") == 2.0
+    np.testing.assert_allclose(store.get("alcomx"), 0.0, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(store.get("ancomx"), 1.0, rtol=RTOL, atol=ATOL)
