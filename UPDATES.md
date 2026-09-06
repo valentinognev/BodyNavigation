@@ -1,5 +1,10 @@
 # Updates
 
+## 0.70.0 - HYPER5 bank-angle control
+- Added `cadac.vehicles.hyper5.control.Hyper5Control` (`name="control"`). `define` registers C++ `def_control` fields used by `control_bank`: phimvx (out, scrn/plot), phicx (data, scrn/plot), phix (state, plot), phixd (state), philimx, tphi. Does not register mcontrol, load, altitude, heading, TBV/TBG. `initialize` pass (no C++ `init_control`). `execute` pass until Task 10 dispatcher.
+- `control_bank(vehicle, phicx, int_step)` ports `Hyper::control_bank`: clip phicx to ±philimx (local), `phixd_new=(phicx-phix)/tphi`, stored-slope `integrate`, writes phix/phixd, returns phix. Does not write phimvx/phicx. Protocol `vehicle.store`. No vehicle. No Plane5Control import.
+- Tests: `Python/tests/unit/test_hyper5_control_bank.py` (Demo 4.7 philimx=70, tphi=1, int_step=0.05; one- and two-step lag vs C++ replica; limiter phicx=90 and -90; execute pass; rtol=1e-12, atol=1e-14).
+
 ## 0.69.0 - HYPER5 Hyper forces FSPV
 - Added `cadac.vehicles.hyper5.forces.Hyper5Forces` (`name="forces"`). `define` registers C++ `def_forces` `FSPV` only (vec, out, plot). Skip-if-name-exists (Round3 newton does not define FSPV). Does not define pdynmc/cl/cd/area/thrust/mass/alphax/phimvx/time (plant/control; tests register those). `initialize` pass (no C++ `init_forces`).
 - `execute` ports `Hyper::forces`: `phimv=phimvx*RAD`, `alpha=alphax*RAD`; `fspv1=(-pdynmc*area*cd+thrust*cos(alpha))/mass`, `fspv2=sin(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`, `fspv3=-cos(phimv)*(pdynmc*area*cl+thrust*sin(alpha))/mass`. Protocol `vehicle.store`. No vehicle. No Cruise3/Plane5 imports or shared helper.
