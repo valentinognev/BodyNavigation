@@ -27,6 +27,8 @@ def run_loop(
         )
         for vehicle in vehicles
     ]
+    for slot, vehicle in enumerate(vehicles):
+        _publish(combus, slot, vehicle)
     while sim_time <= (end_time + int_step):
         times.append(sim_time)
         for slot, vehicle in enumerate(vehicles):
@@ -55,19 +57,27 @@ def run_loop(
                         continue
                     module.execute(vehicle, ctx)
                 int_step = ctx.int_step
-                com_names = getattr(vehicle, "com_names", None)
-                if com_names:
-                    saved = combus[slot].status
-                    packet = packet_from_store(store, com_names)
-                    packet.name = getattr(vehicle, "name", "")
-                    packet.type = getattr(vehicle, "type", "")
-                    packet.status = saved
-                    combus[slot] = packet
+                _publish(combus, slot, vehicle)
             if on_step is not None:
                 on_step(vehicle, ctx)
             vehicle.event_time = event_time + int_step
         sim_time += int_step
     return times
+
+
+def _publish(combus, slot, vehicle):
+    com_names = getattr(vehicle, "com_names", None)
+    if not com_names:
+        return
+    store = getattr(vehicle, "store", None)
+    if store is None:
+        return
+    saved = combus[slot].status
+    packet = packet_from_store(store, com_names)
+    packet.name = getattr(vehicle, "name", "")
+    packet.type = getattr(vehicle, "type", "")
+    packet.status = saved
+    combus[slot] = packet
 
 
 def _health(vehicle):

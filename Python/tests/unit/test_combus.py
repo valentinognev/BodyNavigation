@@ -52,6 +52,44 @@ def test_packet_two_named_vars():
     assert type(packet.status) is int
 
 
+def test_run_loop_seeds_combus_from_store_before_first_execute():
+    first = _Vehicle()
+    first.name = "h"
+    first.type = "HYPER5"
+    first.store.define(Field("mark", 1, "int", "data", "test"))
+    first.com_names = ["mark"]
+    second = _Vehicle()
+    second.name = "t"
+    second.type = "TARGET3"
+    second.store.define(Field("lonx", -106.28, "real", "data", "newton"))
+    second.com_names = ["lonx"]
+    seen = []
+
+    class _Watch:
+        name = "watch"
+
+        def define(self, vehicle):
+            pass
+
+        def initialize(self, vehicle, ctx):
+            pass
+
+        def execute(self, vehicle, ctx):
+            seen.append(ctx.combus[1].vars.get("lonx"))
+
+        def terminate(self, vehicle, ctx):
+            pass
+
+    run_loop(
+        vehicles=[first, second],
+        modules_by_vehicle={first: [_Watch()], second: []},
+        module_order=["watch"],
+        end_time=0.0,
+        int_step=0.1,
+    )
+    assert seen[0] == -106.28
+
+
 def test_run_loop_publishes_packet_after_modules():
     vehicle = _Vehicle()
     vehicle.name = "c1"
@@ -72,7 +110,7 @@ def test_run_loop_publishes_packet_after_modules():
     assert packet.type == "CRUISE3"
     assert packet.status == 1
     assert packet.vars["time"] == 0.1
-    assert watch.vars_during_execute[0] == {}
+    assert watch.vars_during_execute[0]["time"] == 0.0
     assert watch.vars_during_execute[1]["time"] == 0.0
 
 

@@ -9,6 +9,9 @@ from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
 from cadac.vehicles.cruise3.vehicle import Cruise3
+from cadac.vehicles.hyper5.satellite import Satellite3
+from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.hyper5.vehicle import Hyper5
 from cadac.vehicles.plane5.vehicle import Plane5
 from cadac.vehicles.plane6.vehicle import Plane6
 
@@ -16,7 +19,11 @@ _VEHICLE_TYPES = {
     "CRUISE3": Cruise3,
     "PLANE": Plane5,
     "PLANE6": Plane6,
+    "HYPER5": Hyper5,
+    "TARGET3": Target3,
+    "SATELLITE3": Satellite3,
 }
+_NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
 
 
 @dataclass
@@ -44,6 +51,30 @@ def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
     return on_step
 
 
+def _build_vehicle(path, spec):
+    cls = _VEHICLE_TYPES.get(spec.type)
+    if cls is None:
+        raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
+    if spec.type in _NO_DECK_TYPES:
+        return cls(spec.name, spec.events)
+    if spec.type == "HYPER5":
+        if spec.aero_deck is None:
+            raise ValueError(f"{path}: {spec.type} requires aero_deck")
+        mprop = spec.params.get("mprop", 0)
+        if mprop != 0 and spec.prop_deck is None:
+            raise ValueError(f"{path}: {spec.type} requires prop_deck")
+        prop = _deck(spec.prop_deck) if spec.prop_deck is not None else None
+        return cls(spec.name, _deck(spec.aero_deck), prop, spec.events)
+    if spec.aero_deck is None or spec.prop_deck is None:
+        raise ValueError(f"{path}: {spec.type} requires aero_deck and prop_deck")
+    return cls(
+        spec.name,
+        _deck(spec.aero_deck),
+        _deck(spec.prop_deck),
+        spec.events,
+    )
+
+
 def run_scenario(path):
     path = Path(path)
     cfg = load_scenario(path)
@@ -60,17 +91,7 @@ def run_scenario(path):
     vehicles = []
     modules_by_vehicle = {}
     for spec in cfg.vehicles:
-        cls = _VEHICLE_TYPES.get(spec.type)
-        if cls is None:
-            raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
-        if spec.aero_deck is None or spec.prop_deck is None:
-            raise ValueError(f"{path}: {spec.type} requires aero_deck and prop_deck")
-        vehicle = cls(
-            spec.name,
-            _deck(spec.aero_deck),
-            _deck(spec.prop_deck),
-            spec.events,
-        )
+        vehicle = _build_vehicle(path, spec)
         vehicle.define()
         for name, value in spec.params.items():
             try:

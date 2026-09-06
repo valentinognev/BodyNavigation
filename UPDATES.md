@@ -1,5 +1,12 @@
 # Updates
 
+## 0.84.0 - HYPER5 and TARGET3 from JSONC
+- `cadac.vehicles.hyper5.vehicle.Hyper5` (`type="HYPER5"`, health=1). Constructor `(name, aero_deck, prop_deck, events=None)` with `prop_deck` allowed `None`. Modules: environment, aerodynamics, propulsion, forces, newton, seeker, guidance, control, intercept, targeting (define always; Demo 4.7 MODULES omits targeting execute). Simple Cruise3-style define loop.
+- `run_scenario` maps `HYPER5`/`TARGET3`/`SATELLITE3`. HYPER5 requires aero; prop if `mprop!=0` or `prop_deck` present. TARGET3/SATELLITE3: `Target3(name, events)` / `Satellite3(name, events)` — no decks. CRUISE3/PLANE/PLANE6 still require both decks. Unknown types still ValueError (`"HYPER6"` stays the unknown-type sentinel).
+- `run_loop` seeds combus from store `com_names` before the first execute (CADAC `loading_packet_init`) so Hyper seeker can read TARGET3 `lonx`/`latx` at t=0. Skip-missing modules and plot slot 0 unchanged. `_plot_columns` CRUISE3 path unchanged.
+- Translated `CADAC_Simulations/HYPER5_250113/HYPER5/input.asc` + `hyper5_aero_deck.asc` to `Python/cases/hyper5/` (`end_time` 25, RR3X+Truck_t1, mprop=0, mcontrol=44, mguidance=66, mseeker=1, acq_range=6000). No e2e golden.
+- Tests: `Python/tests/unit/test_hyper5_one_step.py` (0.05 s smoke alt finite health 1; committed case; deck policy; TARGET3/SATELLITE3 no decks). Combus seed: `test_run_loop_seeds_combus_from_store_before_first_execute`.
+
 ## 0.83.0 - HYPER5 satellite targeting
 - `Hyper5Targeting.execute`: `mtargeting==0` return; `==1` ports C++ `targeting` / `targeting_satellite` / `targeting_grnd_ranges`; else including 2 ValueError. Writes `wp_lonx`/`wp_latx`/`wp_alt` from closest TARGET3 (guidance-owned; not defined here) plus `clost_tgt_slot`/`tgtng_sat_slot`. Skip cout/`out_count`.
 - Identify SATELLITE3/TARGET3 by `Packet.type` (not CADAC `id.find`). Kinematics from packet.vars `lonx`/`latx`/`alt`/`sbii`; Hyper store `del_radius`/`lonx`/`latx`/`sbii`. `LARGE=1e10` module-level; not in `cadac.constants`. Local CADAC `angle()` (EPS; not Flat6). Port `angle(SBII,STII)` as written. No Plane5 import.
