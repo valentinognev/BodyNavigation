@@ -1,5 +1,12 @@
 # Updates
 
+## 0.101.0 - run AIM5 and AIRCRAFT3 from JSONC hori
+- Kernel: optional `VehicleSpec.family`; scenario-level `"family"` copies onto vehicles that omit it; vehicle key wins. `translate_scenario_asc(..., family=)` writes `"family"` on each vehicle. `_build_vehicle`: family set → `_VEHICLE_FAMILIES` only (no `_VEHICLE_TYPES` fallthrough). Unknown-type sentinel `"NO_SUCH_TYPE"` (was `"AIM5"`).
+- `Aim5` (`type="AIM5"`, both decks required). Modules in hori ASC order on Flat3: aero, propulsion mprop 0–1, kinematic seeker (`Packet.type=="AIRCRAFT3"`, `tgt_num` default 1), pronav/spiral guidance, acceleration autopilot, FSPV forces, intercept (`dta<500` and `dvta>0`; no `sys.exit`). `Aim5Flat3Newton` copies `sael*`/`dvae` → `sbel*`/`dvbe`. Vehicle-only `com_names` union `{SBEL,VBEL,psivlx,thtvlx}`.
+- `Aim5Aircraft` (`type="AIRCRAFT3"`, family `"aim5"` only, no decks). Guidance `acft_option` 0/1/2; bank/load control; `FSPV=[acc_longx*grav,0,-anx*grav]`.
+- Registry: `_VEHICLE_TYPES["AIM5"]`; `_VEHICLE_FAMILIES[("aim5","AIM5"|"AIRCRAFT3")]`. `_NO_DECK_FAMILY_TYPES={("aim5","AIRCRAFT3")}` — not global `_NO_DECK_TYPES`.
+- Case `Python/cases/aim5/` from `input_hori.asc` (`family="aim5"`, `end_time` 10). E2E `test_aim5_hori.py` skips if `tests/e2e/goldens/aim5/plot.csv` absent (file not created).
+
 ## 0.100.1 - HYPER6 e2e skip without golden
 - Added `Python/tests/e2e/test_hyper6_climb.py`. Skip if `tests/e2e/goldens/hyper6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live climb `run_scenario` calls `require_golden` first.
 
