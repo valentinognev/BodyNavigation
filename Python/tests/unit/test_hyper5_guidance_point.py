@@ -43,7 +43,6 @@ POINT_FIELDS = {
 }
 
 NOT_DEFINED = (
-    "pronav_gain",
     "line_gain",
     "nl_gain_fact",
     "decrement",
@@ -51,7 +50,6 @@ NOT_DEFINED = (
     "thtfgx",
     "nl_gain",
     "VBEF",
-    "bias",
     "philimx",
     "write",
     "SWBL",
