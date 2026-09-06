@@ -1,5 +1,9 @@
 # Updates
 
+## 0.95.0 - HYPER6 gamma controller
+- `Hyper6Control.control_gamma` ports C++ climb `mautp=4` pole-placement (`pgam`/`wgam`/`zgam`, `thtvdcomx`). Reads INS `qqcx`/`thtbdcx`/`thtvdcx`/`dvbec` (dvbec==0 → `dvbe`). `np.linalg.inv` for DP and (AA-BB*~GAINGAM). Returns `delecx`; writes `GAINGAM`/`gainff`; does not write `delecx`. No Plane6 import. `execute` still pass.
+- Tests: `Python/tests/unit/test_hyper6_control_gamma.py` (climb pgam=4 wgam=2 zgam=0.7, thtvdcomx=0; finite elevator vs C++ rtol=1e-12; execute remains pass).
+
 ## 0.94.0 - HYPER6 roll and rate SAS
 - Added `cadac.vehicles.hyper6.control.Hyper6Control` (`name="control"`). `define` registers C++ `def_control` (`maut`/`mroll`/`mfreeze`, `alimitx`, `dalimx`/`delimx`/`drlimx`/`philimx`, roll poles `wrcl`/`zrcl`, SAS `tp`/`zetlagr`, gamma poles `pgam`/`wgam`/`zgam`, INS heading/path `psivdcomx`/`thtvdcomx`, commands `delacx`/`delecx`/`delrcx` out+plot, states `yyd`/`yy`/`zzd`/`zz`). Does not define INS/aero names the helpers read (`phibdcx`/`ppcx`/`qqcx`/`rrcx`/`dvbec`, `dllp`/`dllda`/`dla`/`dlde`/`dma`/`dmq`/`dmde`/`dyb`/`dydr`/`dnb`/`dnr`/`dndr`). `execute` pass until maut dispatcher.
 - Helpers port C++ `control_roll`/`control_roll_rate`/`control_pitch_rate`/`control_yaw_rate`: return commands; write `gkp`/`gkphi` (roll) and `zrate`/`grate`/`wnlagr` (yaw only). Reads INS `*c` names. Module-level `SMALL=1e-7` (not `cadac.constants`). Local CADAC sign (`<0 → -1` else `+1`). No Plane6/Flat6 import. No `control_gamma`.
