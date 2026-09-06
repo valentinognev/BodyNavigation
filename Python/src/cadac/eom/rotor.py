@@ -310,7 +310,111 @@ class RotorAttitude:
         store.set("psid", rrx * RAD * tau)
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        nonlinear = store.get("nonlinear")
+        if nonlinear not in (0, 1):
+            raise ValueError(f"unknown nonlinear {nonlinear}")
+        moi_trans = store.get("moi_trans")
+        cyb = store.get("cyb")
+        cyb3 = store.get("cyb3")
+        clwb = store.get("clwb")
+        clp = store.get("clp")
+        clwb3 = store.get("clwb3")
+        clp3 = store.get("clp3")
+        clwb2p = store.get("clwb2p")
+        clwbp2 = store.get("clwbp2")
+        cnb = store.get("cnb")
+        cnr = store.get("cnr")
+        cnb3 = store.get("cnb3")
+        cnr3 = store.get("cnr3")
+        cnb2r = store.get("cnb2r")
+        cnbr2 = store.get("cnbr2")
+        grav = store.get("grav")
+        mass = store.get("mass")
+        ref_length = store.get("ref_length")
+        velocity_ss = store.get("velocity_ss")
+        velocityx = store.get("velocityx")
+        velocityxd = store.get("velocityxd")
+        gamma = store.get("gamma")
+        omegax = store.get("omegax")
+        tau = store.get("tau")
+        moi_spinx = store.get("moi_spinx")
+        mu = store.get("mu")
+        beta = store.get("beta")
+        betad = store.get("betad")
+        phi = store.get("phi")
+        phid = store.get("phid")
+        phidd = store.get("phidd")
+        psi = store.get("psi")
+        psid = store.get("psid")
+        psidd = store.get("psidd")
+        int_step = ctx.int_step
+
+        moi_transx = moi_trans / (ref_length * ref_length * mu * mu * mass)
+
+        betad_new = (
+            (-velocityxd / velocityx + velocityx * cyb) * beta
+            - psid
+            + tau * grav * math.cos(gamma) / (velocityx * velocity_ss) * phi
+            + tau * grav * math.sin(gamma) / (velocityx * velocity_ss) * psi
+            + nonlinear * (velocityx * cyb3 * beta**3 / 6)
+        )
+        beta = integrate(betad_new, betad, beta, int_step)
+        betad = betad_new
+
+        phidd_new = (
+            velocityx * omegax * clwb / (mu * mu * moi_transx) * beta
+            + velocityx * clp / (mu * mu * moi_transx) * phid
+            + moi_spinx * omegax / moi_transx * psid
+            + nonlinear
+            * (
+                velocityx * omegax * clwb3 / (6 * mu * mu * moi_transx) * beta**3
+                + clp3 / (6 * mu**4 * moi_transx * velocityx) * phid**3
+                + omegax * clwb2p / (6 * mu**3 * moi_transx) * beta * beta * phid
+                + omegax * clwbp2 / (6 * mu**4 * moi_transx * velocityx) * beta * phid * phid
+            )
+        )
+        phid_new = integrate(phidd_new, phidd, phid, int_step)
+        phidd = phidd_new
+        phi = integrate(phid_new, phid_new, phi, int_step)
+        phid = phid_new
+
+        psidd_new = (
+            velocityx * velocityx * cnb / (mu * moi_transx) * beta
+            - moi_spinx * omegax / moi_transx * phid
+            + velocityx * cnr / (mu * mu * moi_transx) * psid
+            + nonlinear
+            * (
+                velocityx * velocityx * cnb3 / (6 * mu * moi_transx) * beta**3
+                + cnr3 / (6 * mu**4 * moi_transx * velocityx) * psid**3
+                + velocityx * cnb2r / (6 * mu * mu * moi_transx) * beta * beta * psid
+                + cnbr2 / (6 * mu**3 * moi_transx) * beta * psid * psid
+            )
+        )
+        psid_new = integrate(psidd_new, psidd, psid, int_step)
+        psidd = psidd_new
+        psi = integrate(psid_new, psid_new, psi, int_step)
+        psid = psid_new
+
+        betax = beta * DEG
+        phix = phi * DEG
+        ppx = phid * DEG / tau
+        psix = psi * DEG
+        rrx = psid * DEG / tau
+
+        store.set("beta", beta)
+        store.set("betad", betad)
+        store.set("phi", phi)
+        store.set("phid", phid)
+        store.set("phidd", phidd)
+        store.set("psi", psi)
+        store.set("psid", psid)
+        store.set("psidd", psidd)
+        store.set("betax", betax)
+        store.set("phix", phix)
+        store.set("ppx", ppx)
+        store.set("psix", psix)
+        store.set("rrx", rrx)
 
     def terminate(self, vehicle, ctx):
         pass
