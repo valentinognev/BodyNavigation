@@ -2,9 +2,10 @@ import math
 
 import numpy as np
 
-from cadac.constants import AGRAV, R, RAD
+from cadac.constants import AGRAV, DEG, R, RAD
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr
 
@@ -165,7 +166,92 @@ class RotorTrajectory:
         store.set("VBEL", vbel)
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        cd = store.get("cd")
+        cmdw = store.get("cmdw")
+        clw = store.get("clw")
+        cma = store.get("cma")
+        mass = store.get("mass")
+        ref_area = store.get("ref_area")
+        ref_length = store.get("ref_length")
+        psivlx = store.get("psivlx")
+        hbg = store.get("hbg")
+        moi_spin = store.get("moi_spin")
+        velocity_ss = store.get("velocity_ss")
+        rho = store.get("rho")
+        grav = store.get("grav")
+        velocityx = store.get("velocityx")
+        velocityxd = store.get("velocityxd")
+        gamma = store.get("gamma")
+        gammaxd = store.get("gammaxd")
+        omegax = store.get("omegax")
+        omegaxd = store.get("omegaxd")
+        sbel = store.get("SBEL")
+        sbeld = store.get("SBELD")
+        int_step = ctx.int_step
+
+        tau = 2 * mass / (rho * ref_area * velocity_ss)
+        mu = 2 * mass / (rho * ref_area * ref_length)
+        moi_spinx = moi_spin / (ref_length * ref_length * mu * mu * mass)
+
+        velocityxd_new = (
+            -cd * velocityx * velocityx - tau * grav * math.sin(gamma) / velocity_ss
+        )
+        velocityx = integrate(velocityxd_new, velocityxd, velocityx, int_step)
+        velocityxd = velocityxd_new
+
+        gammaxd_new = clw * omegax / mu - tau * grav * math.cos(gamma) / (
+            velocity_ss * velocityx
+        )
+        gamma = integrate(gammaxd_new, gammaxd, gamma, int_step)
+        gammaxd = gammaxd_new
+
+        omegaxd_new = (
+            cma * velocityx * velocityx / (mu * moi_spinx)
+            + cmdw * velocityx * omegax / (mu * mu * moi_spinx)
+        )
+        omegax = integrate(omegaxd_new, omegaxd, omegax, int_step)
+        omegaxd = omegaxd_new
+
+        dvbe = velocityx * velocity_ss
+        thtvlx = gamma * DEG
+        omega = omegax / tau
+        omega_rpm = omega * RPM
+
+        tvl = mat2tr(psivlx * RAD, thtvlx * RAD)
+        vbel = tvl.T @ np.array([dvbe, 0.0, 0.0])
+        sbeld_new = vbel
+        sbel = integrate(sbeld_new, sbeld, sbel, int_step * tau)
+        sbeld = sbeld_new
+
+        hbe = -float(sbel[2])
+        tpsp_ratio = omega * ref_length / dvbe
+        time = tau * ctx.sim_time
+
+        if hbe < hbg:
+            vehicle.health = 0
+            ctx.combus[ctx.vehicle_slot].status = 0
+
+        store.set("velocityx", velocityx)
+        store.set("velocityxd", velocityxd)
+        store.set("gamma", gamma)
+        store.set("gammaxd", gammaxd)
+        store.set("omegax", omegax)
+        store.set("omegaxd", omegaxd)
+        store.set("SBEL", sbel)
+        store.set("SBELD", sbeld)
+        store.set("moi_spinx", moi_spinx)
+        store.set("tau", tau)
+        store.set("mu", mu)
+        store.set("time", time)
+        store.set("sim_time", ctx.sim_time)
+        store.set("dvbe", dvbe)
+        store.set("thtvlx", thtvlx)
+        store.set("hbe", hbe)
+        store.set("omega", omega)
+        store.set("VBEL", vbel)
+        store.set("omega_rpm", omega_rpm)
+        store.set("tpsp_ratio", tpsp_ratio)
 
     def terminate(self, vehicle, ctx):
         pass
