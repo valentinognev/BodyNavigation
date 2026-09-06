@@ -1,5 +1,10 @@
 # Updates
 
+## 0.103.0 - AGM6 analytic rocket propulsion
+- Added `cadac.vehicles.agm6.propulsion.Agm6Propulsion` (`name="propulsion"`). Constructor takes no deck. `define` registers C++ `def_propulsion` (`mprop`,`aexit`,`vmass`,`thrust`,`vmass0`,`ai11`,`ai33`,`spi`,`throtl`,`thrsl`,`fmass0`,`fmasse`,`fmassed`, freeze saves) plus `IBBB` mat and `eng_ang_mom` real (for `Flat6Euler`). Does not define `press`/`mfreeze`.
+- `initialize`: `vmass=vmass0` (inertia stays ASC data). `execute`: `mprop==1` `fmassed_new=thrsl*throtl/(spi*9.81)` (literal 9.81, not `AGRAV`); stored-slope `integrate` of `fmasse`; `vmass=vmass0-fmasse`; `thrust=thrsl*throtl+(101325-press)*aexit`. `mprop==0` `thrust=0` without integrating fuel. `fmasse>=fmass0` → `mprop=0`. Else including -1 → `ValueError`. Writes `IBBB=diag(ai11,ai33,ai33)`, `eng_ang_mom=0`. Skip `mfreeze` latch if `mfreeze` absent. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_propulsion.py` (mprop=1, thrsl=10000, throtl=1, spi=210, aexit=0.02, press=101325, vmass0=1360, fmass0=250, dt=0.001; thrust==10000; fmasse increases; planted `ai11=42.5` → `IBBB[0,0]==42.5`; mprop=0 thrust 0; mprop=2 raises; rtol=1e-12).
+
 ## 0.102.0 - AGM6 aerodynamics tables and der
 - Added `cadac.vehicles.agm6.aero.Agm6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (refs, body coeffs, table diags, dimensional der, termination, `stmarg`/`gmax` plot). Does not define kinematics/env/propulsion/actuator/control names (`vmach`,`pdynmc`,`alppx`,`phip`,`ppx`,`qqx`,`rrx`,`dvba`,`vmass`,`ai11`,`ai33`,`dpx`,`dqx`,`drx`,`alimit`).
 - `initialize` ports `init_aerodynamics`: `refl=0.5`, `refa=0.196`, `trmach=0.4`, `trdynm=10e3`, `trload=0.5`, `tralp=1`, `trcond=0`. `execute` ports `Missile::aerodynamics` then `aerodynamics_der`. 1D look_up vs Mach; 2D vs Mach and alpha. Absent `dpx`/`dqx`/`drx`/`alimit` treated as 0. Skip der update when `alppx >= alplimx-3`. Vehicle not registered.
