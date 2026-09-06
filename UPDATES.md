@@ -1,5 +1,10 @@
 # Updates
 
+## 0.63.0 - F-16 guidance stub
+- Added `cadac.vehicles.plane6.guidance.Plane6Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` (mguid, line_gain, nl_gain_fact, decrement, swel1/2/3, psiflx, thtflx, dwb, nl_gain, VBEO, VBEF, dwbh, SWBL, turn_min, wp_flag). Does not define newton/control names (time, halt, grav, SBEL, VBEL, dvbe, psivlx, thtvlx, philimx, phicomx, ancomx, alcomx). `initialize` pass (no C++ `init_guidance`).
+- `execute` ports C++ `if(mguid==0) return` without writing phicomx/ancomx/alcomx (control-owned) or diagnostics. mguid!=0 ValueError. Does not port `guidance_line` / waypoint / cout / halt. Protocol `vehicle.store`. No vehicle. Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_plane6_guidance_noop.py` (mguid 0 no raise/no write; 30/33 raise; define-only C++ fields).
+
 ## 0.62.0 - F-16 forces
 - Added `cadac.vehicles.plane6.forces.Plane6Forces` (`name="forces"`). `define` registers C++ `def_forces` only: FAPB and FMB vec out. Does not define pdynmc/thrust/refa/refb/refc/cxt/cyt/czt/clt/cmt/cnt (tests register), FSPB/vmass (newton), or unused C++ local time. `initialize` pass (no C++ `init_forces`).
 - `execute` ports `Plane::forces`: FAPB=[pdynmc*refa*cxt+thrust, pdynmc*refa*cyt, pdynmc*refa*czt]; FMB=[pdynmc*refa*refb*clt, pdynmc*refa*refc*cmt, pdynmc*refa*refb*cnt]. No FSPB. Protocol `vehicle.store`. No guidance/vehicle. Cruise3/HYPER3/PLANE untouched.
