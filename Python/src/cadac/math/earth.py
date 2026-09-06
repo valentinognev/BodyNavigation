@@ -33,6 +33,16 @@ def cadtge(lon_rad, lat_rad):
     return amat
 
 
+def cadine(lon_rad, lat_rad, alt_m, time):
+    rad = alt_m + REARTH
+    cel_lon = lon_rad + WEII3 * time
+    clat = np.cos(lat_rad)
+    slat = np.sin(lat_rad)
+    clon = np.cos(cel_lon)
+    slon = np.sin(cel_lon)
+    return np.array([rad * clat * clon, rad * clat * slon, rad * slat])
+
+
 def cadsph(sbie):
     x = sbie[0]
     y = sbie[1]

@@ -1,5 +1,9 @@
 # Updates
 
+## 0.65.0 - CADAC cadine lon/lat/alt to inertial
+- Added `cadine(lon_rad, lat_rad, alt_m, time)` to `cadac.math.earth` next to `cadtei`/`cadtge`/`cadsph`. Ports HYPER5 C++ `cadine`: spherical radius `alt+REARTH`, celestial longitude `lon+WEII3*time`, inertial position `[rad*clat*clon, rad*clat*slon, rad*slat]`. ndarray `(3,)`. Constants from `cadac.constants`. No scipy. No guidance.
+- Tests: `Python/tests/unit/test_cadine.py` (equator t=0 → `[REARTH,0,0]`; celestial-longitude formula rtol 1e-12). `cadtei`/`cadtge`/`cadsph` numerics unchanged.
+
 ## 0.64.1 - FALCON6 e2e skip-if-missing golden
 - Added `Python/tests/e2e/test_falcon6_gamma.py`: `pytest.skip` if `tests/e2e/goldens/falcon6/plot.csv` is absent (file not created).
 - If golden exists: `run_scenario` on `Python/cases/falcon6/input_gamma.jsonc`; compare `hbe` at t=0 and `hbe`/`vmach` at shared times (Flat6 names, not `alt`/`mach`). CSV rtol=1e-5, atol=max(1e-6, 5e-6*|g|); skip sentinel time=-1.
