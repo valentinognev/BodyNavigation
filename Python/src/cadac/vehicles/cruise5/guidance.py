@@ -49,7 +49,38 @@ class Cruise5Guidance:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        mguidance = store.get("mguidance")
+        if mguidance == 0:
+            return
+        grav = store.get("grav")
+        phicx = store.get("phicx")
+        alcomx = 0.0
+        ancomx = 0.0
+        if mguidance == 30:
+            algv = self.guidance_line(vehicle)
+            alcomx = float(algv[1] / grav)
+        elif mguidance == 43:
+            algv = self.guidance_line(vehicle)
+            apgv = self.guidance_point(vehicle)
+            alcomx = float(apgv[1] / grav)
+            ancomx = float(-algv[2] / grav)
+        else:
+            raise ValueError(f"unknown mguidance {mguidance}")
+        anposlimx = store.get("anposlimx")
+        anneglimx = store.get("anneglimx")
+        allimx = store.get("allimx")
+        if ancomx > anposlimx:
+            ancomx = anposlimx
+        if ancomx < anneglimx:
+            ancomx = anneglimx
+        if alcomx > allimx:
+            alcomx = allimx
+        if alcomx < -allimx:
+            alcomx = -allimx
+        store.set("phicx", phicx)
+        store.set("ancomx", ancomx)
+        store.set("alcomx", alcomx)
 
     def terminate(self, vehicle, ctx):
         pass
