@@ -1,5 +1,10 @@
 # Updates
 
+## 0.57.0 - F-16 propulsion
+- Added `cadac.vehicles.plane6.propulsion.Plane6Propulsion` (`name="propulsion"`). Constructor takes Datadeck. `define` registers C++ `def_propulsion` (mprop/vmachcom/throttle/gmach, thrustf/thrust/thrust_req, mfreeze_prop, powerd/power, power_com/tpower, idle/mil/max). Does not define vmach/pdynmc/alphax/refa/cdrag/hbe/time/mfreeze. No fuel-flow fields; C++ neglects mass change and never looks up `ff_vs_thrust_alt_mach`. FOOT=3.280834 and NT=4.448 are module-level, not in `cadac.constants`.
+- `initialize` is pass (no C++ `init_propulsion`; power/powerd start 0 from define). `execute` ports `Plane::propulsion`: mprop 1 manual throttle; 2 Mach hold `throttle=clip(gmach*(vmachcom-vmach),[0,0.77])` plus `thrust_req=cdrag*pdynmc*refa/cos(alphax*RAD)`; else thrust=0 without integrating power. `propulsion_thrust` power lag via CADAC `integrate`; 2D idle/mil/max look_up(vmach, hbe*FOOT)*NT; blend at power 50. Skip mfreeze latch if `mfreeze` not on the store. Protocol `vehicle.store`. No actuator/control/forces/vehicle. Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_plane6_propulsion.py` (parsed `f16_prop_deck.asc`; mprop=2 vmach=0.58 throttle in (0,1]; full vs CADAC rtol 1e-12; clips; afterburner; power blend; mprop 0/else no integrate; stored-slope; mfreeze skip/latch; FOOT/NT).
+
 ## 0.56.0 - F-16 aero derivatives
 - `Plane6Aero.execute` now calls `aerodynamics_der()` at the end, as C++ `Plane::aerodynamics`. Finite-diff cz/cm/cn ±1.5 deg; local `cla=-cza` and `cmde` not stored (store `cla`/`cmde` stay 0). Stored `cma`/`clnb` include CG shift. Dimensional pitch/lateral/roll derivs and pitch/yaw rigid-mode roots as C++. `stmarg=-cma/cla` if local `cla`. Uses stored `clde`/`cyb`/`cydr`/`cllda`/`cllp`/`cmq`/`clndr`/`clnr` from `aerodynamics()`.
 - Tests: `Python/tests/unit/test_plane6_aero_der.py` (Task 7 FC finite; `dla=duml*(-cza)`, `dma=dumm*cma/RAD`; full der vs CADAC rtol 1e-12; CG shift; store `cla`/`cmde` stay 0). Task 7 `test_unassigned_table_locals_stay_zero` keeps aero-unassigned zeros, no longer asserts der fields stay 0. Cruise3/HYPER3/PLANE untouched. No propulsion/vehicle.
