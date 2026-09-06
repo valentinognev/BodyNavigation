@@ -1,5 +1,8 @@
 # Updates
 
+## 0.84.1 - HYPER5 e2e skip without golden
+- Added `Python/tests/e2e/test_hyper5_pronav.py`: skip if `tests/e2e/goldens/hyper5/plot.csv` absent (file not created). Fixture tests: skip helper, sentinel `time=-1`, `alt` at t=0, shared-column intersection `rtol=1e-5` / `atol=max(1e-6, 5e-6*|g|)`. Live `run_scenario` on `cases/hyper5/input.jsonc` calls `require_golden` first.
+
 ## 0.84.0 - HYPER5 and TARGET3 from JSONC
 - `cadac.vehicles.hyper5.vehicle.Hyper5` (`type="HYPER5"`, health=1). Constructor `(name, aero_deck, prop_deck, events=None)` with `prop_deck` allowed `None`. Modules: environment, aerodynamics, propulsion, forces, newton, seeker, guidance, control, intercept, targeting (define always; Demo 4.7 MODULES omits targeting execute). Simple Cruise3-style define loop.
 - `run_scenario` maps `HYPER5`/`TARGET3`/`SATELLITE3`. HYPER5 requires aero; prop if `mprop!=0` or `prop_deck` present. TARGET3/SATELLITE3: `Target3(name, events)` / `Satellite3(name, events)` — no decks. CRUISE3/PLANE/PLANE6 still require both decks. Unknown types still ValueError (`"HYPER6"` stays the unknown-type sentinel).
