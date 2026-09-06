@@ -66,8 +66,14 @@ def test_mprop2_raises():
         prop.execute(vehicle, _ctx())
 
 
-def test_time_past_burnout_sets_mprop0_and_thrust0():
-    vehicle, prop, _ = _ready(time=2.70, mprop=1)
+def test_time_past_burnout_same_step_keeps_nozzle_thrust():
+    vehicle, prop, deck = _ready(time=2.70, mprop=1)
+    prop.execute(vehicle, _ctx())
+    tsl = deck.look_up("thrust_vs_time", 2.70)
+    want = tsl + (PSL - PRESS) * AEXIT
+    assert vehicle.store.get("mprop") == 0
+    np.testing.assert_allclose(vehicle.store.get("thrust"), want, rtol=RTOL, atol=ATOL)
+    assert want != 0.0
     prop.execute(vehicle, _ctx())
     assert vehicle.store.get("mprop") == 0
     np.testing.assert_allclose(vehicle.store.get("thrust"), 0.0, rtol=RTOL, atol=ATOL)

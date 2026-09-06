@@ -57,7 +57,6 @@ class Sraam6Propulsion:
             ai11 = self.deck.look_up("moiroll_vs_time", time)
             if time > 2.69:
                 mprop = 0
-                thrust = 0.0
         elif mprop == 0:
             thrust = 0.0
         else:
