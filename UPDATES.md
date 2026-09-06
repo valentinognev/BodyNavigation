@@ -1,5 +1,10 @@
 # Updates
 
+## 0.94.0 - HYPER6 roll and rate SAS
+- Added `cadac.vehicles.hyper6.control.Hyper6Control` (`name="control"`). `define` registers C++ `def_control` (`maut`/`mroll`/`mfreeze`, `alimitx`, `dalimx`/`delimx`/`drlimx`/`philimx`, roll poles `wrcl`/`zrcl`, SAS `tp`/`zetlagr`, gamma poles `pgam`/`wgam`/`zgam`, INS heading/path `psivdcomx`/`thtvdcomx`, commands `delacx`/`delecx`/`delrcx` out+plot, states `yyd`/`yy`/`zzd`/`zz`). Does not define INS/aero names the helpers read (`phibdcx`/`ppcx`/`qqcx`/`rrcx`/`dvbec`, `dllp`/`dllda`/`dla`/`dlde`/`dma`/`dmq`/`dmde`/`dyb`/`dydr`/`dnb`/`dnr`/`dndr`). `execute` pass until maut dispatcher.
+- Helpers port C++ `control_roll`/`control_roll_rate`/`control_pitch_rate`/`control_yaw_rate`: return commands; write `gkp`/`gkphi` (roll) and `zrate`/`grate`/`wnlagr` (yaw only). Reads INS `*c` names. Module-level `SMALL=1e-7` (not `cadac.constants`). Local CADAC sign (`<0 → -1` else `+1`). No Plane6/Flat6 import. No `control_gamma`.
+- Tests: `Python/tests/unit/test_hyper6_control_roll.py` (climb `wrcl=8` `zrcl=0.9` `zetlagr=1.1`; frozen aero/rates vs C++ rtol=1e-12; execute remains pass).
+
 ## 0.93.0 - HYPER6 second-order actuators
 - Added `cadac.vehicles.hyper6.actuator.Hyper6Actuator` (`name="actuator"`). `define` registers C++ `def_actuator` (`mact`, `dlimx`/`ddlimx`/`wnact`/`zetact`, `delax`/`delex`/`delrx` out+scrn/plot, elevon diags `elvlx`/`elvrx`/`elvlcx`/`elvrcx`, states `DXD`/`DX`/`DDXD`/`DDX`). Does not define control commands (`delacx`/`delecx`/`delrcx`). No `init_actuator`.
 - `execute` ports `Hyper::actuator`: elevon mix `elvlcx=delecx+delacx`, `elvrcx=delecx-delacx`; `mact==0` position-limit only; `mact==2` second-order `actuator_scnd` (position/rate limits, stored-slope `integrate`); else including 1 → ValueError. Back-convert `delax=(elvlx-elvrx)/2`, `delex=(elvlx+elvrx)/2`. `dt=ctx.int_step`. Local CADAC sign (`<0 → -1` else `+1`); not `np.sign`; not `flat6._cadac_sign`. No Plane6 actuator import.
