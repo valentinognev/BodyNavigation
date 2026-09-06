@@ -10,10 +10,12 @@ from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
 from cadac.vehicles.cruise3.vehicle import Cruise3
 from cadac.vehicles.plane5.vehicle import Plane5
+from cadac.vehicles.plane6.vehicle import Plane6
 
 _VEHICLE_TYPES = {
     "CRUISE3": Cruise3,
     "PLANE": Plane5,
+    "PLANE6": Plane6,
 }
 
 

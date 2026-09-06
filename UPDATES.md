@@ -1,5 +1,11 @@
 # Updates
 
+## 0.64.0 - FALCON6 PLANE6 from JSONC
+- Added `cadac.vehicles.plane6.vehicle.Plane6` (`type="PLANE6"`, health=1). Modules in gamma ASC order plus guidance: environment, kinematics, aerodynamics, propulsion, guidance, forces, control, actuator, euler, newton. `define` skip-if-exists (FALCON5 TBV / Cruise3 FSPV); last execute writer owns the plotted value. Guidance `define` still runs if MODULES omits it.
+- `run_scenario` type map adds `PLANE6 -> Plane6`. CRUISE3 and PLANE kept. aero_deck and prop_deck still required. `_plot_columns`: CRUISE3 still `PLOT_COLUMNS`; PLANE6 uses the existing non-CRUISE3 flagged path (no HYPER3 special case).
+- Translated `CADAC_Simulations/FALCON6_250201/FALCON6/input_gamma.asc` + `f16_aero_deck.asc` / `f16_prop_deck.asc` to `Python/cases/falcon6/`. Unknown-type tests retargeted from `"PLANE6"` to `"HYPER6"`.
+- Tests: `Python/tests/unit/test_plane6_one_step.py` (0.1 s smoke, `hbe` near 1000, flagged columns not CRUISE3, committed end_time 20). No Task 17 e2e golden.
+
 ## 0.63.0 - F-16 guidance stub
 - Added `cadac.vehicles.plane6.guidance.Plane6Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` (mguid, line_gain, nl_gain_fact, decrement, swel1/2/3, psiflx, thtflx, dwb, nl_gain, VBEO, VBEF, dwbh, SWBL, turn_min, wp_flag). Does not define newton/control names (time, halt, grav, SBEL, VBEL, dvbe, psivlx, thtvlx, philimx, phicomx, ancomx, alcomx). `initialize` pass (no C++ `init_guidance`).
 - `execute` ports C++ `if(mguid==0) return` without writing phicomx/ancomx/alcomx (control-owned) or diagnostics. mguid!=0 ValueError. Does not port `guidance_line` / waypoint / cout / halt. Protocol `vehicle.store`. No vehicle. Cruise3/HYPER3/PLANE untouched.
