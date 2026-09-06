@@ -1,5 +1,10 @@
 # Updates
 
+## 0.114.0 - SAM6 INS mins 0 and 1
+- Added `cadac.vehicles.sam6.ins.Sam6Ins` (`name="ins"`). Port of SAM6 `ins.cpp` `init_ins` / `ins` / `ins_gyro` / `ins_accl` / `ins_alt`. Does not define kinematics/newton/euler truth names (`TBL`, `TLB`, `WBEB`, `SBEL`, `FSPB`, `VBEL`, `dvbe`, `alt`).
+- `mins==0`: copy `TBL`→`TBLC`, `FSPB`→`FSPCB`, `WBEB`→`WBECB`, `SBEL`→`SBELC`, `VBEL`→`VBELC`, `dvbe`→`dvbec`, then Euler/FPA as C++. `mins==1`: error ODEs with every `gauss`/`uniform` draw 0 (Cholesky `XX_INIT` 0, `EWALKA=0`); autopilot case. Else including 2/3 `ValueError`. `ins_alt` `biasal=randal=0` → `hbem=alt`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper INS import.
+- Tests: `Python/tests/unit/test_sam6_ins.py` (mins=0 copies SBEL/FSPB; mins=1 after init `SBELC==SBEL`, one execute `WBECB==WBEB` rtol=1e-12; mins=2 raises).
+
 ## 0.113.0 - SAM6 acceleration autopilot
 - `Sam6Control.execute`: `maut==3` calls `control_roll` then `control_accel`. `maut==4` still `ValueError`; unknown modes still roll-only (Task 12).
 - `control_accel` ports SAM6 `control.cpp`: `ancomx+=ancomx_test`, `alcomx+=alcomx_test`; circular limiter vs `alimitx`; poles `zacl=0.7*(1+zacl_bias)`, `wacl=|realq1|*(1+wacl_bias)`, `pacl=(|realq2|+35)*(1+pacl_bias)`; pitch/yaw gains as C++; stored-slope `integrate` of `zz`/`yy`; writes `dqcx`/`drcx`/`GAINFB` (yaw). Skip undeclared `factwacl`/`twcl`. Does not write `ancomx`/`alcomx`. Protocol `vehicle.store`. No Flat6/Plane imports.
