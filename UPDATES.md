@@ -1,5 +1,10 @@
 # Updates
 
+## 0.86.0 - Round6 environment US76
+- Added `cadac.eom.round6.Round6Environment` (`name="environment"`). `define` registers C++ `def_environment` fields used by the mair==0 execute path (`mair`, `press`, `rho`, `vsound`, `vmach`, `pdynmc`, `tempk`, freeze saves, `GRAVG`, `grav`, wind data/state, `VAED`, `dvba`). Does not define newton `alt`/`SBII`/`VBED`, kinematics `time`, or hyper `trcode`/`mfreeze`. Does not define Dryden-only fields.
+- `execute` decodes `matmo=mair//100`, `mturb=(mair-matmo*100)//10`, `mwind=(mair-matmo*100)%10`. All-zero: US76 (`atmosphere76`) + `GRAVG=cad_grav84(SBII,time)`, `grav=||GRAVG||`, `VAED=0`, `dvba=||VBED||`. `vmach` not `mach`. Other mair including 100 → ValueError. Skip `trcode`/`mfreeze` latch if those names are absent. `initialize`/`terminate` pass.
+- Tests: `Python/tests/unit/test_round6_environment.py` (alt=10000, SBII from `cad_in_geo84(10*RAD,10*RAD,10000,0)`, `||VBED||=1000`; rho/press vs `atmosphere76(10000)` rtol=1e-12; vmach finite; mair=100 and other nonzero triples raise).
+
 ## 0.85.0 - WGS84 earth helpers
 - Added `cadac.math.wgs84`: HYPER6 WGS84 `cad_in_geo84`, `cad_geo84_in`, `cad_tdi84`, `cad_tgi84`, `cad_grav84` and callee `cad_geoc_in`. Module-level `GM`/`C20`/`FLATTENING`/`SMAJOR_AXIS`/`GW_CLONG`/`SMALL`. Does not change spherical `cadac.math.earth` or locked `cadac.constants`.
 - Tests: `Python/tests/unit/test_wgs84.py` (equator roundtrip atol=1e-6; grav finite; `cad_tdi84(0,0,0,0)` `assign_loc` pin rtol=1e-12).
