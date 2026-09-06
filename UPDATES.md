@@ -1,5 +1,10 @@
 # Updates
 
+## 0.114.0 - AGM6 TARGET3 Flat3 ground target
+- Added `cadac.vehicles.agm6.flat3io.copy_in`/`copy_out`: `sael*→sbel*`, `dvae→dvbe`, `FSPA→FSPV`, `SAEL→SBEL` (zeros SAEL rebuilt from `sael*`); after newton `SBEL→SAEL`, `VBEL→VAEL`, `dvbe→dvae`, `TBL→TAL`, `sbel1=SBEL[0]` etc. `Agm6Flat3Environment`/`Agm6Flat3Newton` wrap `Flat3Environment`/`Flat3Newton` via copy_in/delegate/copy_out. Reuse `Flat3Kinematics`. Do not modify `cadac.eom.flat3`.
+- Added `cadac.vehicles.agm6.target.Agm6Target` (`type="TARGET3"`). Constructor `(name, events=None)`. Modules: Agm6Flat3Environment, Flat3Kinematics, Agm6TargetForces, Agm6Flat3Newton. Forces `FSPA=[acc_longx*grav, acc_latx*grav, -grav]`; `FSPV=FSPA`; diags `aax`/`alx`/`anx` (`com`). `com_names` from `"com"` flags include `SAEL`/`VAEL`. Not registered. No Hyper5 `Target3` import.
+- Tests: `Python/tests/unit/test_agm6_target.py` (sael1=33000, sael2=10000, sael3=-100, dvae=5, psivlx=-90, acc_latx=0.01; after init SAEL[0]==33000; one execute FSPA[1]==0.01*grav, FSPA[2]==-grav; Hyper5 not imported; rtol=1e-12).
+
 ## 0.113.0 - AGM6 intercept halt/ground/hit
 - Added `cadac.vehicles.agm6.intercept.Agm6Intercept` (`name="intercept"`). `define` registers C++ `def_intercept` (`mterm`,`write`,`miss`,`hit_time`,`MISS_P`,`time_m`,`SBMTP`,`mode`,`dbt`,`psiplx`,`thtplx`,`critmax`). Does not define kinematics/sensor/guidance names (`time`,`halt`,`stop`,`lconv`,`SBEL`,`tgt_num`,`mguid`,`mseek`,`maut`,`mprop`,`trcond`).
 - `execute`: no `print`/`sys.exit`. Halt (if `halt` in store and true) or (`trcond` and `stop` if present) or ground `-SBEL[2]<=0` with `write` latch → `vehicle.health=0`, `ctx.combus[slot].status=0`. Absent `halt`/`stop` treated as 0. Target-plane intercept when `guid_mid==4 or guid_term in {5,6}` and `dbt<100` and `sbtp3>0` as C++ (`mat2tr(psiplx*RAD,thtplx*RAD)`, interpolate `MISS_P`/`hit_time`). Target from `type=="TARGET3"` + 1-based `tgt_num` (`SAEL`/`SBEL` fallback). Does not write `lconv`. No Plane6/Hyper5 import. Vehicle not registered.
