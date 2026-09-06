@@ -148,6 +148,8 @@ EXTERNALS = (
     "dqx",
     "drx",
     "pdynmc",
+    "ai11",
+    "ai33",
 )
 
 
@@ -193,6 +195,8 @@ def _externals(
     drx=0.0,
     dvbe=250.0,
     alplimx=46.0,
+    ai11=0.308,
+    ai33=59.80,
 ):
     store.define(Field("vmach", vmach, "real", "out", "environment"))
     store.define(Field("pdynmc", pdynmc, "real", "out", "environment"))
@@ -205,6 +209,8 @@ def _externals(
     store.define(Field("vmass", vmass, "real", "out", "propulsion"))
     store.define(Field("xcgref", xcgref, "real", "out", "propulsion"))
     store.define(Field("xcg", xcg, "real", "out", "propulsion"))
+    store.define(Field("ai11", ai11, "real", "out", "propulsion"))
+    store.define(Field("ai33", ai33, "real", "out", "propulsion"))
     store.define(Field("alimit", alimit, "real", "data", "control"))
     store.define(Field("dpx", dpx, "real", "out", "actuator"))
     store.define(Field("dqx", dqx, "real", "out", "actuator"))

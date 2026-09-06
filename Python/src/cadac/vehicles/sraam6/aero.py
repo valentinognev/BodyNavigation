@@ -1,6 +1,6 @@
 import math
 
-from cadac.constants import AGRAV
+from cadac.constants import AGRAV, DEG
 from cadac.kernel.state import Field
 
 
@@ -205,6 +205,111 @@ class Sraam6Aero:
         store.set("clna", clna)
         store.set("gavail", gavail)
         store.set("trcond", trcond)
+        self.aerodynamics_der(vehicle)
+
+    def aerodynamics_der(self, vehicle):
+        store = vehicle.store
+        look_up = self.deck.look_up
+        wnq = 0.0
+        zetq = 0.0
+        realq1 = 0.0
+        realq2 = 0.0
+        pqreal = 0.0
+        realp = 0.0
+        alplimx = store.get("alplimx")
+        refl = store.get("refl")
+        refa = store.get("refa")
+        dna = store.get("dna")
+        dnd = store.get("dnd")
+        dma = store.get("dma")
+        dmq = store.get("dmq")
+        dmd = store.get("dmd")
+        dlp = store.get("dlp")
+        dld = store.get("dld")
+        stmarg = store.get("stmarg")
+        vmach = store.get("vmach")
+        pdynmc = store.get("pdynmc")
+        alppx = store.get("alppx")
+        dvbe = store.get("dvbe")
+        vmass = store.get("vmass")
+        xcgref = store.get("xcgref")
+        xcg = store.get("xcg")
+        ai11 = store.get("ai11")
+        ai33 = store.get("ai33")
+        cndq = store.get("cndq")
+        clmdq = store.get("clmdq")
+        clmq = store.get("clmq")
+        cllp = store.get("cllp")
+        clldp = store.get("clldp")
+
+        if alppx < (alplimx - 3.0):
+            alpp = alppx + 3.0
+            if alpp < 3.0:
+                alpp = 3.0
+            alpm = alppx - 3.0
+            if alpm < 0.0:
+                alpm = 0.0
+            cn0p = look_up("cn0_vs_mach_alpha", vmach, alpp)
+            cn0m = look_up("cn0_vs_mach_alpha", vmach, alpm)
+            dum = cn0p - cn0m
+            cna = DEG * dum / (alpp - alpm)
+            cnd = DEG * cndq
+            clm0p = look_up("clm0_vs_mach_alpha", vmach, alpp)
+            clm0m = look_up("clm0_vs_mach_alpha", vmach, alpm)
+            cma = DEG * (clm0p - clm0m) / (alpp - alpm) - cna * (xcgref - xcg) / refl
+            cmq = DEG * clmq
+            cmd = DEG * clmdq
+            clp = DEG * cllp
+            cld = DEG * clldp
+            dumn = pdynmc * refa / vmass
+            dna = dumn * cna
+            dnd = dumn * cnd
+            dumm = pdynmc * refa * refl / ai33
+            dma = dumm * cma
+            dmq = dumm * (refl / (2.0 * dvbe)) * cmq
+            dmd = dumm * cmd
+            duml = pdynmc * refa * refl / ai11
+            dlp = duml * (refl / (2.0 * dvbe)) * clp
+            dld = duml * cld
+            stmarg = -cma / cna
+
+        a11 = dmq
+        try:
+            a12 = dma / dna
+        except ZeroDivisionError:
+            a12 = math.nan if dma == 0.0 else math.copysign(math.inf, dma)
+        a21 = dna
+        a22 = -dna / dvbe
+        arg = math.pow((a11 + a22), 2) - 4.0 * (a11 * a22 - a12 * a21)
+        if arg >= 0.0:
+            wnq = 0.0
+            zetq = 0.0
+            dum = a11 + a22
+            realq1 = (dum + math.sqrt(arg)) / 2.0
+            realq2 = (dum - math.sqrt(arg)) / 2.0
+            pqreal = (realq1 + realq2) / 2.0
+        else:
+            realq1 = 0.0
+            realq2 = 0.0
+            wnq = math.sqrt(a11 * a22 - a12 * a21)
+            zetq = -(a11 + a22) / (2.0 * wnq)
+            pqreal = -zetq * wnq
+        realp = dlp
+
+        store.set("dna", dna)
+        store.set("dnd", dnd)
+        store.set("dma", dma)
+        store.set("dmq", dmq)
+        store.set("dmd", dmd)
+        store.set("dlp", dlp)
+        store.set("dld", dld)
+        store.set("stmarg", stmarg)
+        store.set("realq1", realq1)
+        store.set("realq2", realq2)
+        store.set("wnq", wnq)
+        store.set("zetq", zetq)
+        store.set("realp", realp)
+        store.set("pqreal", pqreal)
 
     def terminate(self, vehicle, ctx):
         pass
