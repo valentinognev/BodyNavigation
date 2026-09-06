@@ -1,5 +1,10 @@
 # Updates
 
+## 0.107.0 - AGM6 accel control and maut dispatcher
+- `Agm6Control.execute` is the maut dispatcher: `maut==0` return without writing `dpcx`/`dqcx`/`drcx`. `maut in {1,2,3}`: always `control_roll`; `2` also `control_rate`; `3` also `control_accel`. Else including -1 → `ValueError`.
+- `control_accel(vehicle, int_step)` ports C++ pole-placement + circular `alimit` + stored-slope `integrate` of `yy`/`zz`. Reads INS `FSPCB`/`WBECB` and guidance `ancomx`/`alcomx` (tests register them). Writes `dqcx`/`drcx`/`GAINFB` and states. Limit `|dqcx|<=dqlimx`, `|drcx|<=drlimx` with CADAC sign inside the helper as C++ (not in the dispatcher). Locals `ancomx`/`alcomx` not written back. `dt=ctx.int_step`. Local CADAC sign. No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_maut.py` (maut=3, wacl=2, zacl=0.7, pacl=10, alimit=3, ancomx=1, alcomx=0, dt=0.001, frozen FSPCB/WBECB/der → finite dqcx vs C++ rtol=1e-12, atol=1e-14; maut=0 no write; maut=1 writes dpcx only; maut=4/-1 raise). Task 6 execute-is-pass now asserts maut=0 no write.
+
 ## 0.106.0 - AGM6 roll and rate control
 - Added `cadac.vehicles.agm6.control.Agm6Control` (`name="control"`). `define` registers C++ `def_control` (`maut`/`mfreeze`, accel poles `wacl`/`zacl`/`pacl`, `alimit`, `dqlimx`/`drlimx`/`dplimx`, roll poles `wrcl`/`zrcl`, commands `dpcx`/`dqcx`/`drcx` out+plot, states `yyd`/`yy`/`zzd`/`zz`, `GAINFB`/`gainp`, diags `gkp`/`gkphi`/`zrate`/`grate`/`wnlagr`, `zetlagr`/`qqcomx`/`rrcomx`). Does not define INS/aero/newton names (`WBECB`,`phiblcx`,`dlp`/`dld`/`dna`/`dnd`/`dma`/`dmq`/`dmd`,`dvbe`). `initialize`/`terminate` pass. `execute` pass until maut dispatcher.
 - Helpers port C++ `control_roll`/`control_rate`: return nothing; write `dpcx` plus `gkp`/`gkphi` (roll, `|dpcx|<=dplimx`) and `dqcx`/`drcx` plus `zrate`/`grate`/`wnlagr` (rate). Gains from `dlp`/`dld`/`dna`/`dmd`/`zetlagr`; commands from INS `WBECB`/`phiblcx` (tests register them). `pp=WBECB[0]` rad/s not `*RAD`. Rate `dqcx=DEG*grate*qq-qqcomx`. Negative radix → module `SMALL=1.e-7` (not `cadac.constants`). Local CADAC sign. No Plane6/Hyper6 import. Vehicle not registered.

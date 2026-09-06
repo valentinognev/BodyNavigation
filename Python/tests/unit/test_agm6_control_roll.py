@@ -296,19 +296,27 @@ def test_initialize_is_pass():
     assert store.get("wnlagr") == 0.0
 
 
-def test_execute_is_pass():
+def test_execute_maut_zero_returns_without_writing():
     vehicle, ctrl = _ready()
     store = vehicle.store
-    store.set("maut", 2)
+    store.set("maut", 0)
+    store.set("dpcx", 7.0)
+    store.set("dqcx", 8.0)
+    store.set("drcx", 9.0)
+    store.set("gkp", 1.5)
+    store.set("gkphi", 2.5)
+    store.set("zrate", 3.5)
+    store.set("grate", 4.5)
+    store.set("wnlagr", 5.5)
     assert ctrl.execute(vehicle, _ctx()) is None
-    assert store.get("dpcx") == 0.0
-    assert store.get("dqcx") == 0.0
-    assert store.get("drcx") == 0.0
-    assert store.get("gkp") == 0.0
-    assert store.get("gkphi") == 0.0
-    assert store.get("zrate") == 0.0
-    assert store.get("grate") == 0.0
-    assert store.get("wnlagr") == 0.0
+    assert store.get("dpcx") == 7.0
+    assert store.get("dqcx") == 8.0
+    assert store.get("drcx") == 9.0
+    assert store.get("gkp") == 1.5
+    assert store.get("gkphi") == 2.5
+    assert store.get("zrate") == 3.5
+    assert store.get("grate") == 4.5
+    assert store.get("wnlagr") == 5.5
 
 
 def test_control_roll_matches_cadac_formulas():
