@@ -1,6 +1,6 @@
 import numpy as np
 
-from cadac.constants import PI
+from cadac.constants import EPS, PI
 
 
 def polar_from_cart(v):
@@ -72,3 +72,27 @@ def cadtbv(phi, alpha):
     amat[2, 1] = -sphi * calpha
     amat[2, 2] = cphi * calpha
     return amat
+
+
+def cart_from_pol(magnitude, azimuth, elevation):
+    vec = np.zeros(3)
+    vec[0] = magnitude * (np.cos(elevation) * np.cos(azimuth))
+    vec[1] = magnitude * (np.cos(elevation) * np.sin(azimuth))
+    vec[2] = magnitude * (np.sin(elevation) * (-1.0))
+    return vec
+
+
+def angle(vec1, vec2):
+    scalar = vec1[0] * vec2[0] + vec1[1] * vec2[1] + vec1[2] * vec2[2]
+    abs1 = np.sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1] + vec1[2] * vec1[2])
+    abs2 = np.sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1] + vec2[2] * vec2[2])
+    dum = abs1 * abs2
+    if abs1 * abs2 > EPS:
+        argument = scalar / dum
+    else:
+        argument = 1.0
+    if argument > 1.0:
+        argument = 1.0
+    if argument < -1.0:
+        argument = -1.0
+    return np.arccos(argument)

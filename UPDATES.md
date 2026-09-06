@@ -1,5 +1,10 @@
 # Updates
 
+## 0.102.0 - CADAC kepler and polar helpers
+- Added `cad_kepler` (Morth) to `cadac.math.wgs84` using module `GM`/`SMALL`. Signature `(sbii, vbii, tgo) -> (spii, vpii, flag)`; `flag==1` returns input copies. Did not port `cad_kepler1`.
+- Added `cart_from_pol` and `angle` (`EPS` clamp from `cadac.constants`) to `cadac.math.frames`. Existing `polar_from_cart`/`mat2tr` unchanged.
+- Tests: `test_wgs84.py` circular equatorial fk/gk replica; `test_frames.py` unit-x polar and orthogonal angle.
+
 ## 0.101.0 - Family dispatch and weather-deck translate
 - `VehicleSpec.family` / `weather_deck` (defaults `None`, trailing fields). `load_scenario` resolves family from vehicle JSONC key else scenario key else None; no `RunConfig.family`.
 - `cli._VEHICLE_FAMILIES` created empty iff missing (never overwrite a live dict). `_build_vehicle`: family set → lookup `(family, type)` only; else type table. Miss includes path, family, and type. Did not register Rocket6 or retarget `HYPER6`/`AIM5`.
