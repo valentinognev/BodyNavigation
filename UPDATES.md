@@ -1,5 +1,10 @@
 # Updates
 
+## 0.115.0 - SAM6 guidance line and pronav
+- Added `cadac.vehicles.sam6.guidance.Sam6Guidance` (`name="guidance"`). Port of SAM6 `guidance.cpp` `guidance_line` / `guidance_term_comp` / `guidance_term_pronav`. Does not define INS/newton/aero/sensor names (`gmax`, `TBLC`/`VBELC`/`SBELC`/`thtvlcx`/`psivlcx`/`FSPCB`, `grav`, `SBEL`/`sbel1/2/3`, `STEL`/`VTEL`/`thtpb`/`psipb`/`sigdy`/`sigdz`, `ddab`/`psisb`/`thtsb`/`lamdqb`/`lamdrb`). No `guidance_mid_pronav`.
+- `execute`: `guid_mid=mguide//10`, `guid_term=mguide%10`. `guid_mid==2` IP from `RADAR0` `SIEL{k+1}` minus `SBELC` (k-th `MISSILE6` among that type; `Packet.type`/names, not `"f1"`). `guid_term==6`/`7` as C++. `guid_mid==3` `ValueError`. Always circular limiter vs `gmax` (mguide=0 still writes `ancomx`/`alcomx` from zero ACBX). Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_guidance.py` (mguide=0 commands 0; mguide=20 radar `SIEL1` 1 km north finite vs C++ rtol=1e-12; mguide=30 raises; mguide=7 seeker kinematics finite; type-index not slot; limiter caps at `gmax`).
+
 ## 0.114.0 - SAM6 INS mins 0 and 1
 - Added `cadac.vehicles.sam6.ins.Sam6Ins` (`name="ins"`). Port of SAM6 `ins.cpp` `init_ins` / `ins` / `ins_gyro` / `ins_accl` / `ins_alt`. Does not define kinematics/newton/euler truth names (`TBL`, `TLB`, `WBEB`, `SBEL`, `FSPB`, `VBEL`, `dvbe`, `alt`).
 - `mins==0`: copy `TBL`→`TBLC`, `FSPB`→`FSPCB`, `WBEB`→`WBECB`, `SBEL`→`SBELC`, `VBEL`→`VBELC`, `dvbe`→`dvbec`, then Euler/FPA as C++. `mins==1`: error ODEs with every `gauss`/`uniform` draw 0 (Cholesky `XX_INIT` 0, `EWALKA=0`); autopilot case. Else including 2/3 `ValueError`. `ins_alt` `biasal=randal=0` → `hbem=alt`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper INS import.
