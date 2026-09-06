@@ -1,5 +1,10 @@
 # Updates
 
+## 0.116.0 - AGM6 aircraft track files
+- `Agm6AircraftSensor.execute` ports C++ `Aircraft::sensor`. On `sim_time>=track_epoch` (init latches epoch to `sim_time`), first 5 `Packet.type=="TARGET3"` in appearance order (not id `t1`): polar from aircraft `SAEL` minus target `SAEL` (fallback `SBEL`); add stored `dat_sigma`/`azat_sigma`/`elat_sigma`; `STCELn=SAEL-SATCL`; `VTCELn=VTEL+vel_sigma` (`VAEL` fallback `VBEL`). Then `track_epoch=sim_time+track_step`.
+- `com` on STCEL1–3/VTCEL1–3 as C++. Same class on `Agm6Aircraft`. No gauss sample. No Hyper5/Plane6/SAM6 imports. Not registered.
+- Tests: `Python/tests/unit/test_agm6_aircraft_sensor.py` (track_step=1 sigmas=0 SAEL=[0,0,-7000] TARGET3 SAEL=[33000,10000,-100] VTEL=[0,-5,0] → STCEL1/VTCEL1; order not t1; SBEL fallback; max 5; epoch hold; stored sigmas vs polar; vehicle same class; rtol=1e-12, atol=1e-14). Task 15 `test_agm6_aircraft.py` kept green.
+
 ## 0.115.0 - AGM6 AIRCRAFT3 flight path
 - Added `cadac.vehicles.agm6.aircraft` (`Agm6AircraftGuidance`/`Agm6AircraftControl`/`Agm6AircraftForces`/`Agm6AircraftSensor`/`Agm6Aircraft`). One file matching C++ `aircraft_modules.cpp`. Reuses Task 14 `Agm6Flat3Environment`/`Agm6Flat3Newton`/`Flat3Kinematics`.
 - Guidance `acft_option==0` `ACOML=[0,0,-grav]`; `==1` `ACOMV=[0,gturn*grav,-grav]`, `ACOML=TVL.T@ACOMV`; `==2` escape vs first `Packet.type=="TARGET3"` `SAEL`/`VAEL`; else `ValueError`.

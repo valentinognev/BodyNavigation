@@ -438,10 +438,11 @@ def test_forces_fspa_and_fspv():
     )
 
 
-def test_sensor_execute_is_pass_until_task_16():
+def test_sensor_empty_combus_leaves_stcel1_zeros():
     vehicle = SimpleNamespace(store=StateStore())
     sensor = Agm6AircraftSensor()
     sensor.define(vehicle)
+    vehicle.store.define(Field("SAEL", ZEROS3, "vec", "state", "newton", ("com",)))
     before = np.array(vehicle.store.get("STCEL1"), copy=True)
     sensor.initialize(vehicle, _ctx())
     sensor.execute(vehicle, _ctx())

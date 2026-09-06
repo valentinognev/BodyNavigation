@@ -1,4 +1,4 @@
-from math import atan2, fabs, sqrt
+from math import atan2, cos, fabs, sin, sqrt
 
 import numpy as np
 
@@ -7,6 +7,7 @@ from cadac.eom.flat3 import Flat3Kinematics
 from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
+from cadac.math.frames import polar_from_cart
 from cadac.vehicles.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
 
 
@@ -26,6 +27,25 @@ def _skew(vec):
         ],
         dtype=float,
     )
+
+
+def _cart_from_pol(magnitude, azimuth, elevation):
+    return np.array(
+        [
+            magnitude * (cos(elevation) * cos(azimuth)),
+            magnitude * (cos(elevation) * sin(azimuth)),
+            magnitude * (sin(elevation) * (-1.0)),
+        ],
+        dtype=float,
+    )
+
+
+def _vec3(vars_, primary, fallback):
+    if primary in vars_:
+        return np.array(vars_[primary], dtype=float, copy=True)
+    if fallback in vars_:
+        return np.array(vars_[fallback], dtype=float, copy=True)
+    return np.zeros(3)
 
 
 class Agm6AircraftGuidance:
@@ -236,7 +256,64 @@ class Agm6AircraftSensor:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        init_flag = store.get("init_flag")
+        target_num = store.get("target_num")
+        track_step = store.get("track_step")
+        dat_sigma = store.get("dat_sigma")
+        azat_sigma = store.get("azat_sigma")
+        elat_sigma = store.get("elat_sigma")
+        vel_sigma = store.get("vel_sigma")
+        track_epoch = store.get("track_epoch")
+        stcel = [
+            np.array(store.get(f"STCEL{i}"), dtype=float, copy=True)
+            for i in range(1, 6)
+        ]
+        vtcel = [
+            np.array(store.get(f"VTCEL{i}"), dtype=float, copy=True)
+            for i in range(1, 6)
+        ]
+        sael = np.asarray(store.get("SAEL"), dtype=float)
+
+        if init_flag:
+            init_flag = 0
+            track_epoch = ctx.sim_time
+
+        if ctx.sim_time >= track_epoch:
+            track_epoch = ctx.sim_time + track_step
+            target_num = 1
+            for packet in ctx.combus or ():
+                if packet is None or packet.type != "TARGET3":
+                    continue
+                stel = _vec3(packet.vars, "SAEL", "SBEL")
+                vtel = _vec3(packet.vars, "VAEL", "VBEL")
+                satl = sael - stel
+                polar = polar_from_cart(satl)
+                satcl = _cart_from_pol(
+                    float(polar[0]) + dat_sigma,
+                    float(polar[1]) + azat_sigma,
+                    float(polar[2]) + elat_sigma,
+                )
+                idx = target_num - 1
+                stcel[idx] = sael - satcl
+                vtcel[idx] = np.array(
+                    [
+                        vtel[0] + vel_sigma,
+                        vtel[1] + vel_sigma,
+                        vtel[2] + vel_sigma,
+                    ],
+                    dtype=float,
+                )
+                target_num += 1
+                if target_num > 5:
+                    break
+
+        store.set("init_flag", init_flag)
+        store.set("track_epoch", track_epoch)
+        store.set("target_num", target_num)
+        for i in range(1, 6):
+            store.set(f"STCEL{i}", stcel[i - 1])
+            store.set(f"VTCEL{i}", vtcel[i - 1])
 
     def terminate(self, vehicle, ctx):
         pass
