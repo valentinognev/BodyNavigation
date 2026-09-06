@@ -1,5 +1,10 @@
 # Updates
 
+## 0.113.0 - SAM6 acceleration autopilot
+- `Sam6Control.execute`: `maut==3` calls `control_roll` then `control_accel`. `maut==4` still `ValueError`; unknown modes still roll-only (Task 12).
+- `control_accel` ports SAM6 `control.cpp`: `ancomx+=ancomx_test`, `alcomx+=alcomx_test`; circular limiter vs `alimitx`; poles `zacl=0.7*(1+zacl_bias)`, `wacl=|realq1|*(1+wacl_bias)`, `pacl=(|realq2|+35)*(1+pacl_bias)`; pitch/yaw gains as C++; stored-slope `integrate` of `zz`/`yy`; writes `dqcx`/`drcx`/`GAINFB` (yaw). Skip undeclared `factwacl`/`twcl`. Does not write `ancomx`/`alcomx`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_control_accel.py` (maut=3, `ancomx_test=1`, `realq1=-10` → `wacl==10` rtol=1e-12; `dqcx` finite vs C++; `zz`/`yy` stored-slope; maut=4 still raises).
+
 ## 0.112.0 - SAM6 control roll and rate
 - Added `cadac.vehicles.sam6.control.Sam6Control` (`name="control"`). Port of SAM6 `control.cpp` `def_control` / `control_roll` / `control_rate`. Does not define INS/aero/newton names (`WBECB`, `thtblcx`, `phiblcx`, `dlp`/`dld`/`dna`/`dmd`, `dvbe`) or undeclared `factwacl`/`twcl`. No `control_accel` (Task 13).
 - `execute`: `maut==0` return without writing; `maut==4` `ValueError`; else `control_roll`; `maut==2` also `control_rate`. Roll: `wrcl=-0.8*dlp*(1+factwrcl)`, pole-placement `gkp`/`gkphi`, `|thtblcx|>88` rate `kp`; writes `dpcx`. Rate: open-loop `zrate`/`aa`/`bb`, `|dmd|<SMALL` then `SMALL*sign` (CADAC; no `dld` guard), `dqcx=DEG*grate*qq` (not `qqcomx`); writes `dqcx`/`drcx`/`dqcx_rcs`/`drcx_rcs`. Module-level `SMALL=1e-7`. Local CADAC sign. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.

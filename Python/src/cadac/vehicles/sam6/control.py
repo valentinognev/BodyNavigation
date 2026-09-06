@@ -1,6 +1,7 @@
-from math import sqrt
+from math import atan2, cos, fabs, sin, sqrt
 
-from cadac.constants import DEG, RAD
+from cadac.constants import AGRAV, DEG, RAD
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 
 SMALL = 1e-7
@@ -75,6 +76,8 @@ class Sam6Control:
         self.control_roll(vehicle)
         if maut == 2:
             self.control_rate(vehicle)
+        if maut == 3:
+            self.control_accel(vehicle, ctx.int_step)
 
     def control_roll(self, vehicle):
         store = vehicle.store
@@ -140,6 +143,87 @@ class Sam6Control:
         store.set("zrate", zrate)
         store.set("grate", grate)
         store.set("wnlagr", wnlagr)
+
+    def control_accel(self, vehicle, int_step):
+        store = vehicle.store
+        alimitx = store.get("alimitx")
+        gainp = store.get("gainp")
+        wacl_bias = store.get("wacl_bias")
+        pacl_bias = store.get("pacl_bias")
+        zacl_bias = store.get("zacl_bias")
+        ancomx = store.get("ancomx") + store.get("ancomx_test")
+        alcomx = store.get("alcomx") + store.get("alcomx_test")
+        dvbe = store.get("dvbe")
+        dna = store.get("dna")
+        dma = store.get("dma")
+        dmq = store.get("dmq")
+        dmd = store.get("dmd")
+        dlnd = store.get("dlnd")
+        realq1 = store.get("realq1")
+        realq2 = store.get("realq2")
+        dnr = store.get("dnr")
+        dyb = store.get("dyb")
+        dnb = store.get("dnb")
+        fspcb = store.get("FSPCB")
+        wbecb = store.get("WBECB")
+        yyd = store.get("yyd")
+        yy = store.get("yy")
+        zzd = store.get("zzd")
+        zz = store.get("zz")
+        aa = sqrt(alcomx * alcomx + ancomx * ancomx)
+        if aa > alimitx:
+            aa = alimitx
+        if fabs(ancomx) < SMALL and fabs(alcomx) < SMALL:
+            phi = 0
+        else:
+            phi = atan2(ancomx, alcomx)
+        alcomx = aa * cos(phi)
+        ancomx = aa * sin(phi)
+        zacl = 0.7 * (1 + zacl_bias)
+        wacl = fabs(realq1) * (1 + wacl_bias)
+        pacl = (fabs(realq2) + 35) * (1 + pacl_bias)
+        gainfb3 = wacl * wacl * pacl / (dna * dmd)
+        gainfb2 = (2 * zacl * wacl + pacl + dmq - dna / dvbe) / dmd
+        gainfb1 = (
+            wacl * wacl
+            + 2 * zacl * wacl * pacl
+            + dma
+            + dmq * dna / dvbe
+            - gainfb2 * dna * dmd / dvbe
+        ) / (dna * dmd) - gainp
+        qq = wbecb[1]
+        fspb3 = fspcb[2]
+        zzd_new = AGRAV * ancomx + fspb3
+        zz = integrate(zzd_new, zzd, zz, int_step)
+        zzd = zzd_new
+        dqc = -gainfb1 * (-fspb3) - gainfb2 * qq + gainfb3 * zz + gainp * zzd
+        dqcx = dqc * DEG
+        gainfb3 = -wacl * wacl * pacl / (dyb * dlnd)
+        gainfb2 = (2 * zacl * wacl + pacl + dnr + dyb / dvbe) / dlnd
+        gainfb1 = (
+            -wacl * wacl
+            - 2 * zacl * wacl * pacl
+            + dnb
+            + dnr * dyb / dvbe
+            - gainfb2 * dyb * dlnd / dvbe
+        ) / (dyb * dlnd) - gainp
+        rr = wbecb[2]
+        fspb2 = fspcb[1]
+        yyd_new = AGRAV * alcomx - fspb2
+        yy = integrate(yyd_new, yyd, yy, int_step)
+        yyd = yyd_new
+        drc = -gainfb1 * fspb2 - gainfb2 * rr + gainfb3 * yy + gainp * yyd
+        drcx = drc * DEG
+        store.set("yyd", yyd)
+        store.set("yy", yy)
+        store.set("zzd", zzd)
+        store.set("zz", zz)
+        store.set("dqcx", dqcx)
+        store.set("drcx", drcx)
+        store.set("wacl", wacl)
+        store.set("zacl", zacl)
+        store.set("pacl", pacl)
+        store.set("GAINFB", (gainfb1, gainfb2, gainfb3))
 
     def terminate(self, vehicle, ctx):
         pass
