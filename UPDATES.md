@@ -1,5 +1,10 @@
 # Updates
 
+## 0.97.0 - HYPER6 forces FAPB/FMB
+- Added `cadac.vehicles.hyper6.forces.Hyper6Forces` (`name="forces"`). `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out). Does not define aero/prop/newton names (`pdynmc`, `thrust`, `refa`/`refb`/`refc`, `cx`/`cy`/`cz`/`cll`/`clm`/`cln`, `FSPB`). `initialize`/`terminate` pass.
+- `execute` ports `Hyper::forces`: `FAPB=[pdynmc*refa*cx+thrust, pdynmc*refa*cy, pdynmc*refa*cz]`; `FMB=[pdynmc*refa*refb*cll, pdynmc*refa*refc*clm, pdynmc*refa*refb*cln]`. If `FARCS`/`FMRCS` absent, treat as zero (RCS out of this plan); if present, add them. Does not write newton-owned `FSPB`. No Plane6 import.
+- Tests: `Python/tests/unit/test_hyper6_forces.py` (GHAME refs, frozen aero/thrust vs C++ rtol=1e-12; FSPB sentinel unchanged; absent RCS zeros).
+
 ## 0.96.0 - HYPER6 maut dispatcher
 - `Hyper6Control.execute` ports C++ `Hyper::control` decode `mauty=maut//10`, `mautp=maut%10`. Modes `{0, 24}` only (climb 24: yaw SAS + gamma + roll). Unknown including -1 → `ValueError`. Limit `|del*|` and `philimx` with CADAC sign. Writes `delacx`/`delecx`/`delrcx`/`ancomx`/`phicomx`. maut=0 returns without writing. No unused mauty/mautp branches. No Plane6 import.
 - Tests: `Python/tests/unit/test_hyper6_maut.py` (maut=24 vs C++ rtol=1e-12; maut=0 no write; maut=-1 raises). Task 10/11 execute-is-pass tests now dispatch maut=24.
