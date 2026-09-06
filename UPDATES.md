@@ -1,5 +1,10 @@
 # Updates
 
+## 0.91.0 - HYPER6 GHAME aerodynamics
+- Added `cadac.vehicles.hyper6.aero.Hyper6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (including `maero`, GHAME refs, `cx`/`cz`, table coeffs, dimensional der, `tralp`; `cd`/`cl` role `"dia"` as C++). Does not define kinematics/env/propulsion/actuator names (`alphax`, `vmach`, `pdynmc`, `dvba`, `vmass`, `IBBB`, `delax`/`delex`/`delrx`).
+- `initialize` ports `Hyper::init_aerodynamics`: `refa=557.42`, `refb=24.38`, `refc=22.86`, termination `trmach`/`trdynm`/`trload`/`tralp`, `refa_st=7`, `caa=0.4`. `execute`: `maero==1` GHAME tables from ASC + body `cx`/`cz` + `aerodynamics_der` as C++. Else including 2 → ValueError (no transfer vehicle). Tests parse `ghame6_aero_deck.asc` (JSONC in Task 16).
+- Tests: `Python/tests/unit/test_hyper6_aero.py` (climb `maero=1`, alphax=2.5, vmach from 1000 m/s at 10 km US76; `cx`/`cz` and der finite vs C++ rtol=1e-12; maero=2 raises).
+
 ## 0.90.0 - Round6 newton step
 - `Round6Newton.execute` ports HYPER6 `Round6::newton`. `FSPB=FAPB/vmass`; `ABII = TBI.T@FSPB + TGI.T@GRAVG` (C++ `NEXT_ACC`); stored-slope `integrate` VBII then SBII. Then WGS84 `cad_geo84_in` / `cad_tdi84` / `cad_tgi84`; `VBED=TDI@(VBII-WEII@SBII)`; polar `psivdx`/`thtvdx` degrees; `TVD=mat2tr`. `vmass`/`FAPB`/`TBI`/`GRAVG` from store (not defined here). Skip `mfreeze` latch if `mfreeze` absent. Module-level `FOOT`/`NMILES` (not `cadac.constants`). No spherical earth / `gravity(alt)`.
 - Tests: `Python/tests/unit/test_round6_newton_step.py` (Task 5 climb ICs, FAPB=0, dt=0.01; alt finite; SBII changes; replica NEXT_ACC matches ABII rtol=1e-12; nonzero FAPB → FSPB=[1,0,0]).
