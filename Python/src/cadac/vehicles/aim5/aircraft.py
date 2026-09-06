@@ -3,8 +3,11 @@ from math import atan2, sqrt
 import numpy as np
 
 from cadac.constants import DEG, EPS, RAD
+from cadac.eom.flat3 import Flat3Environment, Flat3Kinematics
+from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
-from cadac.kernel.state import Field
+from cadac.kernel.state import Field, StateStore
+from cadac.vehicles.aim5.vehicle import Aim5Flat3Newton, _define_aim5_vehicle
 
 
 def _cadac_sign(variable):
@@ -196,4 +199,27 @@ class Aim5AircraftGuidance:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Aim5Aircraft:
+    type = "AIRCRAFT3"
+
+    def __init__(self, name, events=None):
+        self.name = name
+        self.health = 1
+        self.store = StateStore()
+        self.event_time = 0.0
+        self.events = EventEngine(events or [])
+        self.com_names = []
+        self.modules = [
+            Flat3Environment(),
+            Flat3Kinematics(),
+            Aim5AircraftGuidance(),
+            Aim5AircraftControl(),
+            Aim5AircraftForces(),
+            Aim5Flat3Newton(),
+        ]
+
+    def define(self):
+        _define_aim5_vehicle(self)
 

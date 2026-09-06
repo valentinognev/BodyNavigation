@@ -8,6 +8,8 @@ from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns, plot_row, write_pl
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
+from cadac.vehicles.aim5.aircraft import Aim5Aircraft
+from cadac.vehicles.aim5.vehicle import Aim5
 from cadac.vehicles.cruise3.vehicle import Cruise3
 from cadac.vehicles.hyper5.satellite import Satellite3
 from cadac.vehicles.hyper5.target import Target3
@@ -24,9 +26,14 @@ _VEHICLE_TYPES = {
     "HYPER6": Hyper6,
     "TARGET3": Target3,
     "SATELLITE3": Satellite3,
+    "AIM5": Aim5,
 }
-_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {}
+_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
+    ("aim5", "AIM5"): Aim5,
+    ("aim5", "AIRCRAFT3"): Aim5Aircraft,
+}
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
+_NO_DECK_FAMILY_TYPES = {("aim5", "AIRCRAFT3")}
 
 
 @dataclass
@@ -65,7 +72,7 @@ def _build_vehicle(path, spec):
         cls = _VEHICLE_TYPES.get(spec.type)
         if cls is None:
             raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
-    if spec.type in _NO_DECK_TYPES:
+    if (spec.family, spec.type) in _NO_DECK_FAMILY_TYPES or spec.type in _NO_DECK_TYPES:
         return cls(spec.name, spec.events)
     if spec.type == "HYPER5":
         if spec.aero_deck is None:
