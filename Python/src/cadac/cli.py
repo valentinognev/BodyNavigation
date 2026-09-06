@@ -25,7 +25,20 @@ _VEHICLE_TYPES = {
     "TARGET3": Target3,
     "SATELLITE3": Satellite3,
 }
+_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {}
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
+
+
+def register_family_type(family, type_name, cls) -> None:
+    key = (family, type_name)
+    existing = _VEHICLE_FAMILIES.get(key)
+    if existing is cls:
+        return
+    if existing is not None:
+        raise ValueError(
+            f"family type {type_name!r} for family {family!r} already registered"
+        )
+    _VEHICLE_FAMILIES[key] = cls
 
 
 @dataclass
@@ -54,9 +67,16 @@ def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
 
 
 def _build_vehicle(path, spec):
-    cls = _VEHICLE_TYPES.get(spec.type)
-    if cls is None:
-        raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
+    if spec.family is not None:
+        cls = _VEHICLE_FAMILIES.get((spec.family, spec.type))
+        if cls is None:
+            raise ValueError(
+                f"{path}: unknown vehicle type {spec.type!r} for family {spec.family!r}"
+            )
+    else:
+        cls = _VEHICLE_TYPES.get(spec.type)
+        if cls is None:
+            raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
     if spec.type in _NO_DECK_TYPES:
         return cls(spec.name, spec.events)
     if spec.type == "HYPER5":

@@ -93,6 +93,8 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
     events: list = []
     aero_deck = None
     prop_deck = None
+    sam_deck = None
+    srmb_deck = None
     n = len(lines)
     while i < n:
         parts = lines[i].split()
@@ -104,12 +106,23 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
             event, i = _parse_if_event(lines, i)
             events.append(event)
             continue
+        if token == "ENDIF":
+            i += 1
+            continue
         if token == "AERO_DECK":
             aero_deck = _deck_jsonc(parts[1])
             i += 1
             continue
         if token == "PROP_DECK":
             prop_deck = _deck_jsonc(parts[1])
+            i += 1
+            continue
+        if token == "SAM_DECK":
+            sam_deck = _deck_jsonc(parts[1])
+            i += 1
+            continue
+        if token == "SRBM_DECK":
+            srmb_deck = _deck_jsonc(parts[1])
             i += 1
             continue
         params[token] = _parse_number(parts[1])
@@ -119,6 +132,10 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
         vehicle["aero_deck"] = aero_deck
     if prop_deck is not None:
         vehicle["prop_deck"] = prop_deck
+    if sam_deck is not None:
+        vehicle["sam_deck"] = sam_deck
+    if srmb_deck is not None:
+        vehicle["srmb_deck"] = srmb_deck
     vehicle["params"] = params
     vehicle["events"] = events
     return vehicle, i
@@ -187,12 +204,16 @@ def _parse_scenario_asc(src: Path) -> dict:
     }
 
 
-def translate_scenario_asc(src, dst_dir) -> None:
+def translate_scenario_asc(src, dst_dir, family=None) -> None:
     src = Path(src)
     dst_dir = Path(dst_dir)
     dst_dir.mkdir(parents=True, exist_ok=True)
+    payload = _parse_scenario_asc(src)
+    if family is not None:
+        for vehicle in payload["vehicles"]:
+            vehicle["family"] = family
     dst_dir.joinpath(f"{src.stem}.jsonc").write_text(
-        json.dumps(_parse_scenario_asc(src), indent=2) + "\n",
+        json.dumps(payload, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )
