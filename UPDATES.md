@@ -1,5 +1,10 @@
 # Updates
 
+## 0.117.0 - AGM6 environment mair 0 US76
+- Added `cadac.vehicles.agm6.environment.Agm6Environment` (`name="environment"`). Constructor `(weather_deck=None)`. `define` registers C++ `def_environment` plus `VBAL` (reused `Flat6Kinematics.execute` reads `VBAL`). Does not define newton `hbe`/`VBEL`.
+- `initialize`: `dvba=dvbe`. `execute` decodes `mair=|matmo|mturb|mwind|`. All-zero: US76 `atmosphere76(hbe)` + `grav=gravity(hbe)` + `VAEL=0` + `VBAL=VBEL-VAEL` + `dvba=||VBAL||` + `vmach`/`pdynmc` as C++. Other `mair` → `ValueError` until weather. Skip `trcond`/`mfreeze` if absent. Does not modify `cadac.eom.flat6`. Not registered.
+- Tests: `Python/tests/unit/test_agm6_environment.py` (mair=0, hbe=7000, VBEL=[293,0,0] rho/press vs US76, VBAL==VBEL, vmach finite; mair=212 raises; FALCON6 `test_flat6_environment.py` kept green; rtol=1e-12, atol=1e-14).
+
 ## 0.116.0 - AGM6 aircraft track files
 - `Agm6AircraftSensor.execute` ports C++ `Aircraft::sensor`. On `sim_time>=track_epoch` (init latches epoch to `sim_time`), first 5 `Packet.type=="TARGET3"` in appearance order (not id `t1`): polar from aircraft `SAEL` minus target `SAEL` (fallback `SBEL`); add stored `dat_sigma`/`azat_sigma`/`elat_sigma`; `STCELn=SAEL-SATCL`; `VTCELn=VTEL+vel_sigma` (`VAEL` fallback `VBEL`). Then `track_epoch=sim_time+track_step`.
 - `com` on STCEL1–3/VTCEL1–3 as C++. Same class on `Agm6Aircraft`. No gauss sample. No Hyper5/Plane6/SAM6 imports. Not registered.
