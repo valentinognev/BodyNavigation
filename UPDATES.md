@@ -1,5 +1,11 @@
 # Updates
 
+## 0.81.0 - HYPER5 TARGET3 vehicle
+- Added `cadac.vehicles.hyper5.target`: `Target3Forces` (`name="forces"`), `Target3Intercept` (`name="intercept"`), `Target3` (`type="TARGET3"`, health=1). Constructor `(name, events=None)` — no decks. Modules: Round3Environment, Target3Forces, Round3Newton, Target3Intercept (C++ MODULES order; forces before newton). `com_names` from store fields with `"com"` in outputs. Not registered in cli (Task 20).
+- Forces: C++ `def_forces` FSPV (vec out, skip-if-exists), fwd_accel/side_accel (data), CORIO_V/CENTR_V (vec diag). `execute` ports `Target::forces`: TVG=tgv.T, TGI=tig.T, TEG=tge.T, WEIG=tge@weii@TEG, CORIO_V=TVG@WEIG@vbeg*2, CENTR_V=TVG@WEIG@WEIG@TGI@sbii, GRAV_G=[0,0,grav], ACC_V=CORIO+CENTR-GRAV_V, FSPV += fwd_accel/side_accel. Round3 lowercase names. Does not read unused C++ local thtvgx. Does not import Hyper5Forces/Cruise3/Plane5. `initialize`/`terminate` pass.
+- Intercept: C++ `def_intercept` targ_health (int diag). `execute`: `targ_health = ctx.combus[ctx.vehicle_slot].status`. Skip cout. `initialize`/`terminate` pass.
+- Tests: `Python/tests/unit/test_target3_forces.py`, `test_target3_intercept.py` (Demo 4.7 Truck lon/lat/alt; fwd=side=0 FSPV finite vs C++ rtol=1e-12, atol=1e-14; combus status 0 → targ_health 0).
+
 ## 0.80.0 - HYPER5 targeting stub
 - Added `cadac.vehicles.hyper5.targeting.Hyper5Targeting` (`name="targeting"`). `define` registers C++ `def_targeting`: mtargeting (int, data, scrn/plot), del_radius (data), clost_tgt_slot/tgtng_sat_slot (int, out). Does not define guidance waypoints (wp_lonx/wp_latx/wp_alt) or newton/seeker names. `initialize`/`terminate` pass (no C++ `init_targeting`).
 - `execute`: `mtargeting==0` return without writing (C++ return before satellite/target work). Else including 1 ValueError until Task 19. Protocol `vehicle.store`. No vehicle. No Plane5 import.
