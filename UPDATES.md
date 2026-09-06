@@ -1,5 +1,10 @@
 # Updates
 
+## 0.112.0 - SAM6 control roll and rate
+- Added `cadac.vehicles.sam6.control.Sam6Control` (`name="control"`). Port of SAM6 `control.cpp` `def_control` / `control_roll` / `control_rate`. Does not define INS/aero/newton names (`WBECB`, `thtblcx`, `phiblcx`, `dlp`/`dld`/`dna`/`dmd`, `dvbe`) or undeclared `factwacl`/`twcl`. No `control_accel` (Task 13).
+- `execute`: `maut==0` return without writing; `maut==4` `ValueError`; else `control_roll`; `maut==2` also `control_rate`. Roll: `wrcl=-0.8*dlp*(1+factwrcl)`, pole-placement `gkp`/`gkphi`, `|thtblcx|>88` rate `kp`; writes `dpcx`. Rate: open-loop `zrate`/`aa`/`bb`, `|dmd|<SMALL` then `SMALL*sign` (CADAC; no `dld` guard), `dqcx=DEG*grate*qq` (not `qqcomx`); writes `dqcx`/`drcx`/`dqcx_rcs`/`drcx_rcs`. Module-level `SMALL=1e-7`. Local CADAC sign. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_control_rate.py` (maut=0 `dpcx` stays 0; maut=2 dvbe=16 zetlagr=1.2 dummy aero `dqcx`/`drcx` finite vs C++ rtol=1e-12; maut=4 raises; maut=1 roll-only; INS `WBECB` not `WBEB`; CADAC sign 0 → +1).
+
 ## 0.111.0 - SAM6 actuator mact position-limit and second-order
 - Added `cadac.vehicles.sam6.actuator.Sam6Actuator` (`name="actuator"`). Port of SAM6 `actuator.cpp` / `actuator_scnd`. Local CADAC sign (`<0 → -1` else `+1`). `define` registers C++ `def_actuator` (four-fin scalars, not 3-vec `DX`). Does not define control commands `dpcx`/`dqcx`/`drcx` or unused C++ local `time`.
 - `execute`: cross-fin mix `delcx1=-dpcx-drcx`, `delcx2=-dpcx+dqcx`, `delcx3=-dpcx+drcx`, `delcx4=-dpcx-dqcx`. **`mact<2`** (includes **1**) position-limit only; **`mact==2`** second-order with rate/position limits and stored-slope `integrate`; else `ValueError`. Mix back `dpx=0.25*(-delx1-delx2-delx3-delx4)`, `dqx=0.5*(delx2-delx4)`, `drx=0.5*(-delx1+delx3)`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper6 import.
