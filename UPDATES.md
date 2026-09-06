@@ -1,5 +1,10 @@
 # Updates
 
+## 0.99.0 - HYPER6 ideal INS
+- Added `cadac.vehicles.hyper6.ins.Hyper6Ins` (`name="ins"`). `define` registers C++ `def_ins` (mins/frax, computed `SBIIC`/`VBIIC`/`TBIC`/`WBICB`/`WBICI`/`FSPCB`, lon/lat/alt/Euler/flight-path `*c` names, gyro/accel error data zeros not CADAC gauss, states `RICI`/`ESBI` plot). Does not define kinematics/newton/euler truth names (`TBI`, `FSPB`, `SBII`, `VBII`, `WBIB`, `WBII`, `time`). No GPS/star fields.
+- `initialize` no-op for `mins==0`. `execute` copies `TBI`→`TBIC`, `FSPB`→`FSPCB`, `SBII`→`SBIIC`, `VBII`→`VBIIC`, `WBIB`→`WBICB`, `WBII`→`WBICI`, then C++ common geographic/incidence/Euler path (`cad_geo84_in`/`cad_tdi84`). `mins!=0` → `ValueError`. Skip GPS/star if absent. No gyro/accl/grav helpers. Local CADAC sign. No vehicle. No Plane6 import.
+- Tests: `Python/tests/unit/test_hyper6_ins_ideal.py` (mins=0 copies SBII→SBIIC rtol=1e-12; mins=1 raises; control `*c` names; GPS/star absent).
+
 ## 0.98.0 - HYPER6 guidance stub
 - Added `cadac.vehicles.hyper6.guidance.Hyper6Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` (`mguide` int data, line/pronav/LTG/glideslope slots including `wp_sltrange`/`wp_grdrange` default 999999). Does not define newton/control/INS names those functions would read (`time`, `grav`, `maut`, `alcomx`/`ancomx`/`phicomx`, `TBIC`, `mprop`). `initialize`/`terminate` pass (no C++ `init_guidance`).
 - `execute`: `mguide==0` return without writing (climb default; C++ zeros locals then returns before `gets`). Else including 5 ValueError (no LTG/line/pronav). Protocol `vehicle.store`. No vehicle. No Plane6/Hyper5 guidance import.
