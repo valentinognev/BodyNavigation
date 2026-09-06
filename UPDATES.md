@@ -1,5 +1,10 @@
 # Updates
 
+## 0.93.0 - HYPER6 second-order actuators
+- Added `cadac.vehicles.hyper6.actuator.Hyper6Actuator` (`name="actuator"`). `define` registers C++ `def_actuator` (`mact`, `dlimx`/`ddlimx`/`wnact`/`zetact`, `delax`/`delex`/`delrx` out+scrn/plot, elevon diags `elvlx`/`elvrx`/`elvlcx`/`elvrcx`, states `DXD`/`DX`/`DDXD`/`DDX`). Does not define control commands (`delacx`/`delecx`/`delrcx`). No `init_actuator`.
+- `execute` ports `Hyper::actuator`: elevon mix `elvlcx=delecx+delacx`, `elvrcx=delecx-delacx`; `mact==0` position-limit only; `mact==2` second-order `actuator_scnd` (position/rate limits, stored-slope `integrate`); else including 1 → ValueError. Back-convert `delax=(elvlx-elvrx)/2`, `delex=(elvlx+elvrx)/2`. `dt=ctx.int_step`. Local CADAC sign (`<0 → -1` else `+1`); not `np.sign`; not `flat6._cadac_sign`. No Plane6 actuator import.
+- Tests: `Python/tests/unit/test_hyper6_actuator.py` (climb `mact=2`, `delecx=1`, `dt=0.01`; `|delex|<=dlimx`; mact=1 raises; elevon mix; formulas vs C++ rtol=1e-12).
+
 ## 0.92.0 - HYPER6 propulsion mprop 0-2
 - Added `cadac.vehicles.hyper6.propulsion.Hyper6Propulsion` (`name="propulsion"`). Constructor takes `Datadeck`. `define` registers C++ `def_propulsion` (including `mprop`, cowl/throttle/q-hold, `vmass`/`IBBB` and burn-out tensors, fuel state, `ca`/`spi`/`thrust`, rocket/exo slots, `mfreeze` saves). `throttle` default 0.05 as C++. Does not define env/aero names (`vmach`, `pdynmc`, `cd`/`cx`, `area`/`refa`, `alphax`, `time`, `rho`, `dvba`).
 - `initialize` ports `Hyper::init_propulsion`: `vmass=vmass0`; GHAME `IBBB0`/`IBBB1`; `IBBB=IBBB0`; `vmass0_st`/`fmass0_st` 0. `execute`: `mprop` 0/1/2 only (climb is 2); else including 3/4 → ValueError (no rocket/LTG). Tables from `ghame6_prop_deck.asc`. Autothrottle q-hold and fuel/mass/`IBBB` interpolate as C++; stored-slope `integrate` of `fmasse`. Skip `mfreeze` latch if `mfreeze` absent.
