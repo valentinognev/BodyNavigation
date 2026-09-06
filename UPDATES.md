@@ -1,5 +1,11 @@
 # Updates
 
+## 0.55.0 - F-16 aerodynamics tables
+- Added `cadac.vehicles.plane6.aero.Plane6Aero` (`name="aerodynamics"`). Constructor takes Datadeck. `define` registers C++ `def_aerodynamics` (refa/refb/refc, force/moment coeffs, prepared derivs, gmax/gminx, termination, vmass/IBBB/eng_ang_mom, xcg/xcgr). Does not define time/alphax/betax/vmach/pdynmc/dvba/ppx/qqx/rrx/delax/delex/delrx.
+- `initialize` ports `Plane::init_aerodynamics`: refa=27.87, refb=9.14, refc=3.45, vmass=9496, IBBB diag 12875/75673/85551 with Ixz=Izx=-1331.4, eng_ang_mom=70000, trmach=0.8, trdynm=10e3, trload=3, tralppx=21, tralpnx=-6, trbetx=5, trcode=0, tmcode=0. xcg/xcgr/alplimpx/alplimnx stay define zeros.
+- `execute` ports `Plane::aerodynamics` (not `_der`): parsed `f16_aero_deck.asc`; cxt/cyt/czt/clt/cmt/cnt as C++; clt uses local cllr=0 (clr look_up unused); clda sign flip; gmax/gminx from cz at alplimpx/alplimnx; cdrag/clift/clovercd; prepared derivs; unassigned locals stored 0; diagnostic `cl` is rolling-moment look_up; trcode=4 if gmax<trload. Protocol `vehicle.store`. No JSONC under cases/. Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_plane6_aero.py` (alpha=1 elev=0 cxt/czt; full coeffs vs CADAC formulas rtol 1e-12; cllr not clr; cl vs clift; trcode).
+
 ## 0.54.0 - Flat6 newton
 - Added `cadac.eom.flat6.Flat6Newton` (`name="newton"`) in the same `flat6.py` as environment/kinematics/euler. `define` registers C++ `def_newton` (time exec scrn/plot/com, halt, VBEBD/VBEB/SBELD/SBEL state, sbel1/2/3, SBELM, groundrange, FSPB, VBEL, dvbe in/out plot, alpha0x/beta0x, hbe, psivlx/thtvlx, alx/anx/ayx, ATB, mfreeze_newt/dvbef). Does not define TBL (kinematics), grav (environment), WBEB (euler), FAPB (forces), vmass/mfreeze (plane).
 - `initialize` ports `Flat6::init_newton`: VBEB=[calp*cbet, sbet, salp*cbet]*dvbe with alpha0x/beta0x in degrees * RAD; VBEL=TBL.T@VBEB; flight path psivl=0 if vbel1=vbel2=0 else atan2, thtvl=atan2(-vbel3, hypot); SBEL from sbel1/2/3; hbe=-SBEL[2]; SBELM=SBEL. Does not write VBEBD/SBELD/time.
