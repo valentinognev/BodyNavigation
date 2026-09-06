@@ -1,5 +1,11 @@
 # Updates
 
+## 0.104.0 - SAM6 missile aerodynamics
+- Added `cadac.vehicles.sam6.aero.Sam6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (`refl=0.25`, `refa=0.0491`, force/moment coeffs, dimensional der, `alplimx=40`, termination). Does not define `vmach`/`alphax`/`betax`/`dpx`.
+- `initialize` ports `Missile::init_aerodynamics`: `trortho=1e-4`, `tralp=1.047`, `trdynm=1e4`, `trload=0.001`, `trcond=0`.
+- `execute` ports `Missile::aerodynamics` then `aerodynamics_der`. Tables from `SAM_aero_deck.asc` (comma names). Read `vmach` as C++ `mach`. `mprop==0` adds `cab`. Skip TVC `gtvc`/`parm` if absent (C++ localizes them unused; treat 0). `SMALL=1e-7` module-level. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_aero.py` (mach=2, alphax=10, mass=300, xcg=xcgref, zero fins, mprop=1; `ca`/`cn` vs look_up+C++ sums rtol=1e-12; `dna` finite).
+
 ## 0.103.0 - SAM6 Flat3 EOM (SAEL names)
 - Added `cadac.vehicles.sam6.flat3`: `Sam6Flat3Kinematics` / `Sam6Flat3Environment` / `Sam6Flat3Newton`. Port of SAM6 `flat3_modules.cpp`. Does not modify `cadac.eom.flat3`. Does not import `cadac.eom.flat6`.
 - Kinematics: `time` (exec, com), `launch_delay` (data), `launch_epoch` (out, com), `launch_time` (diag). Init `time=sim_time`, `launch_epoch=launch_delay`. Exec `launch_time=sim_time-launch_epoch`, `time=sim_time`.
