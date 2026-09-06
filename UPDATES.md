@@ -1,5 +1,12 @@
 # Updates
 
+## 0.103.0 - SAM6 Flat3 EOM (SAEL names)
+- Added `cadac.vehicles.sam6.flat3`: `Sam6Flat3Kinematics` / `Sam6Flat3Environment` / `Sam6Flat3Newton`. Port of SAM6 `flat3_modules.cpp`. Does not modify `cadac.eom.flat3`. Does not import `cadac.eom.flat6`.
+- Kinematics: `time` (exec, com), `launch_delay` (data), `launch_epoch` (out, com), `launch_time` (diag). Init `time=sim_time`, `launch_epoch=launch_delay`. Exec `launch_time=sim_time-launch_epoch`, `time=sim_time`.
+- Environment: US76 `atmosphere76(-SAEL[2])` + `gravity` (not NASA helper). `mach`/`pdynmc` from `dvae`. Store name `mach`, not `vmach`. Does not define `alt`/`SAEL`/`dvae`.
+- Newton: ICs `sael1/2/3` → `SAEL`, `cart_from_pol` → `VAEL`. `NEXT_ACC = TAL.T @ FSPA + (0,0,grav)`. `phiavout` 0 if absent. Writes `alt=-SAEL[2]`.
+- Tests: `Python/tests/unit/test_sam6_flat3.py`.
+
 ## 0.102.0 - CADAC Flat0 kinematics and fixed-site newton
 - Added `cadac.eom.flat0.Flat0Kinematics` (`name="kinematics"`). `define` registers C++ `def_kinematics` (`time` out+com, `launch_delay` data, `launch_epoch` init, `launch_time` out). `initialize`: `time=ctx.sim_time`, `launch_epoch=launch_delay`. `execute`: `launch_time=sim_time-launch_epoch`, `time=sim_time`.
 - Added `cadac.eom.flat0.Flat0Newton` (`name="newton"`). `define` `srel1/2/3` data, `SREL` vec out. `initialize` packs `SREL`. `execute` no-op (fixed site). No radar/vehicle. No `flat6` import.
