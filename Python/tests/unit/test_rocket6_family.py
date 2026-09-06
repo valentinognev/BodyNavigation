@@ -9,14 +9,35 @@ def test_hyper6_without_family_stays_hyper6():
     assert _VEHICLE_TYPES["HYPER6"].__name__ == "Hyper6"
 
 
-def test_vehicle_families_empty_no_rocket6():
+def test_vehicle_families_registers_rocket6():
     import cadac.cli as cli
+    from cadac.vehicles.rocket6.vehicle import Rocket6
 
     assert hasattr(cli, "_VEHICLE_FAMILIES")
-    assert ("rocket6", "HYPER6") not in cli._VEHICLE_FAMILIES
+    assert cli._VEHICLE_FAMILIES.get(("rocket6", "HYPER6")) is Rocket6
 
 
 def test_family_unknown_does_not_use_type_table(tmp_path: Path):
+    spec = VehicleSpec(
+        type="HYPER6",
+        name="SLV",
+        aero_deck=None,
+        prop_deck=None,
+        params={},
+        events=[],
+        family="no_such_family",
+    )
+    try:
+        _build_vehicle(tmp_path / "x.jsonc", spec)
+        raise AssertionError("expected ValueError")
+    except ValueError as exc:
+        msg = str(exc)
+        assert "no_such_family" in msg
+        assert "HYPER6" in msg
+        assert "x.jsonc" in msg
+
+
+def test_rocket6_without_aero_deck_does_not_require_prop(tmp_path: Path):
     spec = VehicleSpec(
         type="HYPER6",
         name="SLV",
@@ -31,9 +52,8 @@ def test_family_unknown_does_not_use_type_table(tmp_path: Path):
         raise AssertionError("expected ValueError")
     except ValueError as exc:
         msg = str(exc)
-        assert "rocket6" in msg
-        assert "HYPER6" in msg
-        assert "x.jsonc" in msg
+        assert "aero_deck" in msg
+        assert "and prop_deck" not in msg
 
 
 def test_vehicle_family_wins_over_scenario(tmp_path: Path):
