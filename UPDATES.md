@@ -1,5 +1,11 @@
 # Updates
 
+## 0.105.0 - SAM6 missile propulsion
+- Added `cadac.vehicles.sam6.propulsion.Sam6Propulsion` (`name="propulsion"`). Constructor takes `Datadeck`. `define` registers C++ `def_propulsion` (`mprop` out, `aexit` default 0.0314, `mass` 300, `thrust`, `xcgref`, `xcg` 2.9, `ai11` 2.9, `ai33` 440, `mfreeze` saves). Does not define `msl_time`/`press`/`mfreeze`.
+- No `init_propulsion` in C++; `initialize` is pass.
+- `execute` ports `Missile::propulsion`: `thrust=look_up("thrust_vs_time",msl_time)+(101325-press)*aexit`; `mass`/`xcg`/`ai33`/`ai11` from `mass_vs_time`/`cg_vs_time`/`moipitch_vs_time`/`moiroll_vs_time`; `mprop=1` if `msl_time<=60` else 0. Skip `mfreeze` latch if `mfreeze` absent. Tables from `SAM_prop_deck.asc`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_propulsion.py` (msl_time=0 press=101325 mass 300 mprop 1 sea-level table thrust; msl_time=61 mprop 0; back-pressure and tables vs look_up rtol=1e-12).
+
 ## 0.104.0 - SAM6 missile aerodynamics
 - Added `cadac.vehicles.sam6.aero.Sam6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (`refl=0.25`, `refa=0.0491`, force/moment coeffs, dimensional der, `alplimx=40`, termination). Does not define `vmach`/`alphax`/`betax`/`dpx`.
 - `initialize` ports `Missile::init_aerodynamics`: `trortho=1e-4`, `tralp=1.047`, `trdynm=1e4`, `trload=0.001`, `trcond=0`.
