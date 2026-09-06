@@ -1,5 +1,10 @@
 # Updates
 
+## 0.103.0 - Round6 environment tabular wind and Dryden
+- `Round6Environment(weather_deck=None)`: `mair=0` US76 unchanged (`ctx` may be None); `mair=12` US76 + weather-table wind + Dryden with `gauss_value=0`. Missing weather deck or other `mair` → `ValueError`.
+- `define` adds C++ Dryden/wind fields (`turb_length`, `taux*`, `gauss_value`, `tempc`, …), skip-if-exists. `initialize` still copies `dvba=dvbe`.
+- Tests: `test_round6_environment.py` tabular wind smoother vs C++ (`twind=1`, `dt=0.01`, `turb_sigma=0`); Hyper6 one-step still green.
+
 ## 0.102.0 - CADAC kepler and polar helpers
 - Added `cad_kepler` (Morth) to `cadac.math.wgs84` using module `GM`/`SMALL`. Signature `(sbii, vbii, tgo) -> (spii, vpii, flag)`; `flag==1` returns input copies. Did not port `cad_kepler1`.
 - Added `cart_from_pol` and `angle` (`EPS` clamp from `cadac.constants`) to `cadac.math.frames`. Existing `polar_from_cart`/`mat2tr` unchanged.

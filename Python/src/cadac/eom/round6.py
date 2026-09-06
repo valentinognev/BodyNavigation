@@ -34,11 +34,15 @@ def _skew(vec):
 class Round6Environment:
     name = "environment"
 
+    def __init__(self, weather_deck=None):
+        self.weather_deck = weather_deck
+
     def define(self, vehicle):
         store = vehicle.store
         zeros3 = (0.0, 0.0, 0.0)
         for field in (
             Field("mair", 0, "int", "data", "environment"),
+            Field("warning_flag", 0, "int", "init", "environment"),
             Field("press", 0.0, "real", "out", "environment"),
             Field("rho", 0.0, "real", "out", "environment"),
             Field("vsound", 0.0, "real", "diag", "environment"),
@@ -62,12 +66,64 @@ class Round6Environment:
             Field("VAEDSD", zeros3, "vec", "state", "environment"),
             Field("VAED", zeros3, "vec", "out", "environment"),
             Field("dvba", 0.0, "real", "out", "environment"),
+            Field("markov_value", 0.0, "real", "save", "environment"),
+            Field("turb_length", 0.0, "real", "data", "environment"),
+            Field("turb_sigma", 0.0, "real", "data", "environment"),
+            Field("taux1", 0.0, "real", "state", "environment"),
+            Field("taux1d", 0.0, "real", "state", "environment"),
+            Field("taux2", 0.0, "real", "state", "environment"),
+            Field("taux2d", 0.0, "real", "state", "environment"),
+            Field("tau", 0.0, "real", "diag", "environment"),
+            Field("gauss_value", 0.0, "real", "diag", "environment"),
+            Field("tempc", 0.0, "real", "diag", "environment"),
         ):
-            store.define(field)
+            if field.name not in store.names():
+                store.define(field)
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
         store.set("dvba", store.get("dvbe"))
+
+    def _environment_dryden(self, vehicle, dvba, int_step):
+        store = vehicle.store
+        turb_length = store.get("turb_length")
+        turb_sigma = store.get("turb_sigma")
+        tbd = store.get("TBD")
+        alppx = store.get("alppx")
+        phipx = store.get("phipx")
+        markov_value = store.get("markov_value")
+        taux1 = store.get("taux1")
+        taux1d = store.get("taux1d")
+        taux2 = store.get("taux2")
+        taux2d = store.get("taux2d")
+        gauss_value = 0.0
+        taux1d_new = taux2
+        taux1 = integrate(taux1d_new, taux1d, taux1, int_step)
+        taux1d = taux1d_new
+        vl = dvba / turb_length
+        taux2d_new = -vl * vl * taux1 - 2.0 * vl * taux2 + vl * vl * gauss_value
+        taux2 = integrate(taux2d_new, taux2d, taux2, int_step)
+        taux2d = taux2d_new
+        tau = turb_sigma * math.sqrt(1.0 / (vl * PI)) * (
+            taux1 + math.sqrt(3.0) * taux2 / vl
+        )
+        vtab = np.array(
+            [
+                -tau * math.sin(alppx * RAD),
+                tau * math.sin(phipx * RAD) * math.cos(alppx * RAD),
+                tau * math.cos(phipx * RAD) * math.cos(alppx * RAD),
+            ],
+            dtype=float,
+        )
+        vtad = tbd.T @ vtab
+        store.set("markov_value", markov_value)
+        store.set("taux1", taux1)
+        store.set("taux1d", taux1d)
+        store.set("taux2", taux2)
+        store.set("taux2d", taux2d)
+        store.set("tau", tau)
+        store.set("gauss_value", gauss_value)
+        return vtad
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
@@ -75,9 +131,14 @@ class Round6Environment:
         matmo = mair // 100
         mturb = (mair - matmo * 100) // 10
         mwind = (mair - matmo * 100) % 10
-        if matmo != 0 or mturb != 0 or mwind != 0:
+        mair0 = matmo == 0 and mturb == 0 and mwind == 0
+        mair12 = matmo == 0 and mturb == 1 and mwind == 2
+        if not mair0 and not mair12:
             raise ValueError(f"unknown mair {mair}")
+        if mair12 and self.weather_deck is None:
+            raise ValueError("mair 12 requires a weather Datadeck")
 
+        warning_flag = store.get("warning_flag")
         dvba = store.get("dvba")
         vaeds = store.get("VAEDS")
         vaedsd = store.get("VAEDSD")
@@ -90,12 +151,36 @@ class Round6Environment:
         grav = float(np.linalg.norm(gravg))
 
         rho, press, tempk = atmosphere76(alt)
+        tempc = tempk - 273.16
         vsound = math.sqrt(1.4 * R * tempk)
 
         vmach = abs(dvba / vsound)
         pdynmc = 0.5 * rho * dvba * dvba
 
         vaed = np.zeros(3)
+        if mwind > 0:
+            int_step = ctx.int_step
+            twind = store.get("twind")
+            vaed3 = store.get("vaed3")
+            dvw = self.weather_deck.look_up("speed", alt)
+            psiwdx = self.weather_deck.look_up("direction", alt)
+            vaed_raw = np.array(
+                [
+                    -dvw * math.cos(psiwdx * RAD),
+                    -dvw * math.sin(psiwdx * RAD),
+                    vaed3,
+                ],
+                dtype=float,
+            )
+            vaedsd_new = (vaed_raw - vaeds) * (1.0 / twind)
+            vaeds = integrate(vaedsd_new, vaedsd, vaeds, int_step)
+            vaedsd = vaedsd_new
+            vaed = vaeds
+        if mturb == 1:
+            int_step = ctx.int_step
+            vtad = self._environment_dryden(vehicle, dvba, int_step)
+            vaed = vtad + vaeds
+
         vbad = vbed - vaed
         dvba = float(np.linalg.norm(vbad))
         vmach = abs(dvba / vsound)
@@ -129,6 +214,7 @@ class Round6Environment:
             store.set("pdynmcf", pdynmcf)
             store.set("vmachf", vmachf)
 
+        store.set("warning_flag", warning_flag)
         store.set("VAEDS", vaeds)
         store.set("VAEDSD", vaedsd)
         store.set("press", press)
@@ -141,6 +227,7 @@ class Round6Environment:
         store.set("dvba", dvba)
         store.set("vsound", vsound)
         store.set("tempk", tempk)
+        store.set("tempc", tempc)
 
     def terminate(self, vehicle, ctx):
         pass
