@@ -1,5 +1,10 @@
 # Updates
 
+## 0.80.0 - HYPER5 targeting stub
+- Added `cadac.vehicles.hyper5.targeting.Hyper5Targeting` (`name="targeting"`). `define` registers C++ `def_targeting`: mtargeting (int, data, scrn/plot), del_radius (data), clost_tgt_slot/tgtng_sat_slot (int, out). Does not define guidance waypoints (wp_lonx/wp_latx/wp_alt) or newton/seeker names. `initialize`/`terminate` pass (no C++ `init_targeting`).
+- `execute`: `mtargeting==0` return without writing (C++ return before satellite/target work). Else including 1 ValueError until Task 19. Protocol `vehicle.store`. No vehicle. No Plane5 import.
+- Tests: `Python/tests/unit/test_hyper5_targeting_noop.py` (mtargeting=0 no raise/no write; 1/2/99/-1 raise; define-only C++ fields).
+
 ## 0.79.0 - HYPER5 Hyper intercept halt/hit
 - Added `cadac.vehicles.hyper5.intercept.Hyper5Intercept` (`name="intercept"`). `define` registers C++ `def_intercept`: write (int, save, default 1), miss/hit_time/MISS_G (diag), time_m/SBTGM/STMEG/SBMEG (save), halt (int, data). Does not define newton/seeker/guidance names. `initialize`/`terminate` pass (no C++ `init_intercept`).
 - `execute` ports `Hyper::intercept` without cout/`sys.exit`: `halt and write` or `alt<=0 and write` → write=0, `vehicle.health=0`, `ctx.combus[slot].status=0`. `mseeker==3` and `range_go<1000`: STEG from `ctx.combus[targ_com_slot].vars["sbeg"]`; closest-approach interpolation when `closing_speed<0 and write` (hit_time/MISS_G/miss, then same kill); always save previous SBTGM=`-STBG`, STMEG, SBMEG=`sbeg`, time_m. Always writes write and diagnostics. Does not set target packet status. Protocol `vehicle.store`. No vehicle. No Plane5 import.
