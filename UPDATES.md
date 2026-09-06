@@ -1,5 +1,11 @@
 # Updates
 
+## 0.107.0 - SAM6 newton mass and alt
+- Added `cadac.vehicles.sam6.newton.Sam6Newton` (`name="newton"`). Port of SAM6 `newton.cpp`, not `Flat6Newton`. `define` registers C++ `def_newton` plus `hbe` (`VBEBD`/`VBEB`/`SBELD`/`SBEL` state, `sbel1/2/3` data, `FSPB`/`VBEL`/`alt`/`SLEL` out, `dvbe` in/out, `alpha0x`/`beta0x` data, `hbe` out, FPA/`anx`/`ayx`/`ATB` diag, `mfreeze` saves). Does not define `mass`/`FAPB`/`TBL`/`WBEB`/`grav`/`mfreeze`/`vmass`.
+- Init: `VBEB` from `alpha0x`/`beta0x`/`dvbe`; `VBEL=TBL.T@VBEB`; `SBEL`/`SLEL` from `sbel*`; `alt=hbe=-SBEL[2]`.
+- `execute`: `FSPB=FAPB/mass`; `ATB=skew(WBEB)@VBEB`; stored-slope `integrate` of `VBEB` then `SBEL`; `VBEL=TBL.T@VBEB`; writes `alt` and `hbe` both `-SBEL[2]`. Skip `mfreeze` latch if `mfreeze` absent. Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_newton.py` (sbel=0, dvbe=16, identity TBL, mass=300, FAPB=0, grav=9.8, WBEB=0; init `alt==hbe==0`, `||VBEB||==16`, `VBEL==VBEB`; one execute `alt` finite; `FSPB=FAPB/mass` not `vmass`; rtol=1e-12).
+
 ## 0.106.0 - SAM6 missile euler
 - Added `cadac.vehicles.sam6.euler.Sam6Euler` (`name="euler"`). Port of SAM6 `euler.cpp`, not `Flat6Euler`. `define` registers C++ `def_euler` (`ppd/pp`,`qqd/qq`,`rrd/rr` state; `ppx/qqx/rrx` out+plot; `WBEB` vec diag). Does not define `FMB`/`ai11`/`ai33`.
 - No `init_euler` in C++; `initialize` is pass.
