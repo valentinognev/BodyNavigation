@@ -13,6 +13,18 @@ def _cadac_sign(variable):
     return 1
 
 
+def _skew(vec):
+    x, y, z = vec
+    return np.array(
+        [
+            [0.0, -z, y],
+            [z, 0.0, -x],
+            [-y, x, 0.0],
+        ],
+        dtype=float,
+    )
+
+
 class Aim5AircraftForces:
     name = "forces"
 
@@ -130,3 +142,58 @@ class Aim5AircraftControl:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Aim5AircraftGuidance:
+    name = "guidance"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        for field in (
+            Field("acft_option", 0, "int", "data", "guidance"),
+            Field("guid_gain", 0.0, "real", "data", "guidance"),
+            Field("ACOML", (0.0, 0.0, 0.0), "vec", "out", "guidance"),
+            Field("gturn", 0.0, "real", "data", "guidance"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        acft_option = store.get("acft_option")
+        guid_gain = store.get("guid_gain")
+        gturn = store.get("gturn")
+        grav = store.get("grav")
+
+        if acft_option == 0:
+            acoml = np.array([0.0, 0.0, -grav])
+        elif acft_option == 1:
+            tvl = store.get("TVL")
+            acomv = np.array([0.0, gturn * grav, -grav])
+            acoml = tvl.T @ acomv
+        elif acft_option == 2:
+            combus = ctx.combus or ()
+            packet = next((p for p in combus if p.type == "AIM5"), None)
+            if packet is None:
+                raise ValueError("no AIM5 packet on combus")
+            stel = packet.vars["SBEL"]
+            vtel = packet.vars["VBEL"]
+            sbel = store.get("SBEL")
+            vael = store.get("VBEL")
+            satl = sbel - stel
+            dab = float(np.linalg.norm(satl))
+            gain = guid_gain * float(np.linalg.norm(_skew(vael) @ vtel)) / dab
+            uvtel = vtel / np.linalg.norm(vtel)
+            uvael = vael / np.linalg.norm(vael)
+            epsl = _skew(uvael) @ uvtel
+            acoml = _skew(epsl) @ uvael * gain + np.array([0.0, 0.0, -grav])
+        else:
+            raise ValueError(f"unsupported acft_option={acft_option}")
+
+        store.set("ACOML", acoml)
+
+    def terminate(self, vehicle, ctx):
+        pass
+
