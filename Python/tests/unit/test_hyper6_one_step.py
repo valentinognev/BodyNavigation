@@ -134,11 +134,11 @@ def test_hyper6_requires_aero_and_prop_deck(tmp_path: Path):
         run_scenario(path)
 
 
-def test_unknown_vehicle_type_aim5_still_raises(tmp_path: Path):
+def test_unknown_vehicle_type_no_such_type_still_raises(tmp_path: Path):
     path = _jsonc(
         tmp_path,
         "unknown.jsonc",
-        [{"type": "AIM5", "name": "p", "params": {}, "events": []}],
+        [{"type": "NO_SUCH_TYPE", "name": "p", "params": {}, "events": []}],
     )
-    with pytest.raises(ValueError, match="AIM5"):
+    with pytest.raises(ValueError, match="NO_SUCH_TYPE"):
         run_scenario(path)

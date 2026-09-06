@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from cadac.io.scenario import load_scenario
@@ -15,6 +16,9 @@ def test_translate_input_climb_header_and_params(tmp_path: Path):
     assert raw.endswith(b"\n")
 
     cfg = load_scenario(out)
+    assert cfg.vehicles[0].family is None
+    data = json.loads(out.read_text(encoding="utf-8"))
+    assert "family" not in data["vehicles"][0]
     assert cfg.end_time == 90
     assert cfg.options["scrn"] is True
     assert cfg.options["events"] is True
