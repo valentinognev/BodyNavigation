@@ -1,5 +1,10 @@
 # Updates
 
+## 0.98.0 - HYPER6 guidance stub
+- Added `cadac.vehicles.hyper6.guidance.Hyper6Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` (`mguide` int data, line/pronav/LTG/glideslope slots including `wp_sltrange`/`wp_grdrange` default 999999). Does not define newton/control/INS names those functions would read (`time`, `grav`, `maut`, `alcomx`/`ancomx`/`phicomx`, `TBIC`, `mprop`). `initialize`/`terminate` pass (no C++ `init_guidance`).
+- `execute`: `mguide==0` return without writing (climb default; C++ zeros locals then returns before `gets`). Else including 5 ValueError (no LTG/line/pronav). Protocol `vehicle.store`. No vehicle. No Plane6/Hyper5 guidance import.
+- Tests: `Python/tests/unit/test_hyper6_guidance_noop.py` (mguide=0 no raise/no write; mguide=5 raises; define-only C++ fields).
+
 ## 0.97.0 - HYPER6 forces FAPB/FMB
 - Added `cadac.vehicles.hyper6.forces.Hyper6Forces` (`name="forces"`). `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out). Does not define aero/prop/newton names (`pdynmc`, `thrust`, `refa`/`refb`/`refc`, `cx`/`cy`/`cz`/`cll`/`clm`/`cln`, `FSPB`). `initialize`/`terminate` pass.
 - `execute` ports `Hyper::forces`: `FAPB=[pdynmc*refa*cx+thrust, pdynmc*refa*cy, pdynmc*refa*cz]`; `FMB=[pdynmc*refa*refb*cll, pdynmc*refa*refc*clm, pdynmc*refa*refb*cln]`. If `FARCS`/`FMRCS` absent, treat as zero (RCS out of this plan); if present, add them. Does not write newton-owned `FSPB`. No Plane6 import.
