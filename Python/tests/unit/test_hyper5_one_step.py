@@ -236,7 +236,7 @@ def test_unknown_vehicle_type_still_aim5(tmp_path: Path):
     path = _jsonc(
         tmp_path,
         "unknown.jsonc",
-        [{"type": "AIM5", "name": "p", "params": {}, "events": []}],
+        [{"type": "NO_SUCH_TYPE", "name": "p", "params": {}, "events": []}],
     )
-    with pytest.raises(ValueError, match="AIM5"):
+    with pytest.raises(ValueError, match="NO_SUCH_TYPE"):
         run_scenario(path)

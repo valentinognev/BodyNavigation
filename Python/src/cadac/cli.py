@@ -15,6 +15,7 @@ from cadac.vehicles.hyper5.vehicle import Hyper5
 from cadac.vehicles.hyper6.vehicle import Hyper6
 from cadac.vehicles.plane5.vehicle import Plane5
 from cadac.vehicles.plane6.vehicle import Plane6
+from cadac.vehicles.rotor.vehicle import Rotor
 
 _VEHICLE_TYPES = {
     "CRUISE3": Cruise3,
@@ -24,9 +25,12 @@ _VEHICLE_TYPES = {
     "HYPER6": Hyper6,
     "TARGET3": Target3,
     "SATELLITE3": Satellite3,
+    "ROTOR": Rotor,
 }
-_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {}
-_NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
+_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
+    ("magsix", "ROTOR"): Rotor,
+}
+_NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3", "ROTOR"})
 
 
 @dataclass
