@@ -1,5 +1,8 @@
 # Updates
 
+## 0.100.1 - HYPER6 e2e skip without golden
+- Added `Python/tests/e2e/test_hyper6_climb.py`. Skip if `tests/e2e/goldens/hyper6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live climb `run_scenario` calls `require_golden` first.
+
 ## 0.100.0 - run HYPER6 from JSONC climb
 - Added `cadac.vehicles.hyper6.vehicle.Hyper6` (`type="HYPER6"`, health=1). Constructor `(name, aero_deck, prop_deck, events=None)`. Modules in climb ASC order: kinematics, environment, aerodynamics, propulsion, ins, guidance, control, actuator, forces, newton, euler (Round6 EOM + Hyper6 modules). Skip-if-exists on name collisions (Plane6 pattern).
 - `run_scenario` maps `HYPER6 -> Hyper6`; both decks required (PLANE6 path, not HYPER5). Plot columns: flagged like PLANE6; CRUISE3 path unchanged. Radar/Satellite/Ground0 not registered. Unknown-type sentinel is `AIM5`.
