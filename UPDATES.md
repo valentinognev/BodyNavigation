@@ -1,5 +1,9 @@
 # Updates
 
+## 0.84.2 - Hyper5 control_altitude reads Round3 vbeg
+- `Hyper5Control.control_altitude` reads store `vbeg` (Round3 Newton name), not `VBEG`. Same rule as `tgv`. mcontrol 6/16/36 no longer KeyError on a defined Hyper5.
+- Tests: `test_mcontrol_6_execute_reads_round3_vbeg_on_hyper5`; Task 8 plants `vbeg`.
+
 ## 0.84.1 - HYPER5 e2e skip without golden
 - Added `Python/tests/e2e/test_hyper5_pronav.py`: skip if `tests/e2e/goldens/hyper5/plot.csv` absent (file not created). Fixture tests: skip helper, sentinel `time=-1`, `alt` at t=0, shared-column intersection `rtol=1e-5` / `atol=max(1e-6, 5e-6*|g|)`. Live `run_scenario` on `cases/hyper5/input.jsonc` calls `require_golden` first.
 

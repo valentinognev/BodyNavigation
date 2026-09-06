@@ -212,7 +212,7 @@ class Hyper5Control:
         gv = store.get("gv")
         alt = store.get("alt")
         grav = store.get("grav")
-        vbeg = store.get("VBEG")
+        vbeg = store.get("vbeg")
 
         ealt = gh * (altcom - alt)
         if ealt > altdlim:

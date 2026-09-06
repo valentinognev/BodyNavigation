@@ -7,6 +7,7 @@ from cadac.constants import RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.vehicles.hyper5.control import Hyper5Control
+from cadac.vehicles.hyper5.vehicle import Hyper5
 
 # Demo 5.1 fly-out
 GH = 0.2
@@ -33,7 +34,7 @@ ALTITUDE_FIELDS = {
     "altcom": ("real", "data", ("plot",)),
 }
 
-PLANT_FIELDS = ("alt", "grav", "VBEG", "VBEL")
+PLANT_FIELDS = ("alt", "grav", "vbeg", "VBEL")
 
 
 class _Vehicle:
@@ -101,7 +102,7 @@ def _ready(
     store = vehicle.store
     store.define(Field("alt", alt, "real", "out", "newton", ("scrn", "plot")))
     store.define(Field("grav", grav, "real", "out", "environment"))
-    store.define(Field("VBEG", vbeg, "vec", "state", "newton"))
+    store.define(Field("vbeg", vbeg, "vec", "state", "newton"))
     store.set("altcom", altcom)
     store.set("gh", gh)
     store.set("gv", gv)
@@ -145,7 +146,7 @@ def test_execute_dispatches_mcontrol_0():
     store.set("alphax", -1.5)
     alt_before = store.get("alt")
     altd_before = store.get("altd")
-    vbeg_before = store.get("VBEG").copy()
+    vbeg_before = store.get("vbeg").copy()
 
     control.execute(vehicle, _ctx())
 
@@ -153,7 +154,7 @@ def test_execute_dispatches_mcontrol_0():
     assert store.get("alphax") == 0.0
     assert store.get("alt") == alt_before
     assert store.get("altd") == altd_before
-    np.testing.assert_array_equal(store.get("VBEG"), vbeg_before)
+    np.testing.assert_array_equal(store.get("vbeg"), vbeg_before)
 
 
 def test_control_altitude_one_step_matches_cpp_equations():
@@ -323,3 +324,54 @@ def test_control_bank_does_not_write_altitude_states():
     assert store.get("altd") == altd_before
     assert store.get("altd") == 0.0
     assert store.get("altcom") == ALTCOM
+
+
+def test_mcontrol_6_execute_reads_round3_vbeg_on_hyper5():
+    vehicle = Hyper5("RR3X", None, None)
+    vehicle.define()
+    store = vehicle.store
+    assert "vbeg" in store.names()
+    assert "VBEG" not in store.names()
+
+    vbeg = np.array([1475.0, 0.0, 40.0])
+    store.set("vbeg", vbeg)
+    store.set("alt", ALT)
+    store.set("grav", GRAV)
+    store.set("gh", GH)
+    store.set("gv", GV)
+    store.set("altdlim", ALTDLIM)
+    store.set("altcom", ALTCOM)
+    store.set("anposlimx", ANPOSLIMX)
+    store.set("anneglimx", ANNEGLIMX)
+    store.set("mcontrol", 6)
+    store.set("area", 11.6986)
+    store.set("cla", 0.08)
+    store.set("pdynmc", 72000.0)
+    store.set("mass", 1352.0)
+    store.set("dvbe", 254.0)
+    store.set("thrust", 0.0)
+    store.set("ta", 0.0)
+    store.set("gacp", 10.0)
+    store.set("alpposlimx", 6.0)
+    store.set("alpneglimx", -4.0)
+    store.set("FSPV", np.array([2.0, 1.0, -12.0]))
+
+    expected_ancomx, expected_altd = _expected_altitude(
+        ALTCOM,
+        0.0,
+        ALT,
+        GRAV,
+        vbeg,
+        GH,
+        GV,
+        ALTDLIM,
+        ANPOSLIMX,
+        ANNEGLIMX,
+    )
+
+    control = next(module for module in vehicle.modules if module.name == "control")
+    control.execute(vehicle, _ctx())
+
+    assert _approx(store.get("altd"), expected_altd)
+    assert expected_altd == -40.0
+    assert _approx(store.get("ancomx"), expected_ancomx)
