@@ -75,7 +75,7 @@ class Hyper5Control:
         alcomx = store.get("alcomx")
         altcom = store.get("altcom")
         phicx = store.get("phicx")
-        tgv = store.get("TGV")
+        tgv = store.get("tgv")
         phimvx = 0.0
         alphax = 0.0
         if mcontrol == 0:

@@ -205,7 +205,7 @@ def test_execute_dispatches_mcontrol_4():
     store = vehicle.store
     store.define(
         Field(
-            "TGV",
+            "tgv",
             ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
             "mat",
             "init",

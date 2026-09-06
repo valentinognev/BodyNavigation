@@ -197,7 +197,7 @@ def _ready(
     store.define(Field("thrust", thrust, "real", "out", "propulsion"))
     store.define(Field("area", area, "real", "data", "aerodynamics"))
     store.define(Field("cla", cla, "real", "out", "aerodynamics"))
-    store.define(Field("TGV", tgv, "mat", "init", "newton"))
+    store.define(Field("tgv", tgv, "mat", "init", "newton"))
     store.set("mcontrol", mcontrol)
     store.set("alcomx", alcomx)
     store.set("gcp", gcp)
