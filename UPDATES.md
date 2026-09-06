@@ -1,5 +1,11 @@
 # Updates
 
+## 0.106.0 - SAM6 missile euler
+- Added `cadac.vehicles.sam6.euler.Sam6Euler` (`name="euler"`). Port of SAM6 `euler.cpp`, not `Flat6Euler`. `define` registers C++ `def_euler` (`ppd/pp`,`qqd/qq`,`rrd/rr` state; `ppx/qqx/rrx` out+plot; `WBEB` vec diag). Does not define `FMB`/`ai11`/`ai33`.
+- No `init_euler` in C++; `initialize` is pass.
+- `execute`: stored-slope `integrate` of `pp` then `qq` then `rr` with C++ sequential rates (`ppd_new=FMB[0]/ai11`; `qqd_new=((ai33-ai11)*pp*rr+FMB[1])/ai33` uses updated `pp`; `rrd_new=(-(ai33-ai11)*pp*qq+FMB[2])/ai33` uses updated `pp`/`qq`). Writes `WBEB=[pp,qq,rr]` and `ppx/qqx/rrx` in deg/s. Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_euler.py` (ai11=2.9, ai33=440, FMB=(1,0,0), pp=qq=rr=0, dt=0.001 → `pp==integrate(1/2.9,0,0,0.001)` rtol=1e-12; qq=rr=0).
+
 ## 0.105.0 - SAM6 missile propulsion
 - Added `cadac.vehicles.sam6.propulsion.Sam6Propulsion` (`name="propulsion"`). Constructor takes `Datadeck`. `define` registers C++ `def_propulsion` (`mprop` out, `aexit` default 0.0314, `mass` 300, `thrust`, `xcgref`, `xcg` 2.9, `ai11` 2.9, `ai33` 440, `mfreeze` saves). Does not define `msl_time`/`press`/`mfreeze`.
 - No `init_propulsion` in C++; `initialize` is pass.
