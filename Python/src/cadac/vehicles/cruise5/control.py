@@ -63,7 +63,38 @@ class Cruise5Control:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        mcontrol = store.get("mcontrol")
+        if mcontrol not in (0, 44, 46):
+            raise ValueError(f"unknown mcontrol {mcontrol}")
+        int_step = ctx.int_step
+        ancomx = store.get("ancomx")
+        alcomx = store.get("alcomx")
+        altcom = store.get("altcom")
+        phicx = store.get("phicx")
+        tgv = store.get("tgv")
+        phimvx = 0.0
+        alphax = 0.0
+        if mcontrol == 0:
+            phimvx = 0.0
+            alphax = 0.0
+        if mcontrol == 44:
+            phicx = self.control_lateral(vehicle, alcomx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 46:
+            phicx = self.control_lateral(vehicle, alcomx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        tbv = cadtbv(phimvx * RAD, alphax * RAD)
+        tbg = tbv @ tgv.T
+        store.set("phicx", phicx)
+        store.set("TBV", tbv)
+        store.set("TBG", tbg)
+        store.set("alphax", alphax)
+        store.set("phimvx", phimvx)
+        store.set("ancomx", ancomx)
 
     def terminate(self, vehicle, ctx):
         pass
@@ -177,3 +208,32 @@ class Cruise5Control:
 
         store.set("altd", altd)
         return ancomx
+
+    def control_lateral(self, vehicle, alcomx):
+        store = vehicle.store
+        allimx = store.get("allimx")
+        phimvx = store.get("phimvx")
+        alphax = store.get("alphax")
+        gcp = store.get("gcp")
+        fspv = store.get("FSPV")
+        grav = store.get("grav")
+
+        alpha = alphax * RAD
+        phimv = phimvx * RAD
+        tbv = cadtbv(phimv, alpha)
+        fspb = tbv @ fspv
+        fspb3 = fspb[2]
+        anx = -fspb3 / grav
+
+        if alcomx > allimx:
+            alcomx = allimx
+        if alcomx < -allimx:
+            alcomx = -allimx
+
+        sign = 1 if anx >= 0 else -1
+        phic = gcp * sign / (abs(anx) + 0.001) * alcomx
+        phicx = phic * DEG
+
+        alx = fspv[1] / grav
+        store.set("alx", alx)
+        return phicx
