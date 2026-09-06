@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from cadac.constants import DEG, EPS, PI, R, RAD
+from cadac.constants import DEG, EPS, PI, R, RAD, WEII3
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
@@ -304,6 +304,60 @@ class Round6Kinematics:
         store.set("phibd", phibd)
         store.set("alphaix", alphaix)
         store.set("betaix", betaix)
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+class Round6Euler:
+    name = "euler"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        zeros3 = (0.0, 0.0, 0.0)
+        for field in (
+            Field("ppx", 0.0, "real", "out", "euler", ("plot",)),
+            Field("qqx", 0.0, "real", "out", "euler", ("plot",)),
+            Field("rrx", 0.0, "real", "out", "euler", ("plot",)),
+            Field("WBEB", zeros3, "vec", "diag", "euler"),
+            Field("WBIB", zeros3, "vec", "state", "euler"),
+            Field("WBIBD", zeros3, "vec", "state", "euler"),
+            Field("WBII", zeros3, "vec", "out", "euler"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        store = vehicle.store
+        ppx = store.get("ppx")
+        qqx = store.get("qqx")
+        rrx = store.get("rrx")
+        tbi = store.get("TBI")
+        wbeb = np.array([ppx * RAD, qqx * RAD, rrx * RAD], dtype=float)
+        weii = np.array([0.0, 0.0, WEII3], dtype=float)
+        wbib = wbeb + tbi @ weii
+        store.set("WBIB", wbib)
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        fmb = store.get("FMB")
+        tbi = store.get("TBI")
+        ibbb = store.get("IBBB")
+        wbib = store.get("WBIB")
+        wbibd = store.get("WBIBD")
+        int_step = ctx.int_step
+        wacc_next = np.linalg.inv(ibbb) @ (fmb - _skew(wbib) @ ibbb @ wbib)
+        wbib = integrate(wacc_next, wbibd, wbib, int_step)
+        wbibd = wacc_next
+        wbii = tbi.T @ wbib
+        weii = np.array([0.0, 0.0, WEII3], dtype=float)
+        wbeb = wbib - tbi @ weii
+        store.set("WBIB", wbib)
+        store.set("WBIBD", wbibd)
+        store.set("ppx", wbeb[0] * DEG)
+        store.set("qqx", wbeb[1] * DEG)
+        store.set("rrx", wbeb[2] * DEG)
+        store.set("WBEB", wbeb)
+        store.set("WBII", wbii)
 
     def terminate(self, vehicle, ctx):
         pass

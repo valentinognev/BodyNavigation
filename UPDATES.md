@@ -1,5 +1,10 @@
 # Updates
 
+## 0.88.0 - Round6 Euler equations
+- Added `cadac.eom.round6.Round6Euler` (`name="euler"`). Port of HYPER6 `Round6::def_euler` / `init_euler` / `euler`. `define` registers C++ euler fields (`ppx`/`qqx`/`rrx` out+plot, `WBEB` diag, `WBIB`/`WBIBD` state, `WBII` out). Does not define plane/forces `IBBB`/`FMB` or kinematics `TBI`.
+- Init: `WBEB=[ppx,qqx,rrx]*RAD` (store rates stay deg/s); `WBIB=WBEB+TBI@(0,0,WEII3)`; writes `WBIB` only (no `WBEBD`). Execute: `WACC_NEXT=inv(IBBB)@(FMB-skew(WBIB)@IBBB@WBIB)`; stored-slope `integrate` of `WBIB`; `WBII=TBI.T@WBIB`; `WBEB=WBIB-TBI@(0,0,WEII3)`; rates in deg/s on store. `dt=ctx.int_step`. No engine momentum (not Flat6).
+- Tests: `Python/tests/unit/test_round6_euler.py` (zero FMB, identity TBI, ppx=10, dt=0.01; C++ WBIB replica rtol=1e-12; rates deg/s).
+
 ## 0.87.0 - Round6 kinematics DCM
 - Added `cadac.eom.round6.Round6Kinematics` (`name="kinematics"`). Port of HYPER6 `Round6::def_kinematics` / `init_kinematics` / `kinematics` (DCM, not Flat6 quaternions). `define` registers C++ kinematics fields (`time`, `event_time`, `int_step_new`, `out_step_fact`, `TBD`/`TBI`/`TBID`, `ortho_error`, Euler `psibd*`/`thtbd*`/`phibd*`, `alppx`/`phipx`/`alphax`/`betax`/`alphaix`/`betaix`). Does not define newton `lonx`/`latx`/`alt`/`SBII`/`VBED`/`VBII`, euler `WBIB`, unused `ck`, or hyper `trcode`.
 - Init: `time=ctx.sim_time`, `int_step_new=ctx.int_step`; `TBD=mat3tr(psibdx*RAD, thtbdx*RAD, phibdx*RAD)`; `TDI=cad_tdi84(lonx*RAD, latx*RAD, alt, time)`; `TBI=TBD@TDI`. Execute: stored-slope `integrate` of `TBID_NEW=(-skew(WBIB))@TBI`; orthonormalize as C++; Euler from TBD; aero/inertial incidence as C++. Local CADAC sign (`<0 → -1` else `+1`). Skip `trcode` if absent. Timing `ctx.int_step`/`out_fact` like Round3.
