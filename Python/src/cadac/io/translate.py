@@ -69,7 +69,13 @@ _IF_OPS = frozenset({"<", "=", ">"})
 
 def _parse_if_event(lines: list[str], i: int) -> tuple[dict, int]:
     parts = lines[i].split()
-    name, op, raw_value = parts[1], parts[2], parts[3]
+    name = parts[1]
+    if len(parts) >= 4:
+        op, raw_value = parts[2], parts[3]
+    else:
+        token = parts[2]
+        op = next((candidate for candidate in _IF_OPS if token.startswith(candidate)), "")
+        raw_value = token[len(op):]
     if op not in _IF_OPS:
         raise ValueError(f"unknown IF operator {op!r}")
     assignments: dict = {}
@@ -110,6 +116,14 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
             continue
         if token == "PROP_DECK":
             prop_deck = _deck_jsonc(parts[1])
+            i += 1
+            continue
+        if token in {"GAUSS", "RAYL"}:
+            params[parts[1]] = _parse_number(parts[2])
+            i += 1
+            continue
+        if token == "MARKOV":
+            params[parts[1]] = 0
             i += 1
             continue
         params[token] = _parse_number(parts[1])
@@ -187,12 +201,16 @@ def _parse_scenario_asc(src: Path) -> dict:
     }
 
 
-def translate_scenario_asc(src, dst_dir) -> None:
+def translate_scenario_asc(src, dst_dir, family=None) -> None:
     src = Path(src)
     dst_dir = Path(dst_dir)
     dst_dir.mkdir(parents=True, exist_ok=True)
+    data = _parse_scenario_asc(src)
+    if family is not None:
+        for vehicle in data["vehicles"]:
+            vehicle["family"] = family
     dst_dir.joinpath(f"{src.stem}.jsonc").write_text(
-        json.dumps(_parse_scenario_asc(src), indent=2) + "\n",
+        json.dumps(data, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )
