@@ -1,5 +1,10 @@
 # Updates
 
+## 0.113.0 - AGM6 intercept halt/ground/hit
+- Added `cadac.vehicles.agm6.intercept.Agm6Intercept` (`name="intercept"`). `define` registers C++ `def_intercept` (`mterm`,`write`,`miss`,`hit_time`,`MISS_P`,`time_m`,`SBMTP`,`mode`,`dbt`,`psiplx`,`thtplx`,`critmax`). Does not define kinematics/sensor/guidance names (`time`,`halt`,`stop`,`lconv`,`SBEL`,`tgt_num`,`mguid`,`mseek`,`maut`,`mprop`,`trcond`).
+- `execute`: no `print`/`sys.exit`. Halt (if `halt` in store and true) or (`trcond` and `stop` if present) or ground `-SBEL[2]<=0` with `write` latch → `vehicle.health=0`, `ctx.combus[slot].status=0`. Absent `halt`/`stop` treated as 0. Target-plane intercept when `guid_mid==4 or guid_term in {5,6}` and `dbt<100` and `sbtp3>0` as C++ (`mat2tr(psiplx*RAD,thtplx*RAD)`, interpolate `MISS_P`/`hit_time`). Target from `type=="TARGET3"` + 1-based `tgt_num` (`SAEL`/`SBEL` fallback). Does not write `lconv`. No Plane6/Hyper5 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_intercept.py` (halt=1 write=1 → health 0 and packet status 0; halt=0 sbel3=-7000 no kill; sbel3=+1 ground kill once write=0; mguid=40/5/6 hit vs C++ rtol=1e-12; mguid=30 no hit; TARGET3 order not id).
+
 ## 0.112.0 - AGM6 dynamic IIR sensor
 - `Agm6Sensor.execute` `skr_dyn==1` ports C++ `sensor_ir_dyn` / `sensor_ir_aimp` / `sensor_ir_uthpb` / `sensor_ir_thb`. `skr_dyn==0` kinematic unchanged; else including 2 → `ValueError` (mseek 0/5 still skip). Image/gimbal errors at stored means (no gauss). Kalman 2nd-order lags stored-slope `integrate`. TTL identity unless `TTL` planted (C++ `sensor()` identity shortcut; not `VTEL.mat()`).
 - `mseek==3` dyn: FOV `fabs(ehz)<=fovyaw` and `fabs(ehy)<=fovpitch` after `dtimac` → `mseek=4`, else `trcond=5`. `mseek==4` dyn: break-lock `mseek=2`/`mguid=40`/`trcond` 6–9; `dbtk<dblind` → `mseek=5` (hold; C++ zeros pointing/LOS next cycle). Writes `trcond`/`mguid` only if planted. Skip `fovlimx`/IRS if absent. Local CADAC `SMALL`. No Plane6 import. Vehicle not registered.
