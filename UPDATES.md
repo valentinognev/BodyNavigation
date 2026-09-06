@@ -1,5 +1,9 @@
 # Updates
 
+## 0.85.0 - WGS84 earth helpers
+- Added `cadac.math.wgs84`: HYPER6 WGS84 `cad_in_geo84`, `cad_geo84_in`, `cad_tdi84`, `cad_tgi84`, `cad_grav84` and callee `cad_geoc_in`. Module-level `GM`/`C20`/`FLATTENING`/`SMAJOR_AXIS`/`GW_CLONG`/`SMALL`. Does not change spherical `cadac.math.earth` or locked `cadac.constants`.
+- Tests: `Python/tests/unit/test_wgs84.py` (equator roundtrip atol=1e-6; grav finite; `cad_tdi84(0,0,0,0)` `assign_loc` pin rtol=1e-12).
+
 ## 0.84.2 - Hyper5 control_altitude reads Round3 vbeg
 - `Hyper5Control.control_altitude` reads store `vbeg` (Round3 Newton name), not `VBEG`. Same rule as `tgv`. mcontrol 6/16/36 no longer KeyError on a defined Hyper5.
 - Tests: `test_mcontrol_6_execute_reads_round3_vbeg_on_hyper5`; Task 8 plants `vbeg`.
