@@ -1,5 +1,10 @@
 # Updates
 
+## 0.111.0 - AGM6 kinematic IIR sensor
+- Added `cadac.vehicles.agm6.sensor.Agm6Sensor` (`name="sensor"`). `define` registers C++ `def_sensor` plus undeclared execute slots `timeac`/`dbtk`. Does not define kinematics/newton/guidance names (`time`,`SBEL`,`VBEL`,`TBL`,`trcond`,`mguid`) or absent C++ `fovlimx`/IRS.
+- `execute`: TARGET3 by 1-based `tgt_num` among `Packet.type=="TARGET3"` (not CADAC `t{n}`). Copy `SAEL→STEL`,`VAEL→VTEL` (fallback `SBEL`/`VBEL`). `mseek==0` writes STEL/VTEL, no mode change. `mseek==2` and `dbtk<racq` → `mseek=3`. `mseek==3` kinematic `sensor_ir_kin`; `timeac>dtimac` → `mseek=4`. `mseek==4` LOS rates `sigdpy`/`sigdpz`. `mseek==5` hold (download, no mode change, no raise). Else including 1 → `ValueError`. `skr_dyn==1` → `ValueError` until dynamic IIR. Skip `fovlimx`/IRS if absent. Writes `dvbtc` by name (C++ wrongly stores into `BIASSC`). No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_sensor_kin.py` (tgt_num=1, racq=7000, dtimac=0.3, skr_dyn=0; range inside racq 2→3; timeac>dtimac → 4 vs C++ rtol=1e-12; mseek=0 no mode change; mseek=5 hold; mseek=1 and skr_dyn=1 raise; TARGET3 order not id; SBEL/VBEL fallback).
+
 ## 0.110.0 - AGM6 datalink named aircraft tracks
 - Added `cadac.vehicles.agm6.datalink.Agm6Datalink` (`name="datalink"`). `define` registers C++ `def_datalink` (`mnav`,`STCEL`,`VTCEL`,`tgt_pos`,`SAEL`,`VAEL`). Does not define `tgt_num` (sensor; tests register it).
 - `execute`: first `Packet.type=="AIRCRAFT3"` (not CADAC id `a1` or slot `2*tgt_num+5`). Copy named `STCEL{tgt_num}`/`VTCEL{tgt_num}` plus `SAEL`/`VAEL` from that packet. `abs(||STCEL||-tgt_pos)>EPS` → `mnav=3` and save `tgt_pos`. No AIRCRAFT3 → STCEL zeros, `mnav=0`, no raise. Vehicle not registered.
