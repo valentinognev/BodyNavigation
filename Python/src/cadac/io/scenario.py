@@ -31,6 +31,7 @@ class VehicleSpec:
     prop_deck: Path | None
     params: dict
     events: list[EventSpec]
+    family: str | None = None
 
 
 @dataclass
@@ -41,6 +42,7 @@ class RunConfig:
     timing: dict[str, float]
     end_time: float
     vehicles: list[VehicleSpec]
+    family: str | None = None
 
 
 def _options(raw: dict, path: Path) -> dict[str, bool]:
@@ -57,7 +59,7 @@ def _deck_path(parent: Path, value) -> Path | None:
     return parent / Path(value)
 
 
-def _vehicle(parent: Path, raw: dict) -> VehicleSpec:
+def _vehicle(parent: Path, raw: dict, scenario_family: str | None = None) -> VehicleSpec:
     events = [
         EventSpec(when=event["when"], set=event["set"])
         for event in raw.get("events") or []
@@ -69,6 +71,7 @@ def _vehicle(parent: Path, raw: dict) -> VehicleSpec:
         prop_deck=_deck_path(parent, raw.get("prop_deck")),
         params=dict(raw.get("params") or {}),
         events=events,
+        family=raw.get("family") or scenario_family,
     )
 
 
@@ -76,6 +79,7 @@ def load_scenario(path) -> RunConfig:
     path = Path(path)
     data = loads(path.read_text(encoding="utf-8"))
     parent = path.parent
+    scenario_family = data.get("family")
     return RunConfig(
         title=data["title"],
         options=_options(data, path),
@@ -85,5 +89,6 @@ def load_scenario(path) -> RunConfig:
         ],
         timing={key: float(value) for key, value in (data.get("timing") or {}).items()},
         end_time=float(data["end_time"]),
-        vehicles=[_vehicle(parent, vehicle) for vehicle in data["vehicles"]],
+        vehicles=[_vehicle(parent, vehicle, scenario_family) for vehicle in data["vehicles"]],
+        family=scenario_family,
     )

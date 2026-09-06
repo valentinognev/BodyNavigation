@@ -1,5 +1,10 @@
 # Updates
 
+## 0.101.0 - CADAC family vehicle registry
+- Added empty `_VEHICLE_FAMILIES` and `_resolve_vehicle(family, vtype)`. Non-empty family looks up only `_VEHICLE_FAMILIES`; else only `_VEHICLE_TYPES`. Missing → `ValueError` with the type token (and family when set).
+- `VehicleSpec.family` / `RunConfig.family`. `load_scenario` copies scenario JSONC `"family"` onto vehicles unless the vehicle sets its own. `translate_scenario_asc(..., family=None)` writes scenario `"family"` when given.
+- `_build_vehicle` uses `_resolve_vehicle(spec.family, spec.type)`. No AGM6 types registered. TARGET3 stays global. Unknown-type sentinel remains `AIM5`.
+
 ## 0.100.1 - HYPER6 e2e skip without golden
 - Added `Python/tests/e2e/test_hyper6_climb.py`. Skip if `tests/e2e/goldens/hyper6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live climb `run_scenario` calls `require_golden` first.
 

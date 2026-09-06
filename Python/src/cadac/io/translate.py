@@ -187,12 +187,15 @@ def _parse_scenario_asc(src: Path) -> dict:
     }
 
 
-def translate_scenario_asc(src, dst_dir) -> None:
+def translate_scenario_asc(src, dst_dir, family=None) -> None:
     src = Path(src)
     dst_dir = Path(dst_dir)
     dst_dir.mkdir(parents=True, exist_ok=True)
+    payload = _parse_scenario_asc(src)
+    if family is not None:
+        payload["family"] = family
     dst_dir.joinpath(f"{src.stem}.jsonc").write_text(
-        json.dumps(_parse_scenario_asc(src), indent=2) + "\n",
+        json.dumps(payload, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )

@@ -25,7 +25,20 @@ _VEHICLE_TYPES = {
     "TARGET3": Target3,
     "SATELLITE3": Satellite3,
 }
+_VEHICLE_FAMILIES: dict[tuple[str, str], type] = {}
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
+
+
+def _resolve_vehicle(family, vtype):
+    if family:
+        cls = _VEHICLE_FAMILIES.get((family, vtype))
+        if cls is None:
+            raise ValueError(f"unknown vehicle type {vtype!r} in family {family!r}")
+        return cls
+    cls = _VEHICLE_TYPES.get(vtype)
+    if cls is None:
+        raise ValueError(f"unknown vehicle type {vtype!r}")
+    return cls
 
 
 @dataclass
@@ -54,9 +67,10 @@ def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
 
 
 def _build_vehicle(path, spec):
-    cls = _VEHICLE_TYPES.get(spec.type)
-    if cls is None:
-        raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
+    try:
+        cls = _resolve_vehicle(spec.family, spec.type)
+    except ValueError as exc:
+        raise ValueError(f"{path}: {exc}") from exc
     if spec.type in _NO_DECK_TYPES:
         return cls(spec.name, spec.events)
     if spec.type == "HYPER5":
