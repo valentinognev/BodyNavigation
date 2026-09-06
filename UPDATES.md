@@ -1,5 +1,10 @@
 # Updates
 
+## 0.67.0 - HYPER5 Roadrunner aerodynamics
+- Added `cadac.vehicles.hyper5.aero.Hyper5Aero` (`name="aerodynamics"`). Constructor takes Datadeck. `define` registers C++ `def_aerodynamics` (cl, cd, cl_ov_cd, area default 0, cla, cn, ca). Does not define mach/alphax (environment/control) or unused C++ local time. C++ role `dia` maps to `"diag"`. `initialize` pass (no C++ `init_aerodynamics`).
+- `execute` ports `Hyper::aerodynamics`: 2D look_up `cn_rr3x_vs_alphax_mach` / `ca_rr3x_vs_alphax_mach`; `cd=cn*sin(alpha)+ca*cos(alpha)`; `cl=cn*cos(alpha)-ca*sin(alpha)`; `cla` from ±2 deg (`cna=(cnp-cnn)/4`, `caa=(cap-can)/4`, `cla=cna*cos(alpha)-caa*sin(alpha)`). `alpha=alphax*RAD`. Protocol `vehicle.store`. Parsed `hyper5_aero_deck.asc` in tests (JSONC Task 20). No Cruise3/Plane5 imports. No propulsion/forces/vehicle.
+- Tests: `Python/tests/unit/test_hyper5_aero.py` (mach=4, alphax=2, area=11.6986 IC vs look_up then C++ formulas rtol 1e-12, atol 1e-14).
+
 ## 0.66.0 - Skip missing modules; plot vehicle 0
 - `run_loop` skips module names absent on a vehicle (`named.get` / continue); no KeyError when HYPER5 Target shares MODULES with Hyper.
 - `make_plot_on_step` records plot rows only for `vehicle_slot == 0`; still advances `plot_time` once per tick on the last slot. Single-vehicle CRUISE3/PLANE/PLANE6 unchanged. `_plot_columns` CRUISE3 special case kept.
