@@ -1,5 +1,10 @@
 # Updates
 
+## 0.108.0 - SAM6 environment from environment.cpp
+- Added `cadac.vehicles.sam6.environment.Sam6Environment` (`name="environment"`). Port of SAM6 `environment.cpp`, not `Flat6Environment`. `define` registers C++ `def_environment` (`press`/`rho`/`grav`/`tempk` out, `vsound` diag, `vmach`/`pdynmc` out+scrn/plot/com, `mfreeze_environ`/`pdynmcf`/`machf` save). Does not define `alt`/`dvbe`/`hbe`/`VBEL`, wind (`mwind`/`VAEL`/`VBAL`/`dvba`), or missile `mguide`/`trcond`/`trdynm`/`mfreeze`.
+- `execute` reads newton `alt` (C++; newton keeps `hbe=alt`) and `dvbe`. US76 `atmosphere76(alt)`; gravity `G*EARTH_MASS/(REARTH+alt)**2`; `vmach=abs(dvbe/vsound)` (C++ `mach`); `pdynmc=0.5*rho*dvbe*dvbe`. No wind. Skip `mfreeze` latch if `mfreeze` absent. `guid_term==6` and `pdynmc<=trdynm` → `trcond=3` (`mguide%10`). Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import. Does not edit `flat6.py`.
+- Tests: `Python/tests/unit/test_sam6_environment.py` (Newton-init first dvbe=16, SBEL z=-1000 → alt=hbe=1000, VBEL finite; env vs `atmosphere76(1000)` rtol=1e-12; import does not load `Flat6Environment`; not a subclass; guid_term 6 tiny pdynmc sets trcond 3).
+
 ## 0.107.0 - SAM6 newton mass and alt
 - Added `cadac.vehicles.sam6.newton.Sam6Newton` (`name="newton"`). Port of SAM6 `newton.cpp`, not `Flat6Newton`. `define` registers C++ `def_newton` plus `hbe` (`VBEBD`/`VBEB`/`SBELD`/`SBEL` state, `sbel1/2/3` data, `FSPB`/`VBEL`/`alt`/`SLEL` out, `dvbe` in/out, `alpha0x`/`beta0x` data, `hbe` out, FPA/`anx`/`ayx`/`ATB` diag, `mfreeze` saves). Does not define `mass`/`FAPB`/`TBL`/`WBEB`/`grav`/`mfreeze`/`vmass`.
 - Init: `VBEB` from `alpha0x`/`beta0x`/`dvbe`; `VBEL=TBL.T@VBEB`; `SBEL`/`SLEL` from `sbel*`; `alt=hbe=-SBEL[2]`.
