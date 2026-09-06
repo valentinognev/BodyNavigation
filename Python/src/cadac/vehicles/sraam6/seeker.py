@@ -152,6 +152,8 @@ class Sraam6Seeker:
                 tgt_com_slot, packet = targets[idx]
                 stel = np.asarray(packet.vars["SAEL"], dtype=float)
                 vtel = np.asarray(packet.vars["VAEL"], dtype=float)
+        store.set("STEL", stel)
+        store.set("VTEL", vtel)
 
         stsl = stel - ssel
         dts = float(np.linalg.norm(stsl))

@@ -414,6 +414,32 @@ def test_ms1dyn_1_stub_dyn_locks_when_timeac_elapsed():
     assert vehicle.store.get("mguid") == 6
 
 
+def test_ms1dyn_1_stub_thtpb_sigdpy_match_kin_this_frame_vael():
+    vael = _vael()
+    vehicle, seeker, ctx = _ready(
+        mseek=3,
+        ms1dyn=1,
+        racq=20000.0,
+        isets1=0,
+        epchac=0.0,
+        dtimac=DTIMAC,
+        sim_time=0.251,
+    )
+    vehicle.store.set("VTEL", np.array([999.0, 888.0, 777.0]))
+    seeker.execute(vehicle, ctx)
+    store = vehicle.store
+    sbtl = SBEL - SAEL
+    dbt = _dbt()
+    thtpb, _psipb, sigdy, _sigdz = seeker.seeker_kin(vehicle, sbtl, vael, dbt)
+    stale = seeker.seeker_kin(
+        vehicle, sbtl, np.array([999.0, 888.0, 777.0]), dbt
+    )
+    assert stale[2] != pytest.approx(sigdy, rel=RTOL, abs=ATOL)
+    assert store.get("thtpb") == pytest.approx(thtpb, rel=RTOL, abs=ATOL)
+    assert store.get("sigdpy") == pytest.approx(sigdy, rel=RTOL, abs=ATOL)
+    np.testing.assert_allclose(store.get("VTEL"), vael, rtol=RTOL, atol=ATOL)
+
+
 def test_seeker_uthpb_copies_cpp_and_precedence():
     seeker = Sraam6Seeker()
     ththb, phihb = seeker.seeker_uthpb(0.0, 0.0)
