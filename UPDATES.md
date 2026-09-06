@@ -1,5 +1,11 @@
 # Updates
 
+## 0.104.0 - Rocket6 SLV aerodynamics
+- Added `cadac.vehicles.rocket6.aero.Rocket6Aero` (`name="aerodynamics"`). Constructor takes Datadeck. `define` registers C++ `def_aerodynamics` (`maero`, `refa`/`refd`/`xcg_ref`, body `cx`/`cz`, SLV table coeffs, dimensional der, `gnmax`/`gymax`; C++ holes `cndr`/`cnr` as diag). Does not define kinematics/env/propulsion/actuator/TVC names (`alppx`/`phipx`/`alphax`, `vmach`, `pdynmc`, `dvba`, `vmass`, `IBBB`, `xcg`, `mprop`).
+- `initialize` ports `Hyper::init_aerodynamics`: termination `trmach`/`trdynm`/`trload`/`tralp`/`trcode`/`tmcode` only. Does not hardcode GHAME `refa`/`refb`/`refc`.
+- `execute`: `maero` 11/12/13 SLV tables from `aero_deck_SLV.asc` (`ca0slvN`/`caaslvN`/`ca0bslvN`/`cn0slvN`/`clm0slvN`/`clmqslvN`) + body `cx==-ca` + `aerodynamics_der` as C++ (`refd`, TVC `mtvc` 1/2/3 if present). Else including 1 → ValueError. Tests parse ASC via `parse_asc_deck` / `Datadeck.from_tables`. Local CADAC sign. No Hyper6 import.
+- Tests: `Python/tests/unit/test_rocket6_aero.py` (insertion `maero=13`, `vmach=0.5`, `alppx=2`, `phipx=0`, `mprop=3`; finite `cx`/`cz`/`clm`; replica `cx==-ca`; `maero=1` raises; formulas vs C++ rtol=1e-12).
+
 ## 0.103.0 - Round6 environment tabular wind and Dryden
 - `Round6Environment(weather_deck=None)`: `mair=0` US76 unchanged (`ctx` may be None); `mair=12` US76 + weather-table wind + Dryden with `gauss_value=0`. Missing weather deck or other `mair` → `ValueError`.
 - `define` adds C++ Dryden/wind fields (`turb_length`, `taux*`, `gauss_value`, `tempc`, …), skip-if-exists. `initialize` still copies `dvba=dvbe`.
