@@ -1,5 +1,15 @@
+from math import sqrt
+
 from cadac.constants import DEG, RAD
 from cadac.kernel.state import Field
+
+SMALL = 1e-7
+
+
+def _sign(variable):
+    if variable < 0.0:
+        return -1
+    return 1
 
 
 class Sraam6Control:
@@ -78,6 +88,41 @@ class Sraam6Control:
         store.set("dpcx", dpcx)
         store.set("gkp", gkp)
         store.set("gkphi", gkphi)
+
+    def control_rate(self, vehicle):
+        store = vehicle.store
+        zetlagr = store.get("zetlagr")
+        qq = store.get("qq")
+        rr = store.get("rr")
+        dvbe = store.get("dvbe")
+        dna = store.get("dna")
+        dnd = store.get("dnd")
+        dma = store.get("dma")
+        dmq = store.get("dmq")
+        dmd = store.get("dmd")
+        zrate = dna / dvbe - dma * dnd / (dvbe * dmd)
+        aa = dna / dvbe - dmq
+        bb = -dma - dmq * dna / dvbe
+        dum1 = aa - 2.0 * zetlagr * zetlagr * zrate
+        dum2 = aa * aa - 4.0 * zetlagr * zetlagr * bb
+        radix = dum1 * dum1 - dum2
+        if radix < 0.0:
+            radix = 0.0
+        if abs(dmd) < SMALL:
+            dmd = SMALL * _sign(dmd)
+        grate = (-dum1 + sqrt(radix)) / (-dmd)
+        dum3 = grate * dmd * zrate
+        radix = bb + dum3
+        if radix < 0.0:
+            radix = 0.0
+        wnlagr = sqrt(radix)
+        dqcx = DEG * grate * qq
+        drcx = DEG * grate * rr
+        store.set("dqcx", dqcx)
+        store.set("drcx", drcx)
+        store.set("zrate", zrate)
+        store.set("grate", grate)
+        store.set("wnlagr", wnlagr)
 
     def terminate(self, vehicle, ctx):
         pass
