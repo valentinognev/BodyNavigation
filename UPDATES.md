@@ -1,5 +1,10 @@
 # Updates
 
+## 0.59.0 - F-16 roll and rate SAS
+- Added `cadac.vehicles.plane6.control.Plane6Control` (`name="control"`). `define` registers full C++ `def_control` (maut/mroll/mfreeze, limiters, wrcl/zrcl/tp/zetlagr, delacx/delecx/delrcx, gkp/gkphi, zrate/grate/wnlagr, GAINFP/GAINGAM vec (3,), isetc2 real init). Does not define kinematics/aero names these functions read (phiblx, ppx, dllp, dllda, dla, …, dvbe, qqx, rrx). `initialize` pass (no C++ `init_control`). `execute` pass until Task 13 maut dispatcher.
+- Methods port C++ as written: `control_roll` pole-placement gkp/gkphi, RAD/DEG; `control_roll_rate` kp=(1/tp+dllp)/dllda; `control_pitch_rate` zrate/aa/bb, radix clamp 0, |dmde|<SMALL then SMALL*sign; `control_yaw_rate` similar with dyb/dydr/dnb/dnr/dndr, stores zrate/grate/wnlagr. Local `_sign` (`<0 → -1` else `+1`); SMALL=1.e-7 module-level, not in `cadac.constants`. RAD/DEG from constants. Returns commands; does not write delacx/delecx/delrcx. No control_gamma, maut dispatcher, forces, vehicle. Cruise3/HYPER3/PLANE untouched.
+- Tests: `Python/tests/unit/test_plane6_control_roll.py` (frozen store vs CADAC rtol 1e-12; zero-error still computes gains; radix clamp; SMALL dmde/dndr; CADAC sign 0→+1; execute pass).
+
 ## 0.58.0 - F-16 second-order actuators
 - Added `cadac.vehicles.plane6.actuator.Plane6Actuator` (`name="actuator"`). `define` registers C++ `def_actuator` (mact/dlimx/ddlimx/wnact/zetact, delax/delex/delrx, DXD/DX/DDXD/DDX). Does not define delacx/delecx/delrcx. DXD/DX/DDXD/DDX are vec (3,). `initialize` is pass (no C++ `init_actuator`).
 - `execute` ports `Plane::actuator`: mact 0 copies ACTCX then position-limits with CADAC sign (`<0 → -1`, else `+1`); 2 calls `actuator_scnd`; else ValueError (C++ case 1 not implemented). Local `_sign`; no `np.sign`; no `flat6._cadac_sign`. `dt=ctx.int_step`. Protocol `vehicle.store`. No control/forces/vehicle. Cruise3/HYPER3/PLANE untouched.
