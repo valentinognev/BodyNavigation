@@ -1,6 +1,7 @@
-from math import sqrt
+from math import atan2, cos, sin, sqrt
 
-from cadac.constants import DEG, RAD
+from cadac.constants import AGRAV, DEG, RAD
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 
 SMALL = 1e-7
@@ -123,6 +124,78 @@ class Sraam6Control:
         store.set("zrate", zrate)
         store.set("grate", grate)
         store.set("wnlagr", wnlagr)
+
+    def control_accel(self, vehicle, ctx):
+        store = vehicle.store
+        alimit = store.get("alimit")
+        gainp = store.get("gainp")
+        factwacl = store.get("factwacl")
+        factzacl = store.get("factzacl")
+        pdynmc = store.get("pdynmc")
+        ancomx = store.get("ancomx")
+        alcomx = store.get("alcomx")
+        dna = store.get("dna")
+        dma = store.get("dma")
+        dmq = store.get("dmq")
+        dmd = store.get("dmd")
+        fspb = store.get("FSPB")
+        dvbe = store.get("dvbe")
+        qq = store.get("qq")
+        rr = store.get("rr")
+        yyd = store.get("yyd")
+        yy = store.get("yy")
+        zzd = store.get("zzd")
+        zz = store.get("zz")
+        dt = ctx.int_step
+
+        aa = sqrt(alcomx * alcomx + ancomx * ancomx)
+        if aa > alimit:
+            aa = alimit
+        if abs(ancomx) < SMALL and abs(alcomx) < SMALL:
+            phi = 0.0
+        else:
+            phi = atan2(ancomx, alcomx)
+        alcomx = aa * cos(phi)
+        ancomx = aa * sin(phi)
+
+        wacl = (0.013 * sqrt(pdynmc) + 7.1) * (factwacl + 1)
+        zacl = (0.559e-3 * sqrt(pdynmc) + 0.232) * (factzacl + 1)
+        pacl = 14
+
+        gainfb3 = wacl * wacl * pacl / (dna * dmd)
+        gainfb2 = (2.0 * zacl * wacl + pacl + dmq - dna / dvbe) / dmd
+        gainfb1 = (
+            wacl * wacl
+            + 2.0 * zacl * wacl * pacl
+            + dma
+            + dmq * dna / dvbe
+            - gainfb2 * dmd * dna / dvbe
+        ) / (dna * dmd) - gainp
+
+        fspb3 = fspb[2]
+        zzd_new = AGRAV * ancomx + fspb3
+        zz = integrate(zzd_new, zzd, zz, dt)
+        zzd = zzd_new
+        dqc = -gainfb1 * (-fspb3) - gainfb2 * qq + gainfb3 * zz
+        dqcx = dqc * DEG
+
+        fspb2 = fspb[1]
+        yyd_new = AGRAV * alcomx - fspb2
+        yy = integrate(yyd_new, yyd, yy, dt)
+        yyd = yyd_new
+        drc = -gainfb1 * fspb2 - gainfb2 * rr + gainfb3 * yy
+        drcx = drc * DEG
+
+        store.set("yyd", yyd)
+        store.set("yy", yy)
+        store.set("zzd", zzd)
+        store.set("zz", zz)
+        store.set("dqcx", dqcx)
+        store.set("drcx", drcx)
+        store.set("wacl", wacl)
+        store.set("zacl", zacl)
+        store.set("pacl", pacl)
+        store.set("GAINFB", (gainfb1, gainfb2, gainfb3))
 
     def terminate(self, vehicle, ctx):
         pass
