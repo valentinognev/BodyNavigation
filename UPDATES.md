@@ -1,5 +1,9 @@
 # Updates
 
+## 0.61.0 - F-16 maut dispatcher
+- `Plane6Control.execute` ports C++ `Plane::control` for `input_gamma.asc` / `input_roll.asc` only: maut 0 returns without writing commands; 1 roll-only (`mauty=0`,`mautp=1`); 24 yaw SAS + gamma then roll (`mauty=2`,`mautp=4`); else including -1 ValueError. Decode `mauty=maut//10`, `mautp=maut%10`. Does not implement mauty 3/4 or mautp 2/3/5. `mroll` 0 clamps `phicomx` by `philimx` with CADAC sign then `control_roll`; 1 `control_roll_rate`; else ValueError. Limit `|del*|` by `d*limx` with CADAC sign. Stores delacx/delecx/delrcx/ancomx/phicomx. `dt` unused except C++ signature. Gamma omits mroll (define default 0). Cruise3/HYPER3/PLANE untouched. No forces/vehicle.
+- Tests: `Python/tests/unit/test_plane6_maut.py` (frozen aero/kinematics/rates/dvbe; maut 24 vs CADAC rtol 1e-12; maut -1/unknown raise; maut 0 no write; maut 1 roll-only; mroll 1; philimx/surface limiters CADAC sign). Task 11/12 execute-is-pass tests now assert dispatcher.
+
 ## 0.60.0 - F-16 gamma controller
 - Added `Plane6Control.control_gamma(vehicle, thtvlcomx) -> delecx`. Ports C++ `Plane::control_gamma`: pole-placement DP/DD (`pgam`/`wgam`/`zgam`), `GAINGAM=inv(DP)@DD` shape (3,), `DUM33=AA-outer(BB,GAINGAM)`, `gainff=-1/(HH·(inv(DUM33)@BB))` with HH=[0,0,1], then `thtc/qqf/thtblf/thtvlf` in rad and `delecx=delec*DEG`. Stores GAINGAM and gainff. Does not write delecx. Does not read unused C++ locals `time`/`pdynmc`. C++ `if(dvbe==0)dvbe=dvbe` no-op omitted. CADAC row-major AA/BB/DP; `np.linalg.inv` as with IBBB. RAD/DEG from constants. `execute` still pass (no maut dispatcher). Cruise3/HYPER3/PLANE untouched.
 - Tests: `Python/tests/unit/test_plane6_control_gamma.py` (input_gamma poles pgam=10 wgam=3 zgam=0.5, thtvlcomx=1 deg, frozen nonzero dvbe/dla/dmde; finite elevator vs CADAC rtol 1e-12; no time/pdynmc; execute pass).

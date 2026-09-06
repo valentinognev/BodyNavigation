@@ -93,7 +93,56 @@ class Plane6Control:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        maut = store.get("maut")
+        if maut == 0:
+            return
+        if maut not in (1, 24):
+            raise ValueError(f"unknown maut {maut}")
+
+        delacx = 0.0
+        delecx = 0.0
+        delrcx = 0.0
+        mroll = store.get("mroll")
+        dalimx = store.get("dalimx")
+        delimx = store.get("delimx")
+        drlimx = store.get("drlimx")
+        philimx = store.get("philimx")
+        ancomx = store.get("ancomx")
+        phicomx = store.get("phicomx")
+        pcomx = store.get("pcomx")
+        rcomx = store.get("rcomx")
+        thtvlcomx = store.get("thtvlcomx")
+
+        mauty = maut // 10
+        mautp = maut % 10
+
+        if mauty == 2:
+            delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mautp == 4:
+            delecx = self.control_gamma(vehicle, thtvlcomx)
+
+        if mroll == 0:
+            if abs(phicomx) > philimx:
+                phicomx = philimx * _sign(phicomx)
+            delacx = self.control_roll(vehicle, phicomx)
+        elif mroll == 1:
+            delacx = self.control_roll_rate(vehicle, pcomx)
+        else:
+            raise ValueError(f"unknown mroll {mroll}")
+
+        if abs(delacx) > dalimx:
+            delacx = dalimx * _sign(delacx)
+        if abs(delecx) > delimx:
+            delecx = delimx * _sign(delecx)
+        if abs(delrcx) > drlimx:
+            delrcx = drlimx * _sign(delrcx)
+
+        store.set("delacx", delacx)
+        store.set("delecx", delecx)
+        store.set("delrcx", delrcx)
+        store.set("ancomx", ancomx)
+        store.set("phicomx", phicomx)
 
     def control_roll(self, vehicle, phicomx):
         store = vehicle.store
