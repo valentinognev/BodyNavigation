@@ -1,5 +1,10 @@
 # Updates
 
+## 0.110.0 - SAM6 missile forces FAPB/FMB
+- Added `cadac.vehicles.sam6.forces.Sam6Forces` (`name="forces"`). Port of SAM6 `forces.cpp`. `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out). Does not define aero/prop/tvc/rcs/newton names (`pdynmc`, `thrust`, `refa`/`refl`, `ca`/`cy`/`cn`/`cll`/`clm`/`cln`, `mtvc`, `FARCS`/`FMRCS`, `FSPB`).
+- `execute`: `FAPB=[-pdynmc*refa*ca, pdynmc*refa*cy, -pdynmc*refa*cn]`; `FMB=pdynmc*refa*refl*[cll,clm,cln]`. `mtvc==0` (or absent) adds `thrust` to `FAPB[0]`. `mtvc!=0` → `ValueError` (no `FPB`/`FMPB`). Missing `FARCS`/`FMRCS` treated as 0; if present, add them. Does not write newton-owned `FSPB`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_forces.py` (pdynmc=156, refa=0.0491, ca=0.4, thrust=1000, mtvc=0 → `FAPB[0]==-156*0.0491*0.4+1000` rtol=1e-12; mtvc=1 raises; FSPB sentinel unchanged; absent RCS zeros).
+
 ## 0.109.0 - SAM6 kinematics msl_time and VBEB incidence
 - Added `cadac.vehicles.sam6.kinematics.Sam6Kinematics` (`name="kinematics"`). Port of SAM6 `kinematics.cpp`; copies quaternion algebra locally (not `Flat6Kinematics`, does not edit `flat6.py`). Extra/exec fields: `time`, `launch_delay` default 99999, `launch_epoch`, `launch_time`, `msl_time`, `stop`, `lconv`, `int_step_new`, `out_step_fact`.
 - Init: `launch_epoch=launch_delay`, quaternions from Euler, `TBL=mat3tr`. Exec: `time=ctx.sim_time`; `ctx.int_step=int_step_new`; quaternion stored-slope `integrate`; TBL; Euler; incidence from **VBEB** (`alphax`/`betax`/`alpp`/`phip`); `trortho`→`trcond=1`, `alpp>tralp`→`trcond=2` if those names exist. `msl_time` from RADAR0 com `lnch_delay_m{k+1}` for k-th `MISSILE6` among that type (`Packet.type`); no radar → `lnch_delay=0`; `msl_time=max(0, sim_time-lnch_delay)`. Local CADAC sign; `SMALL=1e-7`. Protocol `vehicle.store`.
