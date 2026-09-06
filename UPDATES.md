@@ -1,5 +1,10 @@
 # Updates
 
+## 0.106.0 - AGM6 roll and rate control
+- Added `cadac.vehicles.agm6.control.Agm6Control` (`name="control"`). `define` registers C++ `def_control` (`maut`/`mfreeze`, accel poles `wacl`/`zacl`/`pacl`, `alimit`, `dqlimx`/`drlimx`/`dplimx`, roll poles `wrcl`/`zrcl`, commands `dpcx`/`dqcx`/`drcx` out+plot, states `yyd`/`yy`/`zzd`/`zz`, `GAINFB`/`gainp`, diags `gkp`/`gkphi`/`zrate`/`grate`/`wnlagr`, `zetlagr`/`qqcomx`/`rrcomx`). Does not define INS/aero/newton names (`WBECB`,`phiblcx`,`dlp`/`dld`/`dna`/`dnd`/`dma`/`dmq`/`dmd`,`dvbe`). `initialize`/`terminate` pass. `execute` pass until maut dispatcher.
+- Helpers port C++ `control_roll`/`control_rate`: return nothing; write `dpcx` plus `gkp`/`gkphi` (roll, `|dpcx|<=dplimx`) and `dqcx`/`drcx` plus `zrate`/`grate`/`wnlagr` (rate). Gains from `dlp`/`dld`/`dna`/`dmd`/`zetlagr`; commands from INS `WBECB`/`phiblcx` (tests register them). `pp=WBECB[0]` rad/s not `*RAD`. Rate `dqcx=DEG*grate*qq-qqcomx`. Negative radix → module `SMALL=1.e-7` (not `cadac.constants`). Local CADAC sign. No Plane6/Hyper6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_control_roll.py` (wrcl=5, zrcl=0.9, dplimx=25, phicomx=0, phiblcx=2, WBECB=[0.1,0,0], dlp=-2, dld=20 → dpcx vs C++ rtol=1e-12, atol=1e-14; zetlagr=0.9, qqcomx=rrcomx=0, dvbe=293 frozen aero der → dqcx finite; execute remains pass).
+
 ## 0.105.0 - AGM6 four-fin actuators
 - Added `cadac.vehicles.agm6.actuator.Agm6Actuator` (`name="actuator"`). `define` registers C++ `def_actuator` (`mact`,`dlimx`,`ddlimx`,`wnact`,`zetact`,`dpx`/`dqx`/`drx` out+plot, fin diags `delx*`/`delcx*`, scalar states `dx*`/`ddx*`). Does not define control commands (`dpcx`/`dqcx`/`drcx`). `initialize`/`terminate` pass.
 - `execute` ports `Missile::actuator`: mix `delcx1=-dpcx+dqcx-drcx` (and 2/3/4). `mact<2` position-limit `dlimx` then back-convert `dpx,dqx,drx`. `mact==2` `actuator_scnd` (stored-slope `integrate`, rate/position limits). Else ValueError. `dt=ctx.int_step`. Local CADAC sign. No Plane6/Hyper6 import. Vehicle not registered.
