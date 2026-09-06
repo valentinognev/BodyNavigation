@@ -6,8 +6,8 @@ from cadac.constants import DEG, EPS, PI, R, RAD, WEII3
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat3tr
-from cadac.math.wgs84 import cad_grav84, cad_tdi84
+from cadac.math.frames import mat3tr, polar_from_cart
+from cadac.math.wgs84 import cad_grav84, cad_in_geo84, cad_tdi84, cad_tgi84
 
 
 def _cadac_sign(variable):
@@ -358,6 +358,121 @@ class Round6Euler:
         store.set("rrx", wbeb[2] * DEG)
         store.set("WBEB", wbeb)
         store.set("WBII", wbii)
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+class Round6Newton:
+    name = "newton"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        zeros3 = (0.0, 0.0, 0.0)
+        zeros33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+        for field in (
+            Field("minit", 0, "int", "data", "newton"),
+            Field("alpha0x", 0.0, "real", "data", "newton"),
+            Field("beta0x", 0.0, "real", "data", "newton"),
+            Field("lonx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
+            Field("latx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
+            Field("alt", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("TVD", zeros33, "mat", "out", "newton"),
+            Field("TDI", zeros33, "mat", "init", "newton"),
+            Field("dvbe", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("dvbi", 0.0, "real", "out", "newton", ("scrn", "plot", "com")),
+            Field("WEII", zeros33, "mat", "init", "newton"),
+            Field("psivdx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("thtvdx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+            Field("dbi", 0.0, "real", "out", "newton", ("scrn", "plot")),
+            Field("TGI", zeros33, "mat", "init", "newton"),
+            Field("VBED", zeros3, "vec", "out", "newton"),
+            Field("altx", 0.0, "real", "diag", "newton"),
+            Field("SBII", zeros3, "vec", "state", "newton", ("com",)),
+            Field("VBII", zeros3, "vec", "state", "newton", ("com",)),
+            Field("ABII", zeros3, "vec", "save", "newton"),
+            Field("grndtrck", 0.0, "real", "diag", "newton"),
+            Field("FSPB", zeros3, "vec", "out", "newton"),
+            Field("ayx", 0.0, "real", "diag", "newton", ("plot",)),
+            Field("anx", 0.0, "real", "diag", "newton", ("plot",)),
+            Field("gndtrkmx", 0.0, "real", "diag", "newton"),
+            Field("gndtrnmx", 0.0, "real", "diag", "newton"),
+            Field("latx_bias", 0.0, "real", "data", "newton"),
+            Field("dvbi_bias", 0.0, "real", "data", "newton"),
+            Field("dbi_bias", 0.0, "real", "data", "newton"),
+            Field("mfreeze_newt", 0, "int", "save", "newton"),
+            Field("dvbef", 0.0, "real", "save", "newton"),
+            Field("thtvdx_bias", 0.0, "real", "data", "newton"),
+            Field("sat_semi", 0.0, "real", "data", "newton"),
+            Field("sat_ecc", 0.0, "real", "data", "newton"),
+            Field("sat_inclx", 0.0, "real", "data", "newton"),
+            Field("sat_lon_anodex", 0.0, "real", "data", "newton"),
+            Field("sat_arg_perix", 0.0, "real", "data", "newton"),
+            Field("sat_true_anomx", 0.0, "real", "data", "newton"),
+            Field("ranglex_l_t", 0.0, "real", "data", "newton"),
+            Field("headon_flag", 0, "int", "data", "newton"),
+            Field("tgo_insertion", 0.0, "real", "data", "newton"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        store = vehicle.store
+        minit = store.get("minit")
+        if minit != 0:
+            raise ValueError(f"unknown minit {minit}")
+        dvbe = store.get("dvbe")
+        lonx = store.get("lonx")
+        latx = store.get("latx")
+        alt = store.get("alt")
+        time = store.get("time")
+        psibdx = store.get("psibdx")
+        thtbdx = store.get("thtbdx")
+        phibdx = store.get("phibdx")
+        alpha0x = store.get("alpha0x")
+        beta0x = store.get("beta0x")
+
+        weii = np.zeros((3, 3))
+        weii[0, 1] = -WEII3
+        weii[1, 0] = WEII3
+
+        sbii = cad_in_geo84(lonx * RAD, latx * RAD, alt, time)
+        dbi = float(np.linalg.norm(sbii))
+
+        salp = math.sin(alpha0x * RAD)
+        calp = math.cos(alpha0x * RAD)
+        sbet = math.sin(beta0x * RAD)
+        cbet = math.cos(beta0x * RAD)
+        vbeb = np.array(
+            [calp * cbet * dvbe, sbet * dvbe, salp * cbet * dvbe], dtype=float
+        )
+        tbd = mat3tr(psibdx * RAD, thtbdx * RAD, phibdx * RAD)
+        vbed = tbd.T @ vbeb
+
+        tdi = cad_tdi84(lonx * RAD, latx * RAD, alt, time)
+        tgi = cad_tgi84(lonx * RAD, latx * RAD, alt, time)
+        vbii = tdi.T @ vbed + weii @ sbii
+        dvbi = float(np.linalg.norm(vbii))
+
+        polar = polar_from_cart(vbed)
+        psivdx = DEG * float(polar[1])
+        thtvdx = DEG * float(polar[2])
+
+        store.set("lonx", lonx)
+        store.set("latx", latx)
+        store.set("TDI", tdi)
+        store.set("dvbi", dvbi)
+        store.set("WEII", weii)
+        store.set("psivdx", psivdx)
+        store.set("thtvdx", thtvdx)
+        store.set("dbi", dbi)
+        store.set("TGI", tgi)
+        store.set("VBED", vbed)
+        store.set("SBII", sbii)
+        store.set("VBII", vbii)
+        store.set("psibdx", psibdx)
+
+    def execute(self, vehicle, ctx):
+        pass
 
     def terminate(self, vehicle, ctx):
         pass

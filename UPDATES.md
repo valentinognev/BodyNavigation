@@ -1,5 +1,10 @@
 # Updates
 
+## 0.89.0 - Round6 newton initialization
+- Added `cadac.eom.round6.Round6Newton` (`name="newton"`). Port of HYPER6 `Round6::def_newton` / `init_newton` **minit==0 only**. `define` registers C++ newton fields including newton-owned `FSPB`. Does not define kinematics/euler/environment names (`time`, `TBI`, `GRAVG`, Euler angles) or hyper waypoints. `ABII` role save (C++).
+- Init: `SBII=cad_in_geo84(lonx*RAD,latx*RAD,alt,time)`; VBEB from `alpha0x`/`beta0x`/`dvbe`; `VBED=TBD.T@VBEB`; `VBII=TDI.T@VBED+WEII@SBII`; `TDI`/`TGI` from WGS84; flight-path `psivdx`/`thtvdx` degrees. Does not write `ABII` (stays zeros) or `FSPB`. `minit!=0` → ValueError. `execute` pass until newton step.
+- Tests: `Python/tests/unit/test_round6_newton_init.py` (climb lonx=latx=10, alt=10000, dvbe=1000, alpha0x=2.5; `cad_geo84_in(SBII)` alt near 10000; VBII/VBED vs C++ rtol=1e-12).
+
 ## 0.88.0 - Round6 Euler equations
 - Added `cadac.eom.round6.Round6Euler` (`name="euler"`). Port of HYPER6 `Round6::def_euler` / `init_euler` / `euler`. `define` registers C++ euler fields (`ppx`/`qqx`/`rrx` out+plot, `WBEB` diag, `WBIB`/`WBIBD` state, `WBII` out). Does not define plane/forces `IBBB`/`FMB` or kinematics `TBI`.
 - Init: `WBEB=[ppx,qqx,rrx]*RAD` (store rates stay deg/s); `WBIB=WBEB+TBI@(0,0,WEII3)`; writes `WBIB` only (no `WBEBD`). Execute: `WACC_NEXT=inv(IBBB)@(FMB-skew(WBIB)@IBBB@WBIB)`; stored-slope `integrate` of `WBIB`; `WBII=TBI.T@WBIB`; `WBEB=WBIB-TBI@(0,0,WEII3)`; rates in deg/s on store. `dt=ctx.int_step`. No engine momentum (not Flat6).
