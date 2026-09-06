@@ -1,3 +1,5 @@
+from math import cos
+
 from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
@@ -32,6 +34,11 @@ class Hyper5Control:
             Field("qq", 0.0, "real", "diag", "control", ("plot",)),
             Field("tip", 0.0, "real", "diag", "control", ("plot",)),
             Field("ancomx", 0.0, "real", "data", "control", plot),
+            Field("altdlim", 0.0, "real", "data", "control"),
+            Field("gh", 0.0, "real", "data", "control"),
+            Field("gv", 0.0, "real", "data", "control"),
+            Field("altd", 0.0, "real", "diag", "control", ("plot",)),
+            Field("altcom", 0.0, "real", "data", "control", ("plot",)),
         ):
             if field.name not in store.names():
                 store.define(field)
@@ -129,3 +136,29 @@ class Hyper5Control:
         store.set("qq", qq)
         store.set("tip", tip)
         return alpx
+
+    def control_altitude(self, vehicle, altcom, phimvx):
+        store = vehicle.store
+        anposlimx = store.get("anposlimx")
+        anneglimx = store.get("anneglimx")
+        altdlim = store.get("altdlim")
+        gh = store.get("gh")
+        gv = store.get("gv")
+        alt = store.get("alt")
+        grav = store.get("grav")
+        vbeg = store.get("VBEG")
+
+        ealt = gh * (altcom - alt)
+        if ealt > altdlim:
+            ealt = altdlim
+        if ealt < -altdlim:
+            ealt = -altdlim
+        altd = -vbeg[2]
+        ancomx = (gv * (ealt - altd) / grav + 1) * (1 / cos(phimvx * RAD))
+        if ancomx > anposlimx:
+            ancomx = anposlimx
+        if ancomx < anneglimx:
+            ancomx = anneglimx
+
+        store.set("altd", altd)
+        return ancomx

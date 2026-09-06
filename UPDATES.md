@@ -1,5 +1,10 @@
 # Updates
 
+## 0.72.0 - HYPER5 altitude control
+- `Hyper5Control.define` adds C++ `def_control` fields used by `control_altitude`: altdlim, gh, gv (data), altd (diag, plot), altcom (data, plot). anposlimx/anneglimx already from Task 7. Skip-if-exists. Does not register alt/grav/VBEG (newton/environment). Does not register mcontrol, TBV/TBG, heading, lateral. Bank and load fields unchanged. `execute` still pass.
+- `control_altitude(vehicle, altcom, phimvx)` ports `Hyper::control_altitude`: ealt=gh*(altcom-alt) clipped ±altdlim; altd=-VBEG[2]; ancomx=(gv*(ealt-altd)/grav+1)*(1/cos(phimvx*RAD)); clip [anneglimx, anposlimx]. Writes altd; returns ancomx; does not write ancomx. Protocol `vehicle.store`. No vehicle. No Plane5Control import. Does not use VBEL.
+- Tests: `Python/tests/unit/test_hyper5_control_altitude.py` (Demo 5.1 fly-out gh=0.2, gv=0.3, altdlim=50, altcom=24000, anposlimx=2, anneglimx=-1; one-step vs C++ replica; rate-limiter; banked RAD; ancomx clip; execute pass; rtol=1e-12, atol=1e-14). Plant alt/grav/VBEG registered by the test.
+
 ## 0.71.0 - HYPER5 load-factor control
 - `Hyper5Control.define` adds C++ `def_control` fields used by `control_load`: anposlimx, anneglimx, gacp, ta, alphax (out, scrn/plot), alpposlimx, alpneglimx, xi, xid, alp, alpd, anx (diag, scrn/plot), qq, tip, ancomx (data, scrn/plot). Skip-if-exists. Does not register mcontrol, TBV/TBG, altitude, heading, lateral. Bank fields unchanged. `execute` still pass.
 - `control_load(vehicle, ancomx, int_step)` ports `Hyper::control_load`: TBV=`cadtbv(phimv,alpha)`, FSPB=TBV@FSPV, clip ancomx to [anneglimx, anposlimx], anx=-FSPB[2]/grav, tip=dvbe*mass/(pdynmc*area*cla/RAD+thrust), P-I if ta>0 else xi=0 (gr starts 0), incidence lag, clip returned alpx. Writes xi,xid,alp,alpd,anx,qq,tip. Does not write alphax. Protocol `vehicle.store`. No vehicle. No Plane5Control import.

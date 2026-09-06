@@ -26,7 +26,6 @@ LATER_FIELDS = (
     "alcomx",
     "TBV",
     "TBG",
-    "altcom",
     "gain_psivg",
     "gain_thtvg",
     "psivgcx",
