@@ -1,5 +1,10 @@
 # Updates
 
+## 0.117.0 - SAM6 intercept halt/ground without sys.exit
+- Added `cadac.vehicles.sam6.intercept.Sam6Intercept` (`name="intercept"`). Port of SAM6 `intercept.cpp` without `sys.exit`/`print`. Does not define kinematics/newton/sensor/guidance/control/prop names (`time`, `stop`, `SBEL`/`VBEL`/`alt`/`hbe`, `STEL`/`VTEL`/`tgt_slot`/`mseek`, `trcond`, `mguide`/`ip_sltrange`/`SIBLC`, `maut`, `mprop`).
+- `execute`: `stop&&trcond` → `vehicle.health=0`, `ctx.combus[slot].status=0`. Ground `alt<=0` or `hbe<=0` with `write` latch. IP `ip_sltrange<500` and `UIBL·VBEL<0` latches write and kills missile. `skr_mode==4` and `dbt<500` closest-approach: `mterm==0` L-frame interpolation, `mterm==1` intercept-plane miss; kills missile and `tgt_slot` packet. `mterm==2` `ValueError`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper5 intercept import.
+- Tests: `Python/tests/unit/test_sam6_intercept.py` (halt stop=1 trcond=4 → health 0; alt=-1 write=1 → health 0; stop=0 no kill; IP closing; mterm=0 miss 3 m rtol=1e-12; mterm=2 raises).
+
 ## 0.116.0 - SAM6 RF/IR sensor by Packet.type
 - Added `cadac.vehicles.sam6.sensor.Sam6Sensor` (`name="sensor"`). Port of SAM6 `sensor.cpp` RF/IR mode machine, `sensor_kin`, `sensor_rf_dyn`/`glint`, `sensor_ir_dyn`/`aimp`/`uthpb`/`thb`. Does not define kinematics/INS/aero/guidance names (`time`, `SBEL`, `TBL`, `VBEL`, `WBECB`, `trcond`, `mguide`). Extra save `timeac` (C++ `missile[238]` undeclared).
 - `execute`: `mseek==0` return. `mtarget==1` `ROCKET5`; `==2` `AIRCRAFT3`; else `ValueError`. k-th `MISSILE6` among that type → k-th target of that type (`Packet.type`/names, not `"r1"`/`"a1"`). Reads `SAEL`/`VAEL` by name; `dta` by name else 0. `skr_type==1` RF mode 2 acquire `dbtk<racq_rf` → 3 then 4 lock as C++; `skr_type==2` IR as C++; other `skr_type` `ValueError`. `skr_dyn==1` with bias/random 0; glint/MARKOV 0. Writes `STEL`/`VTEL`/`tgt_slot`/`dta`/`SBTL`/`dbtk`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
