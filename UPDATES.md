@@ -1,5 +1,10 @@
 # Updates
 
+## 0.71.0 - HYPER5 load-factor control
+- `Hyper5Control.define` adds C++ `def_control` fields used by `control_load`: anposlimx, anneglimx, gacp, ta, alphax (out, scrn/plot), alpposlimx, alpneglimx, xi, xid, alp, alpd, anx (diag, scrn/plot), qq, tip, ancomx (data, scrn/plot). Skip-if-exists. Does not register mcontrol, TBV/TBG, altitude, heading, lateral. Bank fields unchanged. `execute` still pass.
+- `control_load(vehicle, ancomx, int_step)` ports `Hyper::control_load`: TBV=`cadtbv(phimv,alpha)`, FSPB=TBV@FSPV, clip ancomx to [anneglimx, anposlimx], anx=-FSPB[2]/grav, tip=dvbe*mass/(pdynmc*area*cla/RAD+thrust), P-I if ta>0 else xi=0 (gr starts 0), incidence lag, clip returned alpx. Writes xi,xid,alp,alpd,anx,qq,tip. Does not write alphax. Protocol `vehicle.store`. No vehicle. No Plane5Control import.
+- Tests: `Python/tests/unit/test_hyper5_control_load.py` (Demo 4.7 gacp=10, ta=0.8, anposlimx=2, anneglimx=-2, alpposlimx=6, alpneglimx=-4; one-step vs C++ replica; ta<=0; ancomx/alpx clips; execute pass; rtol=1e-12, atol=1e-14). Plant FSPV/grav/mass/dvbe/pdynmc/thrust/area/cla registered by the test. Bank tests still pass.
+
 ## 0.70.0 - HYPER5 bank-angle control
 - Added `cadac.vehicles.hyper5.control.Hyper5Control` (`name="control"`). `define` registers C++ `def_control` fields used by `control_bank`: phimvx (out, scrn/plot), phicx (data, scrn/plot), phix (state, plot), phixd (state), philimx, tphi. Does not register mcontrol, load, altitude, heading, TBV/TBG. `initialize` pass (no C++ `init_control`). `execute` pass until Task 10 dispatcher.
 - `control_bank(vehicle, phicx, int_step)` ports `Hyper::control_bank`: clip phicx to ±philimx (local), `phixd_new=(phicx-phix)/tphi`, stored-slope `integrate`, writes phix/phixd, returns phix. Does not write phimvx/phicx. Protocol `vehicle.store`. No vehicle. No Plane5Control import.

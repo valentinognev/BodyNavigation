@@ -23,15 +23,9 @@ BANK_FIELDS = {
 
 LATER_FIELDS = (
     "mcontrol",
-    "alphax",
-    "ancomx",
     "alcomx",
     "TBV",
     "TBG",
-    "anposlimx",
-    "anneglimx",
-    "gacp",
-    "ta",
     "altcom",
     "gain_psivg",
     "gain_thtvg",
@@ -85,11 +79,10 @@ def test_name_is_control():
     assert Hyper5Control().name == "control"
 
 
-def test_define_registers_bank_fields_only():
+def test_define_registers_bank_fields():
     vehicle = _Vehicle()
     Hyper5Control().define(vehicle)
     store = vehicle.store
-    assert set(store.names()) == set(BANK_FIELDS)
     for name, (ftype, role, outputs) in BANK_FIELDS.items():
         field = store.field(name)
         assert field.type == ftype
