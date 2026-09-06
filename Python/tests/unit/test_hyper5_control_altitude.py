@@ -33,16 +33,6 @@ ALTITUDE_FIELDS = {
     "altcom": ("real", "data", ("plot",)),
 }
 
-LATER_FIELDS = (
-    "mcontrol",
-    "alcomx",
-    "TBV",
-    "TBG",
-    "allimx",
-    "gcp",
-    "alx",
-)
-
 PLANT_FIELDS = ("alt", "grav", "VBEG", "VBEL")
 
 
@@ -134,28 +124,36 @@ def test_define_registers_altitude_fields():
         assert field.module == "control"
         assert field.outputs == outputs
         assert store.get(name) == 0.0
-    for name in LATER_FIELDS:
-        assert name not in store.names()
     for name in PLANT_FIELDS:
         assert name not in store.names()
 
 
-def test_execute_is_pass():
+def test_execute_dispatches_mcontrol_0():
     vehicle, control = _ready()
     store = vehicle.store
-    names = list(ALTITUDE_FIELDS) + ["ancomx", "phimvx", "anposlimx", "anneglimx"]
-    before = {name: store.get(name) for name in names}
-    before["alt"] = store.get("alt")
-    before["grav"] = store.get("grav")
-    before["VBEG"] = store.get("VBEG").copy()
+    store.define(
+        Field(
+            "TGV",
+            ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+            "mat",
+            "init",
+            "newton",
+        )
+    )
+    store.set("mcontrol", 0)
+    store.set("phimvx", 12.0)
+    store.set("alphax", -1.5)
+    alt_before = store.get("alt")
+    altd_before = store.get("altd")
+    vbeg_before = store.get("VBEG").copy()
 
     control.execute(vehicle, _ctx())
 
-    for name, value in before.items():
-        if name == "VBEG":
-            np.testing.assert_array_equal(store.get(name), value)
-        else:
-            assert store.get(name) == value
+    assert store.get("phimvx") == 0.0
+    assert store.get("alphax") == 0.0
+    assert store.get("alt") == alt_before
+    assert store.get("altd") == altd_before
+    np.testing.assert_array_equal(store.get("VBEG"), vbeg_before)
 
 
 def test_control_altitude_one_step_matches_cpp_equations():

@@ -1,7 +1,7 @@
 import pytest
 
 from cadac.kernel.executive import SimContext
-from cadac.kernel.state import StateStore
+from cadac.kernel.state import Field, StateStore
 from cadac.vehicles.hyper5.control import Hyper5Control
 
 # Demo 4.7
@@ -20,13 +20,6 @@ BANK_FIELDS = {
     "philimx": ("real", "data", ()),
     "tphi": ("real", "data", ()),
 }
-
-LATER_FIELDS = (
-    "mcontrol",
-    "alcomx",
-    "TBV",
-    "TBG",
-)
 
 
 class _Vehicle:
@@ -85,19 +78,30 @@ def test_define_registers_bank_fields():
         assert field.module == "control"
         assert field.outputs == outputs
         assert store.get(name) == 0.0
-    for name in LATER_FIELDS:
-        assert name not in store.names()
 
 
-def test_execute_is_pass():
+def test_execute_dispatches_mcontrol_0():
     vehicle, control = _ready(30.0)
     store = vehicle.store
-    before = {name: store.get(name) for name in BANK_FIELDS}
+    store.define(
+        Field(
+            "TGV",
+            ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+            "mat",
+            "init",
+            "newton",
+        )
+    )
+    store.set("phimvx", 12.0)
+    store.set("alphax", -1.5)
 
     control.execute(vehicle, _ctx())
 
-    for name, value in before.items():
-        assert store.get(name) == value
+    assert store.get("mcontrol") == 0
+    assert store.get("phimvx") == 0.0
+    assert store.get("alphax") == 0.0
+    assert store.get("phicx") == 30.0
+    assert store.get("phix") == 0.0
 
 
 def test_control_bank_one_step_lag():

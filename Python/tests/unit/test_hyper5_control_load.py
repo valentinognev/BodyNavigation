@@ -50,16 +50,6 @@ LOAD_FIELDS = {
     "ancomx": ("real", "data", ("scrn", "plot")),
 }
 
-LATER_FIELDS = (
-    "mcontrol",
-    "alcomx",
-    "TBV",
-    "TBG",
-    "allimx",
-    "gcp",
-    "alx",
-)
-
 
 class _Vehicle:
     def __init__(self):
@@ -199,8 +189,6 @@ def test_define_registers_load_factor_fields():
         assert field.module == "control"
         assert field.outputs == outputs
         assert store.get(name) == 0.0
-    for name in LATER_FIELDS:
-        assert name not in store.names()
 
 
 def test_define_skips_existing_fields():
@@ -212,16 +200,55 @@ def test_define_skips_existing_fields():
     assert store.field("phimvx").module == "newton"
 
 
-def test_execute_is_pass():
+def test_execute_dispatches_mcontrol_4():
     vehicle, control = _ready()
     store = vehicle.store
-    names = list(LOAD_FIELDS) + ["phimvx", "phix", "phixd", "phicx"]
-    before = {name: store.get(name) for name in names}
+    store.define(
+        Field(
+            "TGV",
+            ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+            "mat",
+            "init",
+            "newton",
+        )
+    )
+    store.set("mcontrol", 4)
+    alphax_before = store.get("alphax")
+    ancomx_before = store.get("ancomx")
+    expected = _expected_load(
+        ANCOMX,
+        INT_STEP,
+        PHIMVX,
+        ALPHAX,
+        ANPOSLIMX,
+        ANNEGLIMX,
+        GACP,
+        TA,
+        ALPPOSLIMX,
+        ALPNEGLIMX,
+        FSPV,
+        GRAV,
+        MASS,
+        DVBE,
+        PDYNMC,
+        THRUST,
+        AREA,
+        CLA,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+    )
+    alpx = expected[0]
 
     control.execute(vehicle, _ctx())
 
-    for name, value in before.items():
-        assert store.get(name) == value
+    assert store.get("mcontrol") == 4
+    assert store.get("phimvx") == 0.0
+    assert store.get("ancomx") == ancomx_before
+    assert _approx(store.get("alphax"), alpx)
+    assert store.get("alphax") != alphax_before
+    assert store.get("alphax") != 0.0
 
 
 def test_control_load_one_step_matches_cpp_equations():

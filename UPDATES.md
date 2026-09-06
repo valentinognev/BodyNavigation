@@ -1,5 +1,11 @@
 # Updates
 
+## 0.74.0 - HYPER5 mcontrol dispatcher
+- `Hyper5Control.define` adds remaining C++ `def_control` dispatcher/lateral fields: mcontrol (int, data, scrn), TBV/TBG (mat, out), alcomx (data, scrn/plot), allimx/gcp (data), alx (diag, plot), alphacx/phimvcx (data). Skip-if-exists. Bank/load/altitude/heading fields unchanged.
+- `control_lateral(vehicle, alcomx)` ports `Hyper::control_lateral`: TBV=`cadtbv(phimvx*RAD, alphax*RAD)`, FSPB=TBV@FSPV, anx=-FSPB[2]/grav, clip alcomx ±allimx, **phic=atan2(alcomx, anx)** (not Plane5 gcp), phicx=phic*DEG, alx=FSPV[1]/grav. Writes alx; returns phicx; does not write phicx/TBV. Protocol `vehicle.store`. No vehicle. No Plane5Control import.
+- `execute` is the mcontrol dispatcher for allowed modes `{0,3,4,6,16,36,40,44}` only (`mcontrol 03` is int 3). Separate `if`s as C++. Locals phimvx/alphax start 0. `0` zeros then still TBV/TBG/`gets()`. Else including -1/1/10/11/46 ValueError. Then `TBV=cadtbv(phimvx*RAD, alphax*RAD)`, `TBG=TBV@TGV.T`. Writes phicx, TBV, TBG, alphax, phimvx, ancomx.
+- Tests: `Python/tests/unit/test_hyper5_mcontrol.py` (Demo 4.7 mcontrol=44 alcomx=0.5 finite phimvx/alphax; mcontrol=-1 raises; mcontrol=0 zeros; atan2 vs gcp; TBG; mcontrol=3 alphacx; rtol=1e-12, atol=1e-14). Tasks 6–8 execute-is-pass now assert dispatcher. Plant TGV/FSPV/grav registered by tests.
+
 ## 0.73.0 - HYPER5 heading and flight-path control
 - `Hyper5Control.define` adds C++ `def_control` fields used by `control_heading` / `control_flightpath`: gain_thtvg, gain_psivg, psivgcx, thtvgcx, avx. alphax/anx/alpposlimx/alpneglimx already from Task 7. Skip-if-exists. Does not register mcontrol/TBV/TBG/alcomx/lateral. Bank, load, altitude fields unchanged. `execute` still pass.
 - `control_heading(vehicle, psivgcx)` ports `Hyper::control_heading`: reads geographic **psivgx** (deg), not Flat3 psivlx. Wrap: if fabs(psivgcx)<=135 then psivgx_comp=psivgx; else if psivgx*psivgcx>=0: psivgx; else wrap `360-psivgx*sign` with C++ `if(psivgx>=0) sign=1 else sign=-1`. Returns bank command; does not write phimvx/phicx. Protocol `vehicle.store`. No vehicle. No Plane5Control import.

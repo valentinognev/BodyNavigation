@@ -1,9 +1,12 @@
-from math import cos
+from math import atan2, cos
 
 from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 from cadac.math.frames import cadtbv
+
+_ALLOWED_MCONTROL = (0, 3, 4, 6, 16, 36, 40, 44)
+_ZEROS33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
 
 class Hyper5Control:
@@ -44,6 +47,15 @@ class Hyper5Control:
             Field("psivgcx", 0.0, "real", "data", "control", ("plot",)),
             Field("thtvgcx", 0.0, "real", "data", "control", ("plot",)),
             Field("avx", 0.0, "real", "diag", "control", ("scrn", "plot")),
+            Field("mcontrol", 0, "int", "data", "control", ("scrn",)),
+            Field("TBV", _ZEROS33, "mat", "out", "control"),
+            Field("TBG", _ZEROS33, "mat", "out", "control"),
+            Field("alcomx", 0.0, "real", "data", "control", ("scrn", "plot")),
+            Field("allimx", 0.0, "real", "data", "control"),
+            Field("gcp", 0.0, "real", "data", "control"),
+            Field("alx", 0.0, "real", "diag", "control", ("plot",)),
+            Field("alphacx", 0.0, "real", "data", "control"),
+            Field("phimvcx", 0.0, "real", "data", "control"),
         ):
             if field.name not in store.names():
                 store.define(field)
@@ -52,7 +64,56 @@ class Hyper5Control:
         pass
 
     def execute(self, vehicle, ctx):
-        pass
+        store = vehicle.store
+        mcontrol = store.get("mcontrol")
+        if mcontrol not in _ALLOWED_MCONTROL:
+            raise ValueError(f"unknown mcontrol {mcontrol}")
+        int_step = ctx.int_step
+        psivgcx = store.get("psivgcx")
+        alphacx = store.get("alphacx")
+        ancomx = store.get("ancomx")
+        alcomx = store.get("alcomx")
+        altcom = store.get("altcom")
+        phicx = store.get("phicx")
+        tgv = store.get("TGV")
+        phimvx = 0.0
+        alphax = 0.0
+        if mcontrol == 0:
+            phimvx = 0.0
+            alphax = 0.0
+        if mcontrol == 3:
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            alphax = alphacx
+        if mcontrol == 4:
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 40:
+            phicx = self.control_lateral(vehicle, alcomx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+        if mcontrol == 44:
+            phicx = self.control_lateral(vehicle, alcomx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 6:
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 16:
+            phicx = self.control_heading(vehicle, psivgcx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 36:
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        tbv = cadtbv(phimvx * RAD, alphax * RAD)
+        tvg = tgv.T
+        tbg = tbv @ tvg
+        store.set("phicx", phicx)
+        store.set("TBV", tbv)
+        store.set("TBG", tbg)
+        store.set("alphax", alphax)
+        store.set("phimvx", phimvx)
+        store.set("ancomx", ancomx)
 
     def terminate(self, vehicle, ctx):
         pass
@@ -206,3 +267,27 @@ class Hyper5Control:
         store.set("anx", anx)
         store.set("avx", avx)
         return alphax
+
+    def control_lateral(self, vehicle, alcomx):
+        store = vehicle.store
+        allimx = store.get("allimx")
+        fspv = store.get("FSPV")
+        grav = store.get("grav")
+        phimvx = store.get("phimvx")
+        alphax = store.get("alphax")
+        alpha = alphax * RAD
+        phimv = phimvx * RAD
+        tbv = cadtbv(phimv, alpha)
+        fspb = tbv @ fspv
+        fspb3 = fspb[2]
+        anx = -fspb3 / grav
+        if alcomx > allimx:
+            alcomx = allimx
+        if alcomx < -allimx:
+            alcomx = -allimx
+        phic = atan2(alcomx, anx)
+        phicx = phic * DEG
+        fspv2 = fspv[1]
+        alx = fspv2 / grav
+        store.set("alx", alx)
+        return phicx
