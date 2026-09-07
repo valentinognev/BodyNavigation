@@ -1,13 +1,20 @@
-from math import acos, atan2, cos, exp, fabs, sin, sqrt, tan
+from math import acos, atan2, cos, exp, fabs, pow, sin, sqrt, tan
 
 import numpy as np
 
 from cadac.constants import DEG, RAD
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 
 SMALL = 1e-7
 G0 = 9.81
 CNALP0 = 7.468
+
+
+def _sign(variable):
+    if variable < 0:
+        return -1
+    return 1
 
 
 def _skew(vec):
@@ -313,6 +320,155 @@ class Sam6RocketGuidance:
         store.set("allx", allx)
         store.set("an_manvr", an_manvr)
         store.set("al_manvr", al_manvr)
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+class Sam6RocketControl:
+    name = "control"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        com = ("com",)
+        for field in (
+            Field("maut", 0, "int", "data", "control"),
+            Field("flag_exo", 0, "int", "data", "control"),
+            Field("ancomx_bias", 0.0, "real", "data", "control"),
+            Field("alt_endo", 0.0, "real", "data", "control"),
+            Field("tip", 0.0, "real", "diag", "control"),
+            Field("xi", 0.0, "real", "state", "control"),
+            Field("xid", 0.0, "real", "state", "control"),
+            Field("ratep", 0.0, "real", "state", "control"),
+            Field("ratepd", 0.0, "real", "state", "control"),
+            Field("alp", 0.0, "real", "state", "control"),
+            Field("alpd", 0.0, "real", "state", "control"),
+            Field("yi", 0.0, "real", "state", "control"),
+            Field("yid", 0.0, "real", "state", "control"),
+            Field("ratey", 0.0, "real", "state", "control"),
+            Field("rateyd", 0.0, "real", "state", "control"),
+            Field("bet", 0.0, "real", "state", "control"),
+            Field("betd", 0.0, "real", "state", "control"),
+            Field("alphax", 0.0, "real", "out", "control", com),
+            Field("betax", 0.0, "real", "out", "control", com),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        maut = store.get("maut")
+        if maut not in (0, 1):
+            raise ValueError(f"maut={maut!r} not supported")
+        flag_exo = store.get("flag_exo")
+        ancomx_bias = store.get("ancomx_bias")
+        alt_endo = store.get("alt_endo")
+        grav = store.get("grav")
+        pdynmc = store.get("pdynmc")
+        dvae = store.get("dvae")
+        alt = store.get("alt")
+        area = store.get("area")
+        alpmax = store.get("alpmax")
+        cytgt = store.get("cytgt")
+        cntgt = store.get("cntgt")
+        cnalp = store.get("cnalp")
+        cybet = store.get("cybet")
+        thrust = store.get("thrust")
+        mass = store.get("mass")
+        ancomx = store.get("ancomx")
+        alcomx = store.get("alcomx")
+        xi = store.get("xi")
+        xid = store.get("xid")
+        ratep = store.get("ratep")
+        ratepd = store.get("ratepd")
+        alp = store.get("alp")
+        alpd = store.get("alpd")
+        yi = store.get("yi")
+        yid = store.get("yid")
+        ratey = store.get("ratey")
+        rateyd = store.get("rateyd")
+        bet = store.get("bet")
+        betd = store.get("betd")
+        int_step = ctx.int_step
+        tip = 0.0
+        alphax = 0.0
+        betax = 0.0
+        if alt > alt_endo:
+            flag_exo = 1
+            xi = 0.0
+            xid = 0.0
+            ratep = 0.0
+            ratepd = 0.0
+            alp = 0.0
+            alpd = 0.0
+            yi = 0.0
+            yid = 0.0
+            ratey = 0.0
+            rateyd = 0.0
+            bet = 0.0
+            betd = 0.0
+        if not flag_exo:
+            ancomx = ancomx_bias
+        if maut == 1 and alt < alt_endo:
+            tr = ((-2e-7) * pdynmc + 0.22)
+            gacp = pow((0.002 * pdynmc), 0.575) * (1 - 0.5)
+            ta = 2.2
+            tip = dvae * mass / (pdynmc * area * fabs(cnalp) + thrust)
+            fspz = -pdynmc * area * cntgt / mass
+            gr = gacp * tip * tr / dvae
+            gi = gr / ta
+            abez = -ancomx * grav
+            ep = abez - fspz
+            xid_new = gi * ep
+            xi = integrate(xid_new, xid, xi, int_step)
+            xid = xid_new
+            ratepc = -(ep * gr + xi)
+            ratepd_new = (ratepc - ratep) / tr
+            ratep = integrate(ratepd_new, ratepd, ratep, int_step)
+            ratepd = ratepd_new
+            alpd_new = (tip * ratep - alp) / tip
+            alp = integrate(alpd_new, alpd, alp, int_step)
+            alpd = alpd_new
+            alphax = alp * DEG
+            if fabs(alphax) > alpmax:
+                alphax = alpmax * _sign(alphax)
+            tiy = dvae * mass / (pdynmc * area * fabs(cybet) + thrust)
+            fspy = pdynmc * area * cytgt / mass
+            gr = gacp * tiy * tr / dvae
+            gi = gr / ta
+            abey = alcomx * grav
+            ey = abey - fspy
+            yid_new = gi * ey
+            yi = integrate(yid_new, yid, yi, int_step)
+            yid = yid_new
+            rateyc = ey * gr + yi
+            rateyd_new = (rateyc - ratey) / tr
+            ratey = integrate(rateyd_new, rateyd, ratey, int_step)
+            rateyd = rateyd_new
+            betd_new = -(tiy * ratey + bet) / tiy
+            bet = integrate(betd_new, betd, bet, int_step)
+            betd = betd_new
+            betax = bet * DEG
+            if fabs(betax) > alpmax:
+                betax = alpmax * _sign(betax)
+        store.set("xi", xi)
+        store.set("xid", xid)
+        store.set("ratep", ratep)
+        store.set("ratepd", ratepd)
+        store.set("alp", alp)
+        store.set("alpd", alpd)
+        store.set("yi", yi)
+        store.set("yid", yid)
+        store.set("ratey", ratey)
+        store.set("rateyd", rateyd)
+        store.set("bet", bet)
+        store.set("betd", betd)
+        store.set("flag_exo", flag_exo)
+        store.set("alphax", alphax)
+        store.set("betax", betax)
+        store.set("tip", tip)
 
     def terminate(self, vehicle, ctx):
         pass

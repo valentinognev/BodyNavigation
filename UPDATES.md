@@ -1,5 +1,10 @@
 # Updates
 
+## 0.125.0 - SAM6 ROCKET5 control
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketControl` (`name="control"`). Port of SAM6 `Rocket::control`. Does not define Flat3/aero/prop/guidance names (`grav`/`pdynmc`/`dvae`/`alt`, `area`/`alpmax`/`cnalp`/`cybet`/`cntgt`/`cytgt`, `thrust`/`mass`, `ancomx`/`alcomx`). No vehicle class.
+- `execute`: `maut` not in `{0,1}` → `ValueError`. `alt>alt_endo` sets `flag_exo` and zeros PI states. Ascent `ancomx=ancomx_bias` while `not flag_exo`. `maut==1` and `alt<alt_endo` P-I as C++ (`tr`, `gacp`, `ta=2.2`); `maut==0` ballistic (no accel loop). CADAC sign on `alpmax` limiter. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_control.py` (maut=1 alt=1000 alt_endo=30000 dummy aero/mass/thrust dt=0.001 → `alphax` finite vs C++ rtol=1e-12; maut=2 raises; maut=0 no loop; exo zeros; ascent bias).
+
 ## 0.124.0 - SAM6 ROCKET5 guidance
 - Added `cadac.vehicles.sam6.rocket.Sam6RocketGuidance` (`name="guidance"`). Port of SAM6 `Rocket::guidance`. Does not define Flat3/aero/sensor/control names (`grav`/`gmax`/`dvta`/`tgo_tgt`/`UTAA`/`WOEA`/`flag_exo`). No vehicle class.
 - `execute`: decode `guid_manvr=mguide//10`, `guid_mode=mguide%10`; not in `{0,1}` → `ValueError`. `guid_mode==1` pronav `APNA=skew(WOEA)@UTAA*gnav*|dvta|`. `guid_manvr==1` and `flag_exo` and `tgo_tgt<tgo_manvr` decaying spiral as C++. Circular limiter vs `gmax` with C++ OR-phi (`mguide==0` writes zeros). Protocol `vehicle.store`. No Flat6/Plane imports.
