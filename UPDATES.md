@@ -1,5 +1,10 @@
 # Updates
 
+## 0.102.0 - MAGSIX Rotor from JSONC
+- Added `cadac.eom.rotor`: `RotorEnvironment` (US76 + `gravity(hbe)`, `mwind==0`), `RotorTrajectory` (DNU ICs/step, `SBEL` dt=`int_step*tau`, ground impact `health=0` + combus status 0, no `sys.exit`), `RotorAttitude` (CADAC beta→phi→psi order; `nonlinear` in `{0,1}`). Module-level `RPM=9.5493`, `RHO_SL=1.225`. Not Flat6/Round6.
+- `Rotor` (`type="ROTOR"`, constructor `(name, events=None)`, no decks). Modules environment/trajectory/attitude. Registered `_VEHICLE_TYPES["ROTOR"]` and `_VEHICLE_FAMILIES[("magsix","ROTOR")]`. `"ROTOR"` in `_NO_DECK_TYPES`.
+- Cases `Python/cases/magsix/`: attitude RECT.MR1 `input.jsonc` (`end_time` 0.35, `int_step` 0.0001, `plot_step` 0.005) and trajectory `input_trajectoryMR1.jsonc` (`end_time` 50, `int_step` 0.001, `plot_step` 0.01). E2E skip without goldens (`tests/e2e/goldens/magsix/plot.csv` and `.../trajectory/plot.csv`).
+
 ## 0.101.0 - run AIM5 and AIRCRAFT3 from JSONC hori
 - Kernel: optional `VehicleSpec.family`; scenario-level `"family"` copies onto vehicles that omit it; vehicle key wins. `translate_scenario_asc(..., family=)` writes `"family"` on each vehicle. `_build_vehicle`: family set → `_VEHICLE_FAMILIES` only (no `_VEHICLE_TYPES` fallthrough). Unknown-type sentinel `"NO_SUCH_TYPE"` (was `"AIM5"`).
 - `Aim5` (`type="AIM5"`, both decks required). Modules in hori ASC order on Flat3: aero, propulsion mprop 0–1, kinematic seeker (`Packet.type=="AIRCRAFT3"`, `tgt_num` default 1), pronav/spiral guidance, acceleration autopilot, FSPV forces, intercept (`dta<500` and `dvta>0`; no `sys.exit`). `Aim5Flat3Newton` copies `sael*`/`dvae` → `sbel*`/`dvbe`. Vehicle-only `com_names` union `{SBEL,VBEL,psivlx,thtvlx}`.
