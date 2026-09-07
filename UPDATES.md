@@ -1,5 +1,8 @@
 # Updates
 
+## 0.120.1 - SAM6 AIRCRAFT3 yaw-90 bank limiter test
+- `test_bank_from_tvl_times_acoml_not_transpose` now asserts C++ `philimx` clip on `phiavx`/`phiavout` and unclipped `phiav`/`phiavcx`. `YAW90@(GRAV,0,0)` → `ACOMV=(0,-GRAV,0)`; `abs(phiav*DEG)>=90` clips outputs.
+
 ## 0.120.0 - SAM6 AIRCRAFT3 control
 - Added `cadac.vehicles.sam6.aircraft.Sam6AircraftControl` (`name="control"`). Port of SAM6 `Aircraft::control`. Does not define Flat3/guidance names (`grav`/`pdynmc`/`TVL`/`acft_option`/`ACOML`) or forces `FSPA`. No vehicle class.
 - `execute`: bank from `TVL@ACOML`; `tphi==0` no lag else stored-slope `integrate`; limit `philimx` on `phiavx`/`phiavout` (CADAC sign); write `phiavout`. Load-factor lag `tanx`; `acft_option>0` alpha limiter `pdynmc*clalpha*alplimx/wingloading`. Protocol `vehicle.store`. No Flat6/Plane imports.

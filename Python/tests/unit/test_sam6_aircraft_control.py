@@ -287,10 +287,13 @@ def test_bank_from_tvl_times_acoml_not_transpose():
     control.execute(vehicle, _ctx())
     store = vehicle.store
     want = atan2(-GRAV, -0.0)
+    phiavx_deg = want * DEG
+    if abs(phiavx_deg) >= 90.0:
+        phiavx_deg = 90.0 * _sign(phiavx_deg)
     assert _approx(store.get("phiav"), want)
     assert _approx(store.get("phiavcx"), want * DEG)
-    assert _approx(store.get("phiavx"), want * DEG)
-    assert _approx(store.get("phiavout"), want * DEG * RAD)
+    assert _approx(store.get("phiavx"), phiavx_deg)
+    assert _approx(store.get("phiavout"), phiavx_deg * RAD)
     assert _approx(store.get("anx"), 1.0)
 
 
