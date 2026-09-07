@@ -11,6 +11,9 @@ from cadac.tables.lookup import Datadeck
 from cadac.vehicles.aim5.aircraft import Aim5Aircraft
 from cadac.vehicles.aim5.vehicle import Aim5
 from cadac.vehicles.cruise3.vehicle import Cruise3
+from cadac.vehicles.cruise5.satellite import Cruise5Satellite
+from cadac.vehicles.cruise5.target import Cruise5Target
+from cadac.vehicles.cruise5.vehicle import Cruise5
 from cadac.vehicles.hyper5.satellite import Satellite3
 from cadac.vehicles.hyper5.target import Target3
 from cadac.vehicles.hyper5.vehicle import Hyper5
@@ -31,6 +34,9 @@ _VEHICLE_TYPES = {
 _VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
     ("aim5", "AIM5"): Aim5,
     ("aim5", "AIRCRAFT3"): Aim5Aircraft,
+    ("cruise5", "CRUISE3"): Cruise5,
+    ("cruise5", "TARGET3"): Cruise5Target,
+    ("cruise5", "SATELLITE3"): Cruise5Satellite,
 }
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3"})
 _NO_DECK_FAMILY_TYPES = {("aim5", "AIRCRAFT3")}
@@ -153,7 +159,7 @@ def run_scenario(path):
 
 
 def _plot_columns(vehicle):
-    if vehicle.type == "CRUISE3":
+    if type(vehicle) is Cruise3:
         return list(PLOT_COLUMNS)
     return flagged_plot_columns(vehicle.store)
 
