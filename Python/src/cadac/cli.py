@@ -26,6 +26,8 @@ from cadac.vehicles.sam6.aircraft import Sam6Aircraft
 from cadac.vehicles.sam6.radar import Sam6Radar
 from cadac.vehicles.sam6.rocket import Sam6Rocket
 from cadac.vehicles.sam6.vehicle import Sam6Missile
+from cadac.vehicles.sraam6.target import Sraam6Target
+from cadac.vehicles.sraam6.vehicle import Sraam6Missile
 
 _VEHICLE_TYPES = {
     "CRUISE3": Cruise3,
@@ -48,7 +50,7 @@ _VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
     ("rocket6", "HYPER6"): Rocket6,
 }
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3", "ROTOR"})
-_NO_DECK_FAMILY_TYPES = {("aim5", "AIRCRAFT3")}
+_NO_DECK_FAMILY_TYPES = {("aim5", "AIRCRAFT3"), ("sraam6", "TARGET3")}
 
 
 def register_family_type(family, type_name, cls) -> None:
@@ -67,6 +69,8 @@ register_family_type("sam6", "MISSILE6", Sam6Missile)
 register_family_type("sam6", "AIRCRAFT3", Sam6Aircraft)
 register_family_type("sam6", "ROCKET5", Sam6Rocket)
 register_family_type("sam6", "RADAR0", Sam6Radar)
+register_family_type("sraam6", "MISSILE6", Sraam6Missile)
+register_family_type("sraam6", "TARGET3", Sraam6Target)
 
 
 @dataclass

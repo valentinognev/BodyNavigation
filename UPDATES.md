@@ -1,5 +1,12 @@
 # Updates
 
+## 0.138.0 - run SRAAM6 1v1 from JSONC
+- AIM5 family API: `VehicleSpec.family`; family set → `_VEHICLE_FAMILIES` only (no fallthrough). `("sraam6","MISSILE6")` / `("sraam6","TARGET3")`. SRAAM6 TARGET3 not in `_VEHICLE_TYPES` or `_NO_DECK_TYPES`. Translate writes `family` on each vehicle; GAUSS/MARKOV/RAYL store means. `OPTION_KEYS` accepts CADAC `stat`.
+- Missile: SRAAM6 Flat6 env/kinematics/euler, aero+der, propulsion, four-fin actuator, maut control, forces, TVC, seeker, mid/term pronav, intercept (no `sys.exit`). Reuse `Flat6Newton` only.
+- Target: `Flat3AircraftEnvironment`/`Newton` (`SAEL`/`dvae`); guidance `tgt_option` 0–2; bank/load-factor control; `FSPA`. Constructor `(name, events=None)`.
+- Case `Python/cases/sraam6/` from `input_1v1.asc` + decks; `end_time` 12. Smoke 0.1 s: missile `hbe` near 5000, target `SAEL` finite, both `health==1`. E2E `tests/e2e/test_sraam6_1v1.py` skips without `goldens/sraam6/plot.csv` (file not created).
+
+
 ## 0.137.3 - SAM6 RF e2e optional skip without golden
 - Added `Python/tests/e2e/test_sam6_rf.py`. Skip if `tests/e2e/goldens/sam6/rf/plot.csv` is absent (file not created). RF 7-vehicle e2e is optional; CI does not require that golden. Skip helper only — no deck translate, no plot compare.
 
