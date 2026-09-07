@@ -1,5 +1,10 @@
 # Updates
 
+## 0.130.0 - SAM6 autopilot JSONC one-step
+- Translated `input_SAM_autopilot.asc` + aero/prop decks to `Python/cases/sam6/` (`family="sam6"`, `end_time==30`, MISSILE6, `mact==2`, `mins==1`, `maut==2`, no radar). Dropped unknown option `stat`.
+- Smoke: fixture copy `end_time=0.05` → `hbe`/`alt` finite, health 1, `msl_time>=0`.
+- Tests: `Python/tests/unit/test_sam6_one_step.py`.
+
 ## 0.129.1 - SAM6 intercept IEEE divide on zero range
 - `Sam6Intercept.execute` uses numpy IEEE divide for `1/ip_sltrange` and `1/dbt` (C++ `double` inf, not Python `ZeroDivisionError`). Kill conditions, write latch, and health/combus unchanged.
 - Autopilot `mguide==0` leaves `ip_sltrange==0`; intercept still runs. `zeros * inf` → nan; `nan<0` is false (no IP kill).
