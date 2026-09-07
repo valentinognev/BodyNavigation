@@ -1,5 +1,8 @@
 # Updates
 
+## 0.131.3 - SAM6 RF e2e optional skip without golden
+- Added `Python/tests/e2e/test_sam6_rf.py`. Skip if `tests/e2e/goldens/sam6/rf/plot.csv` is absent (file not created). RF 7-vehicle e2e is optional; CI does not require that golden. Skip helper only — no deck translate, no plot compare.
+
 ## 0.131.2 - SAM6 autopilot e2e skip without golden
 - Added `Python/tests/e2e/test_sam6_autopilot.py`. Skip if `tests/e2e/goldens/sam6/plot.csv` is absent (file not created). Else `run_scenario` on `cases/sam6/input_SAM_autopilot.jsonc`; compare missile plot columns present in both; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`.
 - Golden must be zero-MC / `mins=1` (every gauss/uniform 0). Do not check in a raw CADAC MC plot.
