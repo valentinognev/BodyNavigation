@@ -1,5 +1,193 @@
 # Updates
 
+## 0.137.3 - SAM6 RF e2e optional skip without golden
+- Added `Python/tests/e2e/test_sam6_rf.py`. Skip if `tests/e2e/goldens/sam6/rf/plot.csv` is absent (file not created). RF 7-vehicle e2e is optional; CI does not require that golden. Skip helper only — no deck translate, no plot compare.
+
+## 0.137.2 - SAM6 autopilot e2e skip without golden
+- Added `Python/tests/e2e/test_sam6_autopilot.py`. Skip if `tests/e2e/goldens/sam6/plot.csv` is absent (file not created). Else `run_scenario` on `cases/sam6/input_SAM_autopilot.jsonc`; compare missile plot columns present in both; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`.
+- Golden must be zero-MC / `mins=1` (every gauss/uniform 0). Do not check in a raw CADAC MC plot.
+
+## 0.137.1 - SAM6 rocket smoke propulsion before aero
+- Rocket smoke JSONC MODULES match C++ SRBM: propulsion then aerodynamics (`mass≈6000` before `gmax`). Kept `sensor` (`mseek==0`).
+- Reverted `Sam6RocketAero` `gmax` IEEE `np.divide`. Restore `/ (mass * grav)`. Define `mass` default still 0.
+- Tests: `Python/tests/unit/test_sam6_multi_smoke.py`.
+
+## 0.137.0 - SAM6 aircraft rocket radar smoke
+- Smoke 0.1 s: `AIRCRAFT3` RF #1 (`acft_option=0`, alt near 10000, health 1, no decks); `ROCKET5` SRBM (`mprop=1`, `maut=1`, aero deck, health 1); `RADAR0`+aircraft `mtrack=2` far of `lethal_rng=20e3`, both health 1, com `lnch_delay_m1==0`.
+- `Sam6RocketAero` `gmax` uses numpy IEEE divide (`mass==0` before propulsion, C++ `1/0` inf). Intercept still `alt<0`.
+- Tests: `Python/tests/unit/test_sam6_multi_smoke.py`.
+
+## 0.136.0 - SAM6 autopilot JSONC one-step
+- Translated `input_SAM_autopilot.asc` + aero/prop decks to `Python/cases/sam6/` (`family="sam6"`, `end_time==30`, MISSILE6, `mact==2`, `mins==1`, `maut==2`, no radar). Dropped unknown option `stat`.
+- Smoke: fixture copy `end_time=0.05` → `hbe`/`alt` finite, health 1, `msl_time>=0`.
+- Tests: `Python/tests/unit/test_sam6_one_step.py`.
+
+## 0.135.1 - SAM6 intercept IEEE divide on zero range
+- `Sam6Intercept.execute` uses numpy IEEE divide for `1/ip_sltrange` and `1/dbt` (C++ `double` inf, not Python `ZeroDivisionError`). Kill conditions, write latch, and health/combus unchanged.
+- Autopilot `mguide==0` leaves `ip_sltrange==0`; intercept still runs. `zeros * inf` → nan; `nan<0` is false (no IP kill).
+- Tests: `Python/tests/unit/test_sam6_intercept.py` (`ip_sltrange==0` `mguide==0` does not raise or IP-kill).
+
+## 0.135.0 - SAM6 family vehicle types and factory decks
+- Added `Sam6Missile` (`type="MISSILE6"`) in `cadac.vehicles.sam6.vehicle`; `Sam6Aircraft` on `aircraft.py`; `Sam6Rocket` on `rocket.py`. `Sam6Radar` unchanged (sensor-first). Skip-if-exists define; `com_names` from `"com"` outputs; `health=1`. Missile uses `Sam6Environment`/`Sam6Kinematics` (not Flat6).
+- `register_family_type` at cli import: `("sam6","MISSILE6")`, `AIRCRAFT3`, `ROCKET5`, `RADAR0`. Does not write `_VEHICLE_TYPES`. Does not wipe `_VEHICLE_FAMILIES`.
+- `_build_vehicle` reads `spec.family`. `family="sam6"` required. MISSILE6: aero+prop. AIRCRAFT3: no decks. ROCKET5: aero required, `prop_deck` forbidden. RADAR0: `sam_deck`/`srmb_deck` required if `mtrack==1`, else optional. HYPER5 without family unchanged. AIM5 still unknown.
+- Tests: `Python/tests/unit/test_sam6_registry.py`. Dropped prior-task "no vehicle class yet" guards on aircraft/rocket module tests.
+
+## 0.134.0 - SAM6 RADAR0 track aircraft and rockets
+- Added `cadac.vehicles.sam6.radar.Sam6Radar` (`type="RADAR0"`) and `Sam6RadarSensor` (`name="sensor"`). Constructor `(name, events=None, sam_deck=None, srmb_deck=None)`. Modules: sensor, Flat0 kinematics, Flat0 newton. Skip-if-exists define; sensor first so save `launch_delay*` default 9999 wins over kinematics 0. Com `lnch_delay_m1..3` default 0. Not registered in CLI.
+- `mtrack==0` return. `==2` polar from `AIRCRAFT3` `SAEL-SREL` (sigma 0); far: `launch_delay1` 9999 and `lnch_delay_m1` 0; lethal latch `launch_delay1=sim_time`, `lnch_delay_m1=launch_delay1+lnch_dly_bias1`. `==1` rocket apogee when measured `VTCEL[2]>0`; look_up `sam_deck`/`srmb_deck` traj tables as C++; then `lnch_delay_m1=launch_delay+bias`. Else `ValueError`. Pair by `Packet.type` index. Up to three targets.
+- Tests: `Python/tests/unit/test_sam6_radar.py`.
+
+## 0.133.0 - SAM6 ROCKET5 intercept
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketIntercept` (`name="intercept"`). Port of SAM6 `Rocket::intercept` without `sys.exit`/`print`. Does not define Flat3/sensor/guidance names (`alt`, `dta`/`dvta`, `mguide`). No vehicle class.
+- `execute`: `dta<1000` and `mguide>0` and `dvta>0` → `vehicle.health=0` and combus status 0; `alt<0` → health 0; `write` latch (once 0, do not keep killing). Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_intercept.py` (alt=-1 write=1 → health 0; alt=1000 write=1 mguide=0 → health unchanged; closest-approach `dta<1000`/`dvta>0`; write latch).
+
+## 0.132.0 - SAM6 ROCKET5 forces
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketForces` (`name="forces"`). Port of SAM6 `Rocket::forces`. Does not define Flat3/aero/prop names (`grav`/`pdynmc`, `area`/`catgt`/`cytgt`/`cntgt`, `thrust`/`mass`). Does not define `acc_longx`.
+- `execute`: `FSPA[0]=(thrust-catgt*pdynmc*area)/mass`; `FSPA[1]=(cytgt*pdynmc*area)/mass`; `FSPA[2]=(-cntgt*pdynmc*area)/mass`; `aax=FSPA[0]/grav`, `alx=FSPA[1]/grav`, `anx=-FSPA[2]/grav`. Undeclared `acc_longx` ignored (0; unused in C++ FSPA). Protocol `vehicle.store`. No vehicle class. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_forces.py` (thrust=128600 catgt=0 pdynmc=0 area=0.636 mass=6000 → `FSPA[0]==128600/6000` rtol=1e-12; aero terms; diagnostics; absent/present `acc_longx` unused).
+
+## 0.131.0 - SAM6 ROCKET5 control
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketControl` (`name="control"`). Port of SAM6 `Rocket::control`. Does not define Flat3/aero/prop/guidance names (`grav`/`pdynmc`/`dvae`/`alt`, `area`/`alpmax`/`cnalp`/`cybet`/`cntgt`/`cytgt`, `thrust`/`mass`, `ancomx`/`alcomx`). No vehicle class.
+- `execute`: `maut` not in `{0,1}` → `ValueError`. `alt>alt_endo` sets `flag_exo` and zeros PI states. Ascent `ancomx=ancomx_bias` while `not flag_exo`. `maut==1` and `alt<alt_endo` P-I as C++ (`tr`, `gacp`, `ta=2.2`); `maut==0` ballistic (no accel loop). CADAC sign on `alpmax` limiter. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_control.py` (maut=1 alt=1000 alt_endo=30000 dummy aero/mass/thrust dt=0.001 → `alphax` finite vs C++ rtol=1e-12; maut=2 raises; maut=0 no loop; exo zeros; ascent bias).
+
+## 0.130.0 - SAM6 ROCKET5 guidance
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketGuidance` (`name="guidance"`). Port of SAM6 `Rocket::guidance`. Does not define Flat3/aero/sensor/control names (`grav`/`gmax`/`dvta`/`tgo_tgt`/`UTAA`/`WOEA`/`flag_exo`). No vehicle class.
+- `execute`: decode `guid_manvr=mguide//10`, `guid_mode=mguide%10`; not in `{0,1}` → `ValueError`. `guid_mode==1` pronav `APNA=skew(WOEA)@UTAA*gnav*|dvta|`. `guid_manvr==1` and `flag_exo` and `tgo_tgt<tgo_manvr` decaying spiral as C++. Circular limiter vs `gmax` with C++ OR-phi (`mguide==0` writes zeros). Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_guidance.py` (mguide=0 gmax=10 → commands 0; mguide=22 raises; mode=1 dummy WOEA/UTAA `ancomx==0.4` `alcomx==0.6` rtol=1e-12; spiral; limiter cap).
+
+## 0.129.0 - SAM6 ROCKET5 sensor
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketSensor` (`name="sensor"`). Port of SAM6 `Rocket::sensor`. Does not define Flat3/control names (`TAL`/`SAEL`/`VAEL`/`alt`, `flag_exo`/`alt_endo`). No vehicle class.
+- `execute`: `mseek==0` return. `mseek!=0` and `flag_exo` and `alt<alt_endo` kinematic LOS to `stel1/2/3` as C++ (`STAL`, `dta`, `dvta`, `tgo_tgt`, `UTAA`, `WOEA`, `sigdy`/`sigdz`). Else no-op (C++ if-block skip). Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_sensor.py` (mseek=0 no `dta` write; mseek=1 flag_exo=1 alt below alt_endo dummy stel/SAEL → `dta` finite vs C++ rtol=1e-12; conditions off no-op).
+
+## 0.128.0 - SAM6 ROCKET5 aero and analytic propulsion
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketAero` (`name="aerodynamics"`) and `Sam6RocketPropulsion` (`name="propulsion"`). Port of SAM6 `rocket_modules.cpp` aero/prop only. No vehicle class.
+- Aero: Datadeck `SRBM_aero_deck`; look_up `cltgt_vs_alpha_mach`/`cdtgt_vs_alpha_mach`; `mprop==0` `catgt*=1.1`; init `cnalp=7.468`. Propulsion analytic: `mprop==1` as C++ (`9.81`); burnout `mprop=0`; else `ValueError`. Defaults `mass_launch=6000`, `mass_fuel=4000`, `isp=230`, `thrust_sl=128600`, `aexit=0.282`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_aero.py`, `test_sam6_rocket_propulsion.py` (alphax=5, mach=0.5, mprop=1 `cltgt` vs look_up rtol=1e-12; launch_time=0 press=101325 → thrust=128600 mass=6000; mprop=2 raises).
+
+## 0.127.0 - SAM6 AIRCRAFT3 forces
+- Added `cadac.vehicles.sam6.aircraft.Sam6AircraftForces` (`name="forces"`). Port of SAM6 `Aircraft::forces`. Does not define Flat3/control names (`grav`/`anx`). No vehicle class.
+- `execute`: `FSPA=(acc_longx*grav, 0, -anx*grav)`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_aircraft_forces.py` (anx=1, acc_longx=0, grav=9.8 → `FSPA==[0,0,-9.8]` rtol=1e-12; longitudinal accel; negative load factor).
+
+## 0.126.1 - SAM6 AIRCRAFT3 yaw-90 bank limiter test
+- `test_bank_from_tvl_times_acoml_not_transpose` now asserts C++ `philimx` clip on `phiavx`/`phiavout` and unclipped `phiav`/`phiavcx`. `YAW90@(GRAV,0,0)` → `ACOMV=(0,-GRAV,0)`; `abs(phiav*DEG)>=90` clips outputs.
+
+## 0.126.0 - SAM6 AIRCRAFT3 control
+- Added `cadac.vehicles.sam6.aircraft.Sam6AircraftControl` (`name="control"`). Port of SAM6 `Aircraft::control`. Does not define Flat3/guidance names (`grav`/`pdynmc`/`TVL`/`acft_option`/`ACOML`) or forces `FSPA`. No vehicle class.
+- `execute`: bank from `TVL@ACOML`; `tphi==0` no lag else stored-slope `integrate`; limit `philimx` on `phiavx`/`phiavout` (CADAC sign); write `phiavout`. Load-factor lag `tanx`; `acft_option>0` alpha limiter `pdynmc*clalpha*alplimx/wingloading`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_aircraft_control.py` (ACOML=(0,0,-9.8), identity TVL, tphi=0, tanx=0, philimx=90, acft_option=0 → `phiavout==0`, `anx==1` rtol=1e-12; TVL@ACOML not transpose; philimx clip; tanx lag; option>0 limiter).
+
+## 0.125.0 - SAM6 AIRCRAFT3 guidance
+- Added `cadac.vehicles.sam6.aircraft.Sam6AircraftGuidance` (`name="guidance"`). Port of SAM6 `Aircraft::guidance`. Does not define Flat3 names (`time`/`grav`/`TVL`/`SAEL`/`VAEL`) or control/forces names. No vehicle class.
+- `execute`: `acft_option==0` writes `ACOML=(0,0,-grav)`. `==1` inside `[man_start,man_stop)` horizontal g-turn `ACOMV=(0,gturn*grav,-grav)` then `ACOML=TVL.T@ACOMV`. `==2` escape vs first `MISSILE6` `SBEL`/`VBEL` by `Packet.type`. Outside window gravity bias. Else `ValueError`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_aircraft_guidance.py` (acft_option=0 grav=9.8 → `ACOML==[0,0,-9.8]`; acft_option=3 raises; acft_option=1 identity TVL `ACOML[1]==9.8`; first MISSILE6 by type not `"m1"`).
+
+## 0.124.1 - SAM6 TVC/RCS distinct zero vectors
+- `Sam6Tvc.execute` / `Sam6Rcs.execute` write a fresh `np.zeros(3)` per output (`FPB`/`FMPB`, `FMRCS`/`FARCS`) so `StateStore` does not alias them.
+
+## 0.124.0 - SAM6 TVC/RCS off stubs
+- Added `cadac.vehicles.sam6.tvc.Sam6Tvc` (`name="tvc"`) and `cadac.vehicles.sam6.rcs.Sam6Rcs` (`name="rcs"`). Port of SAM6 `tvc.cpp`/`rcs.cpp` field tables only. `define` C++ `def_tvc`/`def_rcs` including `FPB`/`FMPB`/`FMRCS`/`FARCS` zeros. Does not define plant names (`thrust`/`mprop`/`maut`/`dqcx`, INS `WBECB`/`FSPCB`, control `ancomx`/`alcomx`).
+- `execute`: `mtvc==0` writes zero `FPB`/`FMPB`; else `ValueError`. `mrcs_moment==0` and `mrcs_force==0` write zero `FMRCS`/`FARCS`; else `ValueError`. No nozzle/Schmitt dynamics this slice. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_tvc_rcs.py` (mtvc=0 `FPB` all 0 rtol=1e-12; mtvc=1 raises; both RCS flags 0 `FARCS` 0; mrcs_force=1 raises).
+
+## 0.123.0 - SAM6 intercept halt/ground without sys.exit
+- Added `cadac.vehicles.sam6.intercept.Sam6Intercept` (`name="intercept"`). Port of SAM6 `intercept.cpp` without `sys.exit`/`print`. Does not define kinematics/newton/sensor/guidance/control/prop names (`time`, `stop`, `SBEL`/`VBEL`/`alt`/`hbe`, `STEL`/`VTEL`/`tgt_slot`/`mseek`, `trcond`, `mguide`/`ip_sltrange`/`SIBLC`, `maut`, `mprop`).
+- `execute`: `stop&&trcond` → `vehicle.health=0`, `ctx.combus[slot].status=0`. Ground `alt<=0` or `hbe<=0` with `write` latch. IP `ip_sltrange<500` and `UIBL·VBEL<0` latches write and kills missile. `skr_mode==4` and `dbt<500` closest-approach: `mterm==0` L-frame interpolation, `mterm==1` intercept-plane miss; kills missile and `tgt_slot` packet. `mterm==2` `ValueError`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper5 intercept import.
+- Tests: `Python/tests/unit/test_sam6_intercept.py` (halt stop=1 trcond=4 → health 0; alt=-1 write=1 → health 0; stop=0 no kill; IP closing; mterm=0 miss 3 m rtol=1e-12; mterm=2 raises).
+
+## 0.122.0 - SAM6 RF/IR sensor by Packet.type
+- Added `cadac.vehicles.sam6.sensor.Sam6Sensor` (`name="sensor"`). Port of SAM6 `sensor.cpp` RF/IR mode machine, `sensor_kin`, `sensor_rf_dyn`/`glint`, `sensor_ir_dyn`/`aimp`/`uthpb`/`thb`. Does not define kinematics/INS/aero/guidance names (`time`, `SBEL`, `TBL`, `VBEL`, `WBECB`, `trcond`, `mguide`). Extra save `timeac` (C++ `missile[238]` undeclared).
+- `execute`: `mseek==0` return. `mtarget==1` `ROCKET5`; `==2` `AIRCRAFT3`; else `ValueError`. k-th `MISSILE6` among that type → k-th target of that type (`Packet.type`/names, not `"r1"`/`"a1"`). Reads `SAEL`/`VAEL` by name; `dta` by name else 0. `skr_type==1` RF mode 2 acquire `dbtk<racq_rf` → 3 then 4 lock as C++; `skr_type==2` IR as C++; other `skr_type` `ValueError`. `skr_dyn==1` with bias/random 0; glint/MARKOV 0. Writes `STEL`/`VTEL`/`tgt_slot`/`dta`/`SBTL`/`dbtk`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_sensor.py` (mseek=12 aircraft inside `racq_rf=7000` → mode 3 or 4; mseek=0 no raise; mtarget=0 raises; mseek=32 raises; rocket type; type-index not slot; kin replica rtol=1e-12).
+
+## 0.121.0 - SAM6 guidance line and pronav
+- Added `cadac.vehicles.sam6.guidance.Sam6Guidance` (`name="guidance"`). Port of SAM6 `guidance.cpp` `guidance_line` / `guidance_term_comp` / `guidance_term_pronav`. Does not define INS/newton/aero/sensor names (`gmax`, `TBLC`/`VBELC`/`SBELC`/`thtvlcx`/`psivlcx`/`FSPCB`, `grav`, `SBEL`/`sbel1/2/3`, `STEL`/`VTEL`/`thtpb`/`psipb`/`sigdy`/`sigdz`, `ddab`/`psisb`/`thtsb`/`lamdqb`/`lamdrb`). No `guidance_mid_pronav`.
+- `execute`: `guid_mid=mguide//10`, `guid_term=mguide%10`. `guid_mid==2` IP from `RADAR0` `SIEL{k+1}` minus `SBELC` (k-th `MISSILE6` among that type; `Packet.type`/names, not `"f1"`). `guid_term==6`/`7` as C++. `guid_mid==3` `ValueError`. Always circular limiter vs `gmax` (mguide=0 still writes `ancomx`/`alcomx` from zero ACBX). Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_guidance.py` (mguide=0 commands 0; mguide=20 radar `SIEL1` 1 km north finite vs C++ rtol=1e-12; mguide=30 raises; mguide=7 seeker kinematics finite; type-index not slot; limiter caps at `gmax`).
+
+## 0.120.0 - SAM6 INS mins 0 and 1
+- Added `cadac.vehicles.sam6.ins.Sam6Ins` (`name="ins"`). Port of SAM6 `ins.cpp` `init_ins` / `ins` / `ins_gyro` / `ins_accl` / `ins_alt`. Does not define kinematics/newton/euler truth names (`TBL`, `TLB`, `WBEB`, `SBEL`, `FSPB`, `VBEL`, `dvbe`, `alt`).
+- `mins==0`: copy `TBL`→`TBLC`, `FSPB`→`FSPCB`, `WBEB`→`WBECB`, `SBEL`→`SBELC`, `VBEL`→`VBELC`, `dvbe`→`dvbec`, then Euler/FPA as C++. `mins==1`: error ODEs with every `gauss`/`uniform` draw 0 (Cholesky `XX_INIT` 0, `EWALKA=0`); autopilot case. Else including 2/3 `ValueError`. `ins_alt` `biasal=randal=0` → `hbem=alt`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper INS import.
+- Tests: `Python/tests/unit/test_sam6_ins.py` (mins=0 copies SBEL/FSPB; mins=1 after init `SBELC==SBEL`, one execute `WBECB==WBEB` rtol=1e-12; mins=2 raises).
+
+## 0.119.0 - SAM6 acceleration autopilot
+- `Sam6Control.execute`: `maut==3` calls `control_roll` then `control_accel`. `maut==4` still `ValueError`; unknown modes still roll-only (Task 12).
+- `control_accel` ports SAM6 `control.cpp`: `ancomx+=ancomx_test`, `alcomx+=alcomx_test`; circular limiter vs `alimitx`; poles `zacl=0.7*(1+zacl_bias)`, `wacl=|realq1|*(1+wacl_bias)`, `pacl=(|realq2|+35)*(1+pacl_bias)`; pitch/yaw gains as C++; stored-slope `integrate` of `zz`/`yy`; writes `dqcx`/`drcx`/`GAINFB` (yaw). Skip undeclared `factwacl`/`twcl`. Does not write `ancomx`/`alcomx`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_control_accel.py` (maut=3, `ancomx_test=1`, `realq1=-10` → `wacl==10` rtol=1e-12; `dqcx` finite vs C++; `zz`/`yy` stored-slope; maut=4 still raises).
+
+## 0.118.0 - SAM6 control roll and rate
+- Added `cadac.vehicles.sam6.control.Sam6Control` (`name="control"`). Port of SAM6 `control.cpp` `def_control` / `control_roll` / `control_rate`. Does not define INS/aero/newton names (`WBECB`, `thtblcx`, `phiblcx`, `dlp`/`dld`/`dna`/`dmd`, `dvbe`) or undeclared `factwacl`/`twcl`. No `control_accel` (Task 13).
+- `execute`: `maut==0` return without writing; `maut==4` `ValueError`; else `control_roll`; `maut==2` also `control_rate`. Roll: `wrcl=-0.8*dlp*(1+factwrcl)`, pole-placement `gkp`/`gkphi`, `|thtblcx|>88` rate `kp`; writes `dpcx`. Rate: open-loop `zrate`/`aa`/`bb`, `|dmd|<SMALL` then `SMALL*sign` (CADAC; no `dld` guard), `dqcx=DEG*grate*qq` (not `qqcomx`); writes `dqcx`/`drcx`/`dqcx_rcs`/`drcx_rcs`. Module-level `SMALL=1e-7`. Local CADAC sign. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_control_rate.py` (maut=0 `dpcx` stays 0; maut=2 dvbe=16 zetlagr=1.2 dummy aero `dqcx`/`drcx` finite vs C++ rtol=1e-12; maut=4 raises; maut=1 roll-only; INS `WBECB` not `WBEB`; CADAC sign 0 → +1).
+
+## 0.117.0 - SAM6 actuator mact position-limit and second-order
+- Added `cadac.vehicles.sam6.actuator.Sam6Actuator` (`name="actuator"`). Port of SAM6 `actuator.cpp` / `actuator_scnd`. Local CADAC sign (`<0 → -1` else `+1`). `define` registers C++ `def_actuator` (four-fin scalars, not 3-vec `DX`). Does not define control commands `dpcx`/`dqcx`/`drcx` or unused C++ local `time`.
+- `execute`: cross-fin mix `delcx1=-dpcx-drcx`, `delcx2=-dpcx+dqcx`, `delcx3=-dpcx+drcx`, `delcx4=-dpcx-dqcx`. **`mact<2`** (includes **1**) position-limit only; **`mact==2`** second-order with rate/position limits and stored-slope `integrate`; else `ValueError`. Mix back `dpx=0.25*(-delx1-delx2-delx3-delx4)`, `dqx=0.5*(delx2-delx4)`, `drx=0.5*(-delx1+delx3)`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane/Hyper6 import.
+- Tests: `Python/tests/unit/test_sam6_actuator.py` (mact=0 dlimx=28 dpcx=10 dqcx=drcx=0 → delx all -10, `dpx==10`; mact=1 same path; mact=2 wnact=600 zetact=0.7 states 0 → `delx1` finite, first-step `ddx1==-1800`; mact=3 raises; CADAC sign 0 → +1).
+
+## 0.116.0 - SAM6 missile forces FAPB/FMB
+- Added `cadac.vehicles.sam6.forces.Sam6Forces` (`name="forces"`). Port of SAM6 `forces.cpp`. `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out). Does not define aero/prop/tvc/rcs/newton names (`pdynmc`, `thrust`, `refa`/`refl`, `ca`/`cy`/`cn`/`cll`/`clm`/`cln`, `mtvc`, `FARCS`/`FMRCS`, `FSPB`).
+- `execute`: `FAPB=[-pdynmc*refa*ca, pdynmc*refa*cy, -pdynmc*refa*cn]`; `FMB=pdynmc*refa*refl*[cll,clm,cln]`. `mtvc==0` (or absent) adds `thrust` to `FAPB[0]`. `mtvc!=0` → `ValueError` (no `FPB`/`FMPB`). Missing `FARCS`/`FMRCS` treated as 0; if present, add them. Does not write newton-owned `FSPB`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_forces.py` (pdynmc=156, refa=0.0491, ca=0.4, thrust=1000, mtvc=0 → `FAPB[0]==-156*0.0491*0.4+1000` rtol=1e-12; mtvc=1 raises; FSPB sentinel unchanged; absent RCS zeros).
+
+## 0.115.0 - SAM6 kinematics msl_time and VBEB incidence
+- Added `cadac.vehicles.sam6.kinematics.Sam6Kinematics` (`name="kinematics"`). Port of SAM6 `kinematics.cpp`; copies quaternion algebra locally (not `Flat6Kinematics`, does not edit `flat6.py`). Extra/exec fields: `time`, `launch_delay` default 99999, `launch_epoch`, `launch_time`, `msl_time`, `stop`, `lconv`, `int_step_new`, `out_step_fact`.
+- Init: `launch_epoch=launch_delay`, quaternions from Euler, `TBL=mat3tr`. Exec: `time=ctx.sim_time`; `ctx.int_step=int_step_new`; quaternion stored-slope `integrate`; TBL; Euler; incidence from **VBEB** (`alphax`/`betax`/`alpp`/`phip`); `trortho`→`trcond=1`, `alpp>tralp`→`trcond=2` if those names exist. `msl_time` from RADAR0 com `lnch_delay_m{k+1}` for k-th `MISSILE6` among that type (`Packet.type`); no radar → `lnch_delay=0`; `msl_time=max(0, sim_time-lnch_delay)`. Local CADAC sign; `SMALL=1e-7`. Protocol `vehicle.store`.
+- Tests: `Python/tests/unit/test_sam6_kinematics.py` (no radar t=5 → `msl_time==5`; radar `lnch_delay_m1=2` first MISSILE6 → 3; identity VBEB alphax/betax 0; VBEB pitch → alphax 10 rtol=1e-12; trortho → trcond 1; not a Flat6 subclass).
+
+## 0.114.0 - SAM6 environment from environment.cpp
+- Added `cadac.vehicles.sam6.environment.Sam6Environment` (`name="environment"`). Port of SAM6 `environment.cpp`, not `Flat6Environment`. `define` registers C++ `def_environment` (`press`/`rho`/`grav`/`tempk` out, `vsound` diag, `vmach`/`pdynmc` out+scrn/plot/com, `mfreeze_environ`/`pdynmcf`/`machf` save). Does not define `alt`/`dvbe`/`hbe`/`VBEL`, wind (`mwind`/`VAEL`/`VBAL`/`dvba`), or missile `mguide`/`trcond`/`trdynm`/`mfreeze`.
+- `execute` reads newton `alt` (C++; newton keeps `hbe=alt`) and `dvbe`. US76 `atmosphere76(alt)`; gravity `G*EARTH_MASS/(REARTH+alt)**2`; `vmach=abs(dvbe/vsound)` (C++ `mach`); `pdynmc=0.5*rho*dvbe*dvbe`. No wind. Skip `mfreeze` latch if `mfreeze` absent. `guid_term==6` and `pdynmc<=trdynm` → `trcond=3` (`mguide%10`). Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import. Does not edit `flat6.py`.
+- Tests: `Python/tests/unit/test_sam6_environment.py` (Newton-init first dvbe=16, SBEL z=-1000 → alt=hbe=1000, VBEL finite; env vs `atmosphere76(1000)` rtol=1e-12; import does not load `Flat6Environment`; not a subclass; guid_term 6 tiny pdynmc sets trcond 3).
+
+## 0.113.0 - SAM6 newton mass and alt
+- Added `cadac.vehicles.sam6.newton.Sam6Newton` (`name="newton"`). Port of SAM6 `newton.cpp`, not `Flat6Newton`. `define` registers C++ `def_newton` plus `hbe` (`VBEBD`/`VBEB`/`SBELD`/`SBEL` state, `sbel1/2/3` data, `FSPB`/`VBEL`/`alt`/`SLEL` out, `dvbe` in/out, `alpha0x`/`beta0x` data, `hbe` out, FPA/`anx`/`ayx`/`ATB` diag, `mfreeze` saves). Does not define `mass`/`FAPB`/`TBL`/`WBEB`/`grav`/`mfreeze`/`vmass`.
+- Init: `VBEB` from `alpha0x`/`beta0x`/`dvbe`; `VBEL=TBL.T@VBEB`; `SBEL`/`SLEL` from `sbel*`; `alt=hbe=-SBEL[2]`.
+- `execute`: `FSPB=FAPB/mass`; `ATB=skew(WBEB)@VBEB`; stored-slope `integrate` of `VBEB` then `SBEL`; `VBEL=TBL.T@VBEB`; writes `alt` and `hbe` both `-SBEL[2]`. Skip `mfreeze` latch if `mfreeze` absent. Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_newton.py` (sbel=0, dvbe=16, identity TBL, mass=300, FAPB=0, grav=9.8, WBEB=0; init `alt==hbe==0`, `||VBEB||==16`, `VBEL==VBEB`; one execute `alt` finite; `FSPB=FAPB/mass` not `vmass`; rtol=1e-12).
+
+## 0.112.0 - SAM6 missile euler
+- Added `cadac.vehicles.sam6.euler.Sam6Euler` (`name="euler"`). Port of SAM6 `euler.cpp`, not `Flat6Euler`. `define` registers C++ `def_euler` (`ppd/pp`,`qqd/qq`,`rrd/rr` state; `ppx/qqx/rrx` out+plot; `WBEB` vec diag). Does not define `FMB`/`ai11`/`ai33`.
+- No `init_euler` in C++; `initialize` is pass.
+- `execute`: stored-slope `integrate` of `pp` then `qq` then `rr` with C++ sequential rates (`ppd_new=FMB[0]/ai11`; `qqd_new=((ai33-ai11)*pp*rr+FMB[1])/ai33` uses updated `pp`; `rrd_new=(-(ai33-ai11)*pp*qq+FMB[2])/ai33` uses updated `pp`/`qq`). Writes `WBEB=[pp,qq,rr]` and `ppx/qqx/rrx` in deg/s. Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_euler.py` (ai11=2.9, ai33=440, FMB=(1,0,0), pp=qq=rr=0, dt=0.001 → `pp==integrate(1/2.9,0,0,0.001)` rtol=1e-12; qq=rr=0).
+
+## 0.111.0 - SAM6 missile propulsion
+- Added `cadac.vehicles.sam6.propulsion.Sam6Propulsion` (`name="propulsion"`). Constructor takes `Datadeck`. `define` registers C++ `def_propulsion` (`mprop` out, `aexit` default 0.0314, `mass` 300, `thrust`, `xcgref`, `xcg` 2.9, `ai11` 2.9, `ai33` 440, `mfreeze` saves). Does not define `msl_time`/`press`/`mfreeze`.
+- No `init_propulsion` in C++; `initialize` is pass.
+- `execute` ports `Missile::propulsion`: `thrust=look_up("thrust_vs_time",msl_time)+(101325-press)*aexit`; `mass`/`xcg`/`ai33`/`ai11` from `mass_vs_time`/`cg_vs_time`/`moipitch_vs_time`/`moiroll_vs_time`; `mprop=1` if `msl_time<=60` else 0. Skip `mfreeze` latch if `mfreeze` absent. Tables from `SAM_prop_deck.asc`. Protocol `vehicle.store`. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_propulsion.py` (msl_time=0 press=101325 mass 300 mprop 1 sea-level table thrust; msl_time=61 mprop 0; back-pressure and tables vs look_up rtol=1e-12).
+
+## 0.110.0 - SAM6 missile aerodynamics
+- Added `cadac.vehicles.sam6.aero.Sam6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (`refl=0.25`, `refa=0.0491`, force/moment coeffs, dimensional der, `alplimx=40`, termination). Does not define `vmach`/`alphax`/`betax`/`dpx`.
+- `initialize` ports `Missile::init_aerodynamics`: `trortho=1e-4`, `tralp=1.047`, `trdynm=1e4`, `trload=0.001`, `trcond=0`.
+- `execute` ports `Missile::aerodynamics` then `aerodynamics_der`. Tables from `SAM_aero_deck.asc` (comma names). Read `vmach` as C++ `mach`. `mprop==0` adds `cab`. Skip TVC `gtvc`/`parm` if absent (C++ localizes them unused; treat 0). `SMALL=1e-7` module-level. No vehicle. No Flat6/Plane5/Plane6 import.
+- Tests: `Python/tests/unit/test_sam6_aero.py` (mach=2, alphax=10, mass=300, xcg=xcgref, zero fins, mprop=1; `ca`/`cn` vs look_up+C++ sums rtol=1e-12; `dna` finite).
+
+## 0.109.0 - SAM6 Flat3 EOM (SAEL names)
+- Added `cadac.vehicles.sam6.flat3`: `Sam6Flat3Kinematics` / `Sam6Flat3Environment` / `Sam6Flat3Newton`. Port of SAM6 `flat3_modules.cpp`. Does not modify `cadac.eom.flat3`. Does not import `cadac.eom.flat6`.
+- Kinematics: `time` (exec, com), `launch_delay` (data), `launch_epoch` (out, com), `launch_time` (diag). Init `time=sim_time`, `launch_epoch=launch_delay`. Exec `launch_time=sim_time-launch_epoch`, `time=sim_time`.
+- Environment: US76 `atmosphere76(-SAEL[2])` + `gravity` (not NASA helper). `mach`/`pdynmc` from `dvae`. Store name `mach`, not `vmach`. Does not define `alt`/`SAEL`/`dvae`.
+- Newton: ICs `sael1/2/3` → `SAEL`, `cart_from_pol` → `VAEL`. `NEXT_ACC = TAL.T @ FSPA + (0,0,grav)`. `phiavout` 0 if absent. Writes `alt=-SAEL[2]`.
+- Tests: `Python/tests/unit/test_sam6_flat3.py`.
+
+## 0.108.0 - CADAC Flat0 kinematics and fixed-site newton
+- Added `cadac.eom.flat0.Flat0Kinematics` (`name="kinematics"`). `define` registers C++ `def_kinematics` (`time` out+com, `launch_delay` data, `launch_epoch` init, `launch_time` out). `initialize`: `time=ctx.sim_time`, `launch_epoch=launch_delay`. `execute`: `launch_time=sim_time-launch_epoch`, `time=sim_time`.
+- Added `cadac.eom.flat0.Flat0Newton` (`name="newton"`). `define` `srel1/2/3` data, `SREL` vec out. `initialize` packs `SREL`. `execute` no-op (fixed site). No radar/vehicle. No `flat6` import.
+- Tests: `Python/tests/unit/test_flat0_kinematics.py`, `Python/tests/unit/test_flat0_newton.py`.
+
+## 0.107.0 - CADAC family vehicle registry
+- `VehicleSpec.family` is the source of truth (`None` when omitted). Scenario-level `"family"` copies onto vehicles that omit it; vehicle key wins. No `RunConfig.family`. Optional `sam_deck` / `srmb_deck`.
+- `_VEHICLE_FAMILIES` + `register_family_type`: same class twice is a no-op; different class for an occupied pair is `ValueError`. Never writes `_VEHICLE_TYPES`. Map created empty (no SAM6 pairs).
+- `_build_vehicle(path, spec)`: family set → `_VEHICLE_FAMILIES[(family, type)]` only (missing mentions family and type); else `_VEHICLE_TYPES`.
+- `translate_scenario_asc(..., family=None)` stamps `"family"` on each vehicle when given; `SAM_DECK`/`SRBM_DECK` → jsonc decks; bare `ENDIF` skipped.
+- Tests: `Python/tests/unit/test_family_registry.py`. Unknown-type sentinel still `"AIM5"`.
+
+
 ## 0.106.0 - Rocket6 vehicle JSONC + e2e gate
 - `Rocket6` (`type="HYPER6"`, `family="rocket6"`) is runnable from JSONC `Python/cases/rocket6/` insertion (`end_time` 190; aero required; weather deck for `mair=12`; Radar/Satellite/Ground not applicable). `_VEHICLE_FAMILIES[("rocket6","HYPER6")]`. `HYPER6` without family still maps to `Hyper6`.
 - `VehicleSpec.weather_deck`. `translate_scenario_asc(..., family=)` writes scenario-level and per-vehicle `"family"`; parses `WEATHER_DECK` and `GAUSS`/`RAYL`/`MARKOV` (MARKOV stores 0).

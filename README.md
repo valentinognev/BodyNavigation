@@ -23,9 +23,9 @@ Mandatory reading: `UPDATES.md`.
 | SRAAM6 | 6DOF flat (+ 3DOF) | Missile + Target |
 | AGM6 | 6DOF flat (+ 3DOF) | Missile + Aircraft + Target |
 
-**Python target:** `Python/` — installable package `cadac`. Runtime JSONC (scenarios + decks); `cadac.io.translate.deck_asc_to_jsonc` converts CADAC `.asc` decks. Named numpy state; CADAC `integrate` / `look_up` / atmospheres. `run_loop` skips module names missing on a vehicle and seeds combus from store `com_names` before the first execute; plot CSV records vehicle slot 0 only. Optional `VehicleSpec.family`: family set → `_VEHICLE_FAMILIES[(family, type)]` only (no fallthrough to `_VEHICLE_TYPES`). Unknown-type sentinel: `"NO_SUCH_TYPE"`. Runnable: kernel + HYPER3 (`CRUISE3`/Round3) + FALCON5 (`PLANE`/Flat3) + FALCON6 (`PLANE6`/Flat6) + HYPER5 (`HYPER5`/`TARGET3`/`SATELLITE3`, Demo 4.7) + HYPER6 (`HYPER6` climb; Radar/Satellite/Ground0 not registered) + AIM5 (`AIM5` global+family, `AIRCRAFT3` family `"aim5"` only; `Python/cases/aim5/` hori) + CRUISE5 (`CRUISE3`/`TARGET3`/`SATELLITE3` family `"cruise5"`; `Python/cases/cruise5/` input_1) + MAGSIX (`ROTOR`/Rotor EOM, not Flat6; no decks) + ROCKET6 (`HYPER6` family `"rocket6"` SLV insertion; aero required, weather deck for `mair=12`). `HYPER6` without family still maps to `Hyper6`. AIM5 reuses Flat3; `Aim5Flat3Newton` maps JSONC `sael*`/`dvae` onto `sbel*`/`dvbe`. Translate writes scenario-level and per-vehicle `"family"`; parses `WEATHER_DECK` and `GAUSS`/`RAYL`/`MARKOV`.
+**Python target:** `Python/` — installable package `cadac`. Runtime JSONC (scenarios + decks); `cadac.io.translate.deck_asc_to_jsonc` converts CADAC `.asc` decks. Named numpy state; CADAC `integrate` / `look_up` / atmospheres. `run_loop` skips module names missing on a vehicle and seeds combus from store `com_names` before the first execute; plot CSV records vehicle slot 0 only. Optional `VehicleSpec.family`: family set → `_VEHICLE_FAMILIES[(family, type)]` only (no fallthrough to `_VEHICLE_TYPES`). Unknown-type sentinel: `"NO_SUCH_TYPE"`. Runnable: kernel + HYPER3 (`CRUISE3`/Round3) + FALCON5 (`PLANE`/Flat3) + FALCON6 (`PLANE6`/Flat6) + HYPER5 (`HYPER5`/`TARGET3`/`SATELLITE3`, Demo 4.7) + HYPER6 (`HYPER6` climb; Radar/Satellite/Ground0 not registered) + AIM5 (`AIM5` global+family, `AIRCRAFT3` family `"aim5"` only) + CRUISE5 (family `"cruise5"`) + MAGSIX (`ROTOR`) + ROCKET6 (`HYPER6` family `"rocket6"` SLV) + SAM6 (family `"sam6"`: `MISSILE6`/`AIRCRAFT3`/`ROCKET5`/`RADAR0`; `Python/cases/sam6/` autopilot). `HYPER6` without family still maps to `Hyper6`. Translate writes scenario-level and per-vehicle `"family"`; parses `WEATHER_DECK`, `SAM_DECK`/`SRBM_DECK`, and `GAUSS`/`RAYL`/`MARKOV`.
 
-**Not yet in Python:** SAM6, SRAAM6, AGM6.
+**Not yet in Python:** SRAAM6, AGM6.
 
 **Design / plans (agents):**
 1. `docs/superpowers/specs/2026-09-04-cadac-python-design.md`
@@ -38,7 +38,7 @@ Mandatory reading: `UPDATES.md`.
 8. `docs/superpowers/plans/2026-09-06-cadac-cruise5.md` (done) — `input_1.asc`; family `cruise5`
 9. `docs/superpowers/plans/2026-09-06-cadac-magsix.md` (done) — Rotor EOM; `input.asc` attitude
 10. `docs/superpowers/plans/2026-09-06-cadac-rocket6.md` (done) — family `rocket6` + type `HYPER6` SLV
-11. `docs/superpowers/plans/2026-09-06-cadac-sam6.md` — Flat0 + family `sam6`
+11. `docs/superpowers/plans/2026-09-06-cadac-sam6.md` (done) — Flat0 + family `sam6`
 12. `docs/superpowers/plans/2026-09-06-cadac-sraam6.md` — `input_1v1.asc`; family `sraam6`
 13. `docs/superpowers/plans/2026-09-06-cadac-agm6.md` — free flight; family `agm6`
 

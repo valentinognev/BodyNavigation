@@ -94,6 +94,8 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
     aero_deck = None
     prop_deck = None
     weather_deck = None
+    sam_deck = None
+    srmb_deck = None
     n = len(lines)
     while i < n:
         parts = lines[i].split()
@@ -105,6 +107,9 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
             event, i = _parse_if_event(lines, i)
             events.append(event)
             continue
+        if token == "ENDIF":
+            i += 1
+            continue
         if token == "AERO_DECK":
             aero_deck = _deck_jsonc(parts[1])
             i += 1
@@ -115,6 +120,14 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
             continue
         if token == "WEATHER_DECK":
             weather_deck = _deck_jsonc(parts[1])
+            i += 1
+            continue
+        if token == "SAM_DECK":
+            sam_deck = _deck_jsonc(parts[1])
+            i += 1
+            continue
+        if token == "SRBM_DECK":
+            srmb_deck = _deck_jsonc(parts[1])
             i += 1
             continue
         if token == "GAUSS":
@@ -138,6 +151,10 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
         vehicle["prop_deck"] = prop_deck
     if weather_deck is not None:
         vehicle["weather_deck"] = weather_deck
+    if sam_deck is not None:
+        vehicle["sam_deck"] = sam_deck
+    if srmb_deck is not None:
+        vehicle["srmb_deck"] = srmb_deck
     vehicle["params"] = params
     vehicle["events"] = events
     return vehicle, i

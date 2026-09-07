@@ -1,0 +1,226 @@
+{
+  "title": "input_SAM_autopilot.asc",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "traj": false,
+    "csv": false,
+    "merge": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 1.0,
+    "com_step": 10.0,
+    "plot_step": 0.05,
+    "traj_step": 1.0,
+    "int_step": 0.001
+  },
+  "end_time": 30.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "SAM",
+      "aero_deck": "SAM_aero_deck.jsonc",
+      "prop_deck": "SAM_prop_deck.jsonc",
+      "params": {
+        "launch_delay": 0,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": 0,
+        "psiblx": 0,
+        "thtblx": 80,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 16,
+        "xcgref": 2.5,
+        "mass": 300,
+        "xcg": 2.9,
+        "ai11": 2.9,
+        "ai33": 440,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 600,
+        "zetact": 0.7,
+        "mins": 1,
+        "maut": 2,
+        "alimitx": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "dplimx": 28,
+        "zrcl": 0.9,
+        "zetlagr": 1.2
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "maut": 3,
+            "wacl_bias": -0.3,
+            "pacl_bias": 0,
+            "zacl_bias": 0
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 10
+            }
+          },
+          "set": {
+            "ancomx_test": 1
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 13
+            }
+          },
+          "set": {
+            "ancomx_test": 0
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 16
+            }
+          },
+          "set": {
+            "ancomx_test": 1
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 19
+            }
+          },
+          "set": {
+            "ancomx_test": 0
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 22
+            }
+          },
+          "set": {
+            "ancomx_test": 1
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 25
+            }
+          },
+          "set": {
+            "ancomx_test": 0
+          }
+        }
+      ],
+      "family": "sam6"
+    }
+  ]
+}

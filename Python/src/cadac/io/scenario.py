@@ -33,6 +33,8 @@ class VehicleSpec:
     events: list[EventSpec]
     family: str | None = None
     weather_deck: Path | None = None
+    sam_deck: Path | None = None
+    srmb_deck: Path | None = None
 
 
 @dataclass
@@ -74,6 +76,8 @@ def _vehicle(parent: Path, raw: dict, scenario_family=None) -> VehicleSpec:
         events=events,
         family=raw.get("family", scenario_family),
         weather_deck=_deck_path(parent, raw.get("weather_deck")),
+        sam_deck=_deck_path(parent, raw.get("sam_deck")),
+        srmb_deck=_deck_path(parent, raw.get("srmb_deck")),
     )
 
 
