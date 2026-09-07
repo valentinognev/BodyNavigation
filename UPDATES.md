@@ -1,5 +1,10 @@
 # Updates
 
+## 0.127.0 - SAM6 ROCKET5 intercept
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketIntercept` (`name="intercept"`). Port of SAM6 `Rocket::intercept` without `sys.exit`/`print`. Does not define Flat3/sensor/guidance names (`alt`, `dta`/`dvta`, `mguide`). No vehicle class.
+- `execute`: `dta<1000` and `mguide>0` and `dvta>0` → `vehicle.health=0` and combus status 0; `alt<0` → health 0; `write` latch (once 0, do not keep killing). Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_intercept.py` (alt=-1 write=1 → health 0; alt=1000 write=1 mguide=0 → health unchanged; closest-approach `dta<1000`/`dvta>0`; write latch).
+
 ## 0.126.0 - SAM6 ROCKET5 forces
 - Added `cadac.vehicles.sam6.rocket.Sam6RocketForces` (`name="forces"`). Port of SAM6 `Rocket::forces`. Does not define Flat3/aero/prop names (`grav`/`pdynmc`, `area`/`catgt`/`cytgt`/`cntgt`, `thrust`/`mass`). Does not define `acc_longx`.
 - `execute`: `FSPA[0]=(thrust-catgt*pdynmc*area)/mass`; `FSPA[1]=(cytgt*pdynmc*area)/mass`; `FSPA[2]=(-cntgt*pdynmc*area)/mass`; `aax=FSPA[0]/grav`, `alx=FSPA[1]/grav`, `anx=-FSPA[2]/grav`. Undeclared `acc_longx` ignored (0; unused in C++ FSPA). Protocol `vehicle.store`. No vehicle class. No Flat6/Plane imports.

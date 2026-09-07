@@ -515,3 +515,34 @@ class Sam6RocketForces:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Sam6RocketIntercept:
+    name = "intercept"
+
+    def define(self, vehicle):
+        vehicle.store.define(Field("write", 1, "int", "init", "intercept"))
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        write = store.get("write")
+        dta = store.get("dta")
+        mguide = store.get("mguide")
+        dvta = store.get("dvta")
+        alt = store.get("alt")
+        if (dta < 1000) and (mguide > 0) and write:
+            if dvta > 0:
+                write = 0
+                vehicle.health = 0
+                ctx.combus[ctx.vehicle_slot].status = 0
+        if (alt < 0) and write:
+            write = 0
+            vehicle.health = 0
+            ctx.combus[ctx.vehicle_slot].status = 0
+        store.set("write", write)
+
+    def terminate(self, vehicle, ctx):
+        pass
