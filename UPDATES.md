@@ -1,5 +1,10 @@
 # Updates
 
+## 0.126.0 - SAM6 ROCKET5 forces
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketForces` (`name="forces"`). Port of SAM6 `Rocket::forces`. Does not define Flat3/aero/prop names (`grav`/`pdynmc`, `area`/`catgt`/`cytgt`/`cntgt`, `thrust`/`mass`). Does not define `acc_longx`.
+- `execute`: `FSPA[0]=(thrust-catgt*pdynmc*area)/mass`; `FSPA[1]=(cytgt*pdynmc*area)/mass`; `FSPA[2]=(-cntgt*pdynmc*area)/mass`; `aax=FSPA[0]/grav`, `alx=FSPA[1]/grav`, `anx=-FSPA[2]/grav`. Undeclared `acc_longx` ignored (0; unused in C++ FSPA). Protocol `vehicle.store`. No vehicle class. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_forces.py` (thrust=128600 catgt=0 pdynmc=0 area=0.636 mass=6000 → `FSPA[0]==128600/6000` rtol=1e-12; aero terms; diagnostics; absent/present `acc_longx` unused).
+
 ## 0.125.0 - SAM6 ROCKET5 control
 - Added `cadac.vehicles.sam6.rocket.Sam6RocketControl` (`name="control"`). Port of SAM6 `Rocket::control`. Does not define Flat3/aero/prop/guidance names (`grav`/`pdynmc`/`dvae`/`alt`, `area`/`alpmax`/`cnalp`/`cybet`/`cntgt`/`cytgt`, `thrust`/`mass`, `ancomx`/`alcomx`). No vehicle class.
 - `execute`: `maut` not in `{0,1}` → `ValueError`. `alt>alt_endo` sets `flag_exo` and zeros PI states. Ascent `ancomx=ancomx_bias` while `not flag_exo`. `maut==1` and `alt<alt_endo` P-I as C++ (`tr`, `gacp`, `ta=2.2`); `maut==0` ballistic (no accel loop). CADAC sign on `alpmax` limiter. Protocol `vehicle.store`. No Flat6/Plane imports.

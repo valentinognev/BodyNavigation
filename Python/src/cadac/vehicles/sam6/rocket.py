@@ -472,3 +472,46 @@ class Sam6RocketControl:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Sam6RocketForces:
+    name = "forces"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        for field in (
+            Field("FSPA", (0.0, 0.0, 0.0), "vec", "out", "forces"),
+            Field("aax", 0.0, "real", "diag", "forces"),
+            Field("alx", 0.0, "real", "diag", "forces", ("com",)),
+            Field("anx", 0.0, "real", "diag", "forces", ("com",)),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        thrust = store.get("thrust")
+        catgt = store.get("catgt")
+        pdynmc = store.get("pdynmc")
+        area = store.get("area")
+        mass = store.get("mass")
+        grav = store.get("grav")
+        cytgt = store.get("cytgt")
+        cntgt = store.get("cntgt")
+        fspa = np.array(
+            [
+                (thrust - catgt * pdynmc * area) / mass,
+                (cytgt * pdynmc * area) / mass,
+                (-cntgt * pdynmc * area) / mass,
+            ],
+            dtype=float,
+        )
+        store.set("FSPA", fspa)
+        store.set("aax", fspa[0] / grav)
+        store.set("alx", fspa[1] / grav)
+        store.set("anx", -fspa[2] / grav)
+
+    def terminate(self, vehicle, ctx):
+        pass
