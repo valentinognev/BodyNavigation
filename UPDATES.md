@@ -1,5 +1,11 @@
 # Updates
 
+## 0.102.0 - run SRAAM6 1v1 from JSONC
+- AIM5 family API: `VehicleSpec.family`; family set → `_VEHICLE_FAMILIES` only (no fallthrough). `("sraam6","MISSILE6")` / `("sraam6","TARGET3")`. SRAAM6 TARGET3 not in `_VEHICLE_TYPES` or `_NO_DECK_TYPES`. Translate writes `family` on each vehicle; GAUSS/MARKOV/RAYL store means. `OPTION_KEYS` accepts CADAC `stat`.
+- Missile: SRAAM6 Flat6 env/kinematics/euler, aero+der, propulsion, four-fin actuator, maut control, forces, TVC, seeker, mid/term pronav, intercept (no `sys.exit`). Reuse `Flat6Newton` only.
+- Target: `Flat3AircraftEnvironment`/`Newton` (`SAEL`/`dvae`); guidance `tgt_option` 0–2; bank/load-factor control; `FSPA`. Constructor `(name, events=None)`.
+- Case `Python/cases/sraam6/` from `input_1v1.asc` + decks; `end_time` 12. Smoke 0.1 s: missile `hbe` near 5000, target `SAEL` finite, both `health==1`. E2E `tests/e2e/test_sraam6_1v1.py` skips without `goldens/sraam6/plot.csv` (file not created).
+
 ## 0.100.1 - HYPER6 e2e skip without golden
 - Added `Python/tests/e2e/test_hyper6_climb.py`. Skip if `tests/e2e/goldens/hyper6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live climb `run_scenario` calls `require_golden` first.
 
