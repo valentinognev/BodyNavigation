@@ -308,5 +308,4 @@ def test_no_flat6_or_plane_imports():
     assert "Plane6" not in src
     assert "hyper5" not in src
     assert "hyper6" not in src
-    assert "class Sam6Rocket:" not in src
     assert "class Sam6RocketForces:" in src

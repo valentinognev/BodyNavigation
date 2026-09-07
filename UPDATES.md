@@ -1,5 +1,11 @@
 # Updates
 
+## 0.129.0 - SAM6 family vehicle types and factory decks
+- Added `Sam6Missile` (`type="MISSILE6"`) in `cadac.vehicles.sam6.vehicle`; `Sam6Aircraft` on `aircraft.py`; `Sam6Rocket` on `rocket.py`. `Sam6Radar` unchanged (sensor-first). Skip-if-exists define; `com_names` from `"com"` outputs; `health=1`. Missile uses `Sam6Environment`/`Sam6Kinematics` (not Flat6).
+- `register_family_type` at cli import: `("sam6","MISSILE6")`, `AIRCRAFT3`, `ROCKET5`, `RADAR0`. Does not write `_VEHICLE_TYPES`. Does not wipe `_VEHICLE_FAMILIES`.
+- `_build_vehicle` reads `spec.family`. `family="sam6"` required. MISSILE6: aero+prop. AIRCRAFT3: no decks. ROCKET5: aero required, `prop_deck` forbidden. RADAR0: `sam_deck`/`srmb_deck` required if `mtrack==1`, else optional. HYPER5 without family unchanged. AIM5 still unknown.
+- Tests: `Python/tests/unit/test_sam6_registry.py`. Dropped prior-task "no vehicle class yet" guards on aircraft/rocket module tests.
+
 ## 0.128.0 - SAM6 RADAR0 track aircraft and rockets
 - Added `cadac.vehicles.sam6.radar.Sam6Radar` (`type="RADAR0"`) and `Sam6RadarSensor` (`name="sensor"`). Constructor `(name, events=None, sam_deck=None, srmb_deck=None)`. Modules: sensor, Flat0 kinematics, Flat0 newton. Skip-if-exists define; sensor first so save `launch_delay*` default 9999 wins over kinematics 0. Com `lnch_delay_m1..3` default 0. Not registered in CLI.
 - `mtrack==0` return. `==2` polar from `AIRCRAFT3` `SAEL-SREL` (sigma 0); far: `launch_delay1` 9999 and `lnch_delay_m1` 0; lethal latch `launch_delay1=sim_time`, `lnch_delay_m1=launch_delay1+lnch_dly_bias1`. `==1` rocket apogee when measured `VTCEL[2]>0`; look_up `sam_deck`/`srmb_deck` traj tables as C++; then `lnch_delay_m1=launch_delay+bias`. Else `ValueError`. Pair by `Packet.type` index. Up to three targets.

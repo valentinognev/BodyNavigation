@@ -15,6 +15,10 @@ from cadac.vehicles.hyper5.vehicle import Hyper5
 from cadac.vehicles.hyper6.vehicle import Hyper6
 from cadac.vehicles.plane5.vehicle import Plane5
 from cadac.vehicles.plane6.vehicle import Plane6
+from cadac.vehicles.sam6.aircraft import Sam6Aircraft
+from cadac.vehicles.sam6.radar import Sam6Radar
+from cadac.vehicles.sam6.rocket import Sam6Rocket
+from cadac.vehicles.sam6.vehicle import Sam6Missile
 
 _VEHICLE_TYPES = {
     "CRUISE3": Cruise3,
@@ -41,6 +45,12 @@ def register_family_type(family, type_name, cls) -> None:
     _VEHICLE_FAMILIES[key] = cls
 
 
+register_family_type("sam6", "MISSILE6", Sam6Missile)
+register_family_type("sam6", "AIRCRAFT3", Sam6Aircraft)
+register_family_type("sam6", "ROCKET5", Sam6Rocket)
+register_family_type("sam6", "RADAR0", Sam6Radar)
+
+
 @dataclass
 class RunResult:
     plot_rows: list[dict]
@@ -48,6 +58,36 @@ class RunResult:
 
 def _deck(path):
     return Datadeck.from_tables(load_deck(path))
+
+
+def _build_sam6_vehicle(path, spec, cls):
+    if spec.type == "MISSILE6":
+        if spec.aero_deck is None or spec.prop_deck is None:
+            raise ValueError(f"{path}: {spec.type} requires aero_deck and prop_deck")
+        return cls(
+            spec.name,
+            _deck(spec.aero_deck),
+            _deck(spec.prop_deck),
+            spec.events,
+        )
+    if spec.type == "AIRCRAFT3":
+        return cls(spec.name, spec.events)
+    if spec.type == "ROCKET5":
+        if spec.aero_deck is None:
+            raise ValueError(f"{path}: {spec.type} requires aero_deck")
+        if spec.prop_deck is not None:
+            raise ValueError(f"{path}: {spec.type} must not have prop_deck")
+        return cls(spec.name, _deck(spec.aero_deck), spec.events)
+    if spec.type == "RADAR0":
+        mtrack = spec.params.get("mtrack", 0)
+        if mtrack == 1 and (spec.sam_deck is None or spec.srmb_deck is None):
+            raise ValueError(f"{path}: {spec.type} requires sam_deck and srmb_deck")
+        sam = _deck(spec.sam_deck) if spec.sam_deck is not None else None
+        srmb = _deck(spec.srmb_deck) if spec.srmb_deck is not None else None
+        return cls(spec.name, spec.events, sam_deck=sam, srmb_deck=srmb)
+    raise ValueError(
+        f"{path}: unknown vehicle type {spec.type!r} for family {spec.family!r}"
+    )
 
 
 def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
@@ -77,6 +117,8 @@ def _build_vehicle(path, spec):
         cls = _VEHICLE_TYPES.get(spec.type)
         if cls is None:
             raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
+    if spec.family == "sam6":
+        return _build_sam6_vehicle(path, spec, cls)
     if spec.type in _NO_DECK_TYPES:
         return cls(spec.name, spec.events)
     if spec.type == "HYPER5":

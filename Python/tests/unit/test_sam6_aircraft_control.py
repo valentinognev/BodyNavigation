@@ -536,6 +536,5 @@ def test_no_flat6_or_plane_imports():
     assert "Plane6" not in src
     assert "hyper5" not in src
     assert "hyper6" not in src
-    assert "class Sam6Aircraft:" not in src
     assert "np.sign" not in src
     assert "_cadac_sign" not in src

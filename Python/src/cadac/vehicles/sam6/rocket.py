@@ -3,8 +3,14 @@ from math import acos, atan2, cos, exp, fabs, pow, sin, sqrt, tan
 import numpy as np
 
 from cadac.constants import DEG, RAD
+from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
-from cadac.kernel.state import Field
+from cadac.kernel.state import Field, StateStore
+from cadac.vehicles.sam6.flat3 import (
+    Sam6Flat3Environment,
+    Sam6Flat3Kinematics,
+    Sam6Flat3Newton,
+)
 
 SMALL = 1e-7
 G0 = 9.81
@@ -546,3 +552,47 @@ class Sam6RocketIntercept:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Sam6Rocket:
+    type = "ROCKET5"
+
+    def __init__(self, name, aero_deck, events=None):
+        self.name = name
+        self.health = 1
+        self.store = StateStore()
+        self.event_time = 0.0
+        self.events = EventEngine(events or [])
+        self.com_names = []
+        self.modules = [
+            Sam6Flat3Environment(),
+            Sam6Flat3Kinematics(),
+            Sam6RocketAero(aero_deck),
+            Sam6RocketPropulsion(),
+            Sam6RocketSensor(),
+            Sam6RocketGuidance(),
+            Sam6RocketControl(),
+            Sam6RocketForces(),
+            Sam6Flat3Newton(),
+            Sam6RocketIntercept(),
+        ]
+
+    def define(self):
+        store = self.store
+        orig_define = store.define
+
+        def define_skip_if_exists(field):
+            if field.name not in store.names():
+                orig_define(field)
+
+        store.define = define_skip_if_exists
+        try:
+            for module in self.modules:
+                module.define(self)
+        finally:
+            store.define = orig_define
+        self.com_names = [
+            name
+            for name in self.store.names()
+            if "com" in self.store.field(name).outputs
+        ]
