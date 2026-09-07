@@ -1,5 +1,10 @@
 # Updates
 
+## 0.131.0 - SAM6 aircraft rocket radar smoke
+- Smoke 0.1 s: `AIRCRAFT3` RF #1 (`acft_option=0`, alt near 10000, health 1, no decks); `ROCKET5` SRBM (`mprop=1`, `maut=1`, aero deck, health 1); `RADAR0`+aircraft `mtrack=2` far of `lethal_rng=20e3`, both health 1, com `lnch_delay_m1==0`.
+- `Sam6RocketAero` `gmax` uses numpy IEEE divide (`mass==0` before propulsion, C++ `1/0` inf). Intercept still `alt<0`.
+- Tests: `Python/tests/unit/test_sam6_multi_smoke.py`.
+
 ## 0.130.0 - SAM6 autopilot JSONC one-step
 - Translated `input_SAM_autopilot.asc` + aero/prop decks to `Python/cases/sam6/` (`family="sam6"`, `end_time==30`, MISSILE6, `mact==2`, `mins==1`, `maut==2`, no radar). Dropped unknown option `stat`.
 - Smoke: fixture copy `end_time=0.05` → `hbe`/`alt` finite, health 1, `msl_time>=0`.
