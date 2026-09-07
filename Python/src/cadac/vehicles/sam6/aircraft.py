@@ -181,3 +181,31 @@ class Sam6AircraftControl:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Sam6AircraftForces:
+    name = "forces"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        for field in (
+            Field("FSPA", (0.0, 0.0, 0.0), "vec", "out", "forces"),
+            Field("acc_longx", 0.0, "real", "data", "forces"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        grav = store.get("grav")
+        anx = store.get("anx")
+        acc_longx = store.get("acc_longx")
+        store.set(
+            "FSPA",
+            np.array([acc_longx * grav, 0.0, -anx * grav], dtype=float),
+        )
+
+    def terminate(self, vehicle, ctx):
+        pass

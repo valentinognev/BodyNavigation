@@ -1,5 +1,10 @@
 # Updates
 
+## 0.121.0 - SAM6 AIRCRAFT3 forces
+- Added `cadac.vehicles.sam6.aircraft.Sam6AircraftForces` (`name="forces"`). Port of SAM6 `Aircraft::forces`. Does not define Flat3/control names (`grav`/`anx`). No vehicle class.
+- `execute`: `FSPA=(acc_longx*grav, 0, -anx*grav)`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_aircraft_forces.py` (anx=1, acc_longx=0, grav=9.8 → `FSPA==[0,0,-9.8]` rtol=1e-12; longitudinal accel; negative load factor).
+
 ## 0.120.1 - SAM6 AIRCRAFT3 yaw-90 bank limiter test
 - `test_bank_from_tvl_times_acoml_not_transpose` now asserts C++ `philimx` clip on `phiavx`/`phiavout` and unclipped `phiav`/`phiavcx`. `YAW90@(GRAV,0,0)` → `ACOMV=(0,-GRAV,0)`; `abs(phiav*DEG)>=90` clips outputs.
 
