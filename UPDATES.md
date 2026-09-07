@@ -1,5 +1,10 @@
 # Updates
 
+## 0.158.1 - Merge remaining CADAC families onto main
+- Local-merge AIM5, CRUISE5, MAGSIX, ROCKET6, SAM6, SRAAM6, AGM6 into `main`. Family registry is the union; `HYPER6` without family still maps to `Hyper6`.
+- Translate: glued IF (`IF time >.25`); `MARKOV` stores 0 (Rocket6/SRAAM6 MONTE-off); `GAUSS`/`RAYL` store the mean. Scenario-level and per-vehicle `"family"`.
+- Ignore `.worktrees/`. README lists all twelve JSONC families/cases.
+
 ## 0.158.0 - AGM6 test-case JSONC smoke
 - Checked-in `Python/cases/agm6/input_testcase.jsonc` + `weather_deck.jsonc` from `input_2_1 AGM6 Test Case.asc` (`family="agm6"`, three vehicles, `mair=212`, weather/stoch means, events `time>3` and `mseek=4`). Reuses `AGM6_aero_deck.jsonc`.
 - `Agm6Environment` Dryden reads Flat6 `TBL` when CADAC `TBD` is absent.
@@ -335,6 +340,11 @@
 - `Aim5Aircraft` (`type="AIRCRAFT3"`, family `"aim5"` only, no decks). Guidance `acft_option` 0/1/2; bank/load control; `FSPV=[acc_longx*grav,0,-anx*grav]`.
 - Registry: `_VEHICLE_TYPES["AIM5"]`; `_VEHICLE_FAMILIES[("aim5","AIM5"|"AIRCRAFT3")]`. `_NO_DECK_FAMILY_TYPES={("aim5","AIRCRAFT3")}` — not global `_NO_DECK_TYPES`.
 - Case `Python/cases/aim5/` from `input_hori.asc` (`family="aim5"`, `end_time` 10). E2E `test_aim5_hori.py` skips if `tests/e2e/goldens/aim5/plot.csv` absent (file not created).
+
+## 0.101.1 - run CRUISE5 family vehicles from JSONC
+- Family `cruise5`: `Cruise5` (`CRUISE3`, both decks), `Cruise5Target` (`TARGET3`, no decks), `Cruise5Satellite` (`SATELLITE3`, no decks). Registers only `_VEHICLE_FAMILIES` pairs; does not overwrite global HYPER3 `CRUISE3` or HYPER5 `TARGET3`/`SATELLITE3`.
+- UAV: drag-polar aero (`area` 0.929), turbojet `mprop` 0–4, FSPV forces, `mcontrol` `{0,44,46}`, `mguidance` `{0,30,43}`, `mseeker==0` else ValueError, intercept ground+43, targeting 0/1 from closest TARGET3.
+- Case `Python/cases/cruise5/` from `input_1.asc`, `family="cruise5"`, `end_time` 410. E2E `tests/e2e/test_cruise5_input1.py` skips if `tests/e2e/goldens/cruise5/plot.csv` is absent.
 
 ## 0.100.1 - HYPER6 e2e skip without golden
 - Added `Python/tests/e2e/test_hyper6_climb.py`. Skip if `tests/e2e/goldens/hyper6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live climb `run_scenario` calls `require_golden` first.

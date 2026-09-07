@@ -76,7 +76,7 @@ def test_translate_testcase_three_vehicles_weather_events_stoch(tmp_path: Path):
     assert params["randal"] == 0
     assert params["dvae"] == 5
     assert params["biast"] == 0
-    assert params["randt"] == 0.0005
+    assert params["randt"] == 0
     assert "GAUSS" not in params
     assert "MARKOV" not in params
     assert "RAYL" not in params

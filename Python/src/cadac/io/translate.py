@@ -69,7 +69,13 @@ _IF_OPS = frozenset({"<", "=", ">"})
 
 def _parse_if_event(lines: list[str], i: int) -> tuple[dict, int]:
     parts = lines[i].split()
-    name, op, raw_value = parts[1], parts[2], parts[3]
+    name = parts[1]
+    if len(parts) >= 4:
+        op, raw_value = parts[2], parts[3]
+    else:
+        token = parts[2]
+        op = next((candidate for candidate in _IF_OPS if token.startswith(candidate)), "")
+        raw_value = token[len(op):]
     if op not in _IF_OPS:
         raise ValueError(f"unknown IF operator {op!r}")
     assignments: dict = {}

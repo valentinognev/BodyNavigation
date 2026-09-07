@@ -8,3 +8,4 @@ __pycache__/
 Python/.venv/
 Python/cases/**/plot.csv
 .superpowers/sdd/
+.worktrees/
