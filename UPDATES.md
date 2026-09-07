@@ -1,5 +1,10 @@
 # Updates
 
+## 0.124.0 - SAM6 ROCKET5 guidance
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketGuidance` (`name="guidance"`). Port of SAM6 `Rocket::guidance`. Does not define Flat3/aero/sensor/control names (`grav`/`gmax`/`dvta`/`tgo_tgt`/`UTAA`/`WOEA`/`flag_exo`). No vehicle class.
+- `execute`: decode `guid_manvr=mguide//10`, `guid_mode=mguide%10`; not in `{0,1}` → `ValueError`. `guid_mode==1` pronav `APNA=skew(WOEA)@UTAA*gnav*|dvta|`. `guid_manvr==1` and `flag_exo` and `tgo_tgt<tgo_manvr` decaying spiral as C++. Circular limiter vs `gmax` with C++ OR-phi (`mguide==0` writes zeros). Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_guidance.py` (mguide=0 gmax=10 → commands 0; mguide=22 raises; mode=1 dummy WOEA/UTAA `ancomx==0.4` `alcomx==0.6` rtol=1e-12; spiral; limiter cap).
+
 ## 0.123.0 - SAM6 ROCKET5 sensor
 - Added `cadac.vehicles.sam6.rocket.Sam6RocketSensor` (`name="sensor"`). Port of SAM6 `Rocket::sensor`. Does not define Flat3/control names (`TAL`/`SAEL`/`VAEL`/`alt`, `flag_exo`/`alt_endo`). No vehicle class.
 - `execute`: `mseek==0` return. `mseek!=0` and `flag_exo` and `alt<alt_endo` kinematic LOS to `stel1/2/3` as C++ (`STAL`, `dta`, `dvta`, `tgo_tgt`, `UTAA`, `WOEA`, `sigdy`/`sigdz`). Else no-op (C++ if-block skip). Protocol `vehicle.store`. No Flat6/Plane imports.

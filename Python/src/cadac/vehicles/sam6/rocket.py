@@ -1,4 +1,4 @@
-from math import acos, atan2, cos, fabs, sin, tan
+from math import acos, atan2, cos, exp, fabs, sin, sqrt, tan
 
 import numpy as np
 
@@ -233,6 +233,86 @@ class Sam6RocketSensor:
         store.set("STAL", stal)
         store.set("sigdy", float(woea[1]))
         store.set("sigdz", float(woea[2]))
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+class Sam6RocketGuidance:
+    name = "guidance"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        for field in (
+            Field("mguide", 0, "int", "data", "guidance"),
+            Field("gnav", 0.0, "real", "data", "guidance"),
+            Field("tgo_manvr", 0.0, "real", "data", "guidance"),
+            Field("amp_manvr", 0.0, "real", "data", "guidance"),
+            Field("frq_manvr", 0.0, "real", "data", "guidance"),
+            Field("tgo63_manvr", 0.0, "real", "data", "guidance"),
+            Field("annx", 0.0, "real", "diag", "guidance"),
+            Field("allx", 0.0, "real", "diag", "guidance"),
+            Field("an_manvr", 0.0, "real", "diag", "guidance"),
+            Field("al_manvr", 0.0, "real", "diag", "guidance"),
+            Field("ancomx", 0.0, "real", "out", "guidance"),
+            Field("alcomx", 0.0, "real", "out", "guidance"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        mguide = store.get("mguide")
+        guid_manvr = mguide // 10
+        guid_mode = mguide % 10
+        if guid_manvr not in (0, 1) or guid_mode not in (0, 1):
+            raise ValueError(
+                f"guid_manvr={guid_manvr!r} guid_mode={guid_mode!r} not supported"
+            )
+        gmax = store.get("gmax")
+        gnav = store.get("gnav")
+        tgo_manvr = store.get("tgo_manvr")
+        amp_manvr = store.get("amp_manvr")
+        frq_manvr = store.get("frq_manvr")
+        tgo63_manvr = store.get("tgo63_manvr")
+        annx = 0.0
+        allx = 0.0
+        an_manvr = 0.0
+        al_manvr = 0.0
+        if guid_mode == 1:
+            grav = store.get("grav")
+            dvta = store.get("dvta")
+            utaa = np.asarray(store.get("UTAA"), dtype=float)
+            woea = np.asarray(store.get("WOEA"), dtype=float)
+            apna = _skew(woea) @ utaa * gnav * fabs(dvta)
+            annx = -float(apna[2]) / grav
+            allx = float(apna[1]) / grav
+        if guid_manvr == 1:
+            flag_exo = store.get("flag_exo")
+            tgo_tgt = store.get("tgo_tgt")
+            if flag_exo and tgo_tgt < tgo_manvr:
+                amp = amp_manvr * (1.0 - exp(-tgo_tgt / tgo63_manvr))
+                an_manvr = amp * sin(frq_manvr * tgo_tgt)
+                al_manvr = amp * cos(frq_manvr * tgo_tgt)
+                annx += an_manvr
+                allx += al_manvr
+        aax = sqrt(allx * allx + annx * annx)
+        if aax > gmax:
+            aax = gmax
+        if fabs(annx) < SMALL or fabs(allx) < SMALL:
+            phi = 0.0
+        else:
+            phi = atan2(annx, allx)
+        alcomx = aax * cos(phi)
+        ancomx = aax * sin(phi)
+        store.set("ancomx", ancomx)
+        store.set("alcomx", alcomx)
+        store.set("annx", annx)
+        store.set("allx", allx)
+        store.set("an_manvr", an_manvr)
+        store.set("al_manvr", al_manvr)
 
     def terminate(self, vehicle, ctx):
         pass
