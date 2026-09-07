@@ -159,3 +159,44 @@ def cad_tgi84(lon, lat, alt, time):
     tgd[2, 0] = np.sin(dd)
     tgd[0, 2] = -np.sin(dd)
     return tgd @ tdi
+
+
+def cad_kepler(sbii, vbii, tgo):
+    sbii = np.asarray(sbii, dtype=float)
+    vbii = np.asarray(vbii, dtype=float)
+    sqrt_gm = np.sqrt(GM)
+    ro = np.sqrt(sbii[0] * sbii[0] + sbii[1] * sbii[1] + sbii[2] * sbii[2])
+    vo = np.sqrt(vbii[0] * vbii[0] + vbii[1] * vbii[1] + vbii[2] * vbii[2])
+    rvo = sbii[0] * vbii[0] + sbii[1] * vbii[1] + sbii[2] * vbii[2]
+    a1 = vo * vo / GM
+    sa = ro / (2 - ro * a1)
+    if sa < 0:
+        return sbii.copy(), vbii.copy(), 1
+    smua = sqrt_gm * np.sqrt(sa)
+    mdot = smua / (sa * sa)
+    dm = mdot * tgo
+    de = dm
+    a11 = rvo / smua
+    a21 = (sa - ro) / sa
+    count20 = 0
+    while True:
+        cde = 1 - np.cos(de)
+        sde = np.sin(de)
+        dmn = de + a11 * cde - a21 * sde
+        dmerr = dm - dmn
+        adm = abs(dmerr) / mdot
+        dmde = 1 + a11 * sde - a21 * (1 - cde)
+        de = de + dmerr / dmde
+        count20 += 1
+        if count20 > 20:
+            return sbii.copy(), vbii.copy(), 1
+        if not (adm > SMALL):
+            break
+    fk = (ro - sa * cde) / ro
+    gk = (dm + sde - de) / mdot
+    spii = sbii * fk + vbii * gk
+    rp = np.sqrt(spii[0] * spii[0] + spii[1] * spii[1] + spii[2] * spii[2])
+    fdk = -smua * sde / ro
+    gdk = rp - sa * cde
+    vpii = sbii * (fdk / rp) + vbii * (gdk / rp)
+    return spii, vpii, 0

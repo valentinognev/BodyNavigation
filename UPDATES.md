@@ -1,5 +1,26 @@
 # Updates
 
+## 0.106.0 - Rocket6 vehicle JSONC + e2e gate
+- `Rocket6` (`type="HYPER6"`, `family="rocket6"`) is runnable from JSONC `Python/cases/rocket6/` insertion (`end_time` 190; aero required; weather deck for `mair=12`; Radar/Satellite/Ground not applicable). `_VEHICLE_FAMILIES[("rocket6","HYPER6")]`. `HYPER6` without family still maps to `Hyper6`.
+- `VehicleSpec.weather_deck`. `translate_scenario_asc(..., family=)` writes scenario-level and per-vehicle `"family"`; parses `WEATHER_DECK` and `GAUSS`/`RAYL`/`MARKOV` (MARKOV stores 0).
+- Added `Python/tests/e2e/test_rocket6_insertion.py`. Skip if `tests/e2e/goldens/rocket6/plot.csv` is absent (file not created). Else compare plot-flagged `alt`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live insertion `run_scenario` calls `require_golden` first. Golden is MONTE-off (`nmonte==0`) + Dryden `gauss_value=0`, not raw `input.asc` plot.csv.
+
+## 0.105.0 - Rocket6 SLV aerodynamics
+- Added `cadac.vehicles.rocket6.aero.Rocket6Aero` (`name="aerodynamics"`). Constructor takes Datadeck. `define` registers C++ `def_aerodynamics` (`maero`, `refa`/`refd`/`xcg_ref`, body `cx`/`cz`, SLV table coeffs, dimensional der, `gnmax`/`gymax`; C++ holes `cndr`/`cnr` as diag). Does not define kinematics/env/propulsion/actuator/TVC names (`alppx`/`phipx`/`alphax`, `vmach`, `pdynmc`, `dvba`, `vmass`, `IBBB`, `xcg`, `mprop`).
+- `initialize` ports `Hyper::init_aerodynamics`: termination `trmach`/`trdynm`/`trload`/`tralp`/`trcode`/`tmcode` only. Does not hardcode GHAME `refa`/`refb`/`refc`.
+- `execute`: `maero` 11/12/13 SLV tables from `aero_deck_SLV.asc` (`ca0slvN`/`caaslvN`/`ca0bslvN`/`cn0slvN`/`clm0slvN`/`clmqslvN`) + body `cx==-ca` + `aerodynamics_der` as C++ (`refd`, TVC `mtvc` 1/2/3 if present). Else including 1 → ValueError. Tests parse ASC via `parse_asc_deck` / `Datadeck.from_tables`. Local CADAC sign. No Hyper6 import.
+- Tests: `Python/tests/unit/test_rocket6_aero.py` (insertion `maero=13`, `vmach=0.5`, `alppx=2`, `phipx=0`, `mprop=3`; finite `cx`/`cz`/`clm`; replica `cx==-ca`; `maero=1` raises; formulas vs C++ rtol=1e-12).
+
+## 0.104.0 - Round6 environment tabular wind and Dryden
+- `Round6Environment(weather_deck=None)`: `mair=0` US76 unchanged (`ctx` may be None); `mair=12` US76 + weather-table wind + Dryden with `gauss_value=0`. Missing weather deck or other `mair` → `ValueError`.
+- `define` adds C++ Dryden/wind fields (`turb_length`, `taux*`, `gauss_value`, `tempc`, …), skip-if-exists. `initialize` still copies `dvba=dvbe`.
+- Tests: `test_round6_environment.py` tabular wind smoother vs C++ (`twind=1`, `dt=0.01`, `turb_sigma=0`); Hyper6 one-step still green.
+
+## 0.103.0 - CADAC kepler and polar helpers
+- Added `cad_kepler` (Morth) to `cadac.math.wgs84` using module `GM`/`SMALL`. Signature `(sbii, vbii, tgo) -> (spii, vpii, flag)`; `flag==1` returns input copies. Did not port `cad_kepler1`.
+- Added `cart_from_pol` and `angle` (`EPS` clamp from `cadac.constants`) to `cadac.math.frames`. Existing `polar_from_cart`/`mat2tr` unchanged.
+- Tests: `test_wgs84.py` circular equatorial fk/gk replica; `test_frames.py` unit-x polar and orthogonal angle.
+
 ## 0.102.0 - MAGSIX Rotor from JSONC
 - Added `cadac.eom.rotor`: `RotorEnvironment` (US76 + `gravity(hbe)`, `mwind==0`), `RotorTrajectory` (DNU ICs/step, `SBEL` dt=`int_step*tau`, ground impact `health=0` + combus status 0, no `sys.exit`), `RotorAttitude` (CADAC beta→phi→psi order; `nonlinear` in `{0,1}`). Module-level `RPM=9.5493`, `RHO_SL=1.225`. Not Flat6/Round6.
 - `Rotor` (`type="ROTOR"`, constructor `(name, events=None)`, no decks). Modules environment/trajectory/attitude. Registered `_VEHICLE_TYPES["ROTOR"]` and `_VEHICLE_FAMILIES[("magsix","ROTOR")]`. `"ROTOR"` in `_NO_DECK_TYPES`.

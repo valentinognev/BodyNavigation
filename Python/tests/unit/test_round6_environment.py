@@ -1,3 +1,4 @@
+import math
 from types import SimpleNamespace
 
 import numpy as np
@@ -6,8 +7,33 @@ import pytest
 from cadac.constants import R, RAD
 from cadac.env.us76 import atmosphere76
 from cadac.eom.round6 import Round6Environment
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.wgs84 import cad_grav84, cad_in_geo84
+from cadac.tables.lookup import Datadeck, Table
+
+RTOL = 1e-12
+ATOL = 1e-14
+
+
+def _weather_speed_direction_deck():
+    speed = Table(
+        name="speed",
+        dim=1,
+        x1=np.array([0.0, 20000.0]),
+        x2=None,
+        x3=None,
+        values=np.array([0.0, 20.0]),
+    )
+    direction = Table(
+        name="direction",
+        dim=1,
+        x1=np.array([0.0, 20000.0]),
+        x2=None,
+        x3=None,
+        values=np.array([0.0, 180.0]),
+    )
+    return Datadeck.from_tables([speed, direction])
 
 
 def _vehicle_with_newton_state(
@@ -17,10 +43,14 @@ def _vehicle_with_newton_state(
     mair=0,
     lon=10.0 * RAD,
     lat=10.0 * RAD,
+    weather_deck=None,
 ):
     s = StateStore()
     vehicle = SimpleNamespace(store=s)
-    env = Round6Environment()
+    if weather_deck is None:
+        env = Round6Environment()
+    else:
+        env = Round6Environment(weather_deck=weather_deck)
     env.define(vehicle)
     s.define(Field("time", 0.0, "real", "exec", "kinematics"))
     s.define(Field("alt", 0.0, "real", "out", "newton"))
@@ -93,3 +123,63 @@ def test_execute_skips_trcode_mfreeze_when_absent():
     assert "trcode" not in s.names()
     assert "mfreeze" not in s.names()
     assert np.isfinite(s.get("vmach"))
+
+
+def test_initialize_sets_dvba_from_dvbe():
+    s = StateStore()
+    vehicle = SimpleNamespace(store=s)
+    env = Round6Environment()
+    env.define(vehicle)
+    s.define(Field("dvbe", 0.0, "real", "out", "newton"))
+    s.set("dvbe", 1234.5)
+    env.initialize(vehicle, None)
+    np.testing.assert_allclose(s.get("dvba"), 1234.5, rtol=RTOL, atol=ATOL)
+
+
+def test_mair_12_without_weather_deck_raises():
+    vehicle, env = _vehicle_with_newton_state(mair=12)
+    ctx = SimpleNamespace(int_step=0.01)
+    with pytest.raises(ValueError, match="weather"):
+        env.execute(vehicle, ctx)
+
+
+def test_mair_12_tabular_wind_zero_dryden():
+    alt = 10000.0
+    twind = 1.0
+    dt = 0.01
+    deck = _weather_speed_direction_deck()
+    vehicle, env = _vehicle_with_newton_state(mair=12, weather_deck=deck)
+    s = vehicle.store
+    s.define(Field("TBD", np.eye(3), "mat", "out", "kinematics"))
+    s.define(Field("alppx", 0.0, "real", "out", "kinematics"))
+    s.define(Field("phipx", 0.0, "real", "out", "kinematics"))
+    s.set("twind", twind)
+    s.set("turb_sigma", 0.0)
+    s.set("turb_length", 100.0)
+    s.set("alppx", 0.0)
+    s.set("phipx", 0.0)
+    s.set("TBD", np.eye(3))
+    s.set("dvba", float(np.linalg.norm(s.get("VBED"))))
+    ctx = SimpleNamespace(int_step=dt)
+    env.execute(vehicle, ctx)
+
+    dvw = 10.0
+    psiwdx = 90.0
+    vaed3 = 0.0
+    vaeds = np.zeros(3)
+    vaedsd = np.zeros(3)
+    vaed_raw = np.array(
+        [
+            -dvw * math.cos(psiwdx * RAD),
+            -dvw * math.sin(psiwdx * RAD),
+            vaed3,
+        ],
+        dtype=float,
+    )
+    vaedsd_new = (vaed_raw - vaeds) * (1.0 / twind)
+    vaeds = integrate(vaedsd_new, vaedsd, vaeds, dt)
+    np.testing.assert_allclose(s.get("VAED"), vaeds, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(s.get("gauss_value"), 0.0, rtol=RTOL, atol=ATOL)
+    vbed = s.get("VBED")
+    dvba = float(np.linalg.norm(vbed - vaeds))
+    np.testing.assert_allclose(s.get("dvba"), dvba, rtol=RTOL, atol=ATOL)

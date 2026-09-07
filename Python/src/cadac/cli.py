@@ -20,6 +20,7 @@ from cadac.vehicles.hyper5.vehicle import Hyper5
 from cadac.vehicles.hyper6.vehicle import Hyper6
 from cadac.vehicles.plane5.vehicle import Plane5
 from cadac.vehicles.plane6.vehicle import Plane6
+from cadac.vehicles.rocket6.vehicle import Rocket6
 from cadac.vehicles.rotor.vehicle import Rotor
 
 _VEHICLE_TYPES = {
@@ -40,6 +41,7 @@ _VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
     ("cruise5", "TARGET3"): Cruise5Target,
     ("cruise5", "SATELLITE3"): Cruise5Satellite,
     ("magsix", "ROTOR"): Rotor,
+    ("rocket6", "HYPER6"): Rocket6,
 }
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3", "ROTOR"})
 _NO_DECK_FAMILY_TYPES = {("aim5", "AIRCRAFT3")}
@@ -83,6 +85,18 @@ def _build_vehicle(path, spec):
             raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
     if (spec.family, spec.type) in _NO_DECK_FAMILY_TYPES or spec.type in _NO_DECK_TYPES:
         return cls(spec.name, spec.events)
+    if cls is Rocket6:
+        if spec.aero_deck is None:
+            raise ValueError(f"{path}: {spec.type} requires aero_deck")
+        prop = _deck(spec.prop_deck) if spec.prop_deck is not None else None
+        weather = _deck(spec.weather_deck) if spec.weather_deck is not None else None
+        return cls(
+            spec.name,
+            _deck(spec.aero_deck),
+            spec.events,
+            weather,
+            prop,
+        )
     if spec.type == "HYPER5":
         if spec.aero_deck is None:
             raise ValueError(f"{path}: {spec.type} requires aero_deck")
