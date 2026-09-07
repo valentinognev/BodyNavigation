@@ -26,8 +26,8 @@ AIRCRAFT_MODULES = [
 ROCKET_MODULES = [
     {"name": "environment", "phases": ["def", "exec"]},
     {"name": "kinematics", "phases": ["def", "init", "exec"]},
-    {"name": "aerodynamics", "phases": ["def", "init", "exec"]},
     {"name": "propulsion", "phases": ["def", "exec"]},
+    {"name": "aerodynamics", "phases": ["def", "init", "exec"]},
     {"name": "sensor", "phases": ["def", "exec"]},
     {"name": "guidance", "phases": ["def", "exec"]},
     {"name": "control", "phases": ["def", "exec"]},

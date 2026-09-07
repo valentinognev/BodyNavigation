@@ -112,10 +112,7 @@ class Sam6RocketAero:
         cltgt_max = look_up("cltgt_vs_alpha_mach", alpmax, mach)
         cdtgt_max = look_up("cdtgt_vs_alpha_mach", alpmax, mach)
         cnp_max = cdtgt_max * sin(alpmax * RAD) + cltgt_max * cos(alpmax * RAD)
-        normal_force = cnp_max * pdynmc * area
-        weight = mass * grav
-        with np.errstate(divide="ignore", invalid="ignore"):
-            gmax = float(np.divide(normal_force, weight))
+        gmax = cnp_max * pdynmc * area / (mass * grav)
 
         store.set("alppx", alppx)
         store.set("phipx", phipx)
