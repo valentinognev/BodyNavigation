@@ -173,3 +173,31 @@ class Sraam6TargetControl:
 
     def terminate(self, vehicle, ctx):
         pass
+
+
+class Sraam6TargetForces:
+    name = "forces"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        for field in (
+            Field("FSPA", _ZEROS3, "vec", "out", "forces"),
+            Field("acc_longx", 0.0, "real", "data", "forces"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        acc_longx = store.get("acc_longx")
+        grav = store.get("grav")
+        anx = store.get("anx")
+        acoma1 = acc_longx * grav
+        acoma2 = 0.0
+        acoma3 = -anx * grav
+        store.set("FSPA", np.array([acoma1, acoma2, acoma3]))
+
+    def terminate(self, vehicle, ctx):
+        pass
