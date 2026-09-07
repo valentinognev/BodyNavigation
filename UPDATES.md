@@ -1,5 +1,10 @@
 # Updates
 
+## 0.129.1 - SAM6 intercept IEEE divide on zero range
+- `Sam6Intercept.execute` uses numpy IEEE divide for `1/ip_sltrange` and `1/dbt` (C++ `double` inf, not Python `ZeroDivisionError`). Kill conditions, write latch, and health/combus unchanged.
+- Autopilot `mguide==0` leaves `ip_sltrange==0`; intercept still runs. `zeros * inf` → nan; `nan<0` is false (no IP kill).
+- Tests: `Python/tests/unit/test_sam6_intercept.py` (`ip_sltrange==0` `mguide==0` does not raise or IP-kill).
+
 ## 0.129.0 - SAM6 family vehicle types and factory decks
 - Added `Sam6Missile` (`type="MISSILE6"`) in `cadac.vehicles.sam6.vehicle`; `Sam6Aircraft` on `aircraft.py`; `Sam6Rocket` on `rocket.py`. `Sam6Radar` unchanged (sensor-first). Skip-if-exists define; `com_names` from `"com"` outputs; `health=1`. Missile uses `Sam6Environment`/`Sam6Kinematics` (not Flat6).
 - `register_family_type` at cli import: `("sam6","MISSILE6")`, `AIRCRAFT3`, `ROCKET5`, `RADAR0`. Does not write `_VEHICLE_TYPES`. Does not wipe `_VEHICLE_FAMILIES`.

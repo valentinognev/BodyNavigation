@@ -204,6 +204,7 @@ def _ready(
     stel=None,
     vtel=None,
     mseek=0,
+    mguide=0,
     ip_sltrange=999999.0,
     siblc=None,
     tgt_slot=1,
@@ -239,6 +240,7 @@ def _ready(
         stel=stel,
         vtel=vtel,
         mseek=mseek,
+        mguide=mguide,
         ip_sltrange=ip_sltrange,
         siblc=siblc,
         tgt_slot=tgt_slot,
@@ -430,6 +432,24 @@ def test_ip_sltrange_500_does_not_kill():
     assert vehicle.health == 1
     assert ctx.combus[ctx.vehicle_slot].status == 1
     assert vehicle.store.get("write") == 1
+
+
+def test_ip_sltrange_zero_mguide_0_does_not_raise_or_ip_kill():
+    vehicle, intercept, ctx = _ready(
+        stop=0,
+        write=1,
+        alt=1000.0,
+        hbe=1000.0,
+        mguide=0,
+        ip_sltrange=0.0,
+        siblc=np.zeros(3),
+        vbel=np.array([-16.0, 0.0, 0.0], dtype=float),
+    )
+    intercept.execute(vehicle, ctx)
+    assert vehicle.health == 1
+    assert ctx.combus[ctx.vehicle_slot].status == 1
+    assert vehicle.store.get("write") == 1
+    assert vehicle.store.get("mguide") == 0
 
 
 def test_mterm_0_lock_dbt_under_500_closing_positive_interpolates_and_kills_both():

@@ -92,7 +92,8 @@ class Sam6Intercept:
             ctx.combus[ctx.vehicle_slot].status = 0
 
         if ip_sltrange < 500:
-            uibl = siblc * (1.0 / ip_sltrange)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                uibl = siblc * np.divide(1.0, ip_sltrange)
             closing_speed = float(uibl @ vbel)
             if (closing_speed < 0) and write:
                 write = 0
@@ -106,7 +107,8 @@ class Sam6Intercept:
 
         if skr_mode == 4:
             if dbt < 500:
-                utbl = stbl * (1.0 / dbt)
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    utbl = stbl * np.divide(1.0, dbt)
                 vtbel = vtel - vbel
                 closing_speed = float(utbl @ vtbel)
                 sbtl = stbl * (-1.0)
