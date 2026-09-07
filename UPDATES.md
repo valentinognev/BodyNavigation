@@ -1,5 +1,10 @@
 # Updates
 
+## 0.123.0 - SAM6 ROCKET5 sensor
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketSensor` (`name="sensor"`). Port of SAM6 `Rocket::sensor`. Does not define Flat3/control names (`TAL`/`SAEL`/`VAEL`/`alt`, `flag_exo`/`alt_endo`). No vehicle class.
+- `execute`: `mseek==0` return. `mseek!=0` and `flag_exo` and `alt<alt_endo` kinematic LOS to `stel1/2/3` as C++ (`STAL`, `dta`, `dvta`, `tgo_tgt`, `UTAA`, `WOEA`, `sigdy`/`sigdz`). Else no-op (C++ if-block skip). Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_sensor.py` (mseek=0 no `dta` write; mseek=1 flag_exo=1 alt below alt_endo dummy stel/SAEL → `dta` finite vs C++ rtol=1e-12; conditions off no-op).
+
 ## 0.122.0 - SAM6 ROCKET5 aero and analytic propulsion
 - Added `cadac.vehicles.sam6.rocket.Sam6RocketAero` (`name="aerodynamics"`) and `Sam6RocketPropulsion` (`name="propulsion"`). Port of SAM6 `rocket_modules.cpp` aero/prop only. No vehicle class.
 - Aero: Datadeck `SRBM_aero_deck`; look_up `cltgt_vs_alpha_mach`/`cdtgt_vs_alpha_mach`; `mprop==0` `catgt*=1.1`; init `cnalp=7.468`. Propulsion analytic: `mprop==1` as C++ (`9.81`); burnout `mprop=0`; else `ValueError`. Defaults `mass_launch=6000`, `mass_fuel=4000`, `isp=230`, `thrust_sl=128600`, `aexit=0.282`. Protocol `vehicle.store`. No Flat6/Plane imports.

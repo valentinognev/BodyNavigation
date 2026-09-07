@@ -1,11 +1,25 @@
 from math import acos, atan2, cos, fabs, sin, tan
 
+import numpy as np
+
 from cadac.constants import DEG, RAD
 from cadac.kernel.state import Field
 
 SMALL = 1e-7
 G0 = 9.81
 CNALP0 = 7.468
+
+
+def _skew(vec):
+    x, y, z = vec
+    return np.array(
+        [
+            [0.0, -z, y],
+            [z, 0.0, -x],
+            [-y, x, 0.0],
+        ],
+        dtype=float,
+    )
 
 
 class Sam6RocketAero:
@@ -147,6 +161,78 @@ class Sam6RocketPropulsion:
         store.set("mass", mass)
         store.set("mprop", mprop)
         store.set("thrust", thrust)
+
+    def terminate(self, vehicle, ctx):
+        pass
+
+
+class Sam6RocketSensor:
+    name = "sensor"
+
+    def define(self, vehicle):
+        store = vehicle.store
+        zeros3 = (0.0, 0.0, 0.0)
+        for field in (
+            Field("mseek", 0, "int", "data", "sensor"),
+            Field("stel1", 0.0, "real", "data", "sensor"),
+            Field("stel2", 0.0, "real", "data", "sensor"),
+            Field("stel3", 0.0, "real", "data", "sensor"),
+            Field("dta", 0.0, "real", "out", "sensor", ("com",)),
+            Field("dvta", 0.0, "real", "out", "sensor", ("com",)),
+            Field("tgo_tgt", 9999.0, "real", "diag", "sensor"),
+            Field("los_azx", 0.0, "real", "diag", "sensor"),
+            Field("los_elx", 0.0, "real", "diag", "sensor"),
+            Field("sigdy", 0.0, "real", "diag", "sensor"),
+            Field("sigdz", 0.0, "real", "diag", "sensor"),
+            Field("UTAA", zeros3, "vec", "out", "sensor"),
+            Field("WOEA", zeros3, "vec", "out", "sensor"),
+            Field("STAL", zeros3, "vec", "out", "sensor"),
+        ):
+            store.define(field)
+
+    def initialize(self, vehicle, ctx):
+        pass
+
+    def execute(self, vehicle, ctx):
+        store = vehicle.store
+        mseek = store.get("mseek")
+        if mseek == 0:
+            return
+        flag_exo = store.get("flag_exo")
+        alt = store.get("alt")
+        alt_endo = store.get("alt_endo")
+        if not (flag_exo and alt < alt_endo):
+            return
+        stel = np.array(
+            [store.get("stel1"), store.get("stel2"), store.get("stel3")],
+            dtype=float,
+        )
+        sael = np.asarray(store.get("SAEL"), dtype=float)
+        vael = np.asarray(store.get("VAEL"), dtype=float)
+        tal = np.asarray(store.get("TAL"), dtype=float)
+        stal = stel - sael
+        dta = float(np.linalg.norm(stal))
+        if dta == 0.0:
+            utal = np.zeros(3, dtype=float)
+        else:
+            utal = stal / dta
+        utaa = tal @ utal
+        vtael = vael * (-1.0)
+        dvta = float(utal @ vtael)
+        abs_dvta = fabs(dvta)
+        if abs_dvta > SMALL:
+            tgo_tgt = dta / abs_dvta
+        else:
+            tgo_tgt = 0.0
+        woea = tal @ _skew(utal) @ vtael * (1.0 / dta)
+        store.set("dta", dta)
+        store.set("dvta", dvta)
+        store.set("tgo_tgt", tgo_tgt)
+        store.set("UTAA", utaa)
+        store.set("WOEA", woea)
+        store.set("STAL", stal)
+        store.set("sigdy", float(woea[1]))
+        store.set("sigdz", float(woea[2]))
 
     def terminate(self, vehicle, ctx):
         pass
