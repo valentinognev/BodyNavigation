@@ -1,5 +1,10 @@
 # Updates
 
+## 0.119.0 - SAM6 AIRCRAFT3 guidance
+- Added `cadac.vehicles.sam6.aircraft.Sam6AircraftGuidance` (`name="guidance"`). Port of SAM6 `Aircraft::guidance`. Does not define Flat3 names (`time`/`grav`/`TVL`/`SAEL`/`VAEL`) or control/forces names. No vehicle class.
+- `execute`: `acft_option==0` writes `ACOML=(0,0,-grav)`. `==1` inside `[man_start,man_stop)` horizontal g-turn `ACOMV=(0,gturn*grav,-grav)` then `ACOML=TVL.T@ACOMV`. `==2` escape vs first `MISSILE6` `SBEL`/`VBEL` by `Packet.type`. Outside window gravity bias. Else `ValueError`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_aircraft_guidance.py` (acft_option=0 grav=9.8 → `ACOML==[0,0,-9.8]`; acft_option=3 raises; acft_option=1 identity TVL `ACOML[1]==9.8`; first MISSILE6 by type not `"m1"`).
+
 ## 0.118.1 - SAM6 TVC/RCS distinct zero vectors
 - `Sam6Tvc.execute` / `Sam6Rcs.execute` write a fresh `np.zeros(3)` per output (`FPB`/`FMPB`, `FMRCS`/`FARCS`) so `StateStore` does not alias them.
 
