@@ -1,5 +1,113 @@
 # Updates
 
+## 0.158.0 - AGM6 test-case JSONC smoke
+- Checked-in `Python/cases/agm6/input_testcase.jsonc` + `weather_deck.jsonc` from `input_2_1 AGM6 Test Case.asc` (`family="agm6"`, three vehicles, `mair=212`, weather/stoch means, events `time>3` and `mseek=4`). Reuses `AGM6_aero_deck.jsonc`.
+- `Agm6Environment` Dryden reads Flat6 `TBL` when CADAC `TBD` is absent.
+- Unit `Python/tests/unit/test_agm6_testcase_smoke.py`: translate bindings; `run_scenario` `end_time` 0.05 three vehicles, missile `hbe` finite, all `health==1`; family TARGET3 is `Agm6Target` not Hyper5 `Target3`.
+- E2E `Python/tests/e2e/test_agm6_testcase.py` skips if `tests/e2e/goldens/agm6/test_case_plot.csv` is absent (file not created).
+
+## 0.157.1 - AGM6 free-flight e2e skip-without-golden
+- Added `Python/tests/e2e/test_agm6_freeflight.py`. Skip if `tests/e2e/goldens/agm6/plot.csv` is absent (file not created). Else `run_scenario` on `Python/cases/agm6/input_freeflight.jsonc`; compare plot-flagged `hbe`/`vmach` when both present; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Live free-flight `run_scenario` calls `require_golden` first.
+
+## 0.157.0 - Run AGM6 MISSILE6 from JSONC free flight
+- `Agm6Missile` (`type="MISSILE6"`) constructor `(name, aero_deck, events=None, weather_deck=None)`. Modules: free-flight ASC order then ins/datalink/sensor/guidance/control/actuator/intercept so define always runs. Skip-if-exists; `com_names` from `"com"` flags.
+- `_VEHICLE_FAMILIES[("agm6","MISSILE6"|"TARGET3"|"AIRCRAFT3")]`. Not in `_VEHICLE_TYPES`. `_build_vehicle`: family `agm6` MISSILE6 requires aero (prop ignored, weather passed); TARGET3/AIRCRAFT3 `(name, events)`. Global `_NO_DECK_TYPES` only when `family is None`.
+- Case `Python/cases/agm6/input_freeflight.jsonc` (`family="agm6"`, `end_time` 30, `alpha0x=3`, `mprop=1`, `sbel3=-7000`, `dvbe=293`, no mair). family=None MISSILE6 still ValueError; HYPER5 TARGET3 without family still constructs.
+- Tests: `Python/tests/unit/test_agm6_one_step.py`.
+
+## 0.156.0 - Translate WEATHER_DECK and stochastic means
+- Shared `_parse_vehicle` maps `WEATHER_DECK` → `weather_deck` jsonc path (same as AERO_DECK/PROP_DECK). `GAUSS`/`MARKOV`/`RAYL` store the mean/value only (`GAUSS biasal 0 5` → `biasal=0`; `MARKOV randal 2 5` → `randal=2`; `RAYL dvae 5` → `dvae=5`); prefixes are not skipped and not sampled.
+- `VehicleSpec.weather_deck: Path | None` default `None`. `load_scenario` resolves it relative to the JSONC parent. `translate_scenario_asc(..., family=None)` and `VehicleSpec.family` unchanged.
+- Tests: `Python/tests/unit/test_agm6_translate_weather.py`. Existing AERO_DECK/PROP_DECK translate tests kept green.
+
+## 0.155.0 - AGM6 weather deck wind and Dryden
+- `Agm6Environment.execute` ports C++ atmosphere/wind/turbulence decode. `matmo==2` look_up `density`/`pressure`/`temperature` vs `hbe` (`tempk=tempc+273.16`, `vsound=sqrt(1.4*R*tempk)`). `mwind==1` constant `dvw=dvae`; `mwind==2` look_up `speed`/`direction`; smooth `VAELS` with `twind` as C++. `mwind==0` `VAEL=0`. `mturb==1` Dryden with injected `gauss_value` (store if present, else 0; no `rand()`). `mturb==0` no add. Always `VBAL=VBEL-VAEL`. Unknown matmo/mturb/mwind digits → `ValueError`. Does not modify `cadac.eom.flat6`.
+- Tests: `Python/tests/unit/test_agm6_weather.py` (parse `weather_deck.asc`; mair=200 rho vs look_up at hbe=7000; mair=1 dvae=5 psiwdx=0 VAEL north `-dvw*cos` smoothed; mair=212 gauss_value=0 finite VAEL). Task 17 `test_agm6_environment.py` mair=212 no longer raises with a weather deck. rtol=1e-12, atol=1e-14.
+
+## 0.154.0 - AGM6 environment mair 0 US76
+- Added `cadac.vehicles.agm6.environment.Agm6Environment` (`name="environment"`). Constructor `(weather_deck=None)`. `define` registers C++ `def_environment` plus `VBAL` (reused `Flat6Kinematics.execute` reads `VBAL`). Does not define newton `hbe`/`VBEL`.
+- `initialize`: `dvba=dvbe`. `execute` decodes `mair=|matmo|mturb|mwind|`. All-zero: US76 `atmosphere76(hbe)` + `grav=gravity(hbe)` + `VAEL=0` + `VBAL=VBEL-VAEL` + `dvba=||VBAL||` + `vmach`/`pdynmc` as C++. Other `mair` → `ValueError` until weather. Skip `trcond`/`mfreeze` if absent. Does not modify `cadac.eom.flat6`. Not registered.
+- Tests: `Python/tests/unit/test_agm6_environment.py` (mair=0, hbe=7000, VBEL=[293,0,0] rho/press vs US76, VBAL==VBEL, vmach finite; mair=212 raises; FALCON6 `test_flat6_environment.py` kept green; rtol=1e-12, atol=1e-14).
+
+## 0.153.0 - AGM6 aircraft track files
+- `Agm6AircraftSensor.execute` ports C++ `Aircraft::sensor`. On `sim_time>=track_epoch` (init latches epoch to `sim_time`), first 5 `Packet.type=="TARGET3"` in appearance order (not id `t1`): polar from aircraft `SAEL` minus target `SAEL` (fallback `SBEL`); add stored `dat_sigma`/`azat_sigma`/`elat_sigma`; `STCELn=SAEL-SATCL`; `VTCELn=VTEL+vel_sigma` (`VAEL` fallback `VBEL`). Then `track_epoch=sim_time+track_step`.
+- `com` on STCEL1–3/VTCEL1–3 as C++. Same class on `Agm6Aircraft`. No gauss sample. No Hyper5/Plane6/SAM6 imports. Not registered.
+- Tests: `Python/tests/unit/test_agm6_aircraft_sensor.py` (track_step=1 sigmas=0 SAEL=[0,0,-7000] TARGET3 SAEL=[33000,10000,-100] VTEL=[0,-5,0] → STCEL1/VTCEL1; order not t1; SBEL fallback; max 5; epoch hold; stored sigmas vs polar; vehicle same class; rtol=1e-12, atol=1e-14). Task 15 `test_agm6_aircraft.py` kept green.
+
+## 0.152.0 - AGM6 AIRCRAFT3 flight path
+- Added `cadac.vehicles.agm6.aircraft` (`Agm6AircraftGuidance`/`Agm6AircraftControl`/`Agm6AircraftForces`/`Agm6AircraftSensor`/`Agm6Aircraft`). One file matching C++ `aircraft_modules.cpp`. Reuses Task 14 `Agm6Flat3Environment`/`Agm6Flat3Newton`/`Flat3Kinematics`.
+- Guidance `acft_option==0` `ACOML=[0,0,-grav]`; `==1` `ACOMV=[0,gturn*grav,-grav]`, `ACOML=TVL.T@ACOMV`; `==2` escape vs first `Packet.type=="TARGET3"` `SAEL`/`VAEL`; else `ValueError`.
+- Control ports C++ lags (`tphi`,`tanx`), bank limit `philimx`, `phiavout`, `anx`. Local CADAC sign. Forces `FSPA=[acc_longx*grav,0,-anx*grav]`; `FSPV=FSPA`. Dummy `Agm6AircraftSensor` `define` registers C++ `def_sensor` (`com` on STCEL1–3/VTCEL1–3; no commented `track_on`); `execute` is `pass` until Task 16.
+- `Agm6Aircraft.type=="AIRCRAFT3"`. Constructor `(name, events=None)`. Modules: env, kinematics, guidance, control, forces, newton wrapper, sensor. `com_names` from `"com"` flags. Not registered. No Hyper5/Plane6/SAM6 imports.
+- Tests: `Python/tests/unit/test_agm6_aircraft.py` (acft_option=0 grav=9.81 ACOML[2]==-grav; tphi=0.5 philimx=60 finite phiavout vs C++; FSPA[2]==-anx*grav; acft_option=3 raises; first TARGET3 not id; rtol=1e-12, atol=1e-14).
+
+## 0.151.0 - AGM6 TARGET3 Flat3 ground target
+- Added `cadac.vehicles.agm6.flat3io.copy_in`/`copy_out`: `sael*→sbel*`, `dvae→dvbe`, `FSPA→FSPV`, `SAEL→SBEL` (zeros SAEL rebuilt from `sael*`); after newton `SBEL→SAEL`, `VBEL→VAEL`, `dvbe→dvae`, `TBL→TAL`, `sbel1=SBEL[0]` etc. `Agm6Flat3Environment`/`Agm6Flat3Newton` wrap `Flat3Environment`/`Flat3Newton` via copy_in/delegate/copy_out. Reuse `Flat3Kinematics`. Do not modify `cadac.eom.flat3`.
+- Added `cadac.vehicles.agm6.target.Agm6Target` (`type="TARGET3"`). Constructor `(name, events=None)`. Modules: Agm6Flat3Environment, Flat3Kinematics, Agm6TargetForces, Agm6Flat3Newton. Forces `FSPA=[acc_longx*grav, acc_latx*grav, -grav]`; `FSPV=FSPA`; diags `aax`/`alx`/`anx` (`com`). `com_names` from `"com"` flags include `SAEL`/`VAEL`. Not registered. No Hyper5 `Target3` import.
+- Tests: `Python/tests/unit/test_agm6_target.py` (sael1=33000, sael2=10000, sael3=-100, dvae=5, psivlx=-90, acc_latx=0.01; after init SAEL[0]==33000; one execute FSPA[1]==0.01*grav, FSPA[2]==-grav; Hyper5 not imported; rtol=1e-12).
+
+## 0.150.0 - AGM6 intercept halt/ground/hit
+- Added `cadac.vehicles.agm6.intercept.Agm6Intercept` (`name="intercept"`). `define` registers C++ `def_intercept` (`mterm`,`write`,`miss`,`hit_time`,`MISS_P`,`time_m`,`SBMTP`,`mode`,`dbt`,`psiplx`,`thtplx`,`critmax`). Does not define kinematics/sensor/guidance names (`time`,`halt`,`stop`,`lconv`,`SBEL`,`tgt_num`,`mguid`,`mseek`,`maut`,`mprop`,`trcond`).
+- `execute`: no `print`/`sys.exit`. Halt (if `halt` in store and true) or (`trcond` and `stop` if present) or ground `-SBEL[2]<=0` with `write` latch → `vehicle.health=0`, `ctx.combus[slot].status=0`. Absent `halt`/`stop` treated as 0. Target-plane intercept when `guid_mid==4 or guid_term in {5,6}` and `dbt<100` and `sbtp3>0` as C++ (`mat2tr(psiplx*RAD,thtplx*RAD)`, interpolate `MISS_P`/`hit_time`). Target from `type=="TARGET3"` + 1-based `tgt_num` (`SAEL`/`SBEL` fallback). Does not write `lconv`. No Plane6/Hyper5 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_intercept.py` (halt=1 write=1 → health 0 and packet status 0; halt=0 sbel3=-7000 no kill; sbel3=+1 ground kill once write=0; mguid=40/5/6 hit vs C++ rtol=1e-12; mguid=30 no hit; TARGET3 order not id).
+
+## 0.149.0 - AGM6 dynamic IIR sensor
+- `Agm6Sensor.execute` `skr_dyn==1` ports C++ `sensor_ir_dyn` / `sensor_ir_aimp` / `sensor_ir_uthpb` / `sensor_ir_thb`. `skr_dyn==0` kinematic unchanged; else including 2 → `ValueError` (mseek 0/5 still skip). Image/gimbal errors at stored means (no gauss). Kalman 2nd-order lags stored-slope `integrate`. TTL identity unless `TTL` planted (C++ `sensor()` identity shortcut; not `VTEL.mat()`).
+- `mseek==3` dyn: FOV `fabs(ehz)<=fovyaw` and `fabs(ehy)<=fovpitch` after `dtimac` → `mseek=4`, else `trcond=5`. `mseek==4` dyn: break-lock `mseek=2`/`mguid=40`/`trcond` 6–9; `dbtk<dblind` → `mseek=5` (hold; C++ zeros pointing/LOS next cycle). Writes `trcond`/`mguid` only if planted. Skip `fovlimx`/IRS if absent. Local CADAC `SMALL`. No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_sensor_dyn.py` (skr_dyn=1, mseek=4, dbtk=5000, wnk=100, zetak=0.9, gk=10, dt=0.001, frozen SBTL/TBL/WBECB; sigdpy finite vs C++ replica rtol=1e-12; dbtk<dblind → mseek=5; eh>trate → mseek=2/mguid=40). Kin `test_skr_dyn_1_uses_dynamic_iir_without_raise` replaces the Task 11 raise.
+
+## 0.148.0 - AGM6 kinematic IIR sensor
+- Added `cadac.vehicles.agm6.sensor.Agm6Sensor` (`name="sensor"`). `define` registers C++ `def_sensor` plus undeclared execute slots `timeac`/`dbtk`. Does not define kinematics/newton/guidance names (`time`,`SBEL`,`VBEL`,`TBL`,`trcond`,`mguid`) or absent C++ `fovlimx`/IRS.
+- `execute`: TARGET3 by 1-based `tgt_num` among `Packet.type=="TARGET3"` (not CADAC `t{n}`). Copy `SAEL→STEL`,`VAEL→VTEL` (fallback `SBEL`/`VBEL`). `mseek==0` writes STEL/VTEL, no mode change. `mseek==2` and `dbtk<racq` → `mseek=3`. `mseek==3` kinematic `sensor_ir_kin`; `timeac>dtimac` → `mseek=4`. `mseek==4` LOS rates `sigdpy`/`sigdpz`. `mseek==5` hold (download, no mode change, no raise). Else including 1 → `ValueError`. `skr_dyn==1` → `ValueError` until dynamic IIR. Skip `fovlimx`/IRS if absent. Writes `dvbtc` by name (C++ wrongly stores into `BIASSC`). No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_sensor_kin.py` (tgt_num=1, racq=7000, dtimac=0.3, skr_dyn=0; range inside racq 2→3; timeac>dtimac → 4 vs C++ rtol=1e-12; mseek=0 no mode change; mseek=5 hold; mseek=1 and skr_dyn=1 raise; TARGET3 order not id; SBEL/VBEL fallback).
+
+## 0.147.0 - AGM6 datalink named aircraft tracks
+- Added `cadac.vehicles.agm6.datalink.Agm6Datalink` (`name="datalink"`). `define` registers C++ `def_datalink` (`mnav`,`STCEL`,`VTCEL`,`tgt_pos`,`SAEL`,`VAEL`). Does not define `tgt_num` (sensor; tests register it).
+- `execute`: first `Packet.type=="AIRCRAFT3"` (not CADAC id `a1` or slot `2*tgt_num+5`). Copy named `STCEL{tgt_num}`/`VTCEL{tgt_num}` plus `SAEL`/`VAEL` from that packet. `abs(||STCEL||-tgt_pos)>EPS` → `mnav=3` and save `tgt_pos`. No AIRCRAFT3 → STCEL zeros, `mnav=0`, no raise. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_datalink.py` (STCEL1=[33000,10000,-100] copies; second execute mnav==0; moved STCEL1 → mnav==3; no aircraft zeros; tgt_num=2 uses STCEL2; first AIRCRAFT3 wins).
+
+## 0.146.0 - AGM6 mid pronav and terminal compensated guidance
+- Added `cadac.vehicles.agm6.guidance.Agm6Guidance` (`name="guidance"`). `define` registers C++ `def_guidance` (mguid/gnav/commands, grav_bias, line-guide slots, WOELC/UTBLC, STELM/VTELC/STELC/STBLC). Does not define INS/datalink/sensor names (`TBLC`,`SBELC`,`VBELC`,`FSPCB`,`mnav`,`STCEL`,`VTCEL`,`STEL`,`psipb`/`thtpb`/`sigdpy`/`sigdpz`). Tests plant them.
+- `execute` C++ order: `mnav==3` latches `epchta`/`STELM=STCEL`/`VTELC=VTCEL` then extrapolates `STELC=STELM+VTELC*dtime` (and `STBLC`) even when `mguid==0`. `mguid==0` returns without writing `ancomx`/`alcomx`. In-scope: `30` mid-3 datalink `guidance_mid_pronav`; `40` mid-4 `STBLC=STEL-SBELC`; `6` `guidance_term_comp`. Else `ValueError` (20/5/2). `mguid>0` circular limiter vs `gmax` then `alcomx`/`ancomx`. Does not write `mnav` onto `grav_bias`. Absent `launch_time` → `ctx.sim_time`. Local CADAC `SMALL`. No Plane6/Hyper5/Hyper6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_guidance.py` (mguid=0 mnav=3 latches STELM, no command write; mguid=30/6 vs C++ ACBX+limiter rtol=1e-12; mguid=40 uses STEL; mguid=20/5/2 raise).
+
+## 0.145.0 - AGM6 INS ideal and deterministic errors
+- Added `cadac.vehicles.agm6.ins.Agm6Ins` (`name="ins"`). `define` registers C++ `def_ins` (error-data vectors default zeros, not CADAC `gauss()`). Does not define kinematics/newton truth names (`TBL`,`FSPB`,`WBEB`,`SBEL`,`VBEL`,`dvbe`,`phiblx`). Control names `WBECB`/`FSPCB`/`phiblcx` live here.
+- `initialize`: `mins==0` copy `SBELC=SBEL`, `VBELC=VBEL`. `mins==1` Cholesky of C++ `PP0` times zero Gauss vector (all `XX_INIT=0`) so `SBELC=SBEL`. Else `ValueError`.
+- `execute`: `mins==0` copy truth into `TBLC`/`FSPCB`/`WBECB`/`SBELC`/`VBELC`/`dvbec`/`phiblcx` then common `psivlcx`/`thtvlcx`/`thtblcx`/`phiblcx` from `VBELC`/`TBLC` as C++. `mins==1` Widnall ODEs with instrument errors at stored means (zeros → computed ≈ truth). Else `ValueError`. `ins_alt`: `hbem=hbe+biasal+randal`. No random/gauss. No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_ins.py` (mins=0 SBEL→SBELC rtol=1e-12; mins=1 zero errors SBELC≈SBEL; mins=2 raises; control names defined; ins_alt 7000+10+2=7012).
+
+## 0.144.0 - AGM6 accel control and maut dispatcher
+- `Agm6Control.execute` is the maut dispatcher: `maut==0` return without writing `dpcx`/`dqcx`/`drcx`. `maut in {1,2,3}`: always `control_roll`; `2` also `control_rate`; `3` also `control_accel`. Else including -1 → `ValueError`.
+- `control_accel(vehicle, int_step)` ports C++ pole-placement + circular `alimit` + stored-slope `integrate` of `yy`/`zz`. Reads INS `FSPCB`/`WBECB` and guidance `ancomx`/`alcomx` (tests register them). Writes `dqcx`/`drcx`/`GAINFB` and states. Limit `|dqcx|<=dqlimx`, `|drcx|<=drlimx` with CADAC sign inside the helper as C++ (not in the dispatcher). Locals `ancomx`/`alcomx` not written back. `dt=ctx.int_step`. Local CADAC sign. No Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_maut.py` (maut=3, wacl=2, zacl=0.7, pacl=10, alimit=3, ancomx=1, alcomx=0, dt=0.001, frozen FSPCB/WBECB/der → finite dqcx vs C++ rtol=1e-12, atol=1e-14; maut=0 no write; maut=1 writes dpcx only; maut=4/-1 raise). Task 6 execute-is-pass now asserts maut=0 no write.
+
+## 0.143.0 - AGM6 roll and rate control
+- Added `cadac.vehicles.agm6.control.Agm6Control` (`name="control"`). `define` registers C++ `def_control` (`maut`/`mfreeze`, accel poles `wacl`/`zacl`/`pacl`, `alimit`, `dqlimx`/`drlimx`/`dplimx`, roll poles `wrcl`/`zrcl`, commands `dpcx`/`dqcx`/`drcx` out+plot, states `yyd`/`yy`/`zzd`/`zz`, `GAINFB`/`gainp`, diags `gkp`/`gkphi`/`zrate`/`grate`/`wnlagr`, `zetlagr`/`qqcomx`/`rrcomx`). Does not define INS/aero/newton names (`WBECB`,`phiblcx`,`dlp`/`dld`/`dna`/`dnd`/`dma`/`dmq`/`dmd`,`dvbe`). `initialize`/`terminate` pass. `execute` pass until maut dispatcher.
+- Helpers port C++ `control_roll`/`control_rate`: return nothing; write `dpcx` plus `gkp`/`gkphi` (roll, `|dpcx|<=dplimx`) and `dqcx`/`drcx` plus `zrate`/`grate`/`wnlagr` (rate). Gains from `dlp`/`dld`/`dna`/`dmd`/`zetlagr`; commands from INS `WBECB`/`phiblcx` (tests register them). `pp=WBECB[0]` rad/s not `*RAD`. Rate `dqcx=DEG*grate*qq-qqcomx`. Negative radix → module `SMALL=1.e-7` (not `cadac.constants`). Local CADAC sign. No Plane6/Hyper6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_control_roll.py` (wrcl=5, zrcl=0.9, dplimx=25, phicomx=0, phiblcx=2, WBECB=[0.1,0,0], dlp=-2, dld=20 → dpcx vs C++ rtol=1e-12, atol=1e-14; zetlagr=0.9, qqcomx=rrcomx=0, dvbe=293 frozen aero der → dqcx finite; execute remains pass).
+
+## 0.142.0 - AGM6 four-fin actuators
+- Added `cadac.vehicles.agm6.actuator.Agm6Actuator` (`name="actuator"`). `define` registers C++ `def_actuator` (`mact`,`dlimx`,`ddlimx`,`wnact`,`zetact`,`dpx`/`dqx`/`drx` out+plot, fin diags `delx*`/`delcx*`, scalar states `dx*`/`ddx*`). Does not define control commands (`dpcx`/`dqcx`/`drcx`). `initialize`/`terminate` pass.
+- `execute` ports `Missile::actuator`: mix `delcx1=-dpcx+dqcx-drcx` (and 2/3/4). `mact<2` position-limit `dlimx` then back-convert `dpx,dqx,drx`. `mact==2` `actuator_scnd` (stored-slope `integrate`, rate/position limits). Else ValueError. `dt=ctx.int_step`. Local CADAC sign. No Plane6/Hyper6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_actuator.py` (mact=0, dlimx=20, dpcx=0, dqcx=5, drcx=0 → |dqx|<=20 mix round-trip; mact=2 wnact=62.8 zetact=0.7 ddlimx=600 dt=0.001 finite fins vs C++ rtol=1e-12, atol=1e-14; mact=3 raises).
+
+## 0.141.0 - AGM6 missile forces FAPB/FMB
+- Added `cadac.vehicles.agm6.forces.Agm6Forces` (`name="forces"`). `define` registers C++ `def_forces` (`FAPB`/`FMB` vec out only). Does not define aero/prop/newton names (`pdynmc`, `thrust`, `refa`/`refl`, `ca`/`cy`/`cn`/`cll`/`clm`/`cln`, `FSPB`). `initialize`/`terminate` pass.
+- `execute` ports `Missile::forces`: `FAPB=[-pdynmc*refa*ca+thrust, pdynmc*refa*cy, -pdynmc*refa*cn]`; `FMB=pdynmc*refa*refl*[cll,clm,cln]`. Does not write newton-owned `FSPB`. No Hyper6/Plane6 import. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_forces.py` (pdynmc=12000, refa=0.196, refl=0.5, ca=0.3, cy=0, cn=0.5, cll=0, clm=-0.1, cln=0, thrust=10000 vs C++ rtol=1e-12, atol=1e-14; FSPB sentinel unchanged).
+
+## 0.140.0 - AGM6 analytic rocket propulsion
+- Added `cadac.vehicles.agm6.propulsion.Agm6Propulsion` (`name="propulsion"`). Constructor takes no deck. `define` registers C++ `def_propulsion` (`mprop`,`aexit`,`vmass`,`thrust`,`vmass0`,`ai11`,`ai33`,`spi`,`throtl`,`thrsl`,`fmass0`,`fmasse`,`fmassed`, freeze saves) plus `IBBB` mat and `eng_ang_mom` real (for `Flat6Euler`). Does not define `press`/`mfreeze`.
+- `initialize`: `vmass=vmass0` (inertia stays ASC data). `execute`: `mprop==1` `fmassed_new=thrsl*throtl/(spi*9.81)` (literal 9.81, not `AGRAV`); stored-slope `integrate` of `fmasse`; `vmass=vmass0-fmasse`; `thrust=thrsl*throtl+(101325-press)*aexit`. `mprop==0` `thrust=0` without integrating fuel. `fmasse>=fmass0` → `mprop=0`. Else including -1 → `ValueError`. Writes `IBBB=diag(ai11,ai33,ai33)`, `eng_ang_mom=0`. Skip `mfreeze` latch if `mfreeze` absent. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_propulsion.py` (mprop=1, thrsl=10000, throtl=1, spi=210, aexit=0.02, press=101325, vmass0=1360, fmass0=250, dt=0.001; thrust==10000; fmasse increases; planted `ai11=42.5` → `IBBB[0,0]==42.5`; mprop=0 thrust 0; mprop=2 raises; rtol=1e-12).
+
+## 0.139.0 - AGM6 aerodynamics tables and der
+- Added `cadac.vehicles.agm6.aero.Agm6Aero` (`name="aerodynamics"`). Constructor takes `Datadeck`. `define` registers C++ `def_aerodynamics` (refs, body coeffs, table diags, dimensional der, termination, `stmarg`/`gmax` plot). Does not define kinematics/env/propulsion/actuator/control names (`vmach`,`pdynmc`,`alppx`,`phip`,`ppx`,`qqx`,`rrx`,`dvba`,`vmass`,`ai11`,`ai33`,`dpx`,`dqx`,`drx`,`alimit`).
+- `initialize` ports `init_aerodynamics`: `refl=0.5`, `refa=0.196`, `trmach=0.4`, `trdynm=10e3`, `trload=0.5`, `tralp=1`, `trcond=0`. `execute` ports `Missile::aerodynamics` then `aerodynamics_der`. 1D look_up vs Mach; 2D vs Mach and alpha. Absent `dpx`/`dqx`/`drx`/`alimit` treated as 0. Skip der update when `alppx >= alplimx-3`. Vehicle not registered.
+- Tests: `Python/tests/unit/test_agm6_aero.py` (vmach=0.85, alppx=3, hbe=7000 US76 pdynmc; `ca`/`cn`/`clm` vs C++ rtol=1e-12; `dna` finite; der skip leaves `stmarg` unchanged). Parses `AGM6_aero_deck.asc`.
+
+
 ## 0.138.0 - run SRAAM6 1v1 from JSONC
 - AIM5 family API: `VehicleSpec.family`; family set → `_VEHICLE_FAMILIES` only (no fallthrough). `("sraam6","MISSILE6")` / `("sraam6","TARGET3")`. SRAAM6 TARGET3 not in `_VEHICLE_TYPES` or `_NO_DECK_TYPES`. Translate writes `family` on each vehicle; GAUSS/MARKOV/RAYL store means. `OPTION_KEYS` accepts CADAC `stat`.
 - Missile: SRAAM6 Flat6 env/kinematics/euler, aero+der, propulsion, four-fin actuator, maut control, forces, TVC, seeker, mid/term pronav, intercept (no `sys.exit`). Reuse `Flat6Newton` only.

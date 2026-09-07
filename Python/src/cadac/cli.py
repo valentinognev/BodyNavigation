@@ -8,6 +8,9 @@ from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns, plot_row, write_pl
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
+from cadac.vehicles.agm6.aircraft import Agm6Aircraft
+from cadac.vehicles.agm6.target import Agm6Target
+from cadac.vehicles.agm6.vehicle import Agm6Missile
 from cadac.vehicles.aim5.aircraft import Aim5Aircraft
 from cadac.vehicles.aim5.vehicle import Aim5
 from cadac.vehicles.cruise3.vehicle import Cruise3
@@ -50,7 +53,12 @@ _VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
     ("rocket6", "HYPER6"): Rocket6,
 }
 _NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3", "ROTOR"})
-_NO_DECK_FAMILY_TYPES = {("aim5", "AIRCRAFT3"), ("sraam6", "TARGET3")}
+_NO_DECK_FAMILY_TYPES = {
+    ("aim5", "AIRCRAFT3"),
+    ("sraam6", "TARGET3"),
+    ("agm6", "TARGET3"),
+    ("agm6", "AIRCRAFT3"),
+}
 
 
 def register_family_type(family, type_name, cls) -> None:
@@ -71,6 +79,21 @@ register_family_type("sam6", "ROCKET5", Sam6Rocket)
 register_family_type("sam6", "RADAR0", Sam6Radar)
 register_family_type("sraam6", "MISSILE6", Sraam6Missile)
 register_family_type("sraam6", "TARGET3", Sraam6Target)
+register_family_type("agm6", "MISSILE6", Agm6Missile)
+register_family_type("agm6", "TARGET3", Agm6Target)
+register_family_type("agm6", "AIRCRAFT3", Agm6Aircraft)
+
+
+def _resolve_vehicle(family, vtype):
+    if family:
+        cls = _VEHICLE_FAMILIES.get((family, vtype))
+        if cls is None:
+            raise ValueError(f"unknown vehicle type {vtype!r} for family {family!r}")
+        return cls
+    cls = _VEHICLE_TYPES.get(vtype)
+    if cls is None:
+        raise ValueError(f"unknown vehicle type {vtype!r}")
+    return cls
 
 
 @dataclass
@@ -129,18 +152,17 @@ def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
 
 
 def _build_vehicle(path, spec):
-    if spec.family is not None:
-        cls = _VEHICLE_FAMILIES.get((spec.family, spec.type))
-        if cls is None:
-            raise ValueError(
-                f"{path}: unknown vehicle type {spec.type!r} for family {spec.family!r}"
-            )
-    else:
-        cls = _VEHICLE_TYPES.get(spec.type)
-        if cls is None:
-            raise ValueError(f"{path}: unknown vehicle type {spec.type!r}")
+    try:
+        cls = _resolve_vehicle(spec.family, spec.type)
+    except ValueError as exc:
+        raise ValueError(f"{path}: {exc}") from exc
     if spec.family == "sam6":
         return _build_sam6_vehicle(path, spec, cls)
+    if spec.family == "agm6" and spec.type == "MISSILE6":
+        if spec.aero_deck is None:
+            raise ValueError(f"{path}: {spec.type} requires aero_deck")
+        weather = _deck(spec.weather_deck) if spec.weather_deck is not None else None
+        return cls(spec.name, _deck(spec.aero_deck), spec.events, weather)
     if (spec.family, spec.type) in _NO_DECK_FAMILY_TYPES or spec.type in _NO_DECK_TYPES:
         return cls(spec.name, spec.events)
     if cls is Rocket6:
