@@ -1,5 +1,10 @@
 # Updates
 
+## 0.128.0 - SAM6 RADAR0 track aircraft and rockets
+- Added `cadac.vehicles.sam6.radar.Sam6Radar` (`type="RADAR0"`) and `Sam6RadarSensor` (`name="sensor"`). Constructor `(name, events=None, sam_deck=None, srmb_deck=None)`. Modules: sensor, Flat0 kinematics, Flat0 newton. Skip-if-exists define; sensor first so save `launch_delay*` default 9999 wins over kinematics 0. Com `lnch_delay_m1..3` default 0. Not registered in CLI.
+- `mtrack==0` return. `==2` polar from `AIRCRAFT3` `SAEL-SREL` (sigma 0); far: `launch_delay1` 9999 and `lnch_delay_m1` 0; lethal latch `launch_delay1=sim_time`, `lnch_delay_m1=launch_delay1+lnch_dly_bias1`. `==1` rocket apogee when measured `VTCEL[2]>0`; look_up `sam_deck`/`srmb_deck` traj tables as C++; then `lnch_delay_m1=launch_delay+bias`. Else `ValueError`. Pair by `Packet.type` index. Up to three targets.
+- Tests: `Python/tests/unit/test_sam6_radar.py`.
+
 ## 0.127.0 - SAM6 ROCKET5 intercept
 - Added `cadac.vehicles.sam6.rocket.Sam6RocketIntercept` (`name="intercept"`). Port of SAM6 `Rocket::intercept` without `sys.exit`/`print`. Does not define Flat3/sensor/guidance names (`alt`, `dta`/`dvta`, `mguide`). No vehicle class.
 - `execute`: `dta<1000` and `mguide>0` and `dvta>0` → `vehicle.health=0` and combus status 0; `alt<0` → health 0; `write` latch (once 0, do not keep killing). Protocol `vehicle.store`. No Flat6/Plane imports.
