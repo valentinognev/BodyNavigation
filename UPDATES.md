@@ -1,5 +1,9 @@
 # Updates
 
+## 0.131.2 - SAM6 autopilot e2e skip without golden
+- Added `Python/tests/e2e/test_sam6_autopilot.py`. Skip if `tests/e2e/goldens/sam6/plot.csv` is absent (file not created). Else `run_scenario` on `cases/sam6/input_SAM_autopilot.jsonc`; compare missile plot columns present in both; sentinel `time=-1`; CSV `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`.
+- Golden must be zero-MC / `mins=1` (every gauss/uniform 0). Do not check in a raw CADAC MC plot.
+
 ## 0.131.1 - SAM6 rocket smoke propulsion before aero
 - Rocket smoke JSONC MODULES match C++ SRBM: propulsion then aerodynamics (`mass≈6000` before `gmax`). Kept `sensor` (`mseek==0`).
 - Reverted `Sam6RocketAero` `gmax` IEEE `np.divide`. Restore `/ (mass * grav)`. Define `mass` default still 0.
