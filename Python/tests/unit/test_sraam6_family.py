@@ -51,9 +51,19 @@ def test_vehicle_family_overrides_scenario_family(tmp_path: Path):
     assert load_scenario(path).vehicles[0].family == "hyper5"
 
 
-def test_family_sraam6_does_not_fall_through_to_global_target3(tmp_path: Path):
+def test_family_sraam6_target3_constructs_sraam6_target(tmp_path: Path):
+    from cadac.vehicles.sraam6.target import Sraam6Target
+
     path = _write(tmp_path / "s.jsonc", _minimal("TARGET3", vehicle_family="sraam6"))
     cfg = load_scenario(path)
     assert cfg.vehicles[0].family == "sraam6"
-    with pytest.raises(ValueError, match="TARGET3"):
+    vehicle = _build_vehicle(path, cfg.vehicles[0])
+    assert type(vehicle) is Sraam6Target
+
+
+def test_family_sraam6_does_not_fall_through_to_global_target3(tmp_path: Path):
+    path = _write(tmp_path / "s.jsonc", _minimal("CRUISE3", vehicle_family="sraam6"))
+    cfg = load_scenario(path)
+    assert cfg.vehicles[0].family == "sraam6"
+    with pytest.raises(ValueError, match="CRUISE3"):
         run_scenario(path)

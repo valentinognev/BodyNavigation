@@ -38,13 +38,13 @@ def test_load_minimal_cruise3_with_time_event():
 def test_unknown_option_key_raises(tmp_path: Path):
     p = tmp_path / "bad.jsonc"
     p.write_text(
-        '{ "title": "t", "options": { "scrn": true, "stat": true }, '
+        '{ "title": "t", "options": { "scrn": true, "nope": true }, '
         '"modules": [], "timing": {}, "end_time": 1, '
         '"vehicles": [ { "type": "CRUISE3", "name": "v", "params": {}, "events": [] } ] }',
         encoding="utf-8",
         newline="\n",
     )
-    with pytest.raises(ValueError, match="stat"):
+    with pytest.raises(ValueError, match="nope"):
         load_scenario(p)
 
 

@@ -14,6 +14,7 @@ OPTION_KEYS = (
     "merge",
     "comscrn",
     "traj",
+    "stat",
 )
 
 
