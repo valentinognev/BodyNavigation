@@ -1,5 +1,10 @@
 # Updates
 
+## 0.122.0 - SAM6 ROCKET5 aero and analytic propulsion
+- Added `cadac.vehicles.sam6.rocket.Sam6RocketAero` (`name="aerodynamics"`) and `Sam6RocketPropulsion` (`name="propulsion"`). Port of SAM6 `rocket_modules.cpp` aero/prop only. No vehicle class.
+- Aero: Datadeck `SRBM_aero_deck`; look_up `cltgt_vs_alpha_mach`/`cdtgt_vs_alpha_mach`; `mprop==0` `catgt*=1.1`; init `cnalp=7.468`. Propulsion analytic: `mprop==1` as C++ (`9.81`); burnout `mprop=0`; else `ValueError`. Defaults `mass_launch=6000`, `mass_fuel=4000`, `isp=230`, `thrust_sl=128600`, `aexit=0.282`. Protocol `vehicle.store`. No Flat6/Plane imports.
+- Tests: `Python/tests/unit/test_sam6_rocket_aero.py`, `test_sam6_rocket_propulsion.py` (alphax=5, mach=0.5, mprop=1 `cltgt` vs look_up rtol=1e-12; launch_time=0 press=101325 → thrust=128600 mass=6000; mprop=2 raises).
+
 ## 0.121.0 - SAM6 AIRCRAFT3 forces
 - Added `cadac.vehicles.sam6.aircraft.Sam6AircraftForces` (`name="forces"`). Port of SAM6 `Aircraft::forces`. Does not define Flat3/control names (`grav`/`anx`). No vehicle class.
 - `execute`: `FSPA=(acc_longx*grav, 0, -anx*grav)`. Protocol `vehicle.store`. No Flat6/Plane imports.
