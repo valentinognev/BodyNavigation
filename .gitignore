@@ -9,3 +9,9 @@ Python/.venv/
 Python/cases/**/plot.csv
 .superpowers/sdd/
 .worktrees/
+Python/tools/cadac_cpp/build/
+CADAC_Simulations/**/plot*.asc
+CADAC_Simulations/**/plot*.csv
+CADAC_Simulations/**/tabout.asc
+CADAC_Simulations/**/traj.asc
+CADAC_Simulations/**/traj.csv

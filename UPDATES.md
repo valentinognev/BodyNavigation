@@ -1,5 +1,68 @@
 # Updates
 
+## 0.168.1 - Parity-audit review: harvest restore, harvest tests, inventory notes
+- Harvest restores preexisting CADAC I/O (`input.asc`, `doc.asc`, `input_copy.asc`, plot/traj csv) after copying the golden. Gitignore CADAC run leftovers (`plot*.asc`/`plot*.csv`, `tabout.asc`, `traj.asc`/`traj.csv`) so `CADAC_Simulations/` stays clean vs HEAD for tracked files.
+- Default unit tests no longer rebuild CADAC: `test_hyper3_harvest_matches_checked_in_golden` and `test_harvest_all_writes_or_skips` are `@pytest.mark.integration` and skip unless `CADAC_HARVEST=1`. `csv_from_plot_asc` uses `Python/tests/unit/fixtures/cadac_plot1.asc`.
+- `kind=module` `ported` is a repo-wide class `name=` / filename-stem match, not family-faithful (HYPER6 seeker→aim5, Ground0 kinematics→flat0, etc.). Zero module rows `missing` is that heuristic's limit, not “all modules conceptually ported.” Cross-family `cadac.vehicles.{fam}` hits get `note="name match only"`.
+- `_E2E_OUTCOMES` is the Task 10 pytest snapshot; regenerating `inventory.json` does not re-run e2e.
+- Missing modes with no Python `unknown {flag}` stub are `drop-out` unless already `slice limit` (unused mauty). 0.164.0 “no drop-outs (other missing modes have ValueError)” was wrong: those 18 rows were `missing`, not ValueError `stubbed`. HYPER6 `RADAR0`/`SAT3` stay `missing` / `slice limit`.
+
+## 0.168.0 - Pytest e2e vs goldens and inventory harvest/e2e rows
+- `scan_all` appends 14 `kind=harvest` rows (all `ported`; harvest 14/14 `ok`, empty notes) and 14 `kind=e2e` rows for JSONC test files (`passed`→`ported`, `failed`→`diverged`). SAM6 RF has no JSONC so no e2e row; `test_sam6_rf.py` still skips without its golden.
+- Live `pytest tests/e2e`: 107 passed, 9 failed, 1 skipped. Families with harvested goldens did not skip. Failed comparisons left red; `RTOL`/`atol` unchanged.
+- `inventory.json` 469 rows by status: ported 412, stubbed 18, missing 24, deferred 8, diverged 7. HYPER6 `SAT3`/`RADAR0` still `missing` (slice limit).
+- Unit `test_inventory_has_e2e_and_harvest_kinds`.
+
+## 0.167.0 - Harvest remaining CADAC goldens
+- Added `harvest_all(skip_failed=True)`: build then `harvest_row` for all 14 `HARVEST_ROWS`; `{golden: ok|build_failed|run_failed}`. Timeouts HYPER3 120s, CRUISE5 900s, ROCKET6 600s, others 300s. Unlinks leftover `plot.csv`/`plot1.csv` in the C++ cwd before each run. No `kind=harvest` inventory rows.
+- Harvest input rewrite also forces OPTIONS `y_csv` (`n_csv`→`y_csv`, else append). FALCON5 intercept `exit(1)` skips CADAC CSV conversion; `csv_from_plot_asc` ports `parse_plot_traj_csv` from `plot1.asc`.
+- All 14 rows `ok`. Goldens under `Python/tests/e2e/goldens/` except HYPER3 committed `plot1.csv` untouched (`plot1.gpp.csv` still the canary dest). No CADAC `.cpp` edits; Makefile `LDLIBS` unused.
+- Unit `test_harvest_all_writes_or_skips`, `test_force_csv_on`, `test_csv_from_plot_asc_matches_cadac_csv`.
+
+## 0.166.0 - HYPER3 canary harvest
+- Added `Python/tools/cadac_cpp/harvest.py`: `find_plot_csv` (plot1.csv then plot.csv), `force_monte_off` (`MONTE`/`nmonte`/`NMONTE` following int → 0; OPTIONS `y_monte` → `n_monte`), `harvest_row(row, timeout_s=600)` backup/write/run/copy/restore `input.asc` in `finally`.
+- HYPER3 writes `Python/tests/e2e/goldens/hyper3/plot1.gpp.csv`; committed `plot1.csv` untouched. Climb OPTIONS has no MONTE flag (`nmonte` defaults 0).
+- Unit `tests/unit/test_cadac_cpp_harvest.py`: plot1 preference; MONTE off; g++ `alt` matches committed golden at `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. No `harvest_all`.
+
+## 0.165.0 - Linux compat shim and HYPER3 g++ build
+- Added `Python/tools/cadac_cpp/compat.hpp` (`system("pause")` no-op via function-like `system` macro; `_itoa`; `-include` cstring/cstdio/cstdlib). `Makefile.cadac` keeps `CXXFLAGS ?=` before `COMPAT :=`; appends `-std=c++17 -include $(COMPAT) -Wno-conversion -fpermissive` so conda `CXXFLAGS` still injects the shim. No CADAC `.cpp`/`.hpp` edits.
+- `build_program(program)` in `build_cadac.py` runs make from `cadac_cpp/` with space-free relative `CADAC_DIR`/`BUILD` and `COMPAT=compat.hpp`; binary `build/<PROGRAM>/<program>`.
+- Unit `tests/unit/test_cadac_cpp_hyper3_build.py`: `build_program("HYPER3")` is a file and executable. Skip only if `g++` missing.
+
+## 0.164.0 - Kernel rows and scan_all inventory
+- Added `kernel_rows()` (19 `program="kernel"` rows; `look_up` ported; `nmonte`/`scrn` deferred) and `scan_all(root)` in `Python/tools/cadac_cpp/`. Mode heuristic: ported if `(flag, value)` implemented, else stubbed if flag in `unknown {flag}` stubs, else missing. Vehicles: ported via `cadac.cli:_VEHICLE_TYPES` or `:_VEHICLE_FAMILIES` for that program's family; HYPER6 `SAT3` is not `SATELLITE3`. Modules: ported if `def_<name>` matches a Python class `name=` or filename stem.
+- CLI `PYTHONPATH=tools python -m cadac_cpp.inventory` writes `tools/cadac_cpp/inventory.json` (441 rows, sorted; no harvest/e2e). Human notes: HYPER6 `RADAR0`/`SAT3` and unused `mauty=3,4` are `slice limit`; no drop-outs (other missing modes have ValueError). SAT3 status stays `missing`.
+- Unit `tests/unit/test_cadac_cpp_inventory.py`: `status_for_mode`, kernel deferred Monte/lookup, HYPER6 `RADAR0`/`SAT3` missing.
+
+## 0.163.1 - extract_family_keys reads register_family_type
+- `extract_family_keys` also matches `register_family_type("fam", "TYPE", ...)`. Dedup first-seen with existing `("fam", "TYPE")` tuples. Still no `cadac.cli` import.
+- Unit `test_family_keys_from_register_family_type`: snippet yields `("sam6", "MISSILE6")` plus other sam6/sraam6/agm6 keys; `test_family_keys` tuple case kept green.
+
+## 0.163.0 - Extract Python registry and modes
+- Added `Python/tools/cadac_cpp/extract_python.py`: `extract_global_types` from `_VEHICLE_TYPES` `"TYPE":` keys; `extract_family_keys` from `("fam", "TYPE")` tuples (first-seen); `extract_python_modes` returns implemented `(flag, int)` from `flag == N` / `flag in|not in (...)` plus stub flags from `unknown {flag}`. Imports `MODE_FLAGS` tuple from `extract_cpp`. Dedupes implemented pairs after the `in` tuple loop. Skips `#` lines for implemented modes. Does not import `cadac.cli`.
+- Unit `Python/tests/unit/test_cadac_cpp_extract_python.py` uses source snippets (not `cadac.cli` at collect): CRUISE3/HYPER6/TARGET3; family `(aim5, AIM5)` / `(rocket6, HYPER6)`; maut 0/24, mauty 2, stub `maut`.
+
+## 0.162.1 - extract_modes reads switch cases
+- `extract_modes` also collects `(flag, N)` from `case N:` inside `switch(<MODE_FLAG>)` (FALCON6/HYPER6 `mact`). Still skips `//` lines; `flag==int` unchanged. `MODE_FLAGS` remains a tuple.
+- Unit `test_modes_from_switch_cases`: `switch(mact){ case 0: case 2: }` yields `("mact", 0)` and `("mact", 2)`; commented `mprop==9` switch ignored. `test_modes_from_if_not_comments` kept green.
+
+## 0.162.0 - Extract C++ modules and integer modes
+- `extract_cpp.py`: `MODE_FLAGS` tuple (34 names from the parity spec); `extract_def_modules(text)` from `void Class::def_name(`; `extract_modes(text)` from executable `flag==int` (incl. `||` / `else if`); skip `//` lines; first-seen order. `extract_vehicle_types` unchanged.
+- Unit `test_cadac_cpp_extract_cpp.py`: def names aerodynamics/propulsion/newton, commented `def_ghost` ignored; mprop 0/1/2, mins 0, maut 24 extracted; commented `mprop==9` not extracted.
+
+## 0.161.0 - Extract C++ vehicle types
+- Added `Python/tools/cadac_cpp/extract_cpp.py`: `extract_vehicle_types(text)` from `set_obj_type` `strcmp`/`!strcmp(temp,"TYPE")`; skips `//` and `/*` line prefixes; first-seen order, no rename. `PROGRAM_DIRS` maps all twelve CADAC programs to folders under `CADAC_Simulations/`.
+- Unit `Python/tests/unit/test_cadac_cpp_extract_cpp.py`: HYPER6 snippet yields `HYPER6`/`SAT3`/`RADAR0`; commented `GHOST` ignored; twelve `PROGRAM_DIRS` keys. No `extract_def_modules`/`extract_modes` yet.
+
+## 0.160.0 - CADAC inventory row schema
+- Added `Python/tools/cadac_cpp/schema.py`: frozen `InventoryRow(program, kind, name, cpp, python, status, note)` with `python: str | None`; `KINDS` / `STATUSES` tuples; `dump_inventory` / `load_inventory` JSON roundtrip. Invalid kind or status raises `ValueError`.
+- Unit `Python/tests/unit/test_cadac_cpp_schema.py`: roundtrip with `python=None`; exact `KINDS`/`STATUSES`; bad status rejected.
+
+## 0.159.0 - CADAC harvest JSONC-to-ASC mapping table
+- Added `Python/tools/cadac_cpp/` (empty `__init__.py` + `harvest_table.py`) outside the `cadac` runtime package. `HARVEST_ROWS`: 14 frozen `HarvestRow(jsonc, cpp_dir, asc_name, golden)` paths relative to repo root (`repo_root()` = `Path(__file__).parents[3]`).
+- Pytest `pythonpath = ["src", "tools"]`. Ignore `Python/tools/cadac_cpp/build/`.
+- Unit `Python/tests/unit/test_cadac_cpp_harvest_table.py`: 14 rows; HYPER3 canary ASC exists; no RADAR ASC; AGM6/MAGSIX/HYPER5/ROCKET6 titles.
+
 ## 0.158.1 - Merge remaining CADAC families onto main
 - Local-merge AIM5, CRUISE5, MAGSIX, ROCKET6, SAM6, SRAAM6, AGM6 into `main`. Family registry is the union; `HYPER6` without family still maps to `Hyper6`.
 - Translate: glued IF (`IF time >.25`); `MARKOV` stores 0 (Rocket6/SRAAM6 MONTE-off); `GAUSS`/`RAYL` store the mean. Scenario-level and per-vehicle `"family"`.

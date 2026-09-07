@@ -1,0 +1,11 @@
+CXX ?= g++
+CXXFLAGS ?= -std=c++17 -O2 -include $(COMPAT)
+COMPAT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/compat.hpp)
+CXXFLAGS += -std=c++17 -include $(COMPAT) -Wno-conversion -fpermissive
+CADAC_DIR ?=
+PROGRAM ?=
+BUILD ?=
+SOURCES := $(wildcard $(CADAC_DIR)/*.cpp)
+$(BUILD)/$(PROGRAM): $(SOURCES) $(COMPAT)
+	mkdir -p $(BUILD)
+	$(CXX) $(CXXFLAGS) -I$(CADAC_DIR) -o $@ $(SOURCES)
