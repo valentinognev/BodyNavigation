@@ -44,6 +44,8 @@ class Table:
 class Datadeck:
     def __init__(self, tables: dict[str, Table]) -> None:
         self._tables = tables
+        self._loc_cache: dict[str, tuple] = {}
+        self._idx_last: tuple | None = None
 
     @classmethod
     def from_tables(cls, tables: list[Table]) -> "Datadeck":
@@ -53,20 +55,29 @@ class Datadeck:
         return self._tables[name]
 
     def find_index(self, max: int, value: float, breakpoints) -> int:
+        key = (id(breakpoints), max, value)
+        cached = self._idx_last
+        if cached is not None and cached[0] == key:
+            return cached[1]
         if value >= breakpoints[max]:
-            return max
-        if value <= breakpoints[0]:
-            return 0
-        index = 0
-        while index <= max:
-            mid = (index + max) // 2
-            if value < breakpoints[mid]:
-                max = mid - 1
-            elif value > breakpoints[mid]:
-                index = mid + 1
+            loc = max
+        elif value <= breakpoints[0]:
+            loc = 0
+        else:
+            index = 0
+            while index <= max:
+                mid = (index + max) // 2
+                if value < breakpoints[mid]:
+                    max = mid - 1
+                elif value > breakpoints[mid]:
+                    index = mid + 1
+                else:
+                    loc = mid
+                    break
             else:
-                return mid
-        return max
+                loc = max
+        self._idx_last = (key, loc)
+        return loc
 
     def look_up(
         self,
@@ -76,22 +87,35 @@ class Datadeck:
         x3: float | None = None,
     ) -> float:
         table = self._tables[name]
+        loc1 = loc2 = loc3 = None
+        cached = self._loc_cache.get(name)
+        if cached is not None:
+            cx1, cx2, cx3, loc1, loc2, loc3 = cached
+            if cx1 != x1 or cx2 != x2 or cx3 != x3:
+                loc1 = loc2 = loc3 = None
         if x2 is None:
             n = len(table.x1)
-            loc = self.find_index(n - 1, x1, table.x1)
-            if loc == n - 1:
+            if loc1 is None:
+                loc1 = self.find_index(n - 1, x1, table.x1)
+            self._loc_cache[name] = (x1, x2, x3, loc1, loc2, loc3)
+            if loc1 == n - 1:
                 return float(table.values[-1])
-            return self._interpolate_1d(table, loc, x1)
+            return self._interpolate_1d(table, loc1, x1)
         n1 = len(table.x1)
         n2 = len(table.x2)
-        loc1 = self.find_index(n1 - 1, x1, table.x1)
-        loc2 = self.find_index(n2 - 1, x2, table.x2)
+        if loc1 is None:
+            loc1 = self.find_index(n1 - 1, x1, table.x1)
+        if loc2 is None:
+            loc2 = self.find_index(n2 - 1, x2, table.x2)
         if x3 is None:
+            self._loc_cache[name] = (x1, x2, x3, loc1, loc2, loc3)
             return self._interpolate_2d(
                 table, loc1, loc1 + 1, loc2, loc2 + 1, x1, x2
             )
         n3 = len(table.x3)
-        loc3 = self.find_index(n3 - 1, x3, table.x3)
+        if loc3 is None:
+            loc3 = self.find_index(n3 - 1, x3, table.x3)
+        self._loc_cache[name] = (x1, x2, x3, loc1, loc2, loc3)
         return self._interpolate_3d(
             table,
             loc1,

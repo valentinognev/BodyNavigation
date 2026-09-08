@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.7 - look_up last-index cache
+- `Datadeck._loc_cache[name] = (x1, x2, x3, loc1, loc2, loc3)`; reuse locs only when the query x matches. Interpolation (EPS dx, last-index clamp) unchanged.
+- `find_index` last-key memo `_idx_last = ((id(breakpoints), max, value), loc)`. Binary search unchanged.
+- Tests: `test_repeated_look_up_identical`, `test_look_up_two_tables_do_not_share_locs`, `test_datadeck_has_loc_cache_attribute`, `test_find_index_last_key_memo`. No CADAC `.cpp` edits.
+
 ## 0.169.6 - Unroll 3×3 cadac_matmul (ijk)
 - `cadac_matmul` 3×3 and 3×1 paths are unrolled ijk (`a[r,0]*b[0,c]+…`), same add order as C++ `Matrix::operator*` and the generic `for i`/`for k` loops. Other shapes keep the nested loop.
 - Not `numpy @`. 1-D `b` still squeezes to `(3,)`; `(3,1)` stays a column.
