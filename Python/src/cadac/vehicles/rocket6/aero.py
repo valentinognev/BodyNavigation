@@ -2,12 +2,7 @@ from math import cos, sin, sqrt
 
 from cadac.constants import AGRAV, RAD
 from cadac.kernel.state import Field
-
-
-def _cadac_sign(variable):
-    if variable < 0:
-        return -1
-    return 1
+from cadac.math.frames import cadac_sign
 
 
 class Rocket6Aero:

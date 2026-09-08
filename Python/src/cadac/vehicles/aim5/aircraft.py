@@ -7,25 +7,8 @@ from cadac.eom.flat3 import Flat3Environment, Flat3Kinematics
 from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
+from cadac.math.frames import cadac_sign, skew
 from cadac.vehicles.aim5.vehicle import Aim5Flat3Newton, _define_aim5_vehicle
-
-
-def _cadac_sign(variable):
-    if variable < 0:
-        return -1
-    return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Aim5AircraftForces:
@@ -119,7 +102,7 @@ class Aim5AircraftControl:
 
         phiavx = phiav * DEG
         if abs(phiavx) >= philimx:
-            phiavx = philimx * _cadac_sign(phiavx)
+            phiavx = philimx * cadac_sign(phiavx)
         phiavout = phiavx * RAD
 
         ancomx = sqrt(acoma2 * acoma2 + acoma3 * acoma3) / grav
@@ -132,7 +115,7 @@ class Aim5AircraftControl:
         if acft_option > 0:
             anlimx = pdynmc * clalpha * alplimx / wingloading
             if abs(anx) >= anlimx:
-                anx = anlimx * _cadac_sign(anx)
+                anx = anlimx * cadac_sign(anx)
 
         store.set("phiav", phiav)
         store.set("phiavd", phiavd)
@@ -187,11 +170,11 @@ class Aim5AircraftGuidance:
             vael = store.get("VBEL")
             satl = sbel - stel
             dab = float(np.linalg.norm(satl))
-            gain = guid_gain * float(np.linalg.norm(_skew(vael) @ vtel)) / dab
+            gain = guid_gain * float(np.linalg.norm(skew(vael) @ vtel)) / dab
             uvtel = vtel / np.linalg.norm(vtel)
             uvael = vael / np.linalg.norm(vael)
-            epsl = _skew(uvael) @ uvtel
-            acoml = _skew(epsl) @ uvael * gain + np.array([0.0, 0.0, -grav])
+            epsl = skew(uvael) @ uvtel
+            acoml = skew(epsl) @ uvael * gain + np.array([0.0, 0.0, -grav])
         else:
             raise ValueError(f"unsupported acft_option={acft_option}")
 

@@ -6,6 +6,7 @@ from cadac.constants import DEG, RAD
 from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
+from cadac.math.frames import skew
 from cadac.vehicles.sam6.flat3 import (
     Sam6Flat3Environment,
     Sam6Flat3Kinematics,
@@ -21,18 +22,6 @@ def _sign(variable):
     if variable < 0:
         return -1
     return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Sam6RocketAero:
@@ -236,7 +225,7 @@ class Sam6RocketSensor:
             tgo_tgt = dta / abs_dvta
         else:
             tgo_tgt = 0.0
-        woea = tal @ _skew(utal) @ vtael * (1.0 / dta)
+        woea = tal @ skew(utal) @ vtael * (1.0 / dta)
         store.set("dta", dta)
         store.set("dvta", dvta)
         store.set("tgo_tgt", tgo_tgt)
@@ -298,7 +287,7 @@ class Sam6RocketGuidance:
             dvta = store.get("dvta")
             utaa = np.asarray(store.get("UTAA"), dtype=float)
             woea = np.asarray(store.get("WOEA"), dtype=float)
-            apna = _skew(woea) @ utaa * gnav * fabs(dvta)
+            apna = skew(woea) @ utaa * gnav * fabs(dvta)
             annx = -float(apna[2]) / grav
             allx = float(apna[1]) / grav
         if guid_manvr == 1:

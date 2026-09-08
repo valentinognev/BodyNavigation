@@ -4,7 +4,7 @@ import numpy as np
 
 from cadac.constants import REARTH
 from cadac.kernel.state import Field
-from cadac.math.frames import angle, cadac_inverse, cadac_matmul
+from cadac.math.frames import angle, cadac_inverse, cadac_matmul, skew
 from cadac.math.wgs84 import GM
 
 LARGE = 1e10
@@ -162,18 +162,6 @@ def gps_quadriga(
         vsii_quad[m, 2] = vel * (math.cos(arg) * sin_incl)
 
     return ssii_quad, vsii_quad, gdop, mgps
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Rocket6Gps:
@@ -417,8 +405,8 @@ class Rocket6Gps:
             zz = np.zeros(8)
             hh = np.zeros((8, 8))
             slotm = 0.0
-            wbii_skew = _skew(wbii)
-            wbici_skew = _skew(wbici)
+            wbii_skew = skew(wbii)
+            wbici_skew = skew(wbici)
             for i in range(4):
                 ssii = ssii_quad[i, :3]
                 ssbi = ssii - sbii

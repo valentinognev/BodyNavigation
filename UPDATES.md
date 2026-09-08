@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.4 - Shared cadac_sign and skew
+- `cadac_sign` / `skew` live in `cadac.math.frames` and re-export from `cadac.math`. `cadac_sign`: `< 0.0 → -1`, else `+1` (`+0` is `+1`). `skew` is the 3×3 cross-product matrix.
+- Replaced every production `_cadac_sign` / `_skew` copy (21 skew, 9 sign). Call-site argument order unchanged; no leftover private wrappers.
+- Tests: `test_cadac_sign_matches_cpp`, `test_skew_cross_product_matrix`, `test_only_one_skew_and_sign_definition`. No CADAC `.cpp` edits.
+
 ## 0.169.3 - Membership via in store
 - Production membership is `"mfreeze" in store` / `n in store`, not `in store.names()`. Unused `names = store.names()` dropped.
 - Leftover `names()` only where the list is the value (plot/combus column lists). Scanner `store_names` 104→23. `baseline.json` not rewritten.

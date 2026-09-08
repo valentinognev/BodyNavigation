@@ -37,13 +37,23 @@ def test_scan_has_required_keys():
 def test_scan_matches_checked_in_baseline():
     data = scan_cadac(ROOT)
     base = load_metrics(BASELINE)
-    # loc/code/untyped_defs drift with later quality tasks; store_names must drop
-    # after membership moves to `in store`. Do not rewrite baseline.json.
+    # loc/code/untyped_defs/np_array drift with later quality tasks; store_names
+    # and skew/sign defs drop after shared helpers. Do not rewrite baseline.json.
     for key in base:
-        if key in ("loc", "code", "store_names", "untyped_defs"):
+        if key in (
+            "loc",
+            "code",
+            "store_names",
+            "untyped_defs",
+            "skew_defs",
+            "cadac_sign_defs",
+            "np_array",
+        ):
             continue
         assert data[key] == base[key], key
     assert data["store_names"] < base["store_names"]
+    assert data["skew_defs"] < base["skew_defs"]
+    assert data["cadac_sign_defs"] < base["cadac_sign_defs"]
 
 
 def test_src_membership_does_not_use_names_list():
@@ -59,3 +69,15 @@ def test_src_membership_does_not_use_names_list():
                     continue
                 hits.append(f"{path}:{i}:{stripped}")
     assert hits == [], "use `name in store`:\n" + "\n".join(hits)
+
+
+def test_only_one_skew_and_sign_definition():
+    skews, signs = [], []
+    for path in ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        if re.search(r"^def (_)?skew\(", text, re.M):
+            skews.append(str(path.relative_to(ROOT)))
+        if re.search(r"^def (_)?cadac_sign\(", text, re.M):
+            signs.append(str(path.relative_to(ROOT)))
+    assert skews == ["math/frames.py"]
+    assert signs == ["math/frames.py"]

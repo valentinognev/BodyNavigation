@@ -5,7 +5,7 @@ import numpy as np
 from cadac.constants import DEG, EPS, PI, RAD, WEII3
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import cadac_matmul
+from cadac.math.frames import cadac_matmul, cadac_sign, skew
 from cadac.math.wgs84 import GM, cad_geo84_in, cad_tdi84
 from cadac.stoch import gauss, mark_ins_stream_consumed
 
@@ -126,12 +126,6 @@ _INS_DEFINE_SIGMAS = (
 )
 
 
-def _cadac_sign(variable):
-    if variable < 0.0:
-        return -1
-    return 1
-
-
 def _cholesky(mat):
     a = np.asarray(mat, dtype=float)
     dim = a.shape[0]
@@ -174,7 +168,7 @@ def _geodetic_euler_from_tbd(tbd, mroll, prev_psibdc=0.0, prev_phibdc=0.0):
     tbd23 = tbd[1, 2]
     pole = math.fabs(tbd13) >= 1.0 - 1e-14
     if pole:
-        thtbdc = PI / 2.0 * _cadac_sign(-tbd13)
+        thtbdc = PI / 2.0 * cadac_sign(-tbd13)
         cthtbd = EPS
     else:
         thtbdc = math.asin(-tbd13)
@@ -182,29 +176,17 @@ def _geodetic_euler_from_tbd(tbd, mroll, prev_psibdc=0.0, prev_phibdc=0.0):
     cpsi = tbd11 / cthtbd
     cphi = tbd33 / cthtbd
     if math.fabs(cpsi) > 1.0:
-        cpsi = 1.0 * _cadac_sign(cpsi)
+        cpsi = 1.0 * cadac_sign(cpsi)
     if math.fabs(cphi) > 1.0:
-        cphi = 1.0 * _cadac_sign(cphi)
-    psibdc = math.acos(cpsi) * _cadac_sign(tbd12)
+        cphi = 1.0 * cadac_sign(cphi)
+    psibdc = math.acos(cpsi) * cadac_sign(tbd12)
     if mroll == 0 or mroll == 1:
-        phibdc = math.acos(cphi) * _cadac_sign(tbd23)
+        phibdc = math.acos(cphi) * cadac_sign(tbd23)
     elif mroll == 2:
-        phibdc = math.acos(-cphi) * _cadac_sign(-tbd23)
+        phibdc = math.acos(-cphi) * cadac_sign(-tbd23)
     else:
         phibdc = 0.0
     return psibdc, thtbdc, phibdc
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Rocket6Ins:
@@ -314,7 +296,7 @@ class Rocket6Ins:
         eunbg_s = store.get("eunbg")
         wbib = np.asarray(store.get("WBIB"), dtype=float)
         fspb = np.asarray(store.get("FSPB"), dtype=float)
-        egb = np.diag(escalg) + _skew(emibg)
+        egb = np.diag(escalg) + skew(emibg)
         emiscg = cadac_matmul(egb, wbib)
         emsbg = ebiasg + emiscg
         eunbg = np.array([eunbg_s, eunbg_s, eunbg_s], dtype=float)
@@ -335,7 +317,7 @@ class Rocket6Ins:
         escala = np.asarray(store.get("ESCALA"), dtype=float)
         ebiasa = np.asarray(store.get("EBIASA"), dtype=float)
         fspb = np.asarray(store.get("FSPB"), dtype=float)
-        eab = np.diag(escala) + _skew(emisa)
+        eab = np.diag(escala) + skew(emisa)
         return ebiasa + cadac_matmul(eab, fspb)
 
     def ins_grav(self, vehicle, esbi, sbiic):
@@ -398,7 +380,7 @@ class Rocket6Ins:
                 rici = rici - np.asarray(store.get("URIC"), dtype=float)
                 store.set("mstar", 2)
 
-            tiic = np.eye(3) - _skew(rici)
+            tiic = np.eye(3) - skew(rici)
             tbic = cadac_matmul(tbi, tiic)
 
             efspb = self.ins_accl(vehicle)
@@ -407,7 +389,7 @@ class Rocket6Ins:
             ticb = tbic.T.copy()
             evbid_new = (
                 cadac_matmul(ticb, efspb)
-                - cadac_matmul(_skew(rici), cadac_matmul(ticb, fspcb))
+                - cadac_matmul(skew(rici), cadac_matmul(ticb, fspcb))
                 + egravi
             )
             evbi = integrate(evbid_new, evbid, evbi, int_step)
@@ -465,7 +447,7 @@ class Rocket6Ins:
 
         dum = vbecb[0] / dvbec
         if math.fabs(dum) > 1.0:
-            dum = 1.0 * _cadac_sign(dum)
+            dum = 1.0 * cadac_sign(dum)
         alppc = math.acos(dum)
         if vbecb[1] == 0.0 and vbecb[2] == 0.0:
             phipc = 0.0

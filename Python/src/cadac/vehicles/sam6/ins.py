@@ -5,6 +5,7 @@ import numpy as np
 from cadac.constants import AGRAV, DEG, EPS, PI, REARTH
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
+from cadac.math.frames import skew
 from cadac.stoch import gauss, uniform
 
 # Initial covariance after GPS transfer alignment (C++ PP0). Units: m, m/s, mrad.
@@ -134,18 +135,6 @@ def _gauss3_rtl(sig):
     second = gauss(0.0, sig)
     first = gauss(0.0, sig)
     return np.array([first, second, third], dtype=float)
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 def _diamat(vec):
@@ -305,7 +294,7 @@ class Sam6Ins:
             )
             rece = integrate(reced_new, reced, rece, int_step)
             reced = reced_new
-            rere = _skew(rece)
+            rere = skew(rece)
             tllc = rere + np.eye(3)
             tblc = tbl @ tllc
             tlcb = tblc.T
@@ -390,7 +379,7 @@ class Sam6Ins:
         ebiasg = np.asarray(store.get("EBIASG"), dtype=float)
         fspb = np.asarray(store.get("FSPB"), dtype=float)
         wbeb = np.asarray(store.get("WBEB"), dtype=float)
-        egb = _diamat(escalg) + _skew(emisg)
+        egb = _diamat(escalg) + skew(emisg)
         emiscg = egb @ wbeb
         emsbg = ebiasg + emiscg
         eug = np.array(
@@ -410,7 +399,7 @@ class Sam6Ins:
         escala = np.asarray(store.get("ESCALA"), dtype=float)
         ebiasa = np.asarray(store.get("EBIASA"), dtype=float)
         fspb = np.asarray(store.get("FSPB"), dtype=float)
-        eab = _diamat(escala) + _skew(emisa)
+        eab = _diamat(escala) + skew(emisa)
         return ebiasa + eab @ fspb
 
     def ins_alt(self, vehicle):

@@ -2,14 +2,9 @@ from math import acos, atan2, cos, sin, tan
 
 from cadac.constants import DEG, RAD
 from cadac.kernel.state import Field
+from cadac.math.frames import cadac_sign
 
 SMALL = 1e-7
-
-
-def _cadac_sign(variable):
-    if variable < 0:
-        return -1
-    return 1
 
 
 class Aim5Aero:
@@ -59,7 +54,7 @@ class Aim5Aero:
         dum1 = tan(beta)
         dum2 = sin(alpha)
         if abs(dum2) < SMALL:
-            dum2 = SMALL * _cadac_sign(dum2)
+            dum2 = SMALL * cadac_sign(dum2)
         phip = atan2(dum1, dum2)
 
         alppx = alpp * DEG

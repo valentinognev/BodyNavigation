@@ -1,5 +1,5 @@
 import numpy as np
-from cadac.math.frames import angle, cart_from_pol, polar_from_cart, mat2tr
+from cadac.math.frames import angle, cadac_sign, cart_from_pol, polar_from_cart, mat2tr, skew
 
 _RTOL = 1e-12
 _ATOL = 1e-14
@@ -22,3 +22,19 @@ def test_cart_from_pol_unit_x():
 def test_angle_orthogonal_xy():
     theta = angle(np.array([1.0, 0.0, 0.0]), np.array([0.0, 1.0, 0.0]))
     np.testing.assert_allclose(theta, np.pi / 2, rtol=_RTOL, atol=_ATOL)
+
+
+def test_cadac_sign_matches_cpp():
+    assert cadac_sign(-1.0) == -1
+    assert cadac_sign(0.0) == 1
+    assert cadac_sign(2.5) == 1
+
+
+def test_skew_cross_product_matrix():
+    k = skew(np.array([1.0, 2.0, 3.0]))
+    np.testing.assert_allclose(
+        k,
+        [[0.0, -3.0, 2.0], [3.0, 0.0, -1.0], [-2.0, 1.0, 0.0]],
+        rtol=1e-12,
+        atol=1e-14,
+    )

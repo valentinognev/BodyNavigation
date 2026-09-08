@@ -4,19 +4,7 @@ import numpy as np
 
 from cadac.constants import DEG, RAD, REARTH
 from cadac.kernel.state import Field
-from cadac.math.frames import polar_from_cart
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
+from cadac.math.frames import polar_from_cart, skew
 
 
 class Hyper5Seeker:
@@ -102,7 +90,7 @@ class Hyper5Seeker:
             inv_dtb = 1.0 / range_go
             utbg = stbg * inv_dtb
             vtbg = tgt_vbeg - vbeg
-            woeb = tbg @ _skew(utbg) @ vtbg * inv_dtb
+            woeb = tbg @ skew(utbg) @ vtbg * inv_dtb
             vbtg = vtbg * (-1.0)
             closing_speed = float(utbg @ vbtg)
             time_go = range_go / closing_speed

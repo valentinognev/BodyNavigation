@@ -1,12 +1,7 @@
 from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-
-
-def _cadac_sign(variable):
-    if variable < 0:
-        return -1
-    return 1
+from cadac.math.frames import cadac_sign
 
 
 class Aim5Control:
@@ -95,7 +90,7 @@ class Aim5Control:
         alpd = alpd_new
         alphax = alp * DEG
         if abs(alphax) > alpmax:
-            alphax = alpmax * _cadac_sign(alphax)
+            alphax = alpmax * cadac_sign(alphax)
 
         # Yaw acceleration controller
         tiy = dvae * mass / (pdynmc * area * abs(cybet) + thrust)
@@ -116,7 +111,7 @@ class Aim5Control:
         betd = betd_new
         betax = bet * DEG
         if abs(betax) > alpmax:
-            betax = alpmax * _cadac_sign(betax)
+            betax = alpmax * cadac_sign(betax)
 
         store.set("xi", xi)
         store.set("xid", xid)

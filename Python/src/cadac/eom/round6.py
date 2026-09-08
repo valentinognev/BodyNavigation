@@ -6,30 +6,12 @@ from cadac.constants import AGRAV, DEG, EPS, PI, R, RAD, REARTH, WEII3
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import cadac_inverse, cadac_matmul, mat2tr, mat3tr, polar_from_cart
+from cadac.math.frames import cadac_inverse, cadac_matmul, mat2tr, mat3tr, polar_from_cart, cadac_sign, skew
 from cadac.math.wgs84 import cad_geo84_in, cad_grav84, cad_in_geo84, cad_tdi84, cad_tgi84
 from cadac.stoch import ROCKET6_MARKOV_COUNT, dryden_white, prepare_for_dryden
 
 FOOT = 3.280834
 NMILES = 5.399568e-4
-
-
-def _cadac_sign(variable):
-    if variable < 0.0:
-        return -1
-    return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Round6Environment:
@@ -302,7 +284,7 @@ class Round6Kinematics:
         ctx.out_fact = out_step_fact
         int_step = ctx.int_step
 
-        tbid_new = cadac_matmul(-_skew(wbib), tbi)
+        tbid_new = cadac_matmul(-skew(wbib), tbi)
         tbi = integrate(tbid_new, tbid, tbi, int_step)
         tbid = tbid_new
 
@@ -330,16 +312,16 @@ class Round6Kinematics:
             thtbd = math.asin(-tbd13)
             cthtbd = math.cos(thtbd)
         else:
-            thtbd = PI / 2.0 * _cadac_sign(-tbd13)
+            thtbd = PI / 2.0 * cadac_sign(-tbd13)
             cthtbd = EPS
         cpsi = tbd11 / cthtbd
         if math.fabs(cpsi) > 1.0:
-            cpsi = 1.0 * _cadac_sign(cpsi)
+            cpsi = 1.0 * cadac_sign(cpsi)
         cphi = tbd33 / cthtbd
         if math.fabs(cphi) > 1.0:
-            cphi = 1.0 * _cadac_sign(cphi)
-        psibd = math.acos(cpsi) * _cadac_sign(tbd12)
-        phibd = math.acos(cphi) * _cadac_sign(tbd23)
+            cphi = 1.0 * cadac_sign(cphi)
+        psibd = math.acos(cpsi) * cadac_sign(tbd12)
+        phibd = math.acos(cphi) * cadac_sign(tbd23)
         psibdx = DEG * psibd
         thtbdx = DEG * thtbd
         phibdx = DEG * phibd
@@ -355,7 +337,7 @@ class Round6Kinematics:
 
         dum = vbab1 / dvba
         if math.fabs(dum) > 1.0:
-            dum = 1.0 * _cadac_sign(dum)
+            dum = 1.0 * cadac_sign(dum)
         alpp = math.acos(dum)
         if vbab2 == 0.0 and vbab3 == 0.0:
             phip = 0.0
@@ -442,7 +424,7 @@ class Round6Euler:
         int_step = ctx.int_step
         wacc_next = cadac_matmul(
             cadac_inverse(ibbb),
-            fmb - cadac_matmul(cadac_matmul(_skew(wbib), ibbb), wbib),
+            fmb - cadac_matmul(cadac_matmul(skew(wbib), ibbb), wbib),
         )
         wbib = integrate(wacc_next, wbibd, wbib, int_step)
         wbibd = wacc_next

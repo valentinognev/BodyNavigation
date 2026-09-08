@@ -5,21 +5,9 @@ import numpy as np
 from cadac.constants import DEG
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr, polar_from_cart
+from cadac.math.frames import mat2tr, polar_from_cart, skew
 
 SMALL = 1.e-7
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 def _vec3(vars_, primary, fallback):
@@ -147,7 +135,7 @@ class Agm6Sensor:
         utbl = stbl / dbtk
         vtbl = vtel - vbel
         dvbtc = abs(float(utbl @ vtbl))
-        woeb = tbl @ _skew(utbl) @ vtbl / dbtk
+        woeb = tbl @ skew(utbl) @ vtbl / dbtk
         polar = polar_from_cart(stbb)
         psipb = float(polar[1])
         thtpb = float(polar[2])

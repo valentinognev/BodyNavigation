@@ -6,6 +6,7 @@ from cadac.constants import DEG, EPS, RAD
 from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
+from cadac.math.frames import skew
 from cadac.vehicles.sam6.flat3 import (
     Sam6Flat3Environment,
     Sam6Flat3Kinematics,
@@ -17,18 +18,6 @@ def _sign(variable):
     if variable < 0:
         return -1
     return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 def _first_missile6(ctx):
@@ -85,12 +74,12 @@ class Sam6AircraftGuidance:
         vael = np.asarray(store.get("VAEL"), dtype=float)
         satl = sael - stel
         dab = np.linalg.norm(satl)
-        dum = np.linalg.norm(_skew(vael) @ vtel)
+        dum = np.linalg.norm(skew(vael) @ vtel)
         gain = store.get("guid_gain") * dum / dab
         uvtel = vtel / np.linalg.norm(vtel)
         uvael = vael / np.linalg.norm(vael)
-        epsl = _skew(uvael) @ uvtel
-        acoml = _skew(epsl) @ uvael * gain
+        epsl = skew(uvael) @ uvtel
+        acoml = skew(epsl) @ uvael * gain
         acoml = acoml + np.array([0.0, 0.0, -grav], dtype=float)
         store.set("ACOML", acoml)
 

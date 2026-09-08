@@ -3,20 +3,9 @@ from math import atan2, cos, exp, sin, sqrt
 import numpy as np
 
 from cadac.kernel.state import Field
+from cadac.math.frames import skew
 
 SMALL = 1e-7
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Aim5Guidance:
@@ -71,7 +60,7 @@ class Aim5Guidance:
         an_manvr = 0.0
         al_manvr = 0.0
         if guid_mode == 1:
-            apna = _skew(woea) @ utaa * (gnav * abs(dvta))
+            apna = skew(woea) @ utaa * (gnav * abs(dvta))
             annx = -apna[2] / grav
             allx = apna[1] / grav
         if guid_manvr == 1 and tgo_aim < tgo_manvr:

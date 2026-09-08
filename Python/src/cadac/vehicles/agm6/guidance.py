@@ -4,21 +4,9 @@ import numpy as np
 
 from cadac.constants import AGRAV, DEG
 from cadac.kernel.state import Field
-from cadac.math.frames import polar_from_cart
+from cadac.math.frames import polar_from_cart, skew
 
 SMALL = 1.e-7
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Agm6Guidance:
@@ -150,10 +138,10 @@ class Agm6Guidance:
             float(utblc[0] * vtblc[0] + utblc[1] * vtblc[1] + utblc[2] * vtblc[2])
         )
         tgoc = dtbc / dvtbc
-        woelc = _skew(utblc) @ vtblc * (1.0 / dtbc)
+        woelc = skew(utblc) @ vtblc * (1.0 / dtbc)
         grav_comp = np.array([0.0, 0.0, grav_bias * grav], dtype=float)
         acbx = tblc @ (
-            (_skew(woelc) @ utblc * gnav * dvtbc - grav_comp) * (1.0 / AGRAV)
+            (skew(woelc) @ utblc * gnav * dvtbc - grav_comp) * (1.0 / AGRAV)
         )
         store.set("WOELC", woelc)
         store.set("UTBLC", utblc)

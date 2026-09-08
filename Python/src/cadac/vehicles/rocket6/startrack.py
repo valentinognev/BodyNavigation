@@ -4,7 +4,7 @@ import numpy as np
 
 from cadac.constants import DEG, RAD
 from cadac.kernel.state import Field
-from cadac.math.frames import cadac_inverse, cadac_matmul, cart_from_pol, polar_from_cart
+from cadac.math.frames import cadac_inverse, cadac_matmul, cart_from_pol, polar_from_cart, skew
 from cadac.math.wgs84 import cad_geo84_in
 
 # 25 bright star catalog, J2000 unit vectors (C++ Hyper::star_init).
@@ -78,18 +78,6 @@ def _univec3(vec):
     return np.array([vec[0] / d, vec[1] / d, vec[2] / d], dtype=float)
 
 
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
-
-
 def star_triad(star_data, star_el_min, sbii):
     star_usii = np.asarray(star_data, dtype=float)
     sbii = np.asarray(sbii, dtype=float)
@@ -129,7 +117,7 @@ def star_triad(star_data, star_el_min, sbii):
                 usii1 = usii_vis[i1]
                 usii2 = usii_vis[i2]
                 usii3 = usii_vis[i3]
-                crossed = cadac_matmul(_skew(usii2), usii3)
+                crossed = cadac_matmul(skew(usii2), usii3)
                 volume_local = abs(
                     float(
                         usii1[0] * crossed[0]

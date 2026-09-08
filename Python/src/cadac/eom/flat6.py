@@ -7,25 +7,7 @@ from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr, mat3tr
-
-
-def _cadac_sign(variable):
-    if variable < 0.0:
-        return -1
-    return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
+from cadac.math.frames import mat2tr, mat3tr, cadac_sign, skew
 
 
 class Flat6Environment:
@@ -199,16 +181,16 @@ class Flat6Kinematics:
             thtbl = math.asin(-tbl13)
             cthtbl = math.cos(thtbl)
         else:
-            thtbl = PI / 2.0 * _cadac_sign(-tbl13)
+            thtbl = PI / 2.0 * cadac_sign(-tbl13)
             cthtbl = EPS
         cpsi = tbl11 / cthtbl
         if math.fabs(cpsi) >= 1.0:
-            cpsi = (1.0 - EPS) * _cadac_sign(cpsi)
+            cpsi = (1.0 - EPS) * cadac_sign(cpsi)
         cphi = tbl33 / cthtbl
         if math.fabs(cphi) >= 1.0:
-            cphi = (1.0 - EPS) * _cadac_sign(cphi)
-        psibl = math.acos(cpsi) * _cadac_sign(tbl12)
-        phibl = math.acos(cphi) * _cadac_sign(tbl23)
+            cphi = (1.0 - EPS) * cadac_sign(cphi)
+        psibl = math.acos(cpsi) * cadac_sign(tbl12)
+        phibl = math.acos(cphi) * cadac_sign(tbl23)
         psiblx = DEG * psibl
         thtblx = DEG * thtbl
         phiblx = DEG * phibl
@@ -221,7 +203,7 @@ class Flat6Kinematics:
         beta = math.asin(vbab2 / dvba)
         dum = vbab1 / dvba
         if math.fabs(dum) > 1.0:
-            dum = 1.0 * _cadac_sign(dum)
+            dum = 1.0 * cadac_sign(dum)
         alpp = math.acos(dum)
         if vbab2 == 0.0 and vbab3 == 0.0:
             phip = 0.0
@@ -312,7 +294,7 @@ class Flat6Euler:
         int_step = ctx.int_step
         l_engine = np.array([eng_ang_mom, 0.0, 0.0], dtype=float)
         wacc_next = np.linalg.inv(ibbb) @ (
-            fmb - _skew(wbeb) @ (ibbb @ wbeb + l_engine)
+            fmb - skew(wbeb) @ (ibbb @ wbeb + l_engine)
         )
         wbeb = integrate(wacc_next, wbebd, wbeb, int_step)
         wbebd = wacc_next
@@ -418,7 +400,7 @@ class Flat6Newton:
         int_step = ctx.int_step
 
         time = ctx.sim_time
-        atb = _skew(wbeb) @ vbeb
+        atb = skew(wbeb) @ vbeb
         gravl = np.array([0.0, 0.0, grav], dtype=float)
         fspb = fapb * (1.0 / vmass)
         vbebd_new = fspb - atb + tbl @ gravl

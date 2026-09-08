@@ -5,25 +5,13 @@ import numpy as np
 from cadac.constants import DEG
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr, polar_from_cart
+from cadac.math.frames import mat2tr, polar_from_cart, skew
 
 SMALL = 1e-7
 
 _IDENTITY = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 _ZEROS3 = (0.0, 0.0, 0.0)
 _ZEROS33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Sraam6Seeker:
@@ -248,7 +236,7 @@ class Sraam6Seeker:
         utbl = stbl * dum1
         vtbl = np.asarray(vtel, dtype=float) - vbel
         dvbtc = abs(float(utbl @ vtbl))
-        woeb = tbl @ (_skew(utbl) @ vtbl) * dum1
+        woeb = tbl @ (skew(utbl) @ vtbl) * dum1
         polar = polar_from_cart(stbb)
         psipb = float(polar[1])
         thtpb = float(polar[2])

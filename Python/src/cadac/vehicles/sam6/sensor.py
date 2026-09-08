@@ -5,7 +5,7 @@ import numpy as np
 from cadac.constants import DEG, PI, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr, polar_from_cart
+from cadac.math.frames import mat2tr, polar_from_cart, skew
 
 SMALL = 1e-7
 KBOLTZ = 1.38e-23
@@ -15,18 +15,6 @@ def _sign(variable):
     if variable < 0.0:
         return -1
     return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 def _markov(sigma, bcor, time, int_step, value_saved):
@@ -384,7 +372,7 @@ class Sam6Sensor:
         utbl = stbl / dbtk
         vtbl = vtel - vbel
         ddab = -fabs(float(utbl @ vtbl))
-        woeb = tbl @ _skew(utbl) @ vtbl / dbtk
+        woeb = tbl @ skew(utbl) @ vtbl / dbtk
         lamdqb = float(woeb[1])
         lamdrb = float(woeb[2])
         polar = polar_from_cart(stbb)

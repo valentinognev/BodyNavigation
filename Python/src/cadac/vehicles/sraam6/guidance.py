@@ -4,22 +4,10 @@ import numpy as np
 
 from cadac.constants import AGRAV, DEG
 from cadac.kernel.state import Field
-from cadac.math.frames import polar_from_cart
+from cadac.math.frames import polar_from_cart, skew
 
 SMALL = 1e-7
 _ZEROS3 = (0.0, 0.0, 0.0)
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 class Sraam6Guidance:
@@ -129,8 +117,8 @@ class Sraam6Guidance:
         vtblc = vtelc - vbel
         dvtbc = abs(float(utblc @ vtblc))
         tgoc = dtbc / dvtbc
-        woelc = _skew(utblc) @ vtblc * (1.0 / dtbc)
-        aapnb = tbl @ (_skew(woelc) @ utblc) * gnav * dvtbc
+        woelc = skew(utblc) @ vtblc * (1.0 / dtbc)
+        aapnb = tbl @ (skew(woelc) @ utblc) * gnav * dvtbc
         ancomx = -float(aapnb[2]) / AGRAV
         alcomx = float(aapnb[1]) / AGRAV
 

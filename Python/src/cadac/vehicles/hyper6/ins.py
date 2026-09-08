@@ -4,14 +4,8 @@ import numpy as np
 
 from cadac.constants import DEG, EPS, PI, WEII3
 from cadac.kernel.state import Field
-from cadac.math.frames import cadac_matmul
+from cadac.math.frames import cadac_matmul, cadac_sign
 from cadac.math.wgs84 import cad_geo84_in, cad_tdi84
-
-
-def _cadac_sign(variable):
-    if variable < 0.0:
-        return -1
-    return 1
 
 
 class Hyper6Ins:
@@ -116,7 +110,7 @@ class Hyper6Ins:
 
         dum = vbecb[0] / dvbec
         if math.fabs(dum) > 1.0:
-            dum = 1.0 * _cadac_sign(dum)
+            dum = 1.0 * cadac_sign(dum)
         alppc = math.acos(dum)
         if vbecb[1] == 0.0 and vbecb[2] == 0.0:
             phipc = 0.0
@@ -158,16 +152,16 @@ class Hyper6Ins:
             thtbdc = math.asin(-tbd13)
             cthtbd = math.cos(thtbdc)
         else:
-            thtbdc = PI / 2.0 * _cadac_sign(-tbd13)
+            thtbdc = PI / 2.0 * cadac_sign(-tbd13)
             cthtbd = EPS
         cpsi = tbd11 / cthtbd
         if math.fabs(cpsi) > 1.0:
-            cpsi = 1.0 * _cadac_sign(cpsi)
+            cpsi = 1.0 * cadac_sign(cpsi)
         cphi = tbd33 / cthtbd
         if math.fabs(cphi) > 1.0:
-            cphi = 1.0 * _cadac_sign(cphi)
-        psibdc = math.acos(cpsi) * _cadac_sign(tbd12)
-        phibdc = math.acos(cphi) * _cadac_sign(tbd23)
+            cphi = 1.0 * cadac_sign(cphi)
+        psibdc = math.acos(cpsi) * cadac_sign(tbd12)
+        phibdc = math.acos(cphi) * cadac_sign(tbd23)
         psibdcx = DEG * psibdc
         thtbdcx = DEG * thtbdc
         phibdcx = DEG * phibdc

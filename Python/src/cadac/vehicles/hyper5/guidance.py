@@ -5,19 +5,7 @@ import numpy as np
 from cadac.constants import DEG, EPS, RAD
 from cadac.kernel.state import Field
 from cadac.math.earth import cadine
-from cadac.math.frames import cadtbv, mat2tr, polar_from_cart
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
+from cadac.math.frames import cadtbv, mat2tr, polar_from_cart, skew
 
 
 def _sign(variable):
@@ -163,7 +151,7 @@ class Hyper5Guidance:
         closing_speed = store.get("closing_speed")
         utbb = store.get("UTBB")
         grav_g = np.array([0.0, 0.0, grav + bias])
-        return _skew(woeb) @ utbb * (pronav_gain * closing_speed) - tbg @ grav_g
+        return skew(woeb) @ utbb * (pronav_gain * closing_speed) - tbg @ grav_g
 
     def guidance_arc(self, vehicle):
         store = vehicle.store
@@ -190,7 +178,7 @@ class Hyper5Guidance:
         vbeg1 = float(vbeg[0])
         vbeg2 = float(vbeg[1])
         vh = np.array([vbeg1, vbeg2, 0.0])
-        uv = _skew(vh) @ sh
+        uv = skew(vh) @ sh
         psiwvx = DEG * _angle(vh, sh)
         zz = np.array([0.0, 0.0, 1.0])
         psiwvx = psiwvx * _sign(float(uv[0] * zz[0] + uv[1] * zz[1] + uv[2] * zz[2]))

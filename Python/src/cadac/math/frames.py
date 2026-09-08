@@ -3,6 +3,24 @@ import numpy as np
 from cadac.constants import EPS, PI
 
 
+def cadac_sign(variable):
+    if variable < 0.0:
+        return -1
+    return 1
+
+
+def skew(vec):
+    x, y, z = vec
+    return np.array(
+        [
+            [0.0, -z, y],
+            [z, 0.0, -x],
+            [-y, x, 0.0],
+        ],
+        dtype=float,
+    )
+
+
 def polar_from_cart(v):
     v1 = v[0]
     v2 = v[1]

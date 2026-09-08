@@ -5,6 +5,7 @@ import numpy as np
 from cadac.constants import AGRAV, DEG, PI, REARTH
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
+from cadac.math.frames import cadac_sign, skew
 from cadac.stoch import draw_ins_define_errors, draw_ins_init_unit
 
 # C++ Missile::init_ins PP0 (9x9, row-major as written).
@@ -112,24 +113,6 @@ PP0 = np.array(
     ],
     dtype=float,
 )
-
-
-def _cadac_sign(variable):
-    if variable < 0.0:
-        return -1
-    return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 def _diamat(vec):
@@ -279,7 +262,7 @@ class Agm6Ins:
             )
             rece = integrate(reced_new, reced, rece, int_step)
             reced = reced_new
-            rere = _skew(rece)
+            rere = skew(rece)
             tllc = rere + np.eye(3)
             tbl = np.asarray(store.get("TBL"), dtype=float)
             tblc = tbl @ tllc
@@ -325,7 +308,7 @@ class Agm6Ins:
         if math.fabs(tblc13) < 1.0:
             thtblc = math.asin(-tblc13)
         else:
-            thtblc = PI / 2.0 * _cadac_sign(-tblc13)
+            thtblc = PI / 2.0 * cadac_sign(-tblc13)
         thtblcx = thtblc * DEG
 
         tblc23 = float(tblc[1, 2])
@@ -362,7 +345,7 @@ class Agm6Ins:
         ebiasg = np.asarray(store.get("EBIASG"), dtype=float)
         fspb = np.asarray(store.get("FSPB"), dtype=float)
         wbeb = np.asarray(store.get("WBEB"), dtype=float)
-        egb = _diamat(escalg) + _skew(emisg)
+        egb = _diamat(escalg) + skew(emisg)
         emiscg = egb @ wbeb
         emsbg = ebiasg + emiscg
         eug = np.array(
@@ -382,7 +365,7 @@ class Agm6Ins:
         escala = np.asarray(store.get("ESCALA"), dtype=float)
         ebiasa = np.asarray(store.get("EBIASA"), dtype=float)
         fspb = np.asarray(store.get("FSPB"), dtype=float)
-        eab = _diamat(escala) + _skew(emisa)
+        eab = _diamat(escala) + skew(emisa)
         return ebiasa + eab @ fspb
 
     def ins_alt(self, vehicle):

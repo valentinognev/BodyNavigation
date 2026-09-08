@@ -7,7 +7,7 @@ from cadac.eom.flat3 import Flat3Kinematics
 from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.math.frames import polar_from_cart
+from cadac.math.frames import polar_from_cart, skew
 from cadac.stoch import gauss
 from cadac.vehicles.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
 
@@ -16,18 +16,6 @@ def _sign(variable):
     if variable < 0:
         return -1
     return 1
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
 
 
 def _cart_from_pol(magnitude, azimuth, elevation):
@@ -91,12 +79,12 @@ class Agm6AircraftGuidance:
                     break
             satl = sael - stel
             dab = float(np.linalg.norm(satl))
-            dum = float(np.linalg.norm(_skew(vael) @ vtel))
+            dum = float(np.linalg.norm(skew(vael) @ vtel))
             gain = guid_gain * dum / dab
             uvtel = vtel * (1.0 / float(np.linalg.norm(vtel)))
             uvael = vael * (1.0 / float(np.linalg.norm(vael)))
-            epsl = _skew(uvael) @ uvtel
-            acoml = _skew(epsl) @ uvael * gain
+            epsl = skew(uvael) @ uvtel
+            acoml = skew(epsl) @ uvael * gain
             acoml = acoml + np.array([0.0, 0.0, -grav], dtype=float)
         else:
             raise ValueError(f"unknown acft_option {acft_option}")

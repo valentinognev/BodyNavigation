@@ -5,19 +5,7 @@ import numpy as np
 from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
+from cadac.math.frames import mat2tr, skew
 
 
 class Sam6Newton:
@@ -96,7 +84,7 @@ class Sam6Newton:
         sbel = store.get("SBEL")
         int_step = ctx.int_step
 
-        atb = _skew(wbeb) @ vbeb
+        atb = skew(wbeb) @ vbeb
         gravl = np.array([0.0, 0.0, grav], dtype=float)
         fspb = fapb * (1.0 / mass)
         vbebd_new = fspb - atb + tbl @ gravl

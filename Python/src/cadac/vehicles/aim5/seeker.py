@@ -2,19 +2,7 @@ import numpy as np
 
 from cadac.constants import DEG
 from cadac.kernel.state import Field
-from cadac.math.frames import polar_from_cart
-
-
-def _skew(vec):
-    x, y, z = vec
-    return np.array(
-        [
-            [0.0, -z, y],
-            [z, 0.0, -x],
-            [-y, x, 0.0],
-        ],
-        dtype=float,
-    )
+from cadac.math.frames import polar_from_cart, skew
 
 
 class Aim5Seeker:
@@ -90,7 +78,7 @@ class Aim5Seeker:
         vtael = vtel - vbel
         dvta = float(utal @ vtael)
         tgo_aim = dta / abs(dvta)
-        woea = tbl @ (_skew(utal) @ vtael) * (1.0 / dta)
+        woea = tbl @ (skew(utal) @ vtael) * (1.0 / dta)
         store.set("STAL", stal)
         store.set("dta", dta)
         store.set("UTAA", utaa)
