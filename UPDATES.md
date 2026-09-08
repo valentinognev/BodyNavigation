@@ -1,5 +1,8 @@
 # Updates
 
+## 0.169.12 - Unit suite green after quality overhaul
+- `pytest tests/unit -q --ignore-glob='*harvest*' -m 'not integration'`: 2139 passed, 0 failed. `test_agm6_sensor_dyn` now imports sibling `test_agm6_sensor_kin` so pytest prepend can collect it.
+
 ## 0.169.11 - ruff + type hints on kernel, math, tables, env, eom
 - `Python/pyproject.toml`: `[project.optional-dependencies] dev` adds `ruff>=0.6`; `[tool.ruff]` `src = ["src"]`, `target-version = "py311"`.
 - Public functions annotated on `kernel`, `math`, `tables`, `env`, `eom` (`integrate`, `StateStore` methods, `cadac_matmul`, `look_up`, `run_loop`, plus other public APIs in those trees). No 133-vehicle mass-annotate. `baseline.json` not rewritten.

@@ -9,7 +9,7 @@ from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr
 
-from tests.unit.test_agm6_sensor_kin import (
+from test_agm6_sensor_kin import (
     ATOL,
     RTOL,
     SAEL,
