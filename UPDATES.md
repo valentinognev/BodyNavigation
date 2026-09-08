@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.0 - Quality metrics scanner
+- `Python/tools/cadac_quality/` scans `src/cadac` for survey counters (`store.get/set/names`, `look_up`, `np.zeros/array`, typed/untyped defs, empty init/term, `_skew`/`_cadac_sign` files). `code` is non-blank non-comment lines; `loc` is total lines.
+- Frozen `tools/cadac_quality/baseline.json` from a live scan (168 files, loc 24518, store_get 2687). CLI: `PYTHONPATH=src:tools python -m cadac_quality.metrics --root src/cadac --out tools/cadac_quality/baseline.json`.
+- Unit `test_cadac_quality_metrics` asserts required int keys and match to the checked-in baseline. No CADAC `.cpp` edits.
+
 ## 0.168.13 - Inventory e2e snapshot after Task 8
 - Task 8 re-verify: 14 JSONC e2e + HYPER6 climb passed. `_E2E_OUTCOMES` still had the seven formerly-failing families as `failed` with crash/mismatch notes. Regenerating `inventory.json` does not re-run e2e.
 - Those seven maps are now `passed` (inventory `ported`, empty notes). All 14 `kind=e2e` rows `ported`. Status counts: ported 419, stubbed 18, missing 24, deferred 8, diverged 0.
