@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-from cadac.constants import DEG, R, RAD
+from cadac.constants import DEG, RAD, R
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
@@ -26,7 +26,7 @@ class Flat3Environment(ModuleBase):
         Field("press", 0.0, "real", "out", "environment"),
     )
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         dvbe = store.get("dvbe")
         sbel = store.get("SBEL")
@@ -52,10 +52,10 @@ class Flat3Kinematics(ModuleBase):
         Field("event_time", 0.0, "real", "exec", "kinematics"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         vehicle.store.set("time", ctx.sim_time)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         store.set("time", ctx.sim_time)
         store.set("event_time", ctx.event_time)
@@ -83,7 +83,7 @@ class Flat3Newton(ModuleBase):
         Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         dvbe = store.get("dvbe")
         psivlx = store.get("psivlx")
@@ -122,7 +122,7 @@ class Flat3Newton(ModuleBase):
         store.set("thtvl", thtvl)
         # C++ Flat3::init_newton does not load alt; first propulsion/control see 0.
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         fspv = store.get("FSPV")
         grav = store.get("grav")
@@ -182,7 +182,7 @@ class Flat3AircraftEnvironment(ModuleBase):
         Field("press", 0.0, "real", "out", "environment"),
     )
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         dvae = store.get("dvae")
         sael = store.get("SAEL")
@@ -221,7 +221,7 @@ class Flat3AircraftNewton(ModuleBase):
         Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         dvae = store.get("dvae")
         psialx = store.get("psialx")
@@ -260,7 +260,7 @@ class Flat3AircraftNewton(ModuleBase):
         store.set("thtal", thtal)
         store.set("alt", -sael[2])
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         fspa = store.get("FSPA")
         grav = store.get("grav")

@@ -3,7 +3,7 @@ import math
 from cadac.constants import R
 
 
-def iso62(alt_m, dvbe):
+def iso62(alt_m: float, dvbe: float) -> dict[str, float]:
     if alt_m < 11000.0:
         k = 288.15 - 0.0065 * alt_m
         press = 101325.0 * (k / 288.15) ** 5.2559

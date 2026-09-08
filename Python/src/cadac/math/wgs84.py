@@ -11,7 +11,7 @@ GW_CLONG = 0
 SMALL = 1e-7
 
 
-def cad_geo84_in(sbii, time):
+def cad_geo84_in(sbii: np.ndarray, time: float) -> tuple[float, float, float]:
     count = 0
     alamda = 0.0
     sbii1 = sbii[0]
@@ -52,7 +52,7 @@ def cad_geo84_in(sbii, time):
     return lon, lat, alt
 
 
-def cad_geoc_in(sbii, time):
+def cad_geoc_in(sbii: np.ndarray, time: float) -> tuple[float, float, float]:
     lon_cel = 0.0
     sbii1 = sbii[0]
     sbii2 = sbii[1]
@@ -75,8 +75,8 @@ def cad_geoc_in(sbii, time):
     return lonc, latc, altc
 
 
-def cad_grav84(sbii, time):
-    lonc, latc, altc = cad_geoc_in(sbii, time)
+def cad_grav84(sbii: np.ndarray, time: float) -> np.ndarray:
+    _lonc, latc, _altc = cad_geoc_in(sbii, time)
     dbi = np.sqrt(sbii[0] * sbii[0] + sbii[1] * sbii[1] + sbii[2] * sbii[2])
     dum1 = GM / (dbi * dbi)
     dum2 = 3 * np.sqrt(5.0)
@@ -93,7 +93,7 @@ def cad_grav84(sbii, time):
     return gravg
 
 
-def cad_in_geo84(lon, lat, alt, time):
+def cad_in_geo84(lon: float, lat: float, alt: float, time: float) -> np.ndarray:
     r0 = SMAJOR_AXIS * (
         1.0
         - FLATTENING * (1.0 - np.cos(2.0 * lat)) / 2.0
@@ -114,7 +114,7 @@ def cad_in_geo84(lon, lat, alt, time):
     return np.array([sbii1, sbii2, sbii3])
 
 
-def cad_tdi84(lon, lat, alt, time):
+def cad_tdi84(lon: float, lat: float, alt: float, time: float) -> np.ndarray:
     tdi = np.zeros((3, 3))
     lon_cel = GW_CLONG + WEII3 * time + lon
     tdi13 = np.cos(lat)
@@ -132,7 +132,7 @@ def cad_tdi84(lon, lat, alt, time):
     return tdi
 
 
-def cad_tgi84(lon, lat, alt, time):
+def cad_tgi84(lon: float, lat: float, alt: float, time: float) -> np.ndarray:
     tdi = np.zeros((3, 3))
     tgd = np.zeros((3, 3))
     lon_cel = GW_CLONG + WEII3 * time + lon
@@ -162,7 +162,7 @@ def cad_tgi84(lon, lat, alt, time):
     return cadac_matmul(tgd, tdi)
 
 
-def cad_kepler(sbii, vbii, tgo):
+def cad_kepler(sbii: np.ndarray, vbii: np.ndarray, tgo: float) -> tuple[np.ndarray, np.ndarray, int]:
     sbii = np.asarray(sbii, dtype=float)
     vbii = np.asarray(vbii, dtype=float)
     sqrt_gm = np.sqrt(GM)

@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Any, Protocol
 
 from cadac.kernel.state import Field
 
@@ -6,20 +6,20 @@ from cadac.kernel.state import Field
 class Module(Protocol):
     name: str
 
-    def define(self, vehicle) -> None: ...
+    def define(self, vehicle: Any) -> None: ...
 
-    def initialize(self, vehicle, ctx) -> None: ...
+    def initialize(self, vehicle: Any, ctx: Any) -> None: ...
 
-    def execute(self, vehicle, ctx) -> None: ...
+    def execute(self, vehicle: Any, ctx: Any) -> None: ...
 
-    def terminate(self, vehicle, ctx) -> None: ...
+    def terminate(self, vehicle: Any, ctx: Any) -> None: ...
 
 
 class ModuleBase:
     name: str
     fields: tuple = ()
 
-    def define(self, vehicle) -> None:
+    def define(self, vehicle: Any) -> None:
         store = vehicle.store
         for item in self.fields:
             if isinstance(item, Field):
@@ -38,18 +38,18 @@ class ModuleBase:
                 continue
             store.define(Field(name, value, ftype, role, module, outputs))
 
-    def initialize(self, vehicle, ctx) -> None:
+    def initialize(self, vehicle: Any, ctx: Any) -> None:
         pass
 
-    def execute(self, vehicle, ctx) -> None:
+    def execute(self, vehicle: Any, ctx: Any) -> None:
         raise NotImplementedError
 
-    def terminate(self, vehicle, ctx) -> None:
+    def terminate(self, vehicle: Any, ctx: Any) -> None:
         pass
 
 
 class DummyModule(ModuleBase):
     name = "dummy"
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle: Any, ctx: Any) -> None:
         vehicle.store.set("time", ctx.sim_time)

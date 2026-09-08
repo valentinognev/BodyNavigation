@@ -5,13 +5,13 @@ import numpy as np
 from cadac.constants import EPS, PI
 
 
-def cadac_sign(variable):
+def cadac_sign(variable: float) -> int:
     if variable < 0.0:
         return -1
     return 1
 
 
-def skew(vec):
+def skew(vec: np.ndarray) -> np.ndarray:
     x, y, z = vec
     return np.array(
         [
@@ -23,12 +23,12 @@ def skew(vec):
     )
 
 
-def hypot3(vec):
+def hypot3(vec: np.ndarray) -> float:
     x, y, z = vec
     return float(np.sqrt(x * x + y * y + z * z))
 
 
-def quat_to_dcm(q0, q1, q2, q3):
+def quat_to_dcm(q0: float, q1: float, q2: float, q3: float) -> np.ndarray:
     tbl = np.zeros((3, 3))
     tbl[0, 0] = q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3
     tbl[0, 1] = 2.0 * (q1 * q2 + q0 * q3)
@@ -42,14 +42,16 @@ def quat_to_dcm(q0, q1, q2, q3):
     return tbl
 
 
-def matvec3(mat, vec):
+def matvec3(mat: np.ndarray, vec: np.ndarray) -> np.ndarray:
     return np.array(
         [np.dot(mat[0], vec), np.dot(mat[1], vec), np.dot(mat[2], vec)],
         dtype=float,
     )
 
 
-def incidence_angles(vbab, dvba):
+def incidence_angles(
+    vbab: np.ndarray, dvba: float
+) -> tuple[float, float, float, float]:
     """Aerodynamic incidence (alpha, beta, alpp, phip) from body airspeed.
 
     CADAC ``Flat6::kinematics`` branches: ``fabs(dum)>1`` clamp,
@@ -79,7 +81,7 @@ def incidence_angles(vbab, dvba):
     return alpha, beta, alpp, phip
 
 
-def polar_from_cart(v):
+def polar_from_cart(v: np.ndarray) -> np.ndarray:
     v1 = v[0]
     v2 = v[1]
     v3 = v[2]
@@ -99,7 +101,7 @@ def polar_from_cart(v):
     return np.array([d, azimuth, elevation])
 
 
-def cadac_matmul(a, b):
+def cadac_matmul(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """C++ `Matrix::operator*` (row-major ijk, no BLAS/FMA). 3×3 unrolled, same ijk as C++ `Matrix::operator*`."""
     a = np.asarray(a, dtype=float)
     b = np.asarray(b, dtype=float)
@@ -142,7 +144,7 @@ def cadac_matmul(a, b):
     return result
 
 
-def _cadac_sub_matrix(amat, row, col):
+def _cadac_sub_matrix(amat: np.ndarray, row: int, col: int) -> np.ndarray:
     """C++ `Matrix::sub_matrix` (1-based row/col omitted)."""
     amat = np.asarray(amat, dtype=float)
     n = amat.shape[0]
@@ -160,7 +162,7 @@ def _cadac_sub_matrix(amat, row, col):
     return result
 
 
-def cadac_determinant(amat):
+def cadac_determinant(amat: np.ndarray) -> float:
     """C++ `Matrix::determinant` (first-row cofactor expansion)."""
     amat = np.asarray(amat, dtype=float)
     n = amat.shape[0]
@@ -178,7 +180,7 @@ def cadac_determinant(amat):
     return result
 
 
-def cadac_adjoint(amat):
+def cadac_adjoint(amat: np.ndarray) -> np.ndarray:
     """C++ `Matrix::adjoint` (cofactors then trans)."""
     amat = np.asarray(amat, dtype=float)
     n = amat.shape[0]
@@ -194,7 +196,7 @@ def cadac_adjoint(amat):
     return result.T.copy()
 
 
-def cadac_inverse(amat):
+def cadac_inverse(amat: np.ndarray) -> np.ndarray:
     """C++ `Matrix::inverse` = (1/det)*adjoint (not LAPACK)."""
     amat = np.asarray(amat, dtype=float)
     d = cadac_determinant(amat)
@@ -204,7 +206,7 @@ def cadac_inverse(amat):
     return cadac_adjoint(amat) * d
 
 
-def mat2tr(psivg, thtvg):
+def mat2tr(psivg: float, thtvg: float) -> np.ndarray:
     amat = np.zeros((3, 3))
     amat[0, 2] = -np.sin(thtvg)
     amat[1, 0] = -np.sin(psivg)
@@ -218,7 +220,7 @@ def mat2tr(psivg, thtvg):
     return amat
 
 
-def mat3tr(psi, tht, phi):
+def mat3tr(psi: float, tht: float, phi: float) -> np.ndarray:
     amat = np.zeros((3, 3))
     spsi = np.sin(psi)
     cpsi = np.cos(psi)
@@ -238,7 +240,7 @@ def mat3tr(psi, tht, phi):
     return amat
 
 
-def cadtbv(phi, alpha):
+def cadtbv(phi: float, alpha: float) -> np.ndarray:
     amat = np.zeros((3, 3))
     salpha = np.sin(alpha)
     calpha = np.cos(alpha)
@@ -255,7 +257,7 @@ def cadtbv(phi, alpha):
     return amat
 
 
-def cart_from_pol(magnitude, azimuth, elevation):
+def cart_from_pol(magnitude: float, azimuth: float, elevation: float) -> np.ndarray:
     vec = np.zeros(3)
     vec[0] = magnitude * (np.cos(elevation) * np.cos(azimuth))
     vec[1] = magnitude * (np.cos(elevation) * np.sin(azimuth))
@@ -263,7 +265,7 @@ def cart_from_pol(magnitude, azimuth, elevation):
     return vec
 
 
-def angle(vec1, vec2):
+def angle(vec1: np.ndarray, vec2: np.ndarray) -> float:
     scalar = vec1[0] * vec2[0] + vec1[1] * vec2[1] + vec1[2] * vec2[2]
     abs1 = np.sqrt(vec1[0] * vec1[0] + vec1[1] * vec1[1] + vec1[2] * vec1[2])
     abs2 = np.sqrt(vec2[0] * vec2[0] + vec2[1] * vec2[1] + vec2[2] * vec2[2])
@@ -272,8 +274,8 @@ def angle(vec1, vec2):
         argument = scalar / dum
     else:
         argument = 1.0
-    if argument > 1.0:
+    if argument > 1.0:  # noqa: PLR1730
         argument = 1.0
-    if argument < -1.0:
+    if argument < -1.0:  # noqa: PLR1730
         argument = -1.0
     return np.arccos(argument)

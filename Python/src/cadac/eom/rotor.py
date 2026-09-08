@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-from cadac.constants import AGRAV, DEG, R, RAD
+from cadac.constants import AGRAV, DEG, RAD, R
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
@@ -44,7 +44,7 @@ class RotorEnvironment(ModuleBase):
         Field("VBAL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
     )
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         mwind = store.get("mwind")
         if mwind != 0:
@@ -113,7 +113,7 @@ class RotorTrajectory(ModuleBase):
         Field("tpsp_ratio", 0.0, "real", "diag", "trajectory", ("plot", "scrn")),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         cd = store.get("cd")
         cmdw = store.get("cmdw")
@@ -156,7 +156,7 @@ class RotorTrajectory(ModuleBase):
         store.set("hbe", hbe)
         store.set("VBEL", vbel)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         cd = store.get("cd")
         cmdw = store.get("cmdw")
@@ -281,7 +281,7 @@ class RotorAttitude(ModuleBase):
         Field("rrx", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         betax = store.get("betax")
         phix = store.get("phix")
@@ -295,7 +295,7 @@ class RotorAttitude(ModuleBase):
         store.set("psi", psix * RAD)
         store.set("psid", rrx * RAD * tau)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         nonlinear = store.get("nonlinear")
         if nonlinear not in (0, 1):

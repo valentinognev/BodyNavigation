@@ -1,4 +1,7 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
+
+from cadac.kernel.state import StateStore
 
 
 @dataclass
@@ -9,7 +12,7 @@ class Packet:
     vars: dict
 
 
-def packet_from_store(store, names):
+def packet_from_store(store: StateStore, names: Iterable[str]) -> Packet:
     return Packet(
         name="",
         type="",

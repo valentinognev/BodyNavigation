@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -14,38 +15,38 @@ class Field:
 
 
 class StateStore:
-    def __init__(self):
-        self._fields = {}
+    def __init__(self) -> None:
+        self._fields: dict[str, Field] = {}
 
-    def define(self, field):
+    def define(self, field: Field) -> None:
         if field.name in self._fields:
             raise ValueError(f"duplicate field {field.name!r}")
         field.value = self._coerce(field.type, field.value)
         self._fields[field.name] = field
 
-    def __contains__(self, name):
+    def __contains__(self, name: object) -> bool:
         return name in self._fields
 
-    def get(self, name):
+    def get(self, name: str) -> Any:
         return self._fields[name].value
 
-    def get_optional(self, name, default=None):
+    def get_optional(self, name: str, default: Any = None) -> Any:
         field = self._fields.get(name)
         if field is None:
             return default
         return field.value
 
-    def set(self, name, value):
+    def set(self, name: str, value: Any) -> None:
         field = self._fields[name]
         field.value = self._coerce(field.type, value)
 
-    def names(self):
+    def names(self) -> list[str]:
         return list(self._fields)
 
-    def field(self, name):
+    def field(self, name: str) -> Field:
         return self._fields[name]
 
-    def _coerce(self, ftype, value):
+    def _coerce(self, ftype: str, value: Any) -> Any:
         if ftype == "int":
             if type(value) is int:
                 return value

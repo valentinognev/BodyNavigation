@@ -15,12 +15,12 @@ class Flat0Kinematics(ModuleBase):
         Field("launch_time", 0.0, "real", "out", "kinematics"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         store.set("time", ctx.sim_time)
         store.set("launch_epoch", store.get("launch_delay"))
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         store.set("launch_time", ctx.sim_time - store.get("launch_epoch"))
         store.set("time", ctx.sim_time)
@@ -37,12 +37,12 @@ class Flat0Newton(ModuleBase):
         Field("SREL", (0.0, 0.0, 0.0), "vec", "out", "newton"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         store.set(
             "SREL",
             (store.get("srel1"), store.get("srel2"), store.get("srel3")),
         )
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         pass

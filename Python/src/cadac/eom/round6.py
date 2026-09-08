@@ -4,13 +4,27 @@ import math
 
 import numpy as np
 
-from cadac.constants import AGRAV, DEG, EPS, PI, R, RAD, REARTH, WEII3
+from cadac.constants import AGRAV, DEG, EPS, PI, RAD, REARTH, WEII3, R
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
-from cadac.math.frames import cadac_inverse, cadac_matmul, mat2tr, mat3tr, polar_from_cart, cadac_sign, skew
-from cadac.math.wgs84 import cad_geo84_in, cad_grav84, cad_in_geo84, cad_tdi84, cad_tgi84
+from cadac.math.frames import (
+    cadac_inverse,
+    cadac_matmul,
+    cadac_sign,
+    mat2tr,
+    mat3tr,
+    polar_from_cart,
+    skew,
+)
+from cadac.math.wgs84 import (
+    cad_geo84_in,
+    cad_grav84,
+    cad_in_geo84,
+    cad_tdi84,
+    cad_tgi84,
+)
 from cadac.stoch import ROCKET6_MARKOV_COUNT, dryden_white, prepare_for_dryden
 
 FOOT = 3.280834
@@ -59,10 +73,10 @@ class Round6Environment(ModuleBase):
         Field("tempc", 0.0, "real", "diag", "environment"),
     )
 
-    def __init__(self, weather_deck=None):
+    def __init__(self, weather_deck=None) -> None:
         self.weather_deck = weather_deck
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         store.set("dvba", store.get("dvbe"))
 
@@ -108,7 +122,7 @@ class Round6Environment(ModuleBase):
         store.set("gauss_value", gauss_value)
         return vtad
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         mair = store.get("mair")
         matmo = mair // 100
@@ -169,14 +183,13 @@ class Round6Environment(ModuleBase):
         vmach = abs(dvba / vsound)
         pdynmc = 0.5 * rho * dvba * dvba
 
-        if "trcode" in store and "mguid" in store:
-            if store.get("mguid") == 6:
-                trcode = store.get("trcode")
-                if vmach <= store.get("trmach"):
-                    trcode = 2.0
-                if pdynmc <= store.get("trdynm"):
-                    trcode = 3.0
-                store.set("trcode", trcode)
+        if "trcode" in store and "mguid" in store and store.get("mguid") == 6:
+            trcode = store.get("trcode")
+            if vmach <= store.get("trmach"):
+                trcode = 2.0
+            if pdynmc <= store.get("trdynm"):
+                trcode = 3.0
+            store.set("trcode", trcode)
 
         if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
@@ -239,7 +252,7 @@ class Round6Kinematics(ModuleBase):
         Field("betaix", 0.0, "real", "diag", "kinematics", ("plot",)),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         time = ctx.sim_time
         int_step_new = ctx.int_step
@@ -257,7 +270,7 @@ class Round6Kinematics(ModuleBase):
         store.set("TBD", tbd)
         store.set("TBI", tbi)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         int_step_new = store.get("int_step_new")
         out_step_fact = store.get("out_step_fact")
@@ -390,7 +403,7 @@ class Round6Euler(ModuleBase):
         Field("WBII", (0.0, 0.0, 0.0), "vec", "out", "euler"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         ppx = store.get("ppx")
         qqx = store.get("qqx")
@@ -401,7 +414,7 @@ class Round6Euler(ModuleBase):
         wbib = wbeb + cadac_matmul(tbi, weii)
         store.set("WBIB", wbib)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         fmb = store.get("FMB")
         tbi = store.get("TBI")
@@ -477,7 +490,7 @@ class Round6Newton(ModuleBase):
         Field("tgo_insertion", 0.0, "real", "data", "newton"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         minit = store.get("minit")
         if minit != 0:
@@ -533,7 +546,7 @@ class Round6Newton(ModuleBase):
         store.set("VBII", vbii)
         store.set("psibdx", psibdx)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         tdi = store.get("TDI")
         tgi = store.get("TGI")

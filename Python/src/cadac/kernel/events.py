@@ -1,4 +1,8 @@
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
+
+from cadac.kernel.state import StateStore
 
 
 @dataclass
@@ -8,11 +12,11 @@ class EventSpec:
 
 
 class EventEngine:
-    def __init__(self, events):
+    def __init__(self, events: Sequence[EventSpec]) -> None:
         self._events = list(events)
         self._index = 0
 
-    def evaluate(self, store):
+    def evaluate(self, store: StateStore) -> bool:
         if self._index >= len(self._events):
             return False
         event = self._events[self._index]
@@ -24,7 +28,7 @@ class EventEngine:
         return True
 
 
-def _parse_when(when):
+def _parse_when(when: Mapping[str, Any]) -> tuple[str, str, Any]:
     if "var" in when and "op" in when and "value" in when:
         return when["var"], when["op"], when["value"]
     name, pred = next(iter(when.items()))
@@ -32,7 +36,7 @@ def _parse_when(when):
     return name, op, value
 
 
-def _matches(store, when):
+def _matches(store: StateStore, when: Mapping[str, Any]) -> bool:
     name, op, crit = _parse_when(when)
     current = store.get(name)
     if type(current) is int:

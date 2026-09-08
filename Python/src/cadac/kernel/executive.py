@@ -1,4 +1,6 @@
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from cadac.kernel.combus import Packet, packet_from_store
 
@@ -14,8 +16,13 @@ class SimContext:
 
 
 def run_loop(
-    vehicles, modules_by_vehicle, module_order, end_time, int_step, on_step=None
-):
+    vehicles: Sequence[Any],
+    modules_by_vehicle: Mapping[Any, Sequence[Any]],
+    module_order: Sequence[str],
+    end_time: float,
+    int_step: float,
+    on_step: Callable[..., Any] | None = None,
+) -> list[float]:
     sim_time = 0.0
     times = []
     combus = [
@@ -50,9 +57,8 @@ def run_loop(
             event_time = getattr(vehicle, "event_time", 0.0)
             engine = getattr(vehicle, "events", None)
             store = getattr(vehicle, "store", None)
-            if engine is not None and store is not None:
-                if engine.evaluate(store):
-                    event_time = 0.0
+            if engine is not None and store is not None and engine.evaluate(store):
+                event_time = 0.0
             vehicle.event_time = event_time
             ctx = contexts[slot]
             ctx.sim_time = sim_time
@@ -70,7 +76,7 @@ def run_loop(
     return times
 
 
-def _publish(combus, slot, vehicle):
+def _publish(combus: list[Packet], slot: int, vehicle: Any) -> None:
     com_names = getattr(vehicle, "com_names", None)
     if not com_names:
         return
@@ -85,7 +91,7 @@ def _publish(combus, slot, vehicle):
     combus[slot] = packet
 
 
-def _health(vehicle):
+def _health(vehicle: Any) -> int:
     if hasattr(vehicle, "health"):
         return vehicle.health
     if hasattr(vehicle, "status"):

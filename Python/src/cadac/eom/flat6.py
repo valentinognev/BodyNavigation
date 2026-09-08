@@ -2,13 +2,21 @@ import math
 
 import numpy as np
 
-from cadac.constants import DEG, EPS, PI, R, RAD
+from cadac.constants import DEG, EPS, PI, RAD, R
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
-from cadac.math.frames import cadac_sign, hypot3, incidence_angles, mat2tr, mat3tr, quat_to_dcm, skew
+from cadac.math.frames import (
+    cadac_sign,
+    hypot3,
+    incidence_angles,
+    mat2tr,
+    mat3tr,
+    quat_to_dcm,
+    skew,
+)
 
 
 class Flat6Environment(ModuleBase):
@@ -29,7 +37,7 @@ class Flat6Environment(ModuleBase):
         Field("VBAL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
     )
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         mwind = store.get("mwind")
         if mwind != 0:
@@ -87,7 +95,7 @@ class Flat6Kinematics(ModuleBase):
         Field("TLB", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "diag", "kinematics"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         psiblx = store.get("psiblx")
         thtblx = store.get("thtblx")
@@ -109,7 +117,7 @@ class Flat6Kinematics(ModuleBase):
         store.set("q3", q3)
         store.set("TBL", tbl)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         ck = store.get("ck")
         dvba = store.get("dvba")
@@ -233,14 +241,14 @@ class Flat6Euler(ModuleBase):
         Field("WBEBD", (0.0, 0.0, 0.0), "vec", "state", "euler"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         ppx = store.get("ppx")
         qqx = store.get("qqx")
         rrx = store.get("rrx")
         store.set("WBEB", np.array([ppx * RAD, qqx * RAD, rrx * RAD], dtype=float))
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         fmb = store.get("FMB")
         ibbb = store.get("IBBB")
@@ -307,7 +315,7 @@ class Flat6Newton(ModuleBase):
         Field("dvbef", 0.0, "real", "save", "newton"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         sbel1 = store.get("sbel1")
         sbel2 = store.get("sbel2")
@@ -334,7 +342,7 @@ class Flat6Newton(ModuleBase):
         store.set("psivlx", psivl * DEG)
         store.set("thtvlx", thtvl * DEG)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         mfreeze_newt = store.get("mfreeze_newt")
         dvbef = store.get("dvbef")

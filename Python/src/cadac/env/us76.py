@@ -1,7 +1,7 @@
 import math
 
 
-def atmosphere76(balt):
+def atmosphere76(balt: float) -> tuple[float, float, float]:
     rearth = 6369.0  # radius of the earth - km
     gmr = 34.163195  # gas constant
     rhosl = 1.22500  # sea level density - kg/m^3

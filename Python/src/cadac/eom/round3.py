@@ -29,11 +29,11 @@ class Round3Environment(ModuleBase):
         Field("press", 0.0, "real", "diag", "environment"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         vehicle.store.set("time", ctx.sim_time)
         vehicle.store.set("int_step_new", ctx.int_step)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         ctx.int_step = store.get("int_step_new")
         ctx.out_fact = store.get("out_step_fact")
@@ -76,7 +76,7 @@ class Round3Newton(ModuleBase):
         Field("abii", (0.0, 0.0, 0.0), "vec", "state", "newton"),
     )
 
-    def initialize(self, vehicle, ctx):
+    def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         dvbe = store.get("dvbe")
         psivgx = store.get("psivgx")
@@ -120,7 +120,7 @@ class Round3Newton(ModuleBase):
         store.set("sbii", sbii)
         store.set("vbii", vbii)
 
-    def execute(self, vehicle, ctx):
+    def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         weii = store.get("weii")
         sbeg = store.get("sbeg")

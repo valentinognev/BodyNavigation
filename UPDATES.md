@@ -1,5 +1,11 @@
 # Updates
 
+## 0.169.11 - ruff + type hints on kernel, math, tables, env, eom
+- `Python/pyproject.toml`: `[project.optional-dependencies] dev` adds `ruff>=0.6`; `[tool.ruff]` `src = ["src"]`, `target-version = "py311"`.
+- Public functions annotated on `kernel`, `math`, `tables`, `env`, `eom` (`integrate`, `StateStore` methods, `cadac_matmul`, `look_up`, `run_loop`, plus other public APIs in those trees). No 133-vehicle mass-annotate. `baseline.json` not rewritten.
+- Scanner `typed_defs` 45→136. `ruff check` on those five trees exit 0.
+- Test: `test_typed_defs_exceed_baseline`. No CADAC `.cpp` edits. No README.
+
 ## 0.169.10 - EOM class docstrings; Round6 Euler inverse comment
 - Remaining EOM classes (`Round6*`, `Round3*`, `Flat3*`, `Flat0*`, `Rotor*`) have Zipfel topic + CADAC C++-style name docstrings. `Flat3Aircraft*` included. Module one-liners on those files.
 - `Round6Euler.execute` comment: keep `cadac_inverse` (adjoint/det); do not use `np.linalg.inv` (LAPACK, 1 ulp; 0.168.12). Flat6 still `np.linalg.inv`.

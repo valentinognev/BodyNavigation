@@ -5,7 +5,9 @@ import numpy as np
 from cadac.constants import EPS
 
 
-def _expected_shape(dim: int, x1, x2, x3) -> tuple[int, ...]:
+def _expected_shape(
+    dim: int, x1: np.ndarray, x2: np.ndarray | None, x3: np.ndarray | None
+) -> tuple[int, ...]:
     if dim == 1:
         return (len(x1),)
     if dim == 2:
@@ -54,7 +56,7 @@ class Datadeck:
     def table(self, name: str) -> Table:
         return self._tables[name]
 
-    def find_index(self, max: int, value: float, breakpoints) -> int:
+    def find_index(self, max: int, value: float, breakpoints: np.ndarray) -> int:
         key = (id(breakpoints), max, value)
         cached = self._idx_last
         if cached is not None and cached[0] == key:

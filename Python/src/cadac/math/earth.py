@@ -3,7 +3,7 @@ import numpy as np
 from cadac.constants import RAD, REARTH, WEII3
 
 
-def cadtei(sim_time):
+def cadtei(sim_time: float) -> np.ndarray:
     tei = np.eye(3)
     xi = WEII3 * sim_time
     sxi = np.sin(xi)
@@ -15,7 +15,7 @@ def cadtei(sim_time):
     return tei
 
 
-def cadtge(lon_rad, lat_rad):
+def cadtge(lon_rad: float, lat_rad: float) -> np.ndarray:
     amat = np.zeros((3, 3))
     clon = np.cos(lon_rad)
     slon = np.sin(lon_rad)
@@ -33,7 +33,7 @@ def cadtge(lon_rad, lat_rad):
     return amat
 
 
-def cadine(lon_rad, lat_rad, alt_m, time):
+def cadine(lon_rad: float, lat_rad: float, alt_m: float, time: float) -> np.ndarray:
     rad = alt_m + REARTH
     cel_lon = lon_rad + WEII3 * time
     clat = np.cos(lat_rad)
@@ -43,7 +43,7 @@ def cadine(lon_rad, lat_rad, alt_m, time):
     return np.array([rad * clat * clon, rad * clat * slon, rad * slat])
 
 
-def cadsph(sbie):
+def cadsph(sbie: np.ndarray) -> tuple[float, float, float]:
     x = sbie[0]
     y = sbie[1]
     z = sbie[2]
