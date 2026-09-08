@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.1 - StateStore contains, get_optional, skip-coerce
+- `"name" in store` is O(1) via `__contains__`. `get_optional(name, default=None)` returns the field value or default without KeyError.
+- `set` still type-checks; skips `int()` / `float()` / `np.asarray` when the value already matches the field type and shape (`int`, `float`, float64 vec/mat). Lists and wrong dtypes still coerce or raise. `set("time", 2)` on a real field still becomes `2.0`.
+- `names()` still returns a list of keys in define order. No store-key renames. No CADAC `.cpp` edits.
+
 ## 0.169.0 - Quality metrics scanner
 - `Python/tools/cadac_quality/` scans `src/cadac` for survey counters (`store.get/set/names`, `look_up`, `np.zeros/array`, typed/untyped defs, empty init/term, `_skew`/`_cadac_sign` files). `code` is non-blank non-comment lines; `loc` is total lines.
 - Frozen `tools/cadac_quality/baseline.json` from a live scan (168 files, loc 24518, store_get 2687). CLI: `PYTHONPATH=src:tools python -m cadac_quality.metrics --root src/cadac --out tools/cadac_quality/baseline.json`.

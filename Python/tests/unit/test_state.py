@@ -78,3 +78,30 @@ def test_unknown_type_raises_valueerror():
         s.define(Field("sbii", np.zeros(3), "vector", "state", "newton"))
     assert "sbii" not in s.names()
 
+
+def test_contains_and_get_optional():
+    s = StateStore()
+    assert "time" not in s
+    assert s.get_optional("time") is None
+    assert s.get_optional("time", 0.0) == 0.0
+    s.define(Field("time", 0.0, "real", "exec", "environment"))
+    assert "time" in s
+    assert s.get_optional("time") == 0.0
+    assert s.names() == ["time"]
+
+
+def test_set_skips_float_and_matching_vec():
+    s = StateStore()
+    s.define(Field("time", 0.0, "real", "exec", "environment"))
+    s.define(Field("sbii", np.zeros(3), "vec", "state", "newton"))
+    s.set("time", 1.5)
+    assert type(s.get("time")) is float
+    vec = np.array([1.0, 2.0, 3.0])
+    s.set("sbii", vec)
+    np.testing.assert_allclose(s.get("sbii"), [1.0, 2.0, 3.0])
+    s.set("time", 2)
+    assert type(s.get("time")) is float
+    assert s.get("time") == 2.0
+    s.set("sbii", [4.0, 5.0, 6.0])
+    np.testing.assert_allclose(s.get("sbii"), [4.0, 5.0, 6.0])
+

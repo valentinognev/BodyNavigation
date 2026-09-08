@@ -23,8 +23,17 @@ class StateStore:
         field.value = self._coerce(field.type, field.value)
         self._fields[field.name] = field
 
+    def __contains__(self, name):
+        return name in self._fields
+
     def get(self, name):
         return self._fields[name].value
+
+    def get_optional(self, name, default=None):
+        field = self._fields.get(name)
+        if field is None:
+            return default
+        return field.value
 
     def set(self, name, value):
         field = self._fields[name]
@@ -38,15 +47,31 @@ class StateStore:
 
     def _coerce(self, ftype, value):
         if ftype == "int":
+            if type(value) is int:
+                return value
             return int(value)
         if ftype == "real":
+            if type(value) is float:
+                return value
             return float(value)
         if ftype == "vec":
+            if (
+                isinstance(value, np.ndarray)
+                and value.shape == (3,)
+                and value.dtype == float
+            ):
+                return value
             arr = np.asarray(value, dtype=float)
             if arr.shape != (3,):
                 raise ValueError(f"vec must have shape (3,), got {arr.shape}")
             return arr
         if ftype == "mat":
+            if (
+                isinstance(value, np.ndarray)
+                and value.shape == (3, 3)
+                and value.dtype == float
+            ):
+                return value
             arr = np.asarray(value, dtype=float)
             if arr.shape != (3, 3):
                 raise ValueError(f"mat must have shape (3, 3), got {arr.shape}")
