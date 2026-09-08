@@ -6,27 +6,21 @@ from cadac.constants import DEG, R, RAD
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
+from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr, polar_from_cart
 
 
-class Flat3Environment:
+class Flat3Environment(ModuleBase):
     name = "environment"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        for field in (
-            Field("grav", 0.0, "real", "out", "environment"),
-            Field("rho", 0.0, "real", "out", "environment"),
-            Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
-            Field("mach", 0.0, "real", "out", "environment", ("scrn", "plot")),
-            Field("vsound", 0.0, "real", "diag", "environment"),
-            Field("press", 0.0, "real", "out", "environment"),
-        ):
-            store.define(field)
-
-    def initialize(self, vehicle, ctx):
-        pass
+    fields = (
+        Field("grav", 0.0, "real", "out", "environment"),
+        Field("rho", 0.0, "real", "out", "environment"),
+        Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
+        Field("mach", 0.0, "real", "out", "environment", ("scrn", "plot")),
+        Field("vsound", 0.0, "real", "diag", "environment"),
+        Field("press", 0.0, "real", "out", "environment"),
+    )
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
@@ -44,20 +38,13 @@ class Flat3Environment:
         store.set("vsound", vsound)
         store.set("press", press)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Flat3Kinematics:
+class Flat3Kinematics(ModuleBase):
     name = "kinematics"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        for field in (
-            Field("time", 0.0, "real", "exec", "kinematics", ("scrn", "plot")),
-            Field("event_time", 0.0, "real", "exec", "kinematics"),
-        ):
-            store.define(field)
+    fields = (
+        Field("time", 0.0, "real", "exec", "kinematics", ("scrn", "plot")),
+        Field("event_time", 0.0, "real", "exec", "kinematics"),
+    )
 
     def initialize(self, vehicle, ctx):
         vehicle.store.set("time", ctx.sim_time)
@@ -67,36 +54,26 @@ class Flat3Kinematics:
         store.set("time", ctx.sim_time)
         store.set("event_time", ctx.event_time)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Flat3Newton:
+class Flat3Newton(ModuleBase):
     name = "newton"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        zeros33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-        for field in (
-            Field("TBL", zeros33, "mat", "out", "newton"),
-            Field("TBV", zeros33, "mat", "diag", "newton"),
-            Field("TVL", zeros33, "mat", "diag", "newton"),
-            Field("dvbe", 0.0, "real", "init/out", "newton", ("scrn",)),
-            Field("SBEL", zeros3, "vec", "state", "newton", ("plot",)),
-            Field("VBEL", zeros3, "vec", "state", "newton"),
-            Field("ABEL", zeros3, "vec", "state", "newton"),
-            Field("psivlx", 0.0, "real", "init/diag", "newton", ("scrn", "plot")),
-            Field("thtvlx", 0.0, "real", "init/diag", "newton", ("scrn", "plot")),
-            Field("sbel1", 0.0, "real", "init", "newton"),
-            Field("sbel2", 0.0, "real", "init", "newton"),
-            Field("sbel3", 0.0, "real", "init", "newton"),
-            Field("psivl", 0.0, "real", "out", "newton"),
-            Field("thtvl", 0.0, "real", "out", "newton"),
-            Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
-        ):
-            if field.name not in store:
-                store.define(field)
+    fields = (
+        Field("TBL", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "out", "newton"),
+        Field("TBV", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "diag", "newton"),
+        Field("TVL", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "diag", "newton"),
+        Field("dvbe", 0.0, "real", "init/out", "newton", ("scrn",)),
+        Field("SBEL", (0.0, 0.0, 0.0), "vec", "state", "newton", ("plot",)),
+        Field("VBEL", (0.0, 0.0, 0.0), "vec", "state", "newton"),
+        Field("ABEL", (0.0, 0.0, 0.0), "vec", "state", "newton"),
+        Field("psivlx", 0.0, "real", "init/diag", "newton", ("scrn", "plot")),
+        Field("thtvlx", 0.0, "real", "init/diag", "newton", ("scrn", "plot")),
+        Field("sbel1", 0.0, "real", "init", "newton"),
+        Field("sbel2", 0.0, "real", "init", "newton"),
+        Field("sbel3", 0.0, "real", "init", "newton"),
+        Field("psivl", 0.0, "real", "out", "newton"),
+        Field("thtvl", 0.0, "real", "out", "newton"),
+        Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -183,27 +160,17 @@ class Flat3Newton:
         store.set("thtvlx", thtvl * DEG)
         store.set("alt", -sbel[2])
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Flat3AircraftEnvironment:
+class Flat3AircraftEnvironment(ModuleBase):
     name = "environment"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        for field in (
-            Field("grav", 0.0, "real", "out", "environment"),
-            Field("rho", 0.0, "real", "out", "environment"),
-            Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
-            Field("mach", 0.0, "real", "out", "environment", ("scrn", "plot")),
-            Field("vsound", 0.0, "real", "diag", "environment"),
-            Field("press", 0.0, "real", "out", "environment"),
-        ):
-            store.define(field)
-
-    def initialize(self, vehicle, ctx):
-        pass
+    fields = (
+        Field("grav", 0.0, "real", "out", "environment"),
+        Field("rho", 0.0, "real", "out", "environment"),
+        Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
+        Field("mach", 0.0, "real", "out", "environment", ("scrn", "plot")),
+        Field("vsound", 0.0, "real", "diag", "environment"),
+        Field("press", 0.0, "real", "out", "environment"),
+    )
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
@@ -221,36 +188,26 @@ class Flat3AircraftEnvironment:
         store.set("vsound", vsound)
         store.set("press", press)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Flat3AircraftNewton:
+class Flat3AircraftNewton(ModuleBase):
     name = "newton"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        zeros33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-        for field in (
-            Field("TAL", zeros33, "mat", "out", "newton"),
-            Field("TAV", zeros33, "mat", "diag", "newton"),
-            Field("TVL", zeros33, "mat", "diag", "newton"),
-            Field("dvae", 0.0, "real", "init/out", "newton", ("com",)),
-            Field("SAEL", zeros3, "vec", "state", "newton", ("com",)),
-            Field("VAEL", zeros3, "vec", "state", "newton", ("com",)),
-            Field("AAEL", zeros3, "vec", "state", "newton"),
-            Field("psialx", 0.0, "real", "init/diag", "newton"),
-            Field("thtalx", 0.0, "real", "init/diag", "newton"),
-            Field("sael1", 0.0, "real", "init", "newton"),
-            Field("sael2", 0.0, "real", "init", "newton"),
-            Field("sael3", 0.0, "real", "init", "newton"),
-            Field("psial", 0.0, "real", "out", "newton", ("com",)),
-            Field("thtal", 0.0, "real", "out", "newton", ("com",)),
-            Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
-        ):
-            if field.name not in store:
-                store.define(field)
+    fields = (
+        Field("TAL", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "out", "newton"),
+        Field("TAV", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "diag", "newton"),
+        Field("TVL", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "diag", "newton"),
+        Field("dvae", 0.0, "real", "init/out", "newton", ("com",)),
+        Field("SAEL", (0.0, 0.0, 0.0), "vec", "state", "newton", ("com",)),
+        Field("VAEL", (0.0, 0.0, 0.0), "vec", "state", "newton", ("com",)),
+        Field("AAEL", (0.0, 0.0, 0.0), "vec", "state", "newton"),
+        Field("psialx", 0.0, "real", "init/diag", "newton"),
+        Field("thtalx", 0.0, "real", "init/diag", "newton"),
+        Field("sael1", 0.0, "real", "init", "newton"),
+        Field("sael2", 0.0, "real", "init", "newton"),
+        Field("sael3", 0.0, "real", "init", "newton"),
+        Field("psial", 0.0, "real", "out", "newton", ("com",)),
+        Field("thtal", 0.0, "real", "out", "newton", ("com",)),
+        Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -336,7 +293,4 @@ class Flat3AircraftNewton:
         store.set("psialx", psial * DEG)
         store.set("thtalx", thtal * DEG)
         store.set("alt", -sael[2])
-
-    def terminate(self, vehicle, ctx):
-        pass
 

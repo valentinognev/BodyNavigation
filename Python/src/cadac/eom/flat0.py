@@ -1,18 +1,15 @@
+from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
 
 
-class Flat0Kinematics:
+class Flat0Kinematics(ModuleBase):
     name = "kinematics"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        for field in (
-            Field("time", 0.0, "real", "out", "kinematics", ("com",)),
-            Field("launch_delay", 0.0, "real", "data", "kinematics"),
-            Field("launch_epoch", 0.0, "real", "init", "kinematics"),
-            Field("launch_time", 0.0, "real", "out", "kinematics"),
-        ):
-            store.define(field)
+    fields = (
+        Field("time", 0.0, "real", "out", "kinematics", ("com",)),
+        Field("launch_delay", 0.0, "real", "data", "kinematics"),
+        Field("launch_epoch", 0.0, "real", "init", "kinematics"),
+        Field("launch_time", 0.0, "real", "out", "kinematics"),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -24,23 +21,15 @@ class Flat0Kinematics:
         store.set("launch_time", ctx.sim_time - store.get("launch_epoch"))
         store.set("time", ctx.sim_time)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Flat0Newton:
+class Flat0Newton(ModuleBase):
     name = "newton"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        for field in (
-            Field("srel1", 0.0, "real", "data", "newton"),
-            Field("srel2", 0.0, "real", "data", "newton"),
-            Field("srel3", 0.0, "real", "data", "newton"),
-            Field("SREL", zeros3, "vec", "out", "newton"),
-        ):
-            store.define(field)
+    fields = (
+        Field("srel1", 0.0, "real", "data", "newton"),
+        Field("srel2", 0.0, "real", "data", "newton"),
+        Field("srel3", 0.0, "real", "data", "newton"),
+        Field("SREL", (0.0, 0.0, 0.0), "vec", "out", "newton"),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -50,7 +39,4 @@ class Flat0Newton:
         )
 
     def execute(self, vehicle, ctx):
-        pass
-
-    def terminate(self, vehicle, ctx):
         pass

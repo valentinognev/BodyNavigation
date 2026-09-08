@@ -6,6 +6,7 @@ from cadac.constants import AGRAV, DEG, R, RAD
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
+from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr
 
@@ -13,39 +14,31 @@ RPM = 9.5493
 RHO_SL = 1.225
 
 
-class RotorEnvironment:
+class RotorEnvironment(ModuleBase):
     name = "environment"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        for field in (
-            Field("mwind", 0, "int", "data", "environment"),
-            Field("press", 0.0, "real", "out", "environment"),
-            Field("rho", 0.0, "real", "out", "environment"),
-            Field("vsound", 0.0, "real", "diag", "environment"),
-            Field("grav", 0.0, "real", "out", "environment"),
-            Field("vmach", 0.0, "real", "out", "environment", ("scrn", "plot", "com")),
-            Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
-            Field("tempk", 0.0, "real", "out", "environment"),
-            Field("dvae", 0.0, "real", "data", "environment"),
-            Field("dvael", 0.0, "real", "data", "environment"),
-            Field("waltl", 0.0, "real", "data", "environment"),
-            Field("dvaeh", 0.0, "real", "data", "environment"),
-            Field("walth", 0.0, "real", "data", "environment"),
-            Field("vaed3", 0.0, "real", "data", "environment"),
-            Field("psiwdx", 0.0, "real", "data", "environment"),
-            Field("twind", 0.1, "real", "data", "environment"),
-            Field("VAELS", zeros3, "vec", "state", "environment"),
-            Field("VAELSD", zeros3, "vec", "state", "environment"),
-            Field("VAEL", zeros3, "vec", "out", "environment"),
-            Field("dvba", 0.0, "real", "out", "environment"),
-            Field("VBAL", zeros3, "vec", "out", "environment"),
-        ):
-            store.define(field)
-
-    def initialize(self, vehicle, ctx):
-        pass
+    fields = (
+        Field("mwind", 0, "int", "data", "environment"),
+        Field("press", 0.0, "real", "out", "environment"),
+        Field("rho", 0.0, "real", "out", "environment"),
+        Field("vsound", 0.0, "real", "diag", "environment"),
+        Field("grav", 0.0, "real", "out", "environment"),
+        Field("vmach", 0.0, "real", "out", "environment", ("scrn", "plot", "com")),
+        Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
+        Field("tempk", 0.0, "real", "out", "environment"),
+        Field("dvae", 0.0, "real", "data", "environment"),
+        Field("dvael", 0.0, "real", "data", "environment"),
+        Field("waltl", 0.0, "real", "data", "environment"),
+        Field("dvaeh", 0.0, "real", "data", "environment"),
+        Field("walth", 0.0, "real", "data", "environment"),
+        Field("vaed3", 0.0, "real", "data", "environment"),
+        Field("psiwdx", 0.0, "real", "data", "environment"),
+        Field("twind", 0.1, "real", "data", "environment"),
+        Field("VAELS", (0.0, 0.0, 0.0), "vec", "state", "environment"),
+        Field("VAELSD", (0.0, 0.0, 0.0), "vec", "state", "environment"),
+        Field("VAEL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
+        Field("dvba", 0.0, "real", "out", "environment"),
+        Field("VBAL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
+    )
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
@@ -72,55 +65,47 @@ class RotorEnvironment:
         store.set("vmach", vmach)
         store.set("pdynmc", pdynmc)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class RotorTrajectory:
+class RotorTrajectory(ModuleBase):
     name = "trajectory"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        for field in (
-            Field("time", 0.0, "real", "diag", "trajectory", ("scrn", "plot")),
-            Field("sim_time", 0.0, "real", "exec", "trajectory", ("scrn", "plot")),
-            Field("cd", 0.0, "real", "data", "trajectory"),
-            Field("cmdw", 0.0, "real", "data", "trajectory"),
-            Field("clw", 0.0, "real", "data", "trajectory"),
-            Field("cma", 0.0, "real", "data", "trajectory"),
-            Field("mass", 0.0, "real", "data", "trajectory"),
-            Field("ref_area", 0.0, "real", "data", "trajectory"),
-            Field("ref_length", 0.0, "real", "data", "trajectory"),
-            Field("velocity_ss", 0.0, "real", "out", "trajectory"),
-            Field("gamma_ss", 0.0, "real", "out", "trajectory"),
-            Field("omega_ss", 0.0, "real", "out", "trajectory"),
-            Field("dvbe", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
-            Field("psivlx", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
-            Field("thtvlx", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
-            Field("hbg", 0.0, "real", "data", "trajectory"),
-            Field("hbe", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
-            Field("omega", 0.0, "real", "init/out", "trajectory"),
-            Field("sbel1", 0.0, "real", "init", "trajectory"),
-            Field("sbel2", 0.0, "real", "init", "trajectory"),
-            Field("sbel3", 0.0, "real", "init", "trajectory"),
-            Field("velocityx", 0.0, "real", "state", "trajectory", ("plot",)),
-            Field("velocityxd", 0.0, "real", "state", "trajectory"),
-            Field("gamma", 0.0, "real", "state", "trajectory", ("plot",)),
-            Field("gammaxd", 0.0, "real", "state", "trajectory"),
-            Field("omegax", 0.0, "real", "state", "trajectory", ("plot",)),
-            Field("omegaxd", 0.0, "real", "state", "trajectory"),
-            Field("moi_spin", 0.0, "real", "out", "trajectory"),
-            Field("moi_spinx", 0.0, "real", "data", "trajectory"),
-            Field("SBEL", zeros3, "vec", "state", "trajectory", ("plot",)),
-            Field("SBELD", zeros3, "vec", "state", "trajectory"),
-            Field("VBEL", zeros3, "vec", "diag", "trajectory", ("plot",)),
-            Field("omega_rpm", 0.0, "real", "diag", "trajectory", ("scrn", "plot")),
-            Field("tau", 0.0, "real", "out", "trajectory"),
-            Field("mu", 0.0, "real", "out", "trajectory"),
-            Field("tpsp_ratio", 0.0, "real", "diag", "trajectory", ("plot", "scrn")),
-        ):
-            store.define(field)
+    fields = (
+        Field("time", 0.0, "real", "diag", "trajectory", ("scrn", "plot")),
+        Field("sim_time", 0.0, "real", "exec", "trajectory", ("scrn", "plot")),
+        Field("cd", 0.0, "real", "data", "trajectory"),
+        Field("cmdw", 0.0, "real", "data", "trajectory"),
+        Field("clw", 0.0, "real", "data", "trajectory"),
+        Field("cma", 0.0, "real", "data", "trajectory"),
+        Field("mass", 0.0, "real", "data", "trajectory"),
+        Field("ref_area", 0.0, "real", "data", "trajectory"),
+        Field("ref_length", 0.0, "real", "data", "trajectory"),
+        Field("velocity_ss", 0.0, "real", "out", "trajectory"),
+        Field("gamma_ss", 0.0, "real", "out", "trajectory"),
+        Field("omega_ss", 0.0, "real", "out", "trajectory"),
+        Field("dvbe", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
+        Field("psivlx", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
+        Field("thtvlx", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
+        Field("hbg", 0.0, "real", "data", "trajectory"),
+        Field("hbe", 0.0, "real", "init/diag", "trajectory", ("scrn", "plot")),
+        Field("omega", 0.0, "real", "init/out", "trajectory"),
+        Field("sbel1", 0.0, "real", "init", "trajectory"),
+        Field("sbel2", 0.0, "real", "init", "trajectory"),
+        Field("sbel3", 0.0, "real", "init", "trajectory"),
+        Field("velocityx", 0.0, "real", "state", "trajectory", ("plot",)),
+        Field("velocityxd", 0.0, "real", "state", "trajectory"),
+        Field("gamma", 0.0, "real", "state", "trajectory", ("plot",)),
+        Field("gammaxd", 0.0, "real", "state", "trajectory"),
+        Field("omegax", 0.0, "real", "state", "trajectory", ("plot",)),
+        Field("omegaxd", 0.0, "real", "state", "trajectory"),
+        Field("moi_spin", 0.0, "real", "out", "trajectory"),
+        Field("moi_spinx", 0.0, "real", "data", "trajectory"),
+        Field("SBEL", (0.0, 0.0, 0.0), "vec", "state", "trajectory", ("plot",)),
+        Field("SBELD", (0.0, 0.0, 0.0), "vec", "state", "trajectory"),
+        Field("VBEL", (0.0, 0.0, 0.0), "vec", "diag", "trajectory", ("plot",)),
+        Field("omega_rpm", 0.0, "real", "diag", "trajectory", ("scrn", "plot")),
+        Field("tau", 0.0, "real", "out", "trajectory"),
+        Field("mu", 0.0, "real", "out", "trajectory"),
+        Field("tpsp_ratio", 0.0, "real", "diag", "trajectory", ("plot", "scrn")),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -253,47 +238,40 @@ class RotorTrajectory:
         store.set("omega_rpm", omega_rpm)
         store.set("tpsp_ratio", tpsp_ratio)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class RotorAttitude:
+class RotorAttitude(ModuleBase):
     name = "attitude"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        for field in (
-            Field("nonlinear", 0, "int", "data", "attitude"),
-            Field("moi_trans", 0.0, "real", "data", "attitude"),
-            Field("cyb", 0.0, "real", "data", "attitude"),
-            Field("cyb3", 0.0, "real", "data", "attitude"),
-            Field("clwb", 0.0, "real", "data", "attitude"),
-            Field("clp", 0.0, "real", "data", "attitude"),
-            Field("clwb3", 0.0, "real", "data", "attitude"),
-            Field("clp3", 0.0, "real", "data", "attitude"),
-            Field("clwb2p", 0.0, "real", "data", "attitude"),
-            Field("clwbp2", 0.0, "real", "data", "attitude"),
-            Field("cnb", 0.0, "real", "data", "attitude"),
-            Field("cnr", 0.0, "real", "data", "attitude"),
-            Field("cnb3", 0.0, "real", "data", "attitude"),
-            Field("cnr3", 0.0, "real", "data", "attitude"),
-            Field("cnb2r", 0.0, "real", "data", "attitude"),
-            Field("cnbr2", 0.0, "real", "data", "attitude"),
-            Field("beta", 0.0, "real", "state", "attitude"),
-            Field("betad", 0.0, "real", "state", "attitude"),
-            Field("phi", 0.0, "real", "state", "attitude"),
-            Field("phid", 0.0, "real", "state", "attitude"),
-            Field("phidd", 0.0, "real", "state", "attitude"),
-            Field("psi", 0.0, "real", "state", "attitude"),
-            Field("psid", 0.0, "real", "state", "attitude"),
-            Field("psidd", 0.0, "real", "state", "attitude"),
-            Field("betax", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
-            Field("phix", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
-            Field("ppx", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
-            Field("psix", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
-            Field("rrx", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
-        ):
-            store.define(field)
+    fields = (
+        Field("nonlinear", 0, "int", "data", "attitude"),
+        Field("moi_trans", 0.0, "real", "data", "attitude"),
+        Field("cyb", 0.0, "real", "data", "attitude"),
+        Field("cyb3", 0.0, "real", "data", "attitude"),
+        Field("clwb", 0.0, "real", "data", "attitude"),
+        Field("clp", 0.0, "real", "data", "attitude"),
+        Field("clwb3", 0.0, "real", "data", "attitude"),
+        Field("clp3", 0.0, "real", "data", "attitude"),
+        Field("clwb2p", 0.0, "real", "data", "attitude"),
+        Field("clwbp2", 0.0, "real", "data", "attitude"),
+        Field("cnb", 0.0, "real", "data", "attitude"),
+        Field("cnr", 0.0, "real", "data", "attitude"),
+        Field("cnb3", 0.0, "real", "data", "attitude"),
+        Field("cnr3", 0.0, "real", "data", "attitude"),
+        Field("cnb2r", 0.0, "real", "data", "attitude"),
+        Field("cnbr2", 0.0, "real", "data", "attitude"),
+        Field("beta", 0.0, "real", "state", "attitude"),
+        Field("betad", 0.0, "real", "state", "attitude"),
+        Field("phi", 0.0, "real", "state", "attitude"),
+        Field("phid", 0.0, "real", "state", "attitude"),
+        Field("phidd", 0.0, "real", "state", "attitude"),
+        Field("psi", 0.0, "real", "state", "attitude"),
+        Field("psid", 0.0, "real", "state", "attitude"),
+        Field("psidd", 0.0, "real", "state", "attitude"),
+        Field("betax", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+        Field("phix", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+        Field("ppx", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+        Field("psix", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+        Field("rrx", 0.0, "real", "diag", "attitude", ("scrn", "plot")),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -415,7 +393,4 @@ class RotorAttitude:
         store.set("ppx", ppx)
         store.set("psix", psix)
         store.set("rrx", rrx)
-
-    def terminate(self, vehicle, ctx):
-        pass
 

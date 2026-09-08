@@ -4,29 +4,26 @@ from cadac.constants import DEG, RAD, REARTH, WEII3
 from cadac.env.gravity import gravity
 from cadac.env.iso62 import iso62
 from cadac.kernel.integrate import integrate
+from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
 from cadac.math.earth import cadsph, cadtei, cadtge
 from cadac.math.frames import mat2tr, polar_from_cart
 
 
-class Round3Environment:
+class Round3Environment(ModuleBase):
     name = "environment"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        for field in (
-            Field("time", 0.0, "real", "exec", "environment", ("scrn", "plot", "com")),
-            Field("event_time", 0.0, "real", "exec", "environment", ("scrn",)),
-            Field("int_step_new", 0.0, "real", "data", "environment"),
-            Field("out_step_fact", 0.0, "real", "data", "environment"),
-            Field("grav", 0.0, "real", "out", "environment"),
-            Field("rho", 0.0, "real", "out", "environment"),
-            Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
-            Field("mach", 0.0, "real", "out", "environment", ("scrn", "plot", "com")),
-            Field("vsound", 0.0, "real", "diag", "environment"),
-            Field("press", 0.0, "real", "diag", "environment"),
-        ):
-            store.define(field)
+    fields = (
+        Field("time", 0.0, "real", "exec", "environment", ("scrn", "plot", "com")),
+        Field("event_time", 0.0, "real", "exec", "environment", ("scrn",)),
+        Field("int_step_new", 0.0, "real", "data", "environment"),
+        Field("out_step_fact", 0.0, "real", "data", "environment"),
+        Field("grav", 0.0, "real", "out", "environment"),
+        Field("rho", 0.0, "real", "out", "environment"),
+        Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
+        Field("mach", 0.0, "real", "out", "environment", ("scrn", "plot", "com")),
+        Field("vsound", 0.0, "real", "diag", "environment"),
+        Field("press", 0.0, "real", "diag", "environment"),
+    )
 
     def initialize(self, vehicle, ctx):
         vehicle.store.set("time", ctx.sim_time)
@@ -48,39 +45,30 @@ class Round3Environment:
         store.set("vsound", atm["vsound"])
         store.set("press", atm["press"])
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Round3Newton:
+class Round3Newton(ModuleBase):
     name = "newton"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        zeros33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-        for field in (
-            Field("psivg", 0.0, "real", "out", "newton"),
-            Field("thtvg", 0.0, "real", "out", "newton"),
-            Field("lonx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
-            Field("latx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
-            Field("alt", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
-            Field("tgv", zeros33, "mat", "init", "newton"),
-            Field("tig", zeros33, "mat", "init/out", "newton"),
-            Field("dvbe", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
-            Field("weii", zeros33, "mat", "init", "newton"),
-            Field("psivgx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
-            Field("thtvgx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
-            Field("sb0ii", zeros3, "vec", "init", "newton"),
-            Field("sbeg", zeros3, "vec", "state", "newton", ("scrn", "plot", "com")),
-            Field("vbeg", zeros3, "vec", "state", "newton", ("scrn", "plot", "com")),
-            Field("tge", zeros33, "mat", "out", "newton"),
-            Field("altx", 0.0, "real", "diag", "newton"),
-            Field("sbii", zeros3, "vec", "state", "newton", ("com",)),
-            Field("vbii", zeros3, "vec", "state", "newton"),
-            Field("abii", zeros3, "vec", "state", "newton"),
-        ):
-            store.define(field)
+    fields = (
+        Field("psivg", 0.0, "real", "out", "newton"),
+        Field("thtvg", 0.0, "real", "out", "newton"),
+        Field("lonx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
+        Field("latx", 0.0, "real", "init/diag", "newton", ("scrn", "plot", "com")),
+        Field("alt", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+        Field("tgv", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "init", "newton"),
+        Field("tig", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "init/out", "newton"),
+        Field("dvbe", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+        Field("weii", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "init", "newton"),
+        Field("psivgx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+        Field("thtvgx", 0.0, "real", "init/out", "newton", ("scrn", "plot", "com")),
+        Field("sb0ii", (0.0, 0.0, 0.0), "vec", "init", "newton"),
+        Field("sbeg", (0.0, 0.0, 0.0), "vec", "state", "newton", ("scrn", "plot", "com")),
+        Field("vbeg", (0.0, 0.0, 0.0), "vec", "state", "newton", ("scrn", "plot", "com")),
+        Field("tge", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "out", "newton"),
+        Field("altx", 0.0, "real", "diag", "newton"),
+        Field("sbii", (0.0, 0.0, 0.0), "vec", "state", "newton", ("com",)),
+        Field("vbii", (0.0, 0.0, 0.0), "vec", "state", "newton"),
+        Field("abii", (0.0, 0.0, 0.0), "vec", "state", "newton"),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -190,6 +178,3 @@ class Round3Newton:
         store.set("latx", latx)
         store.set("tge", tge)
         store.set("altx", altx)
-
-    def terminate(self, vehicle, ctx):
-        pass

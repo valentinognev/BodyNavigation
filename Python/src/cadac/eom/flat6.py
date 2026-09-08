@@ -6,33 +6,26 @@ from cadac.constants import DEG, EPS, PI, R, RAD
 from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
+from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
 from cadac.math.frames import cadac_sign, hypot3, mat2tr, mat3tr, quat_to_dcm, skew
 
 
-class Flat6Environment:
+class Flat6Environment(ModuleBase):
     name = "environment"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        for field in (
-            Field("mwind", 0, "int", "data", "environment"),
-            Field("press", 0.0, "real", "out", "environment"),
-            Field("rho", 0.0, "real", "out", "environment"),
-            Field("vsound", 0.0, "real", "diag", "environment"),
-            Field("grav", 0.0, "real", "out", "environment"),
-            Field("vmach", 0.0, "real", "out", "environment", ("scrn", "plot", "com")),
-            Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
-            Field("tempk", 0.0, "real", "out", "environment"),
-            Field("VAEL", zeros3, "vec", "out", "environment"),
-            Field("dvba", 0.0, "real", "out", "environment", ("plot",)),
-            Field("VBAL", zeros3, "vec", "out", "environment"),
-        ):
-            store.define(field)
-
-    def initialize(self, vehicle, ctx):
-        pass
+    fields = (
+        Field("mwind", 0, "int", "data", "environment"),
+        Field("press", 0.0, "real", "out", "environment"),
+        Field("rho", 0.0, "real", "out", "environment"),
+        Field("vsound", 0.0, "real", "diag", "environment"),
+        Field("grav", 0.0, "real", "out", "environment"),
+        Field("vmach", 0.0, "real", "out", "environment", ("scrn", "plot", "com")),
+        Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
+        Field("tempk", 0.0, "real", "out", "environment"),
+        Field("VAEL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
+        Field("dvba", 0.0, "real", "out", "environment", ("plot",)),
+        Field("VBAL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
+    )
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
@@ -59,44 +52,36 @@ class Flat6Environment:
         store.set("vmach", vmach)
         store.set("pdynmc", pdynmc)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Flat6Kinematics:
+class Flat6Kinematics(ModuleBase):
     name = "kinematics"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-        for field in (
-            Field("ck", 50.0, "real", "data", "kinematics"),
-            Field("q0d", 0.0, "real", "state", "kinematics"),
-            Field("q0", 0.0, "real", "state", "kinematics"),
-            Field("q1d", 0.0, "real", "state", "kinematics"),
-            Field("q1", 0.0, "real", "state", "kinematics"),
-            Field("q2d", 0.0, "real", "state", "kinematics"),
-            Field("q2", 0.0, "real", "state", "kinematics"),
-            Field("q3d", 0.0, "real", "state", "kinematics"),
-            Field("q3", 0.0, "real", "state", "kinematics"),
-            Field("TBL", zeros33, "mat", "out", "kinematics"),
-            Field("psibl", 0.0, "real", "diag", "kinematics"),
-            Field("thtbl", 0.0, "real", "diag", "kinematics"),
-            Field("phibl", 0.0, "real", "diag", "kinematics"),
-            Field("psiblx", 0.0, "real", "in/di", "kinematics", ("scrn", "plot")),
-            Field("thtblx", 0.0, "real", "in/di", "kinematics", ("scrn", "plot")),
-            Field("phiblx", 0.0, "real", "in/di", "kinematics", ("scrn", "plot")),
-            Field("alppx", 0.0, "real", "out", "kinematics", ("plot",)),
-            Field("phipx", 0.0, "real", "out", "kinematics", ("plot",)),
-            Field("alpp", 0.0, "real", "out", "kinematics"),
-            Field("phip", 0.0, "real", "out", "kinematics"),
-            Field("alphax", 0.0, "real", "diag", "kinematics", ("scrn", "plot")),
-            Field("betax", 0.0, "real", "diag", "kinematics", ("scrn", "plot")),
-            Field("erq", 0.0, "real", "diag", "kinematics", ("plot",)),
-            Field("etbl", 0.0, "real", "diag", "kinematics", ("plot",)),
-            Field("TLB", zeros33, "mat", "diag", "kinematics"),
-        ):
-            store.define(field)
+    fields = (
+        Field("ck", 50.0, "real", "data", "kinematics"),
+        Field("q0d", 0.0, "real", "state", "kinematics"),
+        Field("q0", 0.0, "real", "state", "kinematics"),
+        Field("q1d", 0.0, "real", "state", "kinematics"),
+        Field("q1", 0.0, "real", "state", "kinematics"),
+        Field("q2d", 0.0, "real", "state", "kinematics"),
+        Field("q2", 0.0, "real", "state", "kinematics"),
+        Field("q3d", 0.0, "real", "state", "kinematics"),
+        Field("q3", 0.0, "real", "state", "kinematics"),
+        Field("TBL", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "out", "kinematics"),
+        Field("psibl", 0.0, "real", "diag", "kinematics"),
+        Field("thtbl", 0.0, "real", "diag", "kinematics"),
+        Field("phibl", 0.0, "real", "diag", "kinematics"),
+        Field("psiblx", 0.0, "real", "in/di", "kinematics", ("scrn", "plot")),
+        Field("thtblx", 0.0, "real", "in/di", "kinematics", ("scrn", "plot")),
+        Field("phiblx", 0.0, "real", "in/di", "kinematics", ("scrn", "plot")),
+        Field("alppx", 0.0, "real", "out", "kinematics", ("plot",)),
+        Field("phipx", 0.0, "real", "out", "kinematics", ("plot",)),
+        Field("alpp", 0.0, "real", "out", "kinematics"),
+        Field("phip", 0.0, "real", "out", "kinematics"),
+        Field("alphax", 0.0, "real", "diag", "kinematics", ("scrn", "plot")),
+        Field("betax", 0.0, "real", "diag", "kinematics", ("scrn", "plot")),
+        Field("erq", 0.0, "real", "diag", "kinematics", ("plot",)),
+        Field("etbl", 0.0, "real", "diag", "kinematics", ("plot",)),
+        Field("TLB", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "diag", "kinematics"),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -249,24 +234,16 @@ class Flat6Kinematics:
         store.set("etbl", etbl)
         store.set("TLB", tlb)
 
-    def terminate(self, vehicle, ctx):
-        pass
 
-
-class Flat6Euler:
+class Flat6Euler(ModuleBase):
     name = "euler"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        for field in (
-            Field("ppx", 0.0, "real", "init/out", "euler", ("plot",)),
-            Field("qqx", 0.0, "real", "init/out", "euler", ("plot",)),
-            Field("rrx", 0.0, "real", "init/out", "euler", ("plot",)),
-            Field("WBEB", zeros3, "vec", "state", "euler"),
-            Field("WBEBD", zeros3, "vec", "state", "euler"),
-        ):
-            store.define(field)
+    fields = (
+        Field("ppx", 0.0, "real", "init/out", "euler", ("plot",)),
+        Field("qqx", 0.0, "real", "init/out", "euler", ("plot",)),
+        Field("rrx", 0.0, "real", "init/out", "euler", ("plot",)),
+        Field("WBEB", (0.0, 0.0, 0.0), "vec", "state", "euler"),
+        Field("WBEBD", (0.0, 0.0, 0.0), "vec", "state", "euler"),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -295,9 +272,6 @@ class Flat6Euler:
         store.set("qqx", wbeb[1] * DEG)
         store.set("rrx", wbeb[2] * DEG)
 
-    def terminate(self, vehicle, ctx):
-        pass
-
 
 def _flight_path_angles(vbel):
     vbel1 = float(vbel[0])
@@ -311,40 +285,35 @@ def _flight_path_angles(vbel):
     return psivl, thtvl
 
 
-class Flat6Newton:
+class Flat6Newton(ModuleBase):
     name = "newton"
-
-    def define(self, vehicle):
-        store = vehicle.store
-        zeros3 = (0.0, 0.0, 0.0)
-        for field in (
-            Field("time", 0.0, "real", "exec", "newton", ("scrn", "plot", "com")),
-            Field("halt", 0, "int", "exec", "newton"),
-            Field("VBEBD", zeros3, "vec", "state", "newton"),
-            Field("VBEB", zeros3, "vec", "state", "newton", ("plot",)),
-            Field("SBELD", zeros3, "vec", "state", "newton"),
-            Field("SBEL", zeros3, "vec", "state", "newton", ("plot", "com")),
-            Field("sbel1", 0.0, "real", "data", "newton"),
-            Field("sbel2", 0.0, "real", "data", "newton"),
-            Field("sbel3", 0.0, "real", "data", "newton"),
-            Field("SBELM", zeros3, "vec", "save", "newton"),
-            Field("groundrange", 0.0, "real", "diag", "newton"),
-            Field("FSPB", zeros3, "vec", "out", "newton"),
-            Field("VBEL", zeros3, "vec", "out", "newton", ("com", "scrn", "plot")),
-            Field("dvbe", 0.0, "real", "in/out", "newton", ("plot",)),
-            Field("alpha0x", 0.0, "real", "data", "newton"),
-            Field("beta0x", 0.0, "real", "data", "newton"),
-            Field("hbe", 0.0, "real", "out", "newton", ("scrn", "plot")),
-            Field("psivlx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
-            Field("thtvlx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
-            Field("alx", 0.0, "real", "diag", "newton", ("plot",)),
-            Field("anx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
-            Field("ayx", 0.0, "real", "diag", "newton", ("plot",)),
-            Field("ATB", zeros3, "vec", "diag", "newton"),
-            Field("mfreeze_newt", 0, "int", "save", "newton"),
-            Field("dvbef", 0.0, "real", "save", "newton"),
-        ):
-            store.define(field)
+    fields = (
+        Field("time", 0.0, "real", "exec", "newton", ("scrn", "plot", "com")),
+        Field("halt", 0, "int", "exec", "newton"),
+        Field("VBEBD", (0.0, 0.0, 0.0), "vec", "state", "newton"),
+        Field("VBEB", (0.0, 0.0, 0.0), "vec", "state", "newton", ("plot",)),
+        Field("SBELD", (0.0, 0.0, 0.0), "vec", "state", "newton"),
+        Field("SBEL", (0.0, 0.0, 0.0), "vec", "state", "newton", ("plot", "com")),
+        Field("sbel1", 0.0, "real", "data", "newton"),
+        Field("sbel2", 0.0, "real", "data", "newton"),
+        Field("sbel3", 0.0, "real", "data", "newton"),
+        Field("SBELM", (0.0, 0.0, 0.0), "vec", "save", "newton"),
+        Field("groundrange", 0.0, "real", "diag", "newton"),
+        Field("FSPB", (0.0, 0.0, 0.0), "vec", "out", "newton"),
+        Field("VBEL", (0.0, 0.0, 0.0), "vec", "out", "newton", ("com", "scrn", "plot")),
+        Field("dvbe", 0.0, "real", "in/out", "newton", ("plot",)),
+        Field("alpha0x", 0.0, "real", "data", "newton"),
+        Field("beta0x", 0.0, "real", "data", "newton"),
+        Field("hbe", 0.0, "real", "out", "newton", ("scrn", "plot")),
+        Field("psivlx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
+        Field("thtvlx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
+        Field("alx", 0.0, "real", "diag", "newton", ("plot",)),
+        Field("anx", 0.0, "real", "diag", "newton", ("scrn", "plot")),
+        Field("ayx", 0.0, "real", "diag", "newton", ("plot",)),
+        Field("ATB", (0.0, 0.0, 0.0), "vec", "diag", "newton"),
+        Field("mfreeze_newt", 0, "int", "save", "newton"),
+        Field("dvbef", 0.0, "real", "save", "newton"),
+    )
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
@@ -448,6 +417,3 @@ class Flat6Newton:
         store.set("anx", anx)
         store.set("ayx", ayx)
         store.set("ATB", atb)
-
-    def terminate(self, vehicle, ctx):
-        pass

@@ -1,5 +1,11 @@
 # Updates
 
+## 0.169.8 - ModuleBase copies Fields; EOM define via fields tuples
+- `ModuleBase.define` constructs a new `Field(name, value, type, role, module, outputs)` per vehicle so class-level Field tuples are not shared. Default `initialize`/`terminate` are `pass`; `execute` raises `NotImplementedError`. `DummyModule` subclasses it.
+- EOM classes (`flat6`, `flat3`, `flat0`, `round3`, `round6`, `rotor`) set `fields` and inherit; empty `initialize`/`terminate` removed; real `initialize` bodies kept. `Agm6Kinematics(Flat6Kinematics)` still works.
+- `define` skips names already in the store (same as former Flat3Newton/Round6Environment loops and vehicle wrappers).
+- Tests: `test_module_base.py` (no shared Field; terminate noop; execute not implemented). No CADAC `.cpp` edits. No README.
+
 ## 0.169.7 - look_up last-index cache
 - `Datadeck._loc_cache[name] = (x1, x2, x3, loc1, loc2, loc3)`; reuse locs only when the query x matches. Interpolation (EPS dx, last-index clamp) unchanged.
 - `find_index` last-key memo `_idx_last = ((id(breakpoints), max, value), loc)`. Binary search unchanged.
