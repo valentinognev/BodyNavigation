@@ -1,6 +1,7 @@
 import numpy as np
 
 from cadac.constants import RAD, REARTH, WEII3
+from cadac.math.frames import cadac_matmul
 
 GM = 3.9860044e14
 C20 = -4.8416685e-4
@@ -158,7 +159,7 @@ def cad_tgi84(lon, lat, alt, time):
     tgd[1, 1] = 1
     tgd[2, 0] = np.sin(dd)
     tgd[0, 2] = -np.sin(dd)
-    return tgd @ tdi
+    return cadac_matmul(tgd, tdi)
 
 
 def cad_kepler(sbii, vbii, tgo):

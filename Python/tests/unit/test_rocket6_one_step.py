@@ -164,7 +164,7 @@ def test_committed_insertion_case():
     assert (CASES / "aero_deck_SLV.jsonc").is_file()
     assert (CASES / "weather_deck_Wallops.jsonc").is_file()
     assert cfg.vehicles[0].params["alt"] == 100
-    assert cfg.vehicles[0].params["mair"] == 12
+    assert cfg.vehicles[0].params["mair"] == 0
 
 
 def test_rocket6_requires_aero_deck_not_prop(tmp_path: Path):

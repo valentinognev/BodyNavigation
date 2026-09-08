@@ -18,6 +18,9 @@ def atmosphere76(balt):
 
     # convert geometric (m) to geopotential altitude (km)
     alt = balt / 1000
+    # C++: if(alt<84.852) table; else vacuum + last-layer tempk.
+    if alt >= 84.852:
+        return 0.0, 0.0, 186.946
     h = alt * rearth / (alt + rearth)
 
     # binary search determines altitude table entry i below actual altitude

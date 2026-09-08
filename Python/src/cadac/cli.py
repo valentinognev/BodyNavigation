@@ -4,6 +4,7 @@ from pathlib import Path
 
 from cadac.constants import EPS
 from cadac.io.deck import load_deck
+from cadac.stoch import seed
 from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns, plot_row, write_plot_csv
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
@@ -198,6 +199,7 @@ def _build_vehicle(path, spec):
 def run_scenario(path):
     path = Path(path)
     cfg = load_scenario(path)
+    seed(cfg.iseed)
     try:
         int_step = float(cfg.timing["int_step"])
     except KeyError as exc:
@@ -245,6 +247,9 @@ def run_scenario(path):
         int_step,
         on_step=on_step,
     )
+    if vehicles and type(vehicles[0]) is Rotor:
+        # MAGSIX Rotor::plot_data ignores merge, so the C++ post-loop dump is a real row.
+        plot_rows.append(plot_row(vehicles[0].store, columns=csv_columns))
     if cfg.options["plot"] and cfg.options["csv"]:
         write_plot_csv(
             path.parent / "plot.csv",

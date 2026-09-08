@@ -1,4 +1,4 @@
-from cadac.eom.flat6 import Flat6Euler, Flat6Kinematics, Flat6Newton
+from cadac.eom.flat6 import Flat6Euler, Flat6Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
 from cadac.vehicles.agm6.actuator import Agm6Actuator
@@ -10,6 +10,7 @@ from cadac.vehicles.agm6.forces import Agm6Forces
 from cadac.vehicles.agm6.guidance import Agm6Guidance
 from cadac.vehicles.agm6.ins import Agm6Ins
 from cadac.vehicles.agm6.intercept import Agm6Intercept
+from cadac.vehicles.agm6.kinematics import Agm6Kinematics
 from cadac.vehicles.agm6.propulsion import Agm6Propulsion
 from cadac.vehicles.agm6.sensor import Agm6Sensor
 
@@ -26,7 +27,7 @@ class Agm6Missile:
         self.com_names = []
         self.modules = [
             Agm6Environment(weather_deck),
-            Flat6Kinematics(),
+            Agm6Kinematics(),
             Agm6Aero(aero_deck),
             Agm6Propulsion(),
             Agm6Forces(),

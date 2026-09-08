@@ -23,6 +23,91 @@ def polar_from_cart(v):
     return np.array([d, azimuth, elevation])
 
 
+def cadac_matmul(a, b):
+    """C++ `Matrix::operator*` (row-major ijk, no BLAS/FMA)."""
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    squeeze = False
+    if b.ndim == 1:
+        b = b.reshape(-1, 1)
+        squeeze = True
+    nrow, nmid = a.shape
+    ncol = b.shape[1]
+    result = np.zeros((nrow, ncol), dtype=float)
+    for i in range(nrow * ncol):
+        r = i // ncol
+        c = i % ncol
+        acc = 0.0
+        for k in range(nmid):
+            acc += a[r, k] * b[k, c]
+        result[r, c] = acc
+    if squeeze:
+        return result.reshape(nrow)
+    return result
+
+
+def _cadac_sub_matrix(amat, row, col):
+    """C++ `Matrix::sub_matrix` (1-based row/col omitted)."""
+    amat = np.asarray(amat, dtype=float)
+    n = amat.shape[0]
+    result = np.zeros((n - 1, n - 1), dtype=float)
+    skip_start = (row - 1) * n
+    skip_end = skip_start + n
+    j = 0
+    num_elem = n * n
+    for i in range(num_elem):
+        if i < skip_start or i >= skip_end:
+            offset_col = (col - 1) + (i // n) * n
+            if i != offset_col:
+                result.flat[j] = amat.flat[i]
+                j += 1
+    return result
+
+
+def cadac_determinant(amat):
+    """C++ `Matrix::determinant` (first-row cofactor expansion)."""
+    amat = np.asarray(amat, dtype=float)
+    n = amat.shape[0]
+    if n == 1:
+        return float(amat.flat[0])
+    if n == 2:
+        return float(amat[0, 0] * amat[1, 1] - amat[0, 1] * amat[1, 0])
+    result = 0.0
+    for j in range(n):
+        cof = cadac_determinant(_cadac_sub_matrix(amat, 1, j + 1))
+        if (j % 2) == 0:
+            result += cof * amat.flat[j]
+        else:
+            result += (-1.0) * cof * amat.flat[j]
+    return result
+
+
+def cadac_adjoint(amat):
+    """C++ `Matrix::adjoint` (cofactors then trans)."""
+    amat = np.asarray(amat, dtype=float)
+    n = amat.shape[0]
+    result = np.zeros((n, n), dtype=float)
+    for i in range(n * n):
+        row = i // n + 1
+        col = i % n + 1
+        det = cadac_determinant(_cadac_sub_matrix(amat, row, col))
+        if ((row + col) % 2) == 0:
+            result.flat[i] = det
+        else:
+            result.flat[i] = -1.0 * det
+    return result.T.copy()
+
+
+def cadac_inverse(amat):
+    """C++ `Matrix::inverse` = (1/det)*adjoint (not LAPACK)."""
+    amat = np.asarray(amat, dtype=float)
+    d = cadac_determinant(amat)
+    if d == 0.0:
+        raise ValueError("singular! 'Matrix::inverse()'")
+    d = 1.0 / d
+    return cadac_adjoint(amat) * d
+
+
 def mat2tr(psivg, thtvg):
     amat = np.zeros((3, 3))
     amat[0, 2] = -np.sin(thtvg)

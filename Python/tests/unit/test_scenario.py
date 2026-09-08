@@ -1,4 +1,6 @@
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
@@ -10,6 +12,7 @@ FIXTURE = Path(__file__).resolve().parent.parent / "fixtures" / "minimal_cruise3
 
 def test_load_minimal_cruise3_with_time_event():
     cfg = load_scenario(FIXTURE)
+    assert cfg.iseed == 0
     assert cfg.title == "minimal CRUISE3"
     assert cfg.options["scrn"] is True
     assert cfg.options["events"] is False
@@ -59,3 +62,50 @@ def test_extra_params_keys_stay(tmp_path: Path):
     )
     cfg = load_scenario(p)
     assert cfg.vehicles[0].params == {"lonx": -80.55, "custom": 1}
+    assert cfg.iseed == 0
+
+
+def test_load_scenario_reads_iseed(tmp_path: Path):
+    p = tmp_path / "seeded.jsonc"
+    p.write_text(
+        '{ "title": "t", "options": {}, "modules": [], "timing": {}, '
+        '"end_time": 1, "iseed": 12345, '
+        '"vehicles": [ { "type": "CRUISE3", "name": "v", '
+        '"params": {}, "events": [] } ] }',
+        encoding="utf-8",
+        newline="\n",
+    )
+    cfg = load_scenario(p)
+    assert cfg.iseed == 12345
+
+
+def test_run_scenario_seeds_cfg_iseed_not_hardcoded_12345(tmp_path: Path):
+    from cadac.cli import run_scenario
+
+    seen = []
+    cfg = SimpleNamespace(
+        title="t",
+        options={"plot": False, "csv": False},
+        modules=[],
+        timing={"int_step": 0.01},
+        end_time=0.0,
+        vehicles=[],
+        iseed=0,
+    )
+    with (
+        patch("cadac.cli.seed", side_effect=lambda iseed=0: seen.append(iseed)),
+        patch("cadac.cli.load_scenario", return_value=cfg),
+        patch("cadac.cli.run_loop", return_value=None),
+    ):
+        run_scenario(tmp_path / "x.jsonc")
+    assert seen == [0]
+
+    seen.clear()
+    cfg.iseed = 12345
+    with (
+        patch("cadac.cli.seed", side_effect=lambda iseed=0: seen.append(iseed)),
+        patch("cadac.cli.load_scenario", return_value=cfg),
+        patch("cadac.cli.run_loop", return_value=None),
+    ):
+        run_scenario(tmp_path / "x.jsonc")
+    assert seen == [12345]

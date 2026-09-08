@@ -1,9 +1,11 @@
+import json
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 from cadac import run_scenario
+from cadac.io.jsonc import loads
 from cadac.io.plot import write_plot_csv
 
 CASE = Path(__file__).resolve().parents[2] / "cases" / "agm6" / "input_testcase.jsonc"
@@ -135,6 +137,80 @@ def test_shared_columns_require_hbe_and_vmach(tmp_path):
             path,
             [{"time": 0.0, "hbe": 7000.0, "mach": 0.86}],
         )
+
+
+def _run_testcase_until(tmp_path, end_time):
+    data = loads(CASE.read_text(encoding="utf-8"))
+    data["end_time"] = end_time
+    data["vehicles"][0]["aero_deck"] = str(CASE.parent / "AGM6_aero_deck.jsonc")
+    data["vehicles"][0]["weather_deck"] = str(CASE.parent / "weather_deck.jsonc")
+    path = tmp_path / "input_testcase.jsonc"
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return run_scenario(path)
+
+
+def test_vmach_matches_golden_at_t42(tmp_path):
+    require_golden(GOLDEN)
+    result = _run_testcase_until(tmp_path, 4.2)
+    _, golden_rows = load_cadac_plot_csv(GOLDEN)
+    python = _row_at(result.plot_rows, 4.2)
+    golden = _row_at(golden_rows, 4.2)
+    want = golden["vmach"]
+    np.testing.assert_allclose(
+        python["vmach"],
+        want,
+        rtol=RTOL,
+        atol=_csv_atol(want),
+        err_msg="vmach at t=4.2",
+    )
+
+
+def test_vmach_matches_golden_at_t48(tmp_path):
+    require_golden(GOLDEN)
+    result = _run_testcase_until(tmp_path, 4.8)
+    _, golden_rows = load_cadac_plot_csv(GOLDEN)
+    python = _row_at(result.plot_rows, 4.8)
+    golden = _row_at(golden_rows, 4.8)
+    want = golden["vmach"]
+    np.testing.assert_allclose(
+        python["vmach"],
+        want,
+        rtol=RTOL,
+        atol=_csv_atol(want),
+        err_msg="vmach at t=4.8",
+    )
+
+
+def test_hbe_matches_golden_at_t828(tmp_path):
+    require_golden(GOLDEN)
+    result = _run_testcase_until(tmp_path, 82.8)
+    _, golden_rows = load_cadac_plot_csv(GOLDEN)
+    python = _row_at(result.plot_rows, 82.8)
+    golden = _row_at(golden_rows, 82.8)
+    want = golden["hbe"]
+    np.testing.assert_allclose(
+        python["hbe"],
+        want,
+        rtol=RTOL,
+        atol=_csv_atol(want),
+        err_msg="hbe at t=82.8",
+    )
+
+
+def test_vmach_matches_golden_at_t794(tmp_path):
+    require_golden(GOLDEN)
+    result = _run_testcase_until(tmp_path, 79.4)
+    _, golden_rows = load_cadac_plot_csv(GOLDEN)
+    python = _row_at(result.plot_rows, 79.4)
+    golden = _row_at(golden_rows, 79.4)
+    want = golden["vmach"]
+    np.testing.assert_allclose(
+        python["vmach"],
+        want,
+        rtol=RTOL,
+        atol=_csv_atol(want),
+        err_msg="vmach at t=79.4",
+    )
 
 
 def test_hbe_matches_golden_at_t0():

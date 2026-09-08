@@ -8,6 +8,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
 from cadac.math.wgs84 import GM, cad_in_geo84, cad_tdi84
+from cadac.stoch import seed
 from cadac.vehicles.rocket6.ins import Rocket6Ins
 
 RTOL = 1e-12
@@ -91,16 +92,46 @@ def _ready(mins=1):
     vehicle, ins = _defined(mins=mins)
     truth = _plant_truth(vehicle.store)
     ins.initialize(vehicle, _ctx())
+    if mins == 1:
+        # Execute-path tests plant their own error states; zero C++ init_ins draws.
+        for name in (
+            "ESBI",
+            "EVBI",
+            "RICI",
+            "EMISG",
+            "ESCALG",
+            "EBIASG",
+            "EMISA",
+            "ESCALA",
+            "EBIASA",
+        ):
+            vehicle.store.set(name, ZEROS3)
     return vehicle, ins, truth
 
 
-def test_initialize_mins_one_writes_zero_error_states():
+def test_initialize_mins_one_writes_cholesky_error_states():
+    seed(1234)
     vehicle, ins = _defined(mins=1)
     ins.initialize(vehicle, _ctx())
     store = vehicle.store
-    np.testing.assert_array_equal(store.get("ESBI"), ZEROS3)
-    np.testing.assert_array_equal(store.get("EVBI"), ZEROS3)
-    np.testing.assert_array_equal(store.get("RICI"), ZEROS3)
+    np.testing.assert_allclose(
+        store.get("ESBI"),
+        np.array([1.00288005, -13.18049982, -9.24066121]),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        store.get("EVBI"),
+        np.array([0.03403813, -0.10710086, -0.02137323]),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        store.get("RICI"),
+        np.array([4.34377825e-05, 3.48318603e-05, 1.10402655e-04]),
+        rtol=1e-8,
+        atol=1e-12,
+    )
 
 
 def test_initialize_mins_zero_stays_noop():

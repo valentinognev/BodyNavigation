@@ -1,9 +1,11 @@
+import json
 from pathlib import Path
 
 import numpy as np
 import pytest
 
 from cadac import run_scenario
+from cadac.io.jsonc import loads
 from cadac.io.plot import write_plot_csv
 
 CASE = Path(__file__).resolve().parents[2] / "cases" / "agm6" / "input_freeflight.jsonc"
@@ -134,6 +136,32 @@ def test_shared_columns_require_hbe_and_vmach(tmp_path):
         _compare_hbe_vmach(
             path,
             [{"time": 0.0, "hbe": 7000.0, "mach": 0.86}],
+        )
+
+
+def _run_freeflight_until(tmp_path, end_time):
+    data = loads(CASE.read_text(encoding="utf-8"))
+    data["end_time"] = end_time
+    data["vehicles"][0]["aero_deck"] = str(CASE.parent / "AGM6_aero_deck.jsonc")
+    path = tmp_path / "input_freeflight.jsonc"
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return run_scenario(path)
+
+
+def test_qqx_and_alppx_match_golden_at_t1(tmp_path):
+    require_golden(GOLDEN)
+    result = _run_freeflight_until(tmp_path, 1.0)
+    _, golden_rows = load_cadac_plot_csv(GOLDEN)
+    python = _row_at(result.plot_rows, 1.0)
+    golden = _row_at(golden_rows, 1.0)
+    for column in ("qqx", "alppx"):
+        want = golden[column]
+        np.testing.assert_allclose(
+            python[column],
+            want,
+            rtol=RTOL,
+            atol=_csv_atol(want),
+            err_msg=f"{column} at t=1.0",
         )
 
 

@@ -19,30 +19,22 @@ from cadac_cpp.schema import InventoryRow, dump_inventory
 # Task 10 pytest snapshot. Regenerating inventory.json does not re-run e2e.
 # Edit this map when e2e results change; do not parse pytest JSON.
 _E2E_OUTCOMES = {
-    "test_agm6_freeflight.py": "failed",
-    "test_agm6_testcase.py": "failed",
+    "test_agm6_freeflight.py": "passed",
+    "test_agm6_testcase.py": "passed",
     "test_aim5_hori.py": "passed",
     "test_cruise5_input1.py": "passed",
-    "test_falcon5_turning.py": "failed",
+    "test_falcon5_turning.py": "passed",
     "test_falcon6_gamma.py": "passed",
     "test_hyper3_climb.py": "passed",
-    "test_hyper5_pronav.py": "failed",
+    "test_hyper5_pronav.py": "passed",
     "test_hyper6_climb.py": "passed",
-    "test_magsix_attitude.py": "failed",
+    "test_magsix_attitude.py": "passed",
     "test_magsix_trajectory.py": "passed",
-    "test_rocket6_insertion.py": "failed",
-    "test_sam6_autopilot.py": "failed",
+    "test_rocket6_insertion.py": "passed",
+    "test_sam6_autopilot.py": "passed",
     "test_sraam6_1v1.py": "passed",
 }
-_E2E_NOTES = {
-    "test_agm6_freeflight.py": "ValueError: math domain error",
-    "test_agm6_testcase.py": "ZeroDivisionError: division by zero",
-    "test_falcon5_turning.py": "FSPV3 at t=0.0",
-    "test_hyper5_pronav.py": "psivgx at t=0.0",
-    "test_magsix_attitude.py": "KeyError: ('sim_time', 0.3501)",
-    "test_rocket6_insertion.py": "vmach at t=0.1",
-    "test_sam6_autopilot.py": "thtvlcx at t=0.0",
-}
+_E2E_NOTES = {}
 _E2E_STATUS = {"passed": "ported", "failed": "diverged", "skipped": "missing"}
 
 _NAME_EQ = re.compile(r'^[ \t]*name[ \t]*=[ \t]*["\']([^"\']+)["\']', re.MULTILINE)

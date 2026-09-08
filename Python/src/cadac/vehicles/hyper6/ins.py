@@ -4,6 +4,7 @@ import numpy as np
 
 from cadac.constants import DEG, EPS, PI, WEII3
 from cadac.kernel.state import Field
+from cadac.math.frames import cadac_matmul
 from cadac.math.wgs84 import cad_geo84_in, cad_tdi84
 
 
@@ -101,7 +102,7 @@ class Hyper6Ins:
             dtype=float,
         )
         vbeic = vbiic - veic
-        vbecb = tbic @ vbeic
+        vbecb = cadac_matmul(tbic, vbeic)
         dvbec = float(np.linalg.norm(vbecb))
 
         ppcx = wbicb[0] * DEG
@@ -134,7 +135,7 @@ class Hyper6Ins:
         tdci = cad_tdi84(lonc, latc, altc, time)
         loncx = lonc * DEG
         latcx = latc * DEG
-        vbecd = tdci @ vbeic
+        vbecd = cadac_matmul(tdci, vbeic)
 
         if vbecd[0] == 0.0 and vbecd[1] == 0.0:
             psivdc = 0.0
@@ -147,13 +148,13 @@ class Hyper6Ins:
         psivdcx = psivdc * DEG
         thtvdcx = thtvdc * DEG
 
-        tbd = tbic @ tdci.T
+        tbd = cadac_matmul(tbic, tdci.T.copy())
         tbd13 = tbd[0, 2]
         tbd11 = tbd[0, 0]
         tbd33 = tbd[2, 2]
         tbd12 = tbd[0, 1]
         tbd23 = tbd[1, 2]
-        if math.fabs(tbd13) < 1.0:
+        if math.fabs(tbd13) < 1.0 - 1e-14:
             thtbdc = math.asin(-tbd13)
             cthtbd = math.cos(thtbdc)
         else:

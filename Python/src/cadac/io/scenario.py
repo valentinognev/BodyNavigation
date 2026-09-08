@@ -47,6 +47,7 @@ class RunConfig:
     end_time: float
     vehicles: list[VehicleSpec]
     family: str | None = None
+    iseed: int = 0
 
 
 def _options(raw: dict, path: Path) -> dict[str, bool]:
@@ -101,4 +102,5 @@ def load_scenario(path) -> RunConfig:
             for vehicle in data["vehicles"]
         ],
         family=scenario_family,
+        iseed=int(data.get("iseed", 0)),
     )

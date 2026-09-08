@@ -5,8 +5,8 @@
     "name": "Python/tests/e2e/goldens/agm6/plot.csv",
     "cpp": "Python/tests/e2e/goldens/agm6/plot.csv",
     "python": "Python/tests/e2e/test_agm6_freeflight.py",
-    "status": "diverged",
-    "note": "ValueError: math domain error"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "AGM6",
@@ -14,8 +14,8 @@
     "name": "Python/tests/e2e/goldens/agm6/test_case_plot.csv",
     "cpp": "Python/tests/e2e/goldens/agm6/test_case_plot.csv",
     "python": "Python/tests/e2e/test_agm6_testcase.py",
-    "status": "diverged",
-    "note": "ZeroDivisionError: division by zero"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "AGM6",
@@ -977,8 +977,8 @@
     "name": "Python/tests/e2e/goldens/falcon5/plot.csv",
     "cpp": "Python/tests/e2e/goldens/falcon5/plot.csv",
     "python": "Python/tests/e2e/test_falcon5_turning.py",
-    "status": "diverged",
-    "note": "FSPV3 at t=0.0"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "FALCON5",
@@ -1643,8 +1643,8 @@
     "name": "Python/tests/e2e/goldens/hyper5/plot.csv",
     "cpp": "Python/tests/e2e/goldens/hyper5/plot.csv",
     "python": "Python/tests/e2e/test_hyper5_pronav.py",
-    "status": "diverged",
-    "note": "psivgx at t=0.0"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER5",
@@ -2669,8 +2669,8 @@
     "name": "Python/tests/e2e/goldens/magsix/plot.csv",
     "cpp": "Python/tests/e2e/goldens/magsix/plot.csv",
     "python": "Python/tests/e2e/test_magsix_attitude.py",
-    "status": "diverged",
-    "note": "KeyError: ('sim_time', 0.3501)"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "MAGSIX",
@@ -2759,8 +2759,8 @@
     "name": "Python/tests/e2e/goldens/rocket6/plot.csv",
     "cpp": "Python/tests/e2e/goldens/rocket6/plot.csv",
     "python": "Python/tests/e2e/test_rocket6_insertion.py",
-    "status": "diverged",
-    "note": "vmach at t=0.1"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "ROCKET6",
@@ -3218,8 +3218,8 @@
     "name": "Python/tests/e2e/goldens/sam6/plot.csv",
     "cpp": "Python/tests/e2e/goldens/sam6/plot.csv",
     "python": "Python/tests/e2e/test_sam6_autopilot.py",
-    "status": "diverged",
-    "note": "thtvlcx at t=0.0"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "SAM6",

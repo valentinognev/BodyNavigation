@@ -3,6 +3,17 @@ from cadac_cpp.harvest_table import repo_root
 from cadac_cpp.kernel_rows import kernel_rows
 from cadac_cpp.schema import InventoryRow, load_inventory
 
+# Task 8 re-verify: these seven JSONC families now pass. failed→diverged, passed→ported.
+_FORMERLY_FAILING_E2E = (
+    "test_agm6_freeflight.py",
+    "test_agm6_testcase.py",
+    "test_falcon5_turning.py",
+    "test_hyper5_pronav.py",
+    "test_magsix_attitude.py",
+    "test_rocket6_insertion.py",
+    "test_sam6_autopilot.py",
+)
+
 
 def test_status_for_mode():
     assert status_for_mode(("maut", 24), {("maut", 24)}, ["maut"]) == "ported"
@@ -38,6 +49,25 @@ def test_inventory_has_e2e_and_harvest_kinds():
     kinds = {r.kind for r in rows}
     assert "harvest" in kinds
     assert "e2e" in kinds
+
+
+def _e2e_row_for_test(rows, filename: str):
+    matches = [
+        r for r in rows
+        if r.kind == "e2e" and r.python and r.python.endswith(filename)
+    ]
+    assert len(matches) == 1, filename
+    return matches[0]
+
+
+def test_formerly_failing_e2e_inventory_rows_are_ported():
+    snapshot = load_inventory(repo_root() / "Python/tools/cadac_cpp/inventory.json")
+    live = scan_all(repo_root())
+    for filename in _FORMERLY_FAILING_E2E:
+        for rows in (snapshot, live):
+            row = _e2e_row_for_test(rows, filename)
+            assert row.status == "ported", filename
+            assert row.note == ""
 
 
 def test_missing_mode_note_is_dropout():

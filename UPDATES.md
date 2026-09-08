@@ -1,5 +1,67 @@
 # Updates
 
+## 0.168.13 - Inventory e2e snapshot after Task 8
+- Task 8 re-verify: 14 JSONC e2e + HYPER6 climb passed. `_E2E_OUTCOMES` still had the seven formerly-failing families as `failed` with crash/mismatch notes. Regenerating `inventory.json` does not re-run e2e.
+- Those seven maps are now `passed` (inventory `ported`, empty notes). All 14 `kind=e2e` rows `ported`. Status counts: ported 419, stubbed 18, missing 24, deferred 8, diverged 0.
+- Unit `test_formerly_failing_e2e_inventory_rows_are_ported`. No CADAC `.cpp` edits. CSV tols unchanged.
+
+## 0.168.12 - ROCKET6 C++ ijk matmul and adjoint inverse
+- Numpy `@` / `linalg.inv` were 1 ulp off CADAC `Matrix::operator*` (row-major ijk) and `inverse()` (adjoint/det). That 1 ms pitch RCS extra on-time at t=69–73 left `alt` at t=141.2 then t=156.5 over CSV tols; leftover GPS 8×8 LAPACK inverse moved LTG `tgo` so beco in the t=182.4 bin dropped `vmach` by 0.0024.
+- `cadac_matmul` / `cadac_inverse` on Round6 kinematics/euler/newton, `cad_tgi84`, ROCKET6 INS/LTG/GPS/startrack, HYPER6 INS. Euler pole `1-1e-14` kept. JSONC `mair: 0`. CSV tols unchanged. Named insertion e2e green.
+- No CADAC `.cpp` edits.
+
+## 0.168.11 - US76 geometric 84.852 km ceiling
+- C++ `atmosphere76` uses `if(alt<84.852)` on **geometric** km (`balt/1000`), not geopotential. Else `rho=press=0`, `tempk=186.946`. Python kept interpolating; at ROCKET6 t=129.7 (alt 84886 m) golden `pdynmc` drops to 0 and `vmach` jumps 17.329→17.443.
+- Python had `vmach` 17.343 (Δ 0.100). Staging/`beco` already matched (modes 5004, thrust 1.247e5). Focused t=129.7 `vmach` now passes. Named e2e first fail is `alt` at t=141.2 (Δ 1.37 vs combined ~1.34).
+- CSV tols unchanged. No CADAC `.cpp` edits.
+
+## 0.168.10 - ROCKET6 mins=1 init_ins Cholesky
+- `mins=1` was zeroing ESBI/EVBI/RICI. C++ `init_ins` draws 18 `def_ins` gauss then 9 unit Cholesky `gauss` after `srand(1234)`. Golden t=0 `ins_pos_err` 16.1283 vs Python 0.
+- That closed-loop RCS pitch program was the t=9.7 `alt` loft (1031.747 vs 1031.73). With Cholesky + C++ Euler (`|tbd13|>=1-1e-14` → EPS cosine, no 2x2), t=0.1…30 `alt`/`vmach`/RCS counts match. Named e2e first fail is now `vmach` at t=129.7.
+- CSV tols unchanged. No CADAC `.cpp` edits.
+
+## 0.168.9 - ROCKET6 insertion mair=0 and vertical-launch Euler
+- JSONC `mair` was 12 (Wallops wind) vs harvested `input_insertion.asc` `mair 0`. That was t=0.1 `vmach` 0.008492 vs 0.008491 (abs Δ 1.33e-6). With `mair: 0` and `iseed: 1234`, focused `vmach` at t=0.1 passes (Δ ~4e-9).
+- Named e2e `test_alt_and_vmach_match_golden_at_shared_times` still fails `alt` at t=9.7 (Δ 0.0166 vs combined ~0.0155). RCS Schmitt: INS `psibdcx` at pitch-90 is ~66° vs golden 180° (`cad_geo84_in` TDI vs kinematics TDI, `/EPS`).
+- Round6/INS Euler `fabs(tbd13)<1` now uses `1-1e-14` so numpy `1-few ulps` takes C++'s EPS cosine branch (truth `phibdx` 180 at t=0). CSV tols unchanged. No CADAC `.cpp` edits.
+
+## 0.168.8 - HYPER5 Demo 4.7 psivgx at t=0
+- Pronav e2e `test_shared_plot_columns_match_golden` now passes. t=0 `psivgx` 0.000292 vs golden 0.000294 (abs Δ 1.87e-6) was `cadsph` using `PI=3.1415927` / `2*PI` instead of C++ `180*RAD` / `360*RAD`.
+- QIII longitude (`lonx=-106.28`) leaked ~4.64e-8 rad into `TGE`, rotating north velocity into a 1.87e-6 deg heading error (atol floor 1e-6). QIV (HYPER3) cancelled after wrap so it stayed green.
+- `cadsph` now matches C++ wrap. CSV tols unchanged. `test_alt_matches_golden_at_t0` still passes. No CADAC `.cpp` edits.
+
+## 0.168.7 - FALCON5 turning FSPV3 t=0
+- Turning e2e `test_shared_plot_columns_match_golden` now passes. t=0 `FSPV3` −0.724651 vs golden −0.724621 was first-step `alphax` −0.094 vs 0.282 (`ancomx` −1 vs +3).
+- C++ `Flat3::init_newton` does not load `alt`; first propulsion/control see 0. Python `initialize` had written `alt=3500`, so altitude-hold commanded descent instead of the C++ +3 g limit.
+- `Flat3Newton.initialize` no longer writes `alt`. CSV tols unchanged. Harvest last plot line still truncated (`wp_flag` missing); compare skips absent columns. No CADAC `.cpp` edits.
+
+## 0.168.6 - SAM6 autopilot INS gauss thtvlcx
+- Autopilot e2e `test_shared_missile_plot_columns_match_golden` now passes. t=0 `thtvlcx` 80.0 vs golden 79.9238 was Python `_gauss`/`_uniform` always 0.
+- C++ `nmonte==0` still `srand(iseed)` (harvest default 0) and still draws `init_ins` ASpec + Cholesky `gauss` and `ins()` `uniform` walka. Deck GAUSS/MARKOV do not draw when `nmonte==0`.
+- SAM6 INS uses `cadac.stoch.gauss`/`uniform` with g++ right-to-left `Variable::init` / `build_vec3` order. JSONC `iseed: 0`. CSV tols unchanged. No CADAC `.cpp` edits.
+
+## 0.168.5 - MAGSIX attitude last-int-step plot row
+- Attitude e2e `test_all_shared_plot_columns_match_golden_at_shared_times` now passes. 0.005 grid `0..0.35` already matched; failure was `KeyError ('sim_time', 0.3501)`.
+- C++ `while (sim_time<=(end_time+int_step))` last iterate is 0.3501. After the loop MAGSIX `plot_data(merge=true)` still writes a real row (`Rotor::plot_data` ignores `merge`, unlike AGM6 `time=-1`). Python `make_plot_on_step` had already stepped `plot_time` to 0.355.
+- `run_scenario` appends vehicle-0 plot row after `run_loop` for `Rotor` only. CSV tols unchanged. Trajectory e2e still green. No CADAC `.cpp` edits.
+
+## 0.168.4 - AGM6 test-case e2e hbe/vmach green
+- Live test-case `hbe`/`vmach` e2e vs harvested golden now passes at CSV tols. No `dna==0` guard; tols unchanged; no CADAC `.cpp` edits.
+- C++ `nmonte==0` still draws MARKOV `gauss` then stores 0. JSONC kept ASC sigmas (`randt=0.0005` etc.) as live gimbal/altimeter noise; Dryden now zeros `randal`/`randt`/`randp`/`randeh` after those draws.
+- `guidance_term_comp` reads `ththb` (C++ `missile[281]`), not `thtpb`. Live INS uses `def_ins` 18 sigma-specific + `init_ins` 9 unit gauss (g++ RTL arg order). `run_scenario` seeds `cfg.iseed` (testcase 12345; default 0).
+- First Dryden `tau` still matches harvested `VAEL3`. Free-flight e2e still green.
+
+## 0.168.3 - AGM6 test-case Dryden rand()
+- Task 1 pitch-rate fix stopped the test-case tumble/`dna==0` crash. Remaining miss was C++ Dryden `rand()` with `mair=212` (harvest `nmonte=0` still `srand(12345)` and still draws).
+- `cadac.stoch`: glibc `rand()`, CADAC `gauss`, Dryden white noise. `run_scenario` seeds 12345. Dryden burns 27 INS + 4 MARKOV `gauss` draws per C++ order, then overwrites `gauss_value`.
+- AGM6 aircraft sensor uses `gauss(0,sigma)` not `+sigma`. First-step `tau` matches harvested `VAEL3=0.0173842`. Focused `vmach` at t=4.2 passes. Full `hbe`/`vmach` e2e still first fails `vmach` at t=4.8 (`Δ≈1.85e-5`). No `dna==0` guard. CSV tols unchanged. No CADAC `.cpp` edits.
+
+## 0.168.2 - AGM6 free-flight pitch-rate parity
+- Root cause of free-flight tumble: aero reads `phip` (rad) but Flat6 kinematics only wrote `phipx`; after alpha crosses 0 the pitching moment kept the wrong sign. `atmosphere76` crash was the symptom.
+- `Flat6Kinematics.execute` now stores `phip` and `alpp`.
+- AGM6 MISSILE6 uses `Agm6Kinematics`: incidence from `VBEB-TBL*VAEL` (not `TBL*VBAL`) and C++ `SMALL=1e-7` `phip` branch.
+- E2E `test_agm6_freeflight` `hbe`/`vmach` vs harvested golden at `rtol=1e-5`, `atol=max(1e-6, 5e-6*|g|)`. Focused `qqx`/`alppx` at t=1.0. CSV tolerances unchanged. No CADAC `.cpp` edits.
+
 ## 0.168.1 - Parity-audit review: harvest restore, harvest tests, inventory notes
 - Harvest restores preexisting CADAC I/O (`input.asc`, `doc.asc`, `input_copy.asc`, plot/traj csv) after copying the golden. Gitignore CADAC run leftovers (`plot*.asc`/`plot*.csv`, `tabout.asc`, `traj.asc`/`traj.csv`) so `CADAC_Simulations/` stays clean vs HEAD for tracked files.
 - Default unit tests no longer rebuild CADAC: `test_hyper3_harvest_matches_checked_in_golden` and `test_harvest_all_writes_or_skips` are `@pytest.mark.integration` and skip unless `CADAC_HARVEST=1`. `csv_from_plot_asc` uses `Python/tests/unit/fixtures/cadac_plot1.asc`.

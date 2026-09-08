@@ -56,6 +56,9 @@ def _compare_shared_columns(golden_path: Path, plot_rows):
     for golden in golden_rows:
         python = _row_at(plot_rows, golden["time"])
         for column in shared:
+            if column not in golden:
+                # Harvested FALCON5 last plot line is truncated after C++ exit(1).
+                continue
             want = golden[column]
             got = python[column]
             np.testing.assert_allclose(
@@ -118,6 +121,22 @@ def test_shared_columns_ignore_names_only_on_one_side(tmp_path):
     )
 
 
+def test_shared_columns_skip_truncated_golden_row(tmp_path):
+    path = tmp_path / "plot.csv"
+    path.write_text(
+        "title\n0  0 3\ntime,alt,wp_flag,\n0.0,3500.0,0,\n0.1,3499.0,\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _compare_shared_columns(
+        path,
+        [
+            {"time": 0.0, "alt": 3500.0, "wp_flag": 0},
+            {"time": 0.1, "alt": 3499.0, "wp_flag": 1},
+        ],
+    )
+
+
 def test_shared_columns_mismatch_fails(tmp_path):
     path = tmp_path / "plot.csv"
     write_plot_csv(path, "falcon5", ["time", "alt"], [[0.0, 3500.0]])
@@ -129,6 +148,31 @@ def test_alt_matches_golden_at_t0():
     require_golden(GOLDEN)
     result = run_scenario(CASE)
     _compare_alt_t0(GOLDEN, result.plot_rows)
+
+
+def _compare_column_t0(golden_path: Path, plot_rows, column):
+    _, golden_rows = load_cadac_plot_csv(golden_path)
+    got = _row_at(plot_rows, 0.0)[column]
+    want = _row_at(golden_rows, 0.0)[column]
+    np.testing.assert_allclose(
+        got,
+        want,
+        rtol=RTOL,
+        atol=_csv_atol(want),
+        err_msg=f"{column} at t=0",
+    )
+
+
+def test_fspv3_matches_golden_at_t0():
+    require_golden(GOLDEN)
+    result = run_scenario(CASE)
+    _compare_column_t0(GOLDEN, result.plot_rows, "FSPV3")
+
+
+def test_alphax_matches_golden_at_t0():
+    require_golden(GOLDEN)
+    result = run_scenario(CASE)
+    _compare_column_t0(GOLDEN, result.plot_rows, "alphax")
 
 
 def test_shared_plot_columns_match_golden():

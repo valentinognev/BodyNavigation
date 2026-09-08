@@ -4,7 +4,7 @@ import numpy as np
 
 from cadac.constants import REARTH
 from cadac.kernel.state import Field
-from cadac.math.frames import angle
+from cadac.math.frames import angle, cadac_inverse, cadac_matmul
 from cadac.math.wgs84 import GM
 
 LARGE = 1e10
@@ -134,7 +134,7 @@ def gps_quadriga(
                     hgps[1, :3] = uni2
                     hgps[2, :3] = uni3
                     hgps[3, :3] = uni4
-                    cov = np.linalg.inv(hgps @ hgps.T)
+                    cov = cadac_inverse(cadac_matmul(hgps, hgps.T.copy()))
                     gdop_local = math.sqrt(
                         cov[0, 0] + cov[1, 1] + cov[2, 2] + cov[3, 3]
                     )
@@ -363,7 +363,7 @@ class Rocket6Gps:
             self.PHI = (
                 np.eye(8)
                 + self.FF * int_step
-                + (self.FF @ self.FF) * (int_step * int_step / 2.0)
+                + cadac_matmul(self.FF, self.FF) * (int_step * int_step / 2.0)
             )
             gps_acq = 1
             gps_epoch = time
@@ -386,10 +386,10 @@ class Rocket6Gps:
                 qq[i + 3, i + 3] = (qvel * (1.0 + factq)) ** 2
             qq[6, 6] = (qclockb * (1.0 + factq)) ** 2
             qq[7, 7] = (qclockf * (1.0 + factq)) ** 2
-            self.PP = (
-                self.PHI @ (self.PP + qq * (int_step / 2.0)) @ self.PHI.T
-                + qq * (int_step / 2.0)
-            )
+            mid = self.PP + qq * (int_step / 2.0)
+            self.PP = cadac_matmul(
+                cadac_matmul(self.PHI, mid), self.PHI.T.copy()
+            ) + qq * (int_step / 2.0)
             std_pos = math.sqrt(self.PP[0, 0])
             std_vel = math.sqrt(self.PP[3, 3])
             std_ucbias = math.sqrt(self.PP[6, 6])
@@ -427,7 +427,7 @@ class Rocket6Gps:
                 if i == 0:
                     c2_range_err = dsb_meas - dsb
                 vsii = vsii_quad[i]
-                vsbi = vsii - vbii - wbii_skew @ ssbi
+                vsbi = vsii - vbii - cadac_matmul(wbii_skew, ssbi)
                 ussbi = ssbi * (1.0 / dsb)
                 dvsb = float(vsbi[0] * ussbi[0] + vsbi[1] * ussbi[1] + vsbi[2] * ussbi[2])
                 dvsb_meas = dvsb + dr_noise[i] + ucfreq_error
@@ -437,7 +437,7 @@ class Rocket6Gps:
                 dsbc = math.sqrt(
                     ssbic[0] * ssbic[0] + ssbic[1] * ssbic[1] + ssbic[2] * ssbic[2]
                 )
-                vsbic = vsii - vbiic - wbici_skew @ ssbic
+                vsbic = vsii - vbiic - cadac_matmul(wbici_skew, ssbic)
                 ussbic = ssbic * (1.0 / dsb)
                 dvsbc = float(
                     vsbic[0] * ussbic[0] + vsbic[1] * ussbic[1] + vsbic[2] * ussbic[2]
@@ -455,9 +455,12 @@ class Rocket6Gps:
             for i in range(4):
                 rr[i, i] = (rpos * (1.0 + factr)) ** 2
                 rr[i + 4, i + 4] = (rvel * (1.0 + factr)) ** 2
-            kk = self.PP @ hh.T @ np.linalg.inv(hh @ self.PP @ hh.T + rr)
-            xh = kk @ zz
-            self.PP = (np.eye(8) - kk @ hh) @ self.PP
+            innov = cadac_matmul(cadac_matmul(hh, self.PP), hh.T.copy()) + rr
+            kk = cadac_matmul(
+                cadac_matmul(self.PP, hh.T.copy()), cadac_inverse(innov)
+            )
+            xh = cadac_matmul(kk, zz)
+            self.PP = cadac_matmul(np.eye(8) - cadac_matmul(kk, hh), self.PP)
             ucbias_error = ucbias_error - xh[6]
             c2_pos_meas = float(zz[0])
             c2_vel_meas = float(zz[4])

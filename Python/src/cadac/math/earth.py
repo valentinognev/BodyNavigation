@@ -1,6 +1,6 @@
 import numpy as np
 
-from cadac.constants import PI, REARTH, WEII3
+from cadac.constants import RAD, REARTH, WEII3
 
 
 def cadtei(sim_time):
@@ -55,12 +55,12 @@ def cadsph(sbie):
     if (x >= 0) and (y >= 0):
         alamda = dum4
     if (x < 0) and (y >= 0):
-        alamda = PI - dum4
+        alamda = 180 * RAD - dum4
     if (x < 0) and (y < 0):
-        alamda = PI - dum4
+        alamda = 180 * RAD - dum4
     if (x >= 0) and (y < 0):
-        alamda = 2 * PI + dum4
+        alamda = 360 * RAD + dum4
     lon = alamda
-    if lon > PI:
-        lon = -(2 * PI - lon)
+    if lon > 180 * RAD:
+        lon = -(360 * RAD - lon)
     return lon, lat, alt

@@ -10,7 +10,20 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
-from cadac.vehicles.sam6.ins import Sam6Ins
+from cadac.stoch import gauss, seed, uniform
+from cadac.vehicles.sam6.ins import Sam6Ins, _PP0, _cholesky, _gauss
+
+# C++ gauss(0,1) after srand(0) on Linux glibc (CADAC unituni Box-Muller).
+_CPP_GAUSS01_SRAND0 = (
+    -0.34532367182326629,
+    1.1122716058967226,
+    0.6410062294340324,
+    0.60805637857480721,
+    1.1591500561471559,
+    -0.71208231924892507,
+    0.41746552617877442,
+    -1.718945215304998,
+)
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -188,6 +201,7 @@ def _defined(mins=0):
 
 
 def _ready(mins=0, **plant):
+    seed(0)
     vehicle, ins = _defined(mins=mins)
     truth = _plant_truth(vehicle.store, **plant)
     ins.initialize(vehicle, _ctx())
@@ -289,8 +303,10 @@ def _cpp_ins_mins1(truth, store, int_step):
     tllc = rere + np.eye(3)
     tblc = tbl @ tllc
     tlcb = tblc.T
-    walka = np.zeros(3, dtype=float)
-    _ = ewalka
+    walka3 = uniform(-ewalka[2], ewalka[2])
+    walka2 = uniform(-ewalka[1], ewalka[1])
+    walka1 = uniform(-ewalka[0], ewalka[0])
+    walka = np.array([walka1, walka2, walka3], dtype=float)
     fspcb = walka + efspb + fspb
     ef = tlcb @ efspb - rere @ tlcb @ fspcb
     evbed_new = np.array(
@@ -327,6 +343,44 @@ def _cpp_ins_mins1(truth, store, int_step):
         "ehbe": 0.0,
         **angles,
     }
+
+
+def _gauss3_rtl(sig):
+    third = gauss(0.0, sig)
+    second = gauss(0.0, sig)
+    first = gauss(0.0, sig)
+    return np.array([first, second, third], dtype=float)
+
+
+def _cpp_init_aspec_cholesky(sbel, vbel, frax=0.0):
+    errors = {
+        "EUNBG": np.zeros(3),
+        "EMISG": _gauss3_rtl(1.1e-4),
+        "ESCALG": _gauss3_rtl(2.5e-5),
+        "EBIASG": _gauss3_rtl(3.2e-6),
+        "EWALKA": _gauss3_rtl(8.35e-4),
+        "EMISA": _gauss3_rtl(1.1e-4),
+        "ESCALA": _gauss3_rtl(5e-4),
+        "EBIASA": _gauss3_rtl(3.56e-3),
+        "EWALKG": np.zeros(3),
+    }
+    draws = np.array([gauss(0.0, 1.0) for _ in range(9)], dtype=float)
+    xx_init = _cholesky(_PP0) @ draws * (1.0 + frax)
+    esttc = xx_init[0:3]
+    evbe = xx_init[3:6]
+    rece = xx_init[6:9] * 0.001
+    errors["ESTTC"] = esttc
+    errors["EVBE"] = evbe
+    errors["RECE"] = rece
+    errors["SBELC"] = esttc + sbel
+    errors["VBELC"] = evbe + vbel
+    return errors
+
+
+def test_gauss_after_srand0_matches_cpp_box_muller():
+    seed(0)
+    got = [_gauss(0.0, 1.0) for _ in _CPP_GAUSS01_SRAND0]
+    np.testing.assert_allclose(got, _CPP_GAUSS01_SRAND0, rtol=0.0, atol=1e-15)
 
 
 def test_name_is_ins():
@@ -392,42 +446,54 @@ def test_mins0_execute_copies_truth_then_euler_fpa():
     np.testing.assert_array_equal(store.get("EFSPB"), np.zeros(3))
 
 
-def test_mins1_init_sbelc_equals_sbel_cholesky_zero():
+def test_mins1_init_applies_cholesky_after_aspec_gauss():
     vehicle, ins, truth = _ready(mins=1)
     store = vehicle.store
-    np.testing.assert_allclose(store.get("SBELC"), truth["SBEL"], rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(store.get("VBELC"), truth["VBEL"], rtol=RTOL, atol=ATOL)
-    for name in ERROR_STATES:
-        np.testing.assert_allclose(store.get(name), np.zeros(3), rtol=RTOL, atol=ATOL)
-    for name in ERROR_DATA:
-        np.testing.assert_allclose(store.get(name), np.zeros(3), rtol=RTOL, atol=ATOL)
-    assert store.get("EWALKA")[0] == 0.0
+    seed(0)
+    want = _cpp_init_aspec_cholesky(truth["SBEL"], truth["VBEL"])
+    np.testing.assert_allclose(store.get("SBELC"), want["SBELC"], rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(store.get("VBELC"), want["VBELC"], rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(store.get("ESTTC"), want["ESTTC"], rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(store.get("EVBE"), want["EVBE"], rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(store.get("RECE"), want["RECE"], rtol=RTOL, atol=ATOL)
+    for name in ("EMISG", "ESCALG", "EBIASG", "EWALKA", "EMISA", "ESCALA", "EBIASA"):
+        np.testing.assert_allclose(store.get(name), want[name], rtol=RTOL, atol=ATOL)
+    assert abs(store.get("EVBE")[0]) > 1e-6
 
 
-def test_mins1_one_execute_wbecb_equals_wbeb():
+def test_mins1_one_execute_wbecb_includes_gyro_errors():
     vehicle, ins, truth = _ready(mins=1)
-    ins.execute(vehicle, _ctx())
-    np.testing.assert_allclose(
-        vehicle.store.get("WBECB"), truth["WBEB"], rtol=RTOL, atol=ATOL
+    store = vehicle.store
+    ewbeb, wbecb, eug, ewg = _cpp_ins_gyro(
+        truth["WBEB"],
+        truth["FSPB"],
+        store.get("EWALKG"),
+        store.get("EUNBG"),
+        store.get("EMISG"),
+        store.get("ESCALG"),
+        store.get("EBIASG"),
+        DT,
     )
+    ins.execute(vehicle, _ctx())
+    np.testing.assert_allclose(store.get("WBECB"), wbecb, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(store.get("EWBEB"), ewbeb, rtol=RTOL, atol=ATOL)
+    assert np.linalg.norm(store.get("WBECB") - truth["WBEB"]) > 1e-12
 
 
-def test_mins1_one_execute_matches_zero_draw_error_odes():
+def test_mins1_one_execute_matches_cadac_error_odes():
     vehicle, ins, truth = _ready(mins=1)
     ctx = _ctx()
-    want = _cpp_ins_mins1(truth, vehicle.store, ctx.int_step)
     ins.execute(vehicle, ctx)
     store = vehicle.store
+    seed(0)
+    replay, replay_ins, replay_truth = _ready(mins=1)
+    want = _cpp_ins_mins1(replay_truth, replay.store, ctx.int_step)
     for name, value in want.items():
         got = store.get(name)
         if isinstance(value, np.ndarray):
             np.testing.assert_allclose(got, value, rtol=RTOL, atol=ATOL)
         else:
             assert _approx(got, value)
-    np.testing.assert_allclose(store.get("WBECB"), truth["WBEB"], rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(store.get("FSPCB"), truth["FSPB"], rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(store.get("SBELC"), truth["SBEL"], rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(store.get("TBLC"), truth["TBL"], rtol=RTOL, atol=ATOL)
 
 
 def test_mins2_initialize_raises():
@@ -471,10 +537,10 @@ def test_execute_writes_control_ins_names():
             assert np.all(np.isfinite(value))
         else:
             assert np.isfinite(value)
-    np.testing.assert_allclose(store.get("FSPCB"), truth["FSPB"], rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(store.get("WBECB"), truth["WBEB"], rtol=RTOL, atol=ATOL)
-    assert _approx(store.get("thtblcx"), _cpp_euler_fpa(truth["TBL"], truth["VBEL"])["thtblcx"])
-    assert _approx(store.get("phiblcx"), _cpp_euler_fpa(truth["TBL"], truth["VBEL"])["phiblcx"])
+    assert np.all(np.isfinite(store.get("FSPCB")))
+    assert np.all(np.isfinite(store.get("WBECB")))
+    assert np.isfinite(store.get("thtblcx"))
+    assert np.isfinite(store.get("phiblcx"))
 
 
 def test_euler_singularity_uses_cadac_sign():

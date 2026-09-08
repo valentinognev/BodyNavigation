@@ -135,7 +135,7 @@ class Flat3Newton:
         store.set("VBEL", vbel)
         store.set("psivl", psivl)
         store.set("thtvl", thtvl)
-        store.set("alt", -sbel[2])
+        # C++ Flat3::init_newton does not load alt; first propulsion/control see 0.
 
     def execute(self, vehicle, ctx):
         store = vehicle.store

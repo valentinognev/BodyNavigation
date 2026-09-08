@@ -271,6 +271,8 @@ class Flat6Kinematics:
         store.set("phiblx", phiblx)
         store.set("alppx", alppx)
         store.set("phipx", phipx)
+        store.set("alpp", alpp)
+        store.set("phip", phip)
         store.set("erq", erq)
         store.set("etbl", etbl)
         store.set("TLB", tlb)

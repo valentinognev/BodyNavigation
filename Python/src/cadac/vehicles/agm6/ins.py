@@ -5,6 +5,7 @@ import numpy as np
 from cadac.constants import AGRAV, DEG, PI, REARTH
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
+from cadac.stoch import draw_ins_define_errors, draw_ins_init_unit
 
 # C++ Missile::init_ins PP0 (9x9, row-major as written).
 PP0 = np.array(
@@ -168,6 +169,7 @@ class Agm6Ins:
         store = vehicle.store
         zeros3 = (0.0, 0.0, 0.0)
         zeros33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+        emisg, escalg, ebiasg, emisa, escala, ebiasa = draw_ins_define_errors()
         for field in (
             Field("mins", 0, "int", "data", "ins"),
             Field("frax", 0.0, "real", "data", "ins"),
@@ -177,17 +179,17 @@ class Agm6Ins:
             Field("WBECB", zeros3, "vec", "out", "ins"),
             Field("EWALKG", zeros3, "vec", "data", "ins"),
             Field("EUNBG", zeros3, "vec", "data", "ins"),
-            Field("EMISG", zeros3, "vec", "data", "ins"),
-            Field("ESCALG", zeros3, "vec", "data", "ins"),
-            Field("EBIASG", zeros3, "vec", "data", "ins"),
+            Field("EMISG", emisg, "vec", "data", "ins"),
+            Field("ESCALG", escalg, "vec", "data", "ins"),
+            Field("EBIASG", ebiasg, "vec", "data", "ins"),
             Field("biasal", 0.0, "real", "data", "ins"),
             Field("randal", 0.0, "real", "data", "ins"),
             Field("ehbe", 0.0, "real", "out", "ins"),
             Field("TBLC", zeros33, "mat", "out", "ins"),
             Field("EWALKA", zeros3, "vec", "data", "ins"),
-            Field("EMISA", zeros3, "vec", "data", "ins"),
-            Field("ESCALA", zeros3, "vec", "data", "ins"),
-            Field("EBIASA", zeros3, "vec", "data", "ins"),
+            Field("EMISA", emisa, "vec", "data", "ins"),
+            Field("ESCALA", escala, "vec", "data", "ins"),
+            Field("EBIASA", ebiasa, "vec", "data", "ins"),
             Field("EUG", zeros3, "vec", "diag", "ins"),
             Field("EWG", zeros3, "vec", "diag", "ins"),
             Field("EWBEB", zeros3, "vec", "diag", "ins"),
@@ -215,6 +217,7 @@ class Agm6Ins:
         mins = store.get("mins")
         sbel = np.asarray(store.get("SBEL"), dtype=float)
         vbel = np.asarray(store.get("VBEL"), dtype=float)
+        draws = np.asarray(draw_ins_init_unit(), dtype=float)
         if mins == 0:
             store.set("SBELC", sbel.copy())
             store.set("VBELC", vbel.copy())
@@ -223,8 +226,7 @@ class Agm6Ins:
             raise ValueError(f"unknown mins {mins}")
         frax = store.get("frax")
         app_init = _cholesky(PP0)
-        zero_draw = np.zeros(9)
-        xx_init = app_init @ zero_draw
+        xx_init = app_init @ draws
         xx_init = xx_init * (1.0 + frax)
         esttc = np.array([xx_init[0], xx_init[1], xx_init[2]], dtype=float)
         evbe = np.array([xx_init[3], xx_init[4], xx_init[5]], dtype=float)

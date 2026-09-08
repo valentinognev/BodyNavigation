@@ -8,6 +8,7 @@ from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import polar_from_cart
+from cadac.stoch import gauss
 from cadac.vehicles.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
 
 
@@ -290,17 +291,17 @@ class Agm6AircraftSensor:
                 satl = sael - stel
                 polar = polar_from_cart(satl)
                 satcl = _cart_from_pol(
-                    float(polar[0]) + dat_sigma,
-                    float(polar[1]) + azat_sigma,
-                    float(polar[2]) + elat_sigma,
+                    float(polar[0]) + gauss(0.0, dat_sigma),
+                    float(polar[1]) + gauss(0.0, azat_sigma),
+                    float(polar[2]) + gauss(0.0, elat_sigma),
                 )
                 idx = target_num - 1
                 stcel[idx] = sael - satcl
                 vtcel[idx] = np.array(
                     [
-                        vtel[0] + vel_sigma,
-                        vtel[1] + vel_sigma,
-                        vtel[2] + vel_sigma,
+                        vtel[0] + gauss(0.0, vel_sigma),
+                        vtel[1] + gauss(0.0, vel_sigma),
+                        vtel[2] + gauss(0.0, vel_sigma),
                     ],
                     dtype=float,
                 )

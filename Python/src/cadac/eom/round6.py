@@ -6,8 +6,9 @@ from cadac.constants import AGRAV, DEG, EPS, PI, R, RAD, REARTH, WEII3
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr, mat3tr, polar_from_cart
+from cadac.math.frames import cadac_inverse, cadac_matmul, mat2tr, mat3tr, polar_from_cart
 from cadac.math.wgs84 import cad_geo84_in, cad_grav84, cad_in_geo84, cad_tdi84, cad_tgi84
+from cadac.stoch import ROCKET6_MARKOV_COUNT, dryden_white, prepare_for_dryden
 
 FOOT = 3.280834
 NMILES = 5.399568e-4
@@ -96,7 +97,8 @@ class Round6Environment:
         taux1d = store.get("taux1d")
         taux2 = store.get("taux2")
         taux2d = store.get("taux2d")
-        gauss_value = 0.0
+        prepare_for_dryden(markov_count=ROCKET6_MARKOV_COUNT)
+        gauss_value = dryden_white(int_step)
         taux1d_new = taux2
         taux1 = integrate(taux1d_new, taux1d, taux1, int_step)
         taux1d = taux1d_new
@@ -275,7 +277,7 @@ class Round6Kinematics:
         alt = store.get("alt")
         tbd = mat3tr(psibdx * RAD, thtbdx * RAD, phibdx * RAD)
         tdi = cad_tdi84(lonx * RAD, latx * RAD, alt, time)
-        tbi = tbd @ tdi
+        tbi = cadac_matmul(tbd, tdi)
         store.set("time", time)
         store.set("int_step_new", int_step_new)
         store.set("TBD", tbd)
@@ -301,13 +303,13 @@ class Round6Kinematics:
         ctx.out_fact = out_step_fact
         int_step = ctx.int_step
 
-        tbid_new = (-_skew(wbib)) @ tbi
+        tbid_new = cadac_matmul(-_skew(wbib), tbi)
         tbi = integrate(tbid_new, tbid, tbi, int_step)
         tbid = tbid_new
 
         unit = np.eye(3)
-        ee = unit - tbi @ tbi.T
-        tbi = tbi + ee @ tbi * 0.5
+        ee = unit - cadac_matmul(tbi, tbi.T.copy())
+        tbi = tbi + cadac_matmul(ee, tbi) * 0.5
 
         e1 = ee[0, 0]
         e2 = ee[1, 1]
@@ -315,14 +317,17 @@ class Round6Kinematics:
         ortho_error = math.sqrt(e1 * e1 + e2 * e2 + e3 * e3)
 
         tdi = cad_tdi84(lonx * RAD, latx * RAD, alt, time)
-        tbd = tbi @ tdi.T
+        tbd = cadac_matmul(tbi, tdi.T.copy())
         tbd13 = tbd[0, 2]
         tbd11 = tbd[0, 0]
         tbd33 = tbd[2, 2]
         tbd12 = tbd[0, 1]
         tbd23 = tbd[1, 2]
 
-        if math.fabs(tbd13) < 1.0:
+        # C++ `if(fabs(tbd13)<1)`. Numpy TBI·TDIᵀ at vertical launch often
+        # yields |tbd13| a few ulps below 1; that asin path divides by ~1e-8
+        # cosine and corrupts roll/yaw (RCS Schmitt). Treat 1-1e-14 as |tbd13|>=1.
+        if math.fabs(tbd13) < 1.0 - 1e-14:
             thtbd = math.asin(-tbd13)
             cthtbd = math.cos(thtbd)
         else:
@@ -340,7 +345,7 @@ class Round6Kinematics:
         thtbdx = DEG * thtbd
         phibdx = DEG * phibd
 
-        vbab = tbd @ (vbed - vaed)
+        vbab = cadac_matmul(tbd, vbed - vaed)
         vbab1 = vbab[0]
         vbab2 = vbab[1]
         vbab3 = vbab[2]
@@ -366,7 +371,7 @@ class Round6Kinematics:
         alppx = alpp * DEG
         phipx = phip * DEG
 
-        vbib = tbi @ vbii
+        vbib = cadac_matmul(tbi, vbii)
         vbib1 = vbib[0]
         vbib2 = vbib[1]
         vbib3 = vbib[2]
@@ -425,7 +430,7 @@ class Round6Euler:
         tbi = store.get("TBI")
         wbeb = np.array([ppx * RAD, qqx * RAD, rrx * RAD], dtype=float)
         weii = np.array([0.0, 0.0, WEII3], dtype=float)
-        wbib = wbeb + tbi @ weii
+        wbib = wbeb + cadac_matmul(tbi, weii)
         store.set("WBIB", wbib)
 
     def execute(self, vehicle, ctx):
@@ -436,12 +441,15 @@ class Round6Euler:
         wbib = store.get("WBIB")
         wbibd = store.get("WBIBD")
         int_step = ctx.int_step
-        wacc_next = np.linalg.inv(ibbb) @ (fmb - _skew(wbib) @ ibbb @ wbib)
+        wacc_next = cadac_matmul(
+            cadac_inverse(ibbb),
+            fmb - cadac_matmul(cadac_matmul(_skew(wbib), ibbb), wbib),
+        )
         wbib = integrate(wacc_next, wbibd, wbib, int_step)
         wbibd = wacc_next
-        wbii = tbi.T @ wbib
+        wbii = cadac_matmul(tbi.T.copy(), wbib)
         weii = np.array([0.0, 0.0, WEII3], dtype=float)
-        wbeb = wbib - tbi @ weii
+        wbeb = wbib - cadac_matmul(tbi, weii)
         store.set("WBIB", wbib)
         store.set("WBIBD", wbibd)
         store.set("ppx", wbeb[0] * DEG)
@@ -537,11 +545,11 @@ class Round6Newton:
             [calp * cbet * dvbe, sbet * dvbe, salp * cbet * dvbe], dtype=float
         )
         tbd = mat3tr(psibdx * RAD, thtbdx * RAD, phibdx * RAD)
-        vbed = tbd.T @ vbeb
+        vbed = cadac_matmul(tbd.T.copy(), vbeb)
 
         tdi = cad_tdi84(lonx * RAD, latx * RAD, alt, time)
         tgi = cad_tgi84(lonx * RAD, latx * RAD, alt, time)
-        vbii = tdi.T @ vbed + weii @ sbii
+        vbii = cadac_matmul(tdi.T.copy(), vbed) + cadac_matmul(weii, sbii)
         dvbi = float(np.linalg.norm(vbii))
 
         polar = polar_from_cart(vbed)
@@ -581,7 +589,7 @@ class Round6Newton:
         int_step = ctx.int_step
 
         fspb = fapb * (1.0 / vmass)
-        next_acc = tbi.T @ fspb + tgi.T @ gravg
+        next_acc = cadac_matmul(tbi.T.copy(), fspb) + cadac_matmul(tgi.T.copy(), gravg)
         next_vel = integrate(next_acc, abii, vbii, int_step)
         sbii = integrate(next_vel, vbii, sbii, int_step)
         abii = next_acc
@@ -596,7 +604,7 @@ class Round6Newton:
         latx = lat * DEG
         altx = 0.001 * alt * FOOT
 
-        vbed = tdi @ (vbii - weii @ sbii)
+        vbed = cadac_matmul(tdi, vbii - cadac_matmul(weii, sbii))
         polar = polar_from_cart(vbed)
         dvbe = float(polar[0])
         psivdx = DEG * float(polar[1])

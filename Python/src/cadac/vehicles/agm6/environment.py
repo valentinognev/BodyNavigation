@@ -7,12 +7,7 @@ from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-
-
-def _optional(store, name, default=0.0):
-    if name in store.names():
-        return store.get(name)
-    return default
+from cadac.stoch import dryden_white, prepare_for_dryden
 
 
 class Agm6Environment:
@@ -159,7 +154,8 @@ class Agm6Environment:
         tbd = store.get("TBD") if "TBD" in store.names() else store.get("TBL")
         alppx = store.get("alppx")
         phipx = store.get("phipx")
-        gauss_value = _optional(store, "gauss_value", 0.0)
+        prepare_for_dryden(store)
+        gauss_value = dryden_white(int_step)
         taux1 = store.get("taux1")
         taux1d = store.get("taux1d")
         taux2 = store.get("taux2")

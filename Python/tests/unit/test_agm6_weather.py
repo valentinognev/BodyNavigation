@@ -13,6 +13,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
+from cadac.stoch import seed
 from cadac.vehicles.agm6.environment import Agm6Environment
 
 RTOL = 1e-12
@@ -34,6 +35,11 @@ PSIWDX = 0.0
 # Hand-checked 1D interpolant of weather_deck.asc density at hbe=7000
 # (5000 m → 0.70, 10000 m → 0.40): 0.70 + 0.4*(0.40-0.70) = 0.58
 RHO_7000 = 0.58
+
+# Harvested test_case_plot.csv t=0 VAEL3: Dryden tau with phipx=0, TBL=I,
+# srand(12345), C++ def_ins+init_ins gauss, then markov_noise, then Dryden rand().
+GOLDEN_T0_VAEL3 = 0.0173842
+CSV_RTOL = 1e-5
 
 
 def _weather_deck():
@@ -189,6 +195,58 @@ def test_mair_2_tabular_wind_smoothes_vael():
     )
 
 
+def test_nmonte0_markov_values_zeroed_after_dryden_gauss():
+    # C++ markov_noise always draws gauss then, when nmonte==0, stores 0.
+    # JSONC keeps MARKOV sigmas (randt=0.0005, ...); they must not stay live.
+    seed(12345)
+    deck = _weather_deck()
+    vehicle, env = _ready(
+        mair=212,
+        weather_deck=deck,
+        kinematics=True,
+        twind=1.0,
+        turb_length=TURB_LENGTH,
+        turb_sigma=TURB_SIGMA,
+    )
+    store = vehicle.store
+    for name, sigma in (
+        ("randal", 2.0),
+        ("randt", 0.0005),
+        ("randp", 0.001),
+        ("randeh", 0.0002),
+    ):
+        store.define(Field(name, sigma, "real", "data", "sensor"))
+    env.execute(vehicle, _ctx())
+    for name in ("randal", "randt", "randp", "randeh"):
+        assert store.get(name) == 0.0
+    atol = max(1e-6, 5e-6 * abs(GOLDEN_T0_VAEL3))
+    np.testing.assert_allclose(
+        store.get("VAEL")[2], GOLDEN_T0_VAEL3, rtol=CSV_RTOL, atol=atol
+    )
+
+
+def test_mair_212_first_tau_matches_harvested_vael3():
+    seed(12345)
+    deck = _weather_deck()
+    vehicle, env = _ready(
+        mair=212,
+        weather_deck=deck,
+        kinematics=True,
+        twind=1.0,
+        turb_length=TURB_LENGTH,
+        turb_sigma=TURB_SIGMA,
+    )
+    env.execute(vehicle, _ctx())
+    store = vehicle.store
+    atol = max(1e-6, 5e-6 * abs(GOLDEN_T0_VAEL3))
+    np.testing.assert_allclose(
+        store.get("tau"), GOLDEN_T0_VAEL3, rtol=CSV_RTOL, atol=atol
+    )
+    np.testing.assert_allclose(
+        store.get("VAEL")[2], GOLDEN_T0_VAEL3, rtol=CSV_RTOL, atol=atol
+    )
+
+
 def test_mair_212_gauss_value_0_finite_vael():
     deck = _weather_deck()
     vehicle, env = _ready(
@@ -201,19 +259,12 @@ def test_mair_212_gauss_value_0_finite_vael():
     store = vehicle.store
     vael = store.get("VAEL")
     assert np.all(np.isfinite(vael))
-    dvw = deck.look_up("speed", HBE)
-    psiwdx = deck.look_up("direction", HBE)
-    want_wind = _smoothed_constant_wind(dvw, psiwdx, 0.0, TWIND_DEFAULT, DT)
-    # gauss_value=0 and zero Dryden states → VTAL=0, so VAEL==smoothed wind
-    np.testing.assert_allclose(vael, want_wind, rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(
-        store.get("VBAL"), VBEL - vael, rtol=RTOL, atol=ATOL
-    )
     np.testing.assert_allclose(
         store.get("rho"), deck.look_up("density", HBE), rtol=RTOL, atol=ATOL
     )
-    np.testing.assert_allclose(store.get("tau"), 0.0, rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(store.get("gauss_value"), 0.0, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(
+        store.get("VBAL"), VBEL - vael, rtol=RTOL, atol=ATOL
+    )
 
 
 def test_mturb_0_does_not_add_dryden():
@@ -228,30 +279,24 @@ def test_mturb_0_does_not_add_dryden():
     np.testing.assert_allclose(store.get("tau"), 0.0, rtol=RTOL, atol=ATOL)
 
 
-def test_injected_gauss_value_used_not_rand():
+def test_dryden_overwrites_stored_gauss_value_with_rand():
+    seed(12345)
     deck = _weather_deck()
-    zero, env0 = _ready(
-        mair=210,
-        weather_deck=deck,
-        kinematics=True,
-        gauss_value=0.0,
-    )
-    env0.execute(zero, _ctx())
-    np.testing.assert_allclose(zero.store.get("VAEL"), np.zeros(3), rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(zero.store.get("tau"), 0.0, rtol=RTOL, atol=ATOL)
-
-    one, env1 = _ready(
+    vehicle, env = _ready(
         mair=210,
         weather_deck=deck,
         kinematics=True,
         gauss_value=1.0,
     )
-    env1.execute(one, _ctx())
-    assert np.any(np.abs(one.store.get("VAEL")) > 0.0)
-    assert one.store.get("tau") != pytest.approx(0.0, rel=RTOL, abs=ATOL)
-    np.testing.assert_allclose(one.store.get("gauss_value"), 1.0, rtol=RTOL, atol=ATOL)
+    env.execute(vehicle, _ctx())
+    assert np.any(np.abs(vehicle.store.get("VAEL")) > 0.0)
+    assert vehicle.store.get("tau") != pytest.approx(0.0, rel=RTOL, abs=ATOL)
+    assert vehicle.store.get("gauss_value") != pytest.approx(1.0, rel=RTOL, abs=ATOL)
     np.testing.assert_allclose(
-        one.store.get("VBAL"), VBEL - one.store.get("VAEL"), rtol=RTOL, atol=ATOL
+        vehicle.store.get("VBAL"),
+        VBEL - vehicle.store.get("VAEL"),
+        rtol=RTOL,
+        atol=ATOL,
     )
 
 

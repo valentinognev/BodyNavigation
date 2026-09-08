@@ -75,6 +75,7 @@ EXTERNALS = (
     "VTEL",
     "psipb",
     "thtpb",
+    "ththb",
     "sigdpy",
     "sigdpz",
     "gmax",
@@ -108,6 +109,7 @@ VBEL = np.array([248.0, 12.0, 4.0], dtype=float)
 FSPCB = np.array([12.0, 0.5, -9.8], dtype=float)
 PSIPB = 0.05
 THTPB = -0.03
+THTHB = 0.21
 SIGDPY = 0.02
 SIGDPZ = -0.01
 
@@ -205,6 +207,7 @@ def _plant(
     grav=GRAV,
     psipb=PSIPB,
     thtpb=THTPB,
+    ththb=None,
     sigdpy=SIGDPY,
     sigdpz=SIGDPZ,
     launch_time=None,
@@ -229,6 +232,8 @@ def _plant(
         sbel = SBEL
     if vbel is None:
         vbel = VBEL
+    if ththb is None:
+        ththb = thtpb
     specs = (
         ("mnav", mnav, "int", "out", "datalink"),
         ("STCEL", stcel, "vec", "out", "datalink"),
@@ -241,6 +246,7 @@ def _plant(
         ("VTEL", vtel, "vec", "out", "sensor"),
         ("psipb", psipb, "real", "out", "sensor"),
         ("thtpb", thtpb, "real", "out", "sensor"),
+        ("ththb", ththb, "real", "diag", "sensor"),
         ("sigdpy", sigdpy, "real", "out", "sensor"),
         ("sigdpz", sigdpz, "real", "out", "sensor"),
         ("SBEL", sbel, "vec", "state", "newton"),
@@ -413,6 +419,27 @@ def test_mguid6_term_comp_vs_cpp():
 
     guid.execute(vehicle, _ctx())
     alcomx, ancomx = _limit_commands(want_acbx, GMAX)
+    assert store.get("alcomx") == pytest.approx(alcomx, rel=RTOL, abs=ATOL)
+    assert store.get("ancomx") == pytest.approx(ancomx, rel=RTOL, abs=ATOL)
+
+
+def test_mguid6_term_comp_uses_ththb_like_cpp_missile_281():
+    # C++ guidance_term_comp reads missile[281], which def_sensor names ththb
+    # (thtpb is missile[279]). Local C++ variable is still called thtpb.
+    tblc = _tblc()
+    vehicle, guid = _ready(mguid=6, mnav=0, thtpb=THTPB, ththb=THTHB)
+    store = vehicle.store
+    acbx = guid.guidance_term_comp(vehicle)
+    want_ththb, *_ = _cpp_term_comp(
+        SBEL, STEL, VBEL, VTEL, FSPCB, tblc, GNAV, PSIPB, THTHB, SIGDPY, SIGDPZ
+    )
+    want_thtpb, *_ = _cpp_term_comp(
+        SBEL, STEL, VBEL, VTEL, FSPCB, tblc, GNAV, PSIPB, THTPB, SIGDPY, SIGDPZ
+    )
+    np.testing.assert_allclose(acbx, want_ththb, rtol=RTOL, atol=ATOL)
+    assert not np.allclose(want_ththb, want_thtpb, rtol=RTOL, atol=ATOL)
+    guid.execute(vehicle, _ctx())
+    alcomx, ancomx = _limit_commands(want_ththb, GMAX)
     assert store.get("alcomx") == pytest.approx(alcomx, rel=RTOL, abs=ATOL)
     assert store.get("ancomx") == pytest.approx(ancomx, rel=RTOL, abs=ATOL)
 

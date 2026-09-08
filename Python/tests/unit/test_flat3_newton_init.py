@@ -25,7 +25,8 @@ def test_init_newton_sbel_dvbe_alt():
     newton.initialize(vehicle, None)
     assert s.get("SBEL")[2] == -3500
     assert s.get("dvbe") == 200
-    assert s.get("alt") == 3500
+    # C++ Flat3::init_newton does not load alt (flat3[36]); first exec sees 0
+    assert s.get("alt") == 0.0
 
 
 def test_initialize_vbel_and_tbl_level_north():

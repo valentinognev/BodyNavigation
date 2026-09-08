@@ -72,6 +72,18 @@ def test_hbe_matches_golden_at_t0():
     np.testing.assert_allclose(got, want, rtol=RTOL, atol=_csv_atol(want))
 
 
+def test_python_plot_includes_golden_last_int_step_sim_time():
+    require_golden(GOLDEN)
+    _, golden_rows = load_cadac_plot_csv(GOLDEN)
+    golden_times = [row["sim_time"] for row in golden_rows]
+    assert any(abs(t - 0.35) < 1e-9 for t in golden_times)
+    assert any(abs(t - 0.3501) < 1e-9 for t in golden_times)
+    result = run_scenario(CASE)
+    python_times = [row["sim_time"] for row in result.plot_rows]
+    assert any(abs(t - 0.35) < 1e-9 for t in python_times)
+    assert any(abs(t - 0.3501) < 1e-9 for t in python_times)
+
+
 def test_all_shared_plot_columns_match_golden_at_shared_times():
     require_golden(GOLDEN)
     result = run_scenario(CASE)

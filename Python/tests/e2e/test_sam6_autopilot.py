@@ -1,8 +1,7 @@
-"""SAM6 autopilot e2e vs optional golden plot.csv.
+"""SAM6 autopilot e2e vs harvested golden plot.csv.
 
-Skip if tests/e2e/goldens/sam6/plot.csv is absent. Do not check in a raw CADAC
-Monte-Carlo INS plot. The golden must be a zero-MC recording: every gauss/uniform
-draw 0, matching Python mins=1.
+Skip if tests/e2e/goldens/sam6/plot.csv is absent. Harvest used nmonte=0 and
+default iseed=0; C++ gauss()/uniform() in init_ins and ins() still draw.
 """
 
 from pathlib import Path
@@ -136,6 +135,21 @@ def test_time_matches_golden_at_t0():
     require_golden(GOLDEN)
     result = run_scenario(CASE)
     _compare_time_t0(GOLDEN, result.plot_rows)
+
+
+def test_thtvlcx_matches_golden_at_t0():
+    require_golden(GOLDEN)
+    result = run_scenario(CASE)
+    _, golden_rows = load_cadac_plot_csv(GOLDEN)
+    want = _row_at(golden_rows, 0.0)["thtvlcx"]
+    got = _row_at(result.plot_rows, 0.0)["thtvlcx"]
+    np.testing.assert_allclose(
+        got,
+        want,
+        rtol=RTOL,
+        atol=_csv_atol(want),
+        err_msg="thtvlcx at t=0",
+    )
 
 
 def test_shared_missile_plot_columns_match_golden():

@@ -131,6 +131,25 @@ def test_alt_matches_golden_at_t0():
     _compare_alt_t0(GOLDEN, result.plot_rows)
 
 
+def _compare_column_t0(golden_path: Path, plot_rows, column):
+    _, golden_rows = load_cadac_plot_csv(golden_path)
+    got = _row_at(plot_rows, 0.0)[column]
+    want = _row_at(golden_rows, 0.0)[column]
+    np.testing.assert_allclose(
+        got,
+        want,
+        rtol=RTOL,
+        atol=_csv_atol(want),
+        err_msg=f"{column} at t=0",
+    )
+
+
+def test_psivgx_matches_golden_at_t0():
+    require_golden(GOLDEN)
+    result = run_scenario(CASE)
+    _compare_column_t0(GOLDEN, result.plot_rows, "psivgx")
+
+
 def test_shared_plot_columns_match_golden():
     require_golden(GOLDEN)
     result = run_scenario(CASE)

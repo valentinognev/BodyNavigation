@@ -235,14 +235,33 @@ def test_between_track_epochs_does_not_update_files():
     )
 
 
-def test_stored_sigmas_added_to_polar_and_velocity():
+def test_stored_sigmas_draw_gauss_not_added_as_bias():
+    from cadac.stoch import gauss, seed
+
     dat_sigma = 10.0
     azat_sigma = 0.01
-    elat_sigma = -0.02
+    elat_sigma = 0.02
     vel_sigma = 1.5
     combus = [
         _packet("red", "TARGET3", SAEL=SAEL_TGT.copy(), VAEL=VTEL.copy()),
     ]
+    seed(99)
+    satl = SAEL_ACFT - SAEL_TGT
+    polar = polar_from_cart(satl)
+    dat_meas = float(polar[0]) + gauss(0.0, dat_sigma)
+    azat_meas = float(polar[1]) + gauss(0.0, azat_sigma)
+    elat_meas = float(polar[2]) + gauss(0.0, elat_sigma)
+    satcl = _cart_from_pol(dat_meas, azat_meas, elat_meas)
+    want_stcel = SAEL_ACFT - satcl
+    want_vtcel = np.array(
+        [
+            VTEL[0] + gauss(0.0, vel_sigma),
+            VTEL[1] + gauss(0.0, vel_sigma),
+            VTEL[2] + gauss(0.0, vel_sigma),
+        ],
+        dtype=float,
+    )
+    seed(99)
     vehicle, sensor, ctx = _ready(
         combus=combus,
         dat_sigma=dat_sigma,
@@ -251,7 +270,13 @@ def test_stored_sigmas_added_to_polar_and_velocity():
         vel_sigma=vel_sigma,
     )
     sensor.execute(vehicle, ctx)
-    want_stcel, want_vtcel = _expected(
+    np.testing.assert_allclose(
+        vehicle.store.get("STCEL1"), want_stcel, rtol=RTOL, atol=ATOL
+    )
+    np.testing.assert_allclose(
+        vehicle.store.get("VTCEL1"), want_vtcel, rtol=RTOL, atol=ATOL
+    )
+    bias_stcel, bias_vtcel = _expected(
         SAEL_ACFT,
         SAEL_TGT,
         VTEL,
@@ -260,12 +285,7 @@ def test_stored_sigmas_added_to_polar_and_velocity():
         elat_sigma=elat_sigma,
         vel_sigma=vel_sigma,
     )
-    np.testing.assert_allclose(
-        vehicle.store.get("STCEL1"), want_stcel, rtol=RTOL, atol=ATOL
-    )
-    np.testing.assert_allclose(
-        vehicle.store.get("VTCEL1"), want_vtcel, rtol=RTOL, atol=ATOL
-    )
+    assert not np.allclose(vehicle.store.get("STCEL1"), bias_stcel, rtol=RTOL, atol=ATOL)
 
 
 def test_vehicle_uses_same_sensor_class():

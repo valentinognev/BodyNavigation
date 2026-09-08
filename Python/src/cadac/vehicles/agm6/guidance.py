@@ -170,7 +170,8 @@ class Agm6Guidance:
         stel = np.asarray(store.get("STEL"), dtype=float)
         vtel = np.asarray(store.get("VTEL"), dtype=float)
         psipb = store.get("psipb")
-        thtpb = store.get("thtpb")
+        # C++ guidance_term_comp reads missile[281] (ththb), not missile[279] (thtpb).
+        thtpb = store.get("ththb")
         sigdpy = store.get("sigdpy")
         sigdpz = store.get("sigdpz")
         tblc = np.asarray(store.get("TBLC"), dtype=float)

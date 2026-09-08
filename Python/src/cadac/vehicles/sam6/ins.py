@@ -5,6 +5,7 @@ import numpy as np
 from cadac.constants import AGRAV, DEG, EPS, PI, REARTH
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
+from cadac.stoch import gauss, uniform
 
 # Initial covariance after GPS transfer alignment (C++ PP0). Units: m, m/s, mrad.
 _PP0 = np.array(
@@ -119,12 +120,20 @@ def _sign(variable):
     return 1
 
 
-def _gauss(_mean, _sig):
-    return 0.0
+def _gauss(mean, sig):
+    return gauss(mean, sig)
 
 
-def _uniform(_low, _high):
-    return 0.0
+def _uniform(low, high):
+    return uniform(low, high)
+
+
+def _gauss3_rtl(sig):
+    # g++ evaluates Variable::init(v1, v2, v3) arguments right-to-left.
+    third = gauss(0.0, sig)
+    second = gauss(0.0, sig)
+    first = gauss(0.0, sig)
+    return np.array([first, second, third], dtype=float)
 
 
 def _skew(vec):
@@ -228,34 +237,13 @@ class Sam6Ins:
         vbel = np.asarray(store.get("VBEL"), dtype=float)
         if mins == 1:
             store.set("EUNBG", np.zeros(3))
-            store.set(
-                "EMISG",
-                np.array([_gauss(0, 1.1e-4), _gauss(0, 1.1e-4), _gauss(0, 1.1e-4)]),
-            )
-            store.set(
-                "ESCALG",
-                np.array([_gauss(0, 2.5e-5), _gauss(0, 2.5e-5), _gauss(0, 2.5e-5)]),
-            )
-            store.set(
-                "EBIASG",
-                np.array([_gauss(0, 3.2e-6), _gauss(0, 3.2e-6), _gauss(0, 3.2e-6)]),
-            )
-            store.set(
-                "EWALKA",
-                np.array([_gauss(0, 8.35e-4), _gauss(0, 8.35e-4), _gauss(0, 8.35e-4)]),
-            )
-            store.set(
-                "EMISA",
-                np.array([_gauss(0, 1.1e-4), _gauss(0, 1.1e-4), _gauss(0, 1.1e-4)]),
-            )
-            store.set(
-                "ESCALA",
-                np.array([_gauss(0, 5e-4), _gauss(0, 5e-4), _gauss(0, 5e-4)]),
-            )
-            store.set(
-                "EBIASA",
-                np.array([_gauss(0, 3.56e-3), _gauss(0, 3.56e-3), _gauss(0, 3.56e-3)]),
-            )
+            store.set("EMISG", _gauss3_rtl(1.1e-4))
+            store.set("ESCALG", _gauss3_rtl(2.5e-5))
+            store.set("EBIASG", _gauss3_rtl(3.2e-6))
+            store.set("EWALKA", _gauss3_rtl(8.35e-4))
+            store.set("EMISA", _gauss3_rtl(1.1e-4))
+            store.set("ESCALA", _gauss3_rtl(5e-4))
+            store.set("EBIASA", _gauss3_rtl(3.56e-3))
         gauss_init = np.array([_gauss(0.0, 1.0) for _ in range(9)], dtype=float)
         xx_init = _cholesky(_PP0) @ gauss_init
         xx_init = xx_init * (1.0 + frax)
@@ -321,14 +309,11 @@ class Sam6Ins:
             tllc = rere + np.eye(3)
             tblc = tbl @ tllc
             tlcb = tblc.T
-            walka = np.array(
-                [
-                    _uniform(-ewalka[0], ewalka[0]),
-                    _uniform(-ewalka[1], ewalka[1]),
-                    _uniform(-ewalka[2], ewalka[2]),
-                ],
-                dtype=float,
-            )
+            # g++ evaluates Matrix::build_vec3 arguments right-to-left.
+            u3 = _uniform(-ewalka[2], ewalka[2])
+            u2 = _uniform(-ewalka[1], ewalka[1])
+            u1 = _uniform(-ewalka[0], ewalka[0])
+            walka = np.array([u1, u2, u3], dtype=float)
             fspcb = walka + efspb + fspb
             ef = tlcb @ efspb - rere @ tlcb @ fspcb
             evbed_new = np.array(

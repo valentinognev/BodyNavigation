@@ -4,6 +4,7 @@ import numpy as np
 
 from cadac.constants import RAD
 from cadac.kernel.state import Field
+from cadac.math.frames import cadac_matmul
 from cadac.math.wgs84 import cad_kepler
 
 
@@ -149,7 +150,7 @@ class Rocket6Guidance:
         if time_ltg > ltg_step * ltg_count:
             ltg_count += 1
             utic, mprop = self.guidance_ltg(vehicle, mprop, int_step, time_ltg)
-            utbc = tbic @ utic
+            utbc = cadac_matmul(tbic, utic)
 
         store.set("init_flag", init_flag)
         store.set("time_ltg", time_ltg)
@@ -202,7 +203,7 @@ class Rocket6Guidance:
         fspcb = np.asarray(store.get("FSPCB"), dtype=float)
 
         utic = np.zeros(3)
-        abii = tbic.T @ fspcb
+        abii = cadac_matmul(tbic.T.copy(), fspcb)
         amag1 = _absolute(abii)
 
         spii = np.zeros(3)

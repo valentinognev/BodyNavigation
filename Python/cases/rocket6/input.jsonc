@@ -1,5 +1,6 @@
 {
   "title": "input_insertion.asc  Three-stage rocket ascent",
+  "iseed": 1234,
   "options": {
     "scrn": true,
     "comscrn": false,
@@ -149,7 +150,7 @@
         "psibdx": -83,
         "alpha0x": 0,
         "beta0x": 0,
-        "mair": 12,
+        "mair": 0,
         "dvae": 5,
         "twind": 1,
         "turb_length": 100,

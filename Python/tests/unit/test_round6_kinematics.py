@@ -3,13 +3,13 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from cadac.constants import DEG, EPS, PI, RAD
+from cadac.constants import DEG, EPS, PI, RAD, WEII3
 from cadac.eom.round6 import Round6Kinematics
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.math.frames import mat3tr
-from cadac.math.wgs84 import cad_tdi84
+from cadac.math.frames import cadac_inverse, cadac_matmul, mat3tr
+from cadac.math.wgs84 import cad_tdi84, cad_tgi84
 
 
 def _ctx(sim_time=0.0, int_step=0.01, event_time=0.0, out_fact=0.0):
@@ -74,13 +74,36 @@ def _skew(vec):
     )
 
 
+def _cadac_matmul(a, b):
+    """C++ Matrix::operator* row-major ijk (no BLAS)."""
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    squeeze = False
+    if b.ndim == 1:
+        b = b.reshape(-1, 1)
+        squeeze = True
+    nrow, nmid = a.shape
+    ncol = b.shape[1]
+    result = np.zeros((nrow, ncol), dtype=float)
+    for i in range(nrow * ncol):
+        r = i // ncol
+        c = i % ncol
+        acc = 0.0
+        for k in range(nmid):
+            acc += a[r, k] * b[k, c]
+        result[r, c] = acc
+    if squeeze:
+        return result.reshape(nrow)
+    return result
+
+
 def _cpp_step(tbi, tbid, wbib, int_step):
-    tbid_new = (-_skew(wbib)) @ tbi
+    tbid_new = _cadac_matmul(-_skew(wbib), tbi)
     tbi = integrate(tbid_new, tbid, tbi, int_step)
     tbid = tbid_new
     unit = np.eye(3)
-    ee = unit - tbi @ tbi.T
-    tbi = tbi + ee @ tbi * 0.5
+    ee = unit - _cadac_matmul(tbi, tbi.T.copy())
+    tbi = tbi + _cadac_matmul(ee, tbi) * 0.5
     e1 = ee[0, 0]
     e2 = ee[1, 1]
     e3 = ee[2, 2]
@@ -166,7 +189,7 @@ def test_initialize_tbd_tbi_from_euler_degrees_and_tdi84():
     want_tdi = cad_tdi84(10.0 * RAD, 10.0 * RAD, 10000.0, 0.0)
     np.testing.assert_allclose(store.get("TBD"), want_tbd, rtol=1e-12)
     np.testing.assert_allclose(store.get("TBD")[0, 2], -math.sin(2.5 * RAD), rtol=1e-12)
-    np.testing.assert_allclose(store.get("TBI"), want_tbd @ want_tdi, rtol=1e-12)
+    np.testing.assert_array_equal(store.get("TBI"), _cadac_matmul(want_tbd, want_tdi))
 
 
 def test_initialize_seeds_time_and_int_step_new_from_ctx():
@@ -383,3 +406,89 @@ def test_euler_angles_recovered_after_zero_rate_step():
     np.testing.assert_allclose(store.get("psibdx"), 0.0, atol=1e-12)
     np.testing.assert_allclose(store.get("phibdx"), 0.0, atol=1e-12)
     np.testing.assert_allclose(store.get("thtbd"), 2.5 * RAD, rtol=1e-12, atol=1e-12)
+
+
+def test_vertical_launch_earth_rate_step_uses_singularity_euler_branch():
+    # ROCKET6 insertion: thtbdx=90. First kinematics step includes euler-init
+    # WBIB = TBI·ω_earth. Numpy |TBD13| stays a few ulps below 1 (C++ Matrix
+    # multiply often goes over), so the C++ `fabs(tbd13)<1` asin path divides
+    # by ~1e-8 cosine and returns ~177 deg roll vs harvested 180.
+    vehicle, kin = _vehicle()
+    store = vehicle.store
+    store.set("psibdx", -83.0)
+    store.set("thtbdx", 90.0)
+    store.set("phibdx", 0.0)
+    ctx = _ctx(int_step=0.001)
+    _plant(store, lonx=-120.49, latx=34.68, alt=100.0, wbib=(0.0, 0.0, 0.0))
+    kin.initialize(vehicle, ctx)
+    tbi = store.get("TBI")
+    weii = np.array([0.0, 0.0, WEII3], dtype=float)
+    store.set("WBIB", tbi @ weii)
+    kin.execute(vehicle, ctx)
+    np.testing.assert_allclose(store.get("phibdx"), 180.0, rtol=0.0, atol=1e-6)
+    np.testing.assert_allclose(store.get("psibdx"), 90.0, rtol=0.0, atol=1e-3)
+    np.testing.assert_allclose(store.get("thtbdx"), 90.0, rtol=0.0, atol=1e-5)
+
+
+def test_earth_rate_step_tbd13_matches_cadac_ijk_multiply_not_numpy_at():
+    # Numpy @ is ~1 ulp off C++ Matrix::operator* per 3x3. That accumulation
+    # seeds the ROCKET6 t=69–73 pitch Schmitt 1 ms extra on-time.
+    vehicle, kin = _vehicle()
+    store = vehicle.store
+    store.set("psibdx", -83.0)
+    store.set("thtbdx", 90.0)
+    store.set("phibdx", 0.0)
+    ctx = _ctx(int_step=0.001)
+    _plant(store, lonx=-120.49, latx=34.68, alt=100.0, wbib=(0.0, 0.0, 0.0))
+    kin.initialize(vehicle, ctx)
+    tbi = store.get("TBI")
+    weii = np.array([0.0, 0.0, WEII3], dtype=float)
+    store.set("WBIB", _cadac_matmul(tbi, weii))
+    tbi0 = store.get("TBI").copy()
+    tbid0 = store.get("TBID").copy()
+    wbib = store.get("WBIB").copy()
+    tdi = cad_tdi84(-120.49 * RAD, 34.68 * RAD, 100.0, 0.0)
+    want_tbi, _, _ = _cpp_step(tbi0, tbid0, wbib, ctx.int_step)
+    want_tbd = _cadac_matmul(want_tbi, tdi.T.copy())
+    kin.execute(vehicle, ctx)
+    np.testing.assert_array_equal(store.get("TBI"), want_tbi)
+    assert store.get("TBD")[0, 2] == want_tbd[0, 2]
+
+
+def test_cadac_inverse_matches_cpp_adjoint_over_det_not_numpy():
+    amat = np.array(
+        [[2.0, 0.1, 0.0], [0.1, 3.0, -0.2], [0.0, -0.2, 4.0]],
+        dtype=float,
+    )
+    got = cadac_inverse(amat)
+    det = amat[0, 0] * (amat[1, 1] * amat[2, 2] - amat[1, 2] * amat[2, 1])
+    det -= amat[0, 1] * (amat[1, 0] * amat[2, 2] - amat[1, 2] * amat[2, 0])
+    det += amat[0, 2] * (amat[1, 0] * amat[2, 1] - amat[1, 1] * amat[2, 0])
+    np.testing.assert_allclose(cadac_matmul(amat, got), np.eye(3), atol=1e-15)
+    numpy_inv = np.linalg.inv(amat)
+    assert not np.array_equal(got, numpy_inv)
+
+
+def test_cad_tgi84_matches_cadac_ijk_multiply_not_numpy_at():
+    lon = -120.49 * RAD
+    lat = 34.68 * RAD
+    alt = 45000.0
+    time = 69.9
+    got = cad_tgi84(lon, lat, alt, time)
+    tdi = cad_tdi84(lon, lat, alt, time)
+    from cadac.math.wgs84 import FLATTENING, SMAJOR_AXIS
+
+    r0 = SMAJOR_AXIS * (
+        1.0
+        - FLATTENING * (1.0 - np.cos(2.0 * lat)) / 2.0
+        + 5.0 * FLATTENING**2 * (1.0 - np.cos(4.0 * lat)) / 16.0
+    )
+    dd = FLATTENING * np.sin(2.0 * lat) * (1.0 - FLATTENING / 2.0 - alt / r0)
+    tgd = np.zeros((3, 3))
+    tgd[0, 0] = np.cos(dd)
+    tgd[2, 2] = np.cos(dd)
+    tgd[1, 1] = 1.0
+    tgd[2, 0] = np.sin(dd)
+    tgd[0, 2] = -np.sin(dd)
+    want = cadac_matmul(tgd, tdi)
+    np.testing.assert_array_equal(got, want)

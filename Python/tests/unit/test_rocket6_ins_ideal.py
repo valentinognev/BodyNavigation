@@ -8,9 +8,9 @@ import pytest
 from cadac.constants import DEG, EPS, PI, RAD, WEII3
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.math.frames import mat3tr
+from cadac.math.frames import cadac_matmul, mat3tr
 from cadac.math.wgs84 import cad_geo84_in, cad_in_geo84, cad_tdi84
-from cadac.vehicles.rocket6.ins import Rocket6Ins
+from cadac.vehicles.rocket6.ins import Rocket6Ins, _geodetic_euler_from_tbd
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -166,7 +166,7 @@ def _cpp_ins_mins0(tbi, fspb, wbib, wbii, sbii, vbii, time, mroll=0):
         dtype=float,
     )
     vbeic = vbiic - veic
-    vbecb = tbic @ vbeic
+    vbecb = cadac_matmul(tbic, vbeic)
     dvbec = float(np.linalg.norm(vbecb))
 
     ppcx = wbicb[0] * DEG
@@ -199,7 +199,7 @@ def _cpp_ins_mins0(tbi, fspb, wbib, wbii, sbii, vbii, time, mroll=0):
     tdci = cad_tdi84(lonc, latc, altc, time)
     loncx = lonc * DEG
     latcx = latc * DEG
-    vbecd = tdci @ vbeic
+    vbecd = cadac_matmul(tdci, vbeic)
 
     if vbecd[0] == 0.0 and vbecd[1] == 0.0:
         psivdc = 0.0
@@ -212,31 +212,8 @@ def _cpp_ins_mins0(tbi, fspb, wbib, wbii, sbii, vbii, time, mroll=0):
     psivdcx = psivdc * DEG
     thtvdcx = thtvdc * DEG
 
-    tbd = tbic @ tdci.T
-    tbd13 = tbd[0, 2]
-    tbd11 = tbd[0, 0]
-    tbd33 = tbd[2, 2]
-    tbd12 = tbd[0, 1]
-    tbd23 = tbd[1, 2]
-    if math.fabs(tbd13) < 1.0:
-        thtbdc = math.asin(-tbd13)
-        cthtbd = math.cos(thtbdc)
-    else:
-        thtbdc = PI / 2.0 * _cadac_sign(-tbd13)
-        cthtbd = EPS
-    cpsi = tbd11 / cthtbd
-    if math.fabs(cpsi) > 1.0:
-        cpsi = 1.0 * _cadac_sign(cpsi)
-    cphi = tbd33 / cthtbd
-    if math.fabs(cphi) > 1.0:
-        cphi = 1.0 * _cadac_sign(cphi)
-    psibdc = math.acos(cpsi) * _cadac_sign(tbd12)
-    if mroll == 0 or mroll == 1:
-        phibdc = math.acos(cphi) * _cadac_sign(tbd23)
-    elif mroll == 2:
-        phibdc = math.acos(-cphi) * _cadac_sign(-tbd23)
-    else:
-        phibdc = 0.0
+    tbd = cadac_matmul(tbic, tdci.T.copy())
+    psibdc, thtbdc, phibdc = _geodetic_euler_from_tbd(tbd, mroll)
     return {
         "TBIC": tbic,
         "FSPCB": fspcb,

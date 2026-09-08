@@ -10,7 +10,13 @@ from cadac.eom.round6 import Round6Environment
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.wgs84 import cad_grav84, cad_in_geo84
+from cadac.stoch import dryden_white, gauss, seed
 from cadac.tables.lookup import Datadeck, Table
+
+# C++ srand(0); def_ins 18 gauss + init_ins 9 gauss; then each step
+# markov_noise 15 gauss (nmonte==0 still draws then stores 0) before Dryden.
+_ROCKET6_INS_GAUSS = 27
+_ROCKET6_MARKOV_COUNT = 15
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -179,7 +185,33 @@ def test_mair_12_tabular_wind_zero_dryden():
     vaedsd_new = (vaed_raw - vaeds) * (1.0 / twind)
     vaeds = integrate(vaedsd_new, vaedsd, vaeds, dt)
     np.testing.assert_allclose(s.get("VAED"), vaeds, rtol=RTOL, atol=ATOL)
-    np.testing.assert_allclose(s.get("gauss_value"), 0.0, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(s.get("tau"), 0.0, rtol=RTOL, atol=ATOL)
     vbed = s.get("VBED")
     dvba = float(np.linalg.norm(vbed - vaeds))
     np.testing.assert_allclose(s.get("dvba"), dvba, rtol=RTOL, atol=ATOL)
+
+
+def test_mair_12_dryden_gauss_value_matches_cpp_srand0_stream():
+    alt = 10000.0
+    dt = 0.001
+    deck = _weather_speed_direction_deck()
+    vehicle, env = _vehicle_with_newton_state(alt=alt, mair=12, weather_deck=deck)
+    s = vehicle.store
+    s.define(Field("TBD", np.eye(3), "mat", "out", "kinematics"))
+    s.define(Field("alppx", 0.0, "real", "out", "kinematics"))
+    s.define(Field("phipx", 0.0, "real", "out", "kinematics"))
+    s.set("twind", 1.0)
+    s.set("turb_sigma", 0.5)
+    s.set("turb_length", 100.0)
+    s.set("alppx", 0.0)
+    s.set("phipx", 0.0)
+    s.set("TBD", np.eye(3))
+    s.set("dvba", float(np.linalg.norm(s.get("VBED"))))
+    seed(0)
+    for _ in range(_ROCKET6_INS_GAUSS + _ROCKET6_MARKOV_COUNT):
+        gauss(0.0, 1.0)
+    want = dryden_white(dt)
+    seed(0)
+    env.execute(vehicle, SimpleNamespace(int_step=dt))
+    np.testing.assert_allclose(s.get("gauss_value"), want, rtol=RTOL, atol=ATOL)
+    assert abs(s.get("gauss_value")) > 1e-12

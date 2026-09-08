@@ -53,6 +53,13 @@ def test_attitude_smoke_hbe_and_phix(tmp_path: Path):
         assert value == value  # finite
 
 
+def test_attitude_plot_includes_end_time_plus_int_step(tmp_path: Path):
+    result = run_scenario(_attitude_smoke(tmp_path))
+    times = [row["sim_time"] for row in result.plot_rows]
+    assert any(abs(t - 0.01) < 1e-9 for t in times)
+    assert any(abs(t - 0.0101) < 1e-9 for t in times)
+
+
 def test_committed_attitude_case_is_rect_mr1():
     cfg = load_scenario(CASES / "input.jsonc")
     assert cfg.end_time == 0.35

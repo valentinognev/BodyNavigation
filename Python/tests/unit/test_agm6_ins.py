@@ -9,7 +9,8 @@ from cadac.constants import DEG, PI, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
-from cadac.vehicles.agm6.ins import Agm6Ins
+from cadac.stoch import gauss, seed
+from cadac.vehicles.agm6.ins import Agm6Ins, PP0, _cholesky
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -193,10 +194,21 @@ def _defined(mins=0):
     return vehicle, ins
 
 
+def _zero_live_ins_errors(store, truth=None):
+    for name in GAUSS_IN_CPP:
+        store.set(name, (0.0, 0.0, 0.0))
+    for name in ERROR_STATES:
+        store.set(name, (0.0, 0.0, 0.0))
+    if truth is not None:
+        store.set("SBELC", np.asarray(truth["SBEL"], dtype=float).copy())
+        store.set("VBELC", np.asarray(truth["VBEL"], dtype=float).copy())
+
+
 def _ready(mins=0, *, tlb=False):
     vehicle, ins = _defined(mins=mins)
     truth = _plant_truth(vehicle.store, tlb=tlb)
     ins.initialize(vehicle, _ctx())
+    _zero_live_ins_errors(vehicle.store, truth)
     return vehicle, ins, truth
 
 
@@ -224,7 +236,8 @@ def test_define_registers_cpp_def_ins_fields():
         elif ftype == "real":
             assert store.get(name) == default
         elif ftype == "vec":
-            np.testing.assert_array_equal(store.get(name), zeros3)
+            if name not in GAUSS_IN_CPP:
+                np.testing.assert_array_equal(store.get(name), zeros3)
             assert store.get(name).shape == (3,)
         else:
             np.testing.assert_array_equal(store.get(name), zeros33)
@@ -233,14 +246,59 @@ def test_define_registers_cpp_def_ins_fields():
         assert name not in store.names()
 
 
-def test_define_error_data_vectors_are_zeros_not_gauss():
+def _gauss3_rtl(sigs):
+    # g++ evaluates Variable::init(v1,v2,v3) arguments right-to-left.
+    third = gauss(0.0, sigs[2])
+    second = gauss(0.0, sigs[1])
+    first = gauss(0.0, sigs[0])
+    return (first, second, third)
+
+
+def _cpp_def_ins_gauss_vectors():
+    return {
+        "EMISG": _gauss3_rtl((1.1e-4, 1.1e-4, 1.1e-4)),
+        "ESCALG": _gauss3_rtl((2e-5, 2.5e-5, 2.5e-5)),
+        "EBIASG": _gauss3_rtl((1e-5, 3.2e-6, 3.2e-6)),
+        "EMISA": _gauss3_rtl((1.1e-4, 1.1e-4, 1.1e-4)),
+        "ESCALA": _gauss3_rtl((5e-4, 5e-4, 5e-4)),
+        "EBIASA": _gauss3_rtl((3.56e-3, 3.56e-3, 3.56e-3)),
+    }
+
+
+def test_define_error_data_vectors_match_cpp_gauss_order():
+    seed(12345)
     vehicle = SimpleNamespace(store=StateStore())
     Agm6Ins().define(vehicle)
+    seed(12345)
+    want = _cpp_def_ins_gauss_vectors()
     store = vehicle.store
-    zeros3 = np.zeros(3)
     for name in GAUSS_IN_CPP:
-        np.testing.assert_array_equal(store.get(name), zeros3)
+        np.testing.assert_allclose(store.get(name), want[name], rtol=RTOL, atol=ATOL)
         assert store.field(name).role == "data"
+
+
+def test_initialize_mins_one_applies_cholesky_gauss_draws():
+    seed(12345)
+    vehicle, ins = _defined(mins=1)
+    planted = _plant_sbel_vbel(vehicle.store)
+    vehicle.store.set("frax", 0.0)
+    ins.initialize(vehicle, _ctx())
+    seed(12345)
+    _cpp_def_ins_gauss_vectors()
+    draws = np.array([gauss(0.0, 1.0) for _ in range(9)])
+    xx_init = _cholesky(PP0) @ draws
+    esttc = xx_init[0:3]
+    evbe = xx_init[3:6]
+    rece = xx_init[6:9] * 0.001
+    np.testing.assert_allclose(vehicle.store.get("ESTTC"), esttc, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(vehicle.store.get("EVBE"), evbe, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(vehicle.store.get("RECE"), rece, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(
+        vehicle.store.get("SBELC"), esttc + planted["SBEL"], rtol=RTOL, atol=ATOL
+    )
+    np.testing.assert_allclose(
+        vehicle.store.get("VBELC"), evbe + planted["VBEL"], rtol=RTOL, atol=ATOL
+    )
 
 
 def test_define_does_not_register_kinematics_newton_truth_names():
@@ -279,20 +337,25 @@ def test_initialize_mins_zero_copies_sbel_vbel():
         np.testing.assert_array_equal(vehicle.store.get(name), np.zeros(3))
 
 
-def test_initialize_mins_one_zero_gauss_sbelc_equals_sbel():
+def test_initialize_mins_one_frax_scales_cholesky_draws():
+    seed(12345)
     vehicle, ins = _defined(mins=1)
     planted = _plant_sbel_vbel(vehicle.store)
     vehicle.store.set("frax", 10.0)
     ins.initialize(vehicle, _ctx())
+    seed(12345)
+    _cpp_def_ins_gauss_vectors()
+    draws = np.array([gauss(0.0, 1.0) for _ in range(9)])
+    xx_init = _cholesky(PP0) @ draws * 11.0
     np.testing.assert_allclose(
-        vehicle.store.get("SBELC"), planted["SBEL"], rtol=RTOL, atol=ATOL
+        vehicle.store.get("ESTTC"), xx_init[0:3], rtol=RTOL, atol=ATOL
     )
     np.testing.assert_allclose(
-        vehicle.store.get("VBELC"), planted["VBEL"], rtol=RTOL, atol=ATOL
+        vehicle.store.get("SBELC"),
+        xx_init[0:3] + planted["SBEL"],
+        rtol=RTOL,
+        atol=ATOL,
     )
-    np.testing.assert_array_equal(vehicle.store.get("ESTTC"), np.zeros(3))
-    np.testing.assert_array_equal(vehicle.store.get("EVBE"), np.zeros(3))
-    np.testing.assert_array_equal(vehicle.store.get("RECE"), np.zeros(3))
 
 
 def test_initialize_mins_two_raises():

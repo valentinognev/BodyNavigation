@@ -4,7 +4,7 @@ import numpy as np
 
 from cadac.constants import DEG, RAD
 from cadac.kernel.state import Field
-from cadac.math.frames import cart_from_pol, polar_from_cart
+from cadac.math.frames import cadac_inverse, cadac_matmul, cart_from_pol, polar_from_cart
 from cadac.math.wgs84 import cad_geo84_in
 
 # 25 bright star catalog, J2000 unit vectors (C++ Hyper::star_init).
@@ -129,7 +129,14 @@ def star_triad(star_data, star_el_min, sbii):
                 usii1 = usii_vis[i1]
                 usii2 = usii_vis[i2]
                 usii3 = usii_vis[i3]
-                volume_local = abs(float(usii1 @ (_skew(usii2) @ usii3)))
+                crossed = cadac_matmul(_skew(usii2), usii3)
+                volume_local = abs(
+                    float(
+                        usii1[0] * crossed[0]
+                        + usii1[1] * crossed[1]
+                        + usii1[2] * crossed[2]
+                    )
+                )
                 if volume_local > star_volume:
                     star_volume = volume_local
                     triad[0] = i1
@@ -262,14 +269,14 @@ class Rocket6Startrack:
             slotm = 0.0
             for i in range(3):
                 usii = usii_triad[i, :3]
-                usib = tbi @ usii
+                usib = cadac_matmul(tbi, usii)
                 polar = polar_from_cart(usib)
                 az = polar[1]
                 el = polar[2]
                 az_meas = az + az_bias[i] + az_noise[i]
                 el_meas = el + el_bias[i] + el_noise[i]
                 usibm = cart_from_pol(1.0, az_meas, el_meas)
-                usiim = tbic.T @ usibm
+                usiim = cadac_matmul(tbic.T.copy(), usibm)
                 triad_meas[:, i] = usiim
                 triad_true[:, i] = usii
                 slot[i] = usii_triad[i, 3]
@@ -292,7 +299,7 @@ class Rocket6Startrack:
                     staralt3 = staralt
             if star_slotsum != slotm:
                 star_slotsum = slotm
-            rdiff = triad_meas @ np.linalg.inv(triad_true)
+            rdiff = cadac_matmul(triad_meas, cadac_inverse(triad_true))
             uric[0] = rdiff[2, 1]
             uric[1] = rdiff[0, 2]
             uric[2] = rdiff[1, 0]
