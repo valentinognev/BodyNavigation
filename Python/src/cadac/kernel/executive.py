@@ -29,6 +29,21 @@ def run_loop(
     ]
     for slot, vehicle in enumerate(vehicles):
         _publish(combus, slot, vehicle)
+    chains = []
+    for vehicle in vehicles:
+        named = {module.name: module for module in modules_by_vehicle[vehicle]}
+        chains.append(tuple(named[name] for name in module_order if name in named))
+    contexts = [
+        SimContext(
+            sim_time=0.0,
+            int_step=int_step,
+            event_time=0.0,
+            out_fact=0.0,
+            combus=combus,
+            vehicle_slot=slot,
+        )
+        for slot, vehicle in enumerate(vehicles)
+    ]
     while sim_time <= (end_time + int_step):
         times.append(sim_time)
         for slot, vehicle in enumerate(vehicles):
@@ -39,22 +54,12 @@ def run_loop(
                 if engine.evaluate(store):
                     event_time = 0.0
             vehicle.event_time = event_time
-            ctx = SimContext(
-                sim_time=sim_time,
-                int_step=int_step,
-                event_time=event_time,
-                out_fact=0.0,
-                combus=combus,
-                vehicle_slot=slot,
-            )
+            ctx = contexts[slot]
+            ctx.sim_time = sim_time
+            ctx.int_step = int_step
+            ctx.event_time = event_time
             if combus[slot].status == 1:
-                named = {
-                    module.name: module for module in modules_by_vehicle[vehicle]
-                }
-                for name in module_order:
-                    module = named.get(name)
-                    if module is None:
-                        continue
+                for module in chains[slot]:
                     module.execute(vehicle, ctx)
                 int_step = ctx.int_step
                 _publish(combus, slot, vehicle)

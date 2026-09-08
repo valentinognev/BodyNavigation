@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.2 - Executive bind-once SimContext reuse
+- `run_loop` binds `{module.name: module}` and execute chains once before the time loop. One `SimContext` per vehicle; mutates `sim_time`, `int_step`, `event_time` each step.
+- Same loop semantics: `sim_time <= end_time + int_step`, health/status skip, last vehicle's `ctx.int_step` wins, skip missing module names.
+- Tests: `test_run_loop_does_not_rebuild_name_map_each_step`, `test_run_loop_reuses_simcontext_per_vehicle`. No CADAC `.cpp` edits.
+
 ## 0.169.1 - StateStore contains, get_optional, skip-coerce
 - `"name" in store` is O(1) via `__contains__`. `get_optional(name, default=None)` returns the field value or default without KeyError.
 - `set` still type-checks; skips `int()` / `float()` / `np.asarray` when the value already matches the field type and shape (`int`, `float`, float64 vec/mat). Lists and wrong dtypes still coerce or raise. `set("time", 2)` on a real field still becomes `2.0`.

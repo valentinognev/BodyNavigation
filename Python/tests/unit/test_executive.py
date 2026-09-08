@@ -221,3 +221,74 @@ def test_skip_module_absent_on_vehicle():
         int_step=0.1,
     )
     assert a.store.get("time") == 0.1
+
+
+def test_run_loop_does_not_rebuild_name_map_each_step():
+    vehicle = _Vehicle()
+    calls = {"maps": 0}
+
+    class _Named:
+        name = "watch"
+
+        def define(self, vehicle):
+            pass
+
+        def initialize(self, vehicle, ctx):
+            pass
+
+        def execute(self, vehicle, ctx):
+            pass
+
+        def terminate(self, vehicle, ctx):
+            pass
+
+    class _Dict(dict):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+        def __getitem__(self, key):
+            if key is vehicle or key == vehicle:
+                calls["maps"] += 1
+            return super().__getitem__(key)
+
+    dummy = _Named()
+    modules = _Dict({vehicle: [dummy]})
+    run_loop(
+        vehicles=[vehicle],
+        modules_by_vehicle=modules,
+        module_order=["watch"],
+        end_time=0.2,
+        int_step=0.1,
+    )
+    # 4 time stations (0, 0.1, 0.2, 0.3). Lookup once at bind, not once per step.
+    assert calls["maps"] == 1
+
+
+def test_run_loop_reuses_simcontext_per_vehicle():
+    vehicle = _Vehicle()
+    ids = []
+
+    class _Watch:
+        name = "watch"
+
+        def define(self, vehicle):
+            pass
+
+        def initialize(self, vehicle, ctx):
+            pass
+
+        def execute(self, vehicle, ctx):
+            ids.append(id(ctx))
+
+        def terminate(self, vehicle, ctx):
+            pass
+
+    run_loop(
+        vehicles=[vehicle],
+        modules_by_vehicle={vehicle: [_Watch()]},
+        module_order=["watch"],
+        end_time=0.1,
+        int_step=0.1,
+    )
+    assert len(ids) >= 2
+    assert len(set(ids)) == 1
