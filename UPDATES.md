@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.6 - Unroll 3×3 cadac_matmul (ijk)
+- `cadac_matmul` 3×3 and 3×1 paths are unrolled ijk (`a[r,0]*b[0,c]+…`), same add order as C++ `Matrix::operator*` and the generic `for i`/`for k` loops. Other shapes keep the nested loop.
+- Not `numpy @`. 1-D `b` still squeezes to `(3,)`; `(3,1)` stays a column.
+- Tests: `test_cadac_matmul_3x3_matches_ijk_not_required_to_match_at`, `test_cadac_matmul_generic_shape_still_ijk`, `test_cadac_matmul_3x3_unrolled_documented`. No CADAC `.cpp` edits.
+
 ## 0.169.5 - hypot3, quat_to_dcm, matvec3; Flat6 kinematics DCM
 - `hypot3(vec)` is `sqrt(x*x+y*y+z*z)` (not `np.linalg.norm`). `quat_to_dcm(q0,q1,q2,q3)` is the former Flat6 TBL nine assignments. `matvec3` is three row dots.
 - `Flat6Kinematics.execute` builds TBL via `quat_to_dcm`; still four `integrate` calls and `q0..q3` keys. `TBL @ vbal` kept. Environment `dvba` and Newton `dvbe`/`groundrange` use `hypot3`.

@@ -68,13 +68,33 @@ def polar_from_cart(v):
 
 
 def cadac_matmul(a, b):
-    """C++ `Matrix::operator*` (row-major ijk, no BLAS/FMA)."""
+    """C++ `Matrix::operator*` (row-major ijk, no BLAS/FMA). 3×3 unrolled, same ijk as C++ `Matrix::operator*`."""
     a = np.asarray(a, dtype=float)
     b = np.asarray(b, dtype=float)
     squeeze = False
     if b.ndim == 1:
         b = b.reshape(-1, 1)
         squeeze = True
+    if a.shape == (3, 3) and b.shape == (3, 3):
+        result = np.zeros((3, 3), dtype=float)
+        result[0, 0] = a[0, 0] * b[0, 0] + a[0, 1] * b[1, 0] + a[0, 2] * b[2, 0]
+        result[0, 1] = a[0, 0] * b[0, 1] + a[0, 1] * b[1, 1] + a[0, 2] * b[2, 1]
+        result[0, 2] = a[0, 0] * b[0, 2] + a[0, 1] * b[1, 2] + a[0, 2] * b[2, 2]
+        result[1, 0] = a[1, 0] * b[0, 0] + a[1, 1] * b[1, 0] + a[1, 2] * b[2, 0]
+        result[1, 1] = a[1, 0] * b[0, 1] + a[1, 1] * b[1, 1] + a[1, 2] * b[2, 1]
+        result[1, 2] = a[1, 0] * b[0, 2] + a[1, 1] * b[1, 2] + a[1, 2] * b[2, 2]
+        result[2, 0] = a[2, 0] * b[0, 0] + a[2, 1] * b[1, 0] + a[2, 2] * b[2, 0]
+        result[2, 1] = a[2, 0] * b[0, 1] + a[2, 1] * b[1, 1] + a[2, 2] * b[2, 1]
+        result[2, 2] = a[2, 0] * b[0, 2] + a[2, 1] * b[1, 2] + a[2, 2] * b[2, 2]
+        return result
+    if a.shape == (3, 3) and b.shape == (3, 1):
+        result = np.zeros((3, 1), dtype=float)
+        result[0, 0] = a[0, 0] * b[0, 0] + a[0, 1] * b[1, 0] + a[0, 2] * b[2, 0]
+        result[1, 0] = a[1, 0] * b[0, 0] + a[1, 1] * b[1, 0] + a[1, 2] * b[2, 0]
+        result[2, 0] = a[2, 0] * b[0, 0] + a[2, 1] * b[1, 0] + a[2, 2] * b[2, 0]
+        if squeeze:
+            return result.reshape(3)
+        return result
     nrow, nmid = a.shape
     ncol = b.shape[1]
     result = np.zeros((nrow, ncol), dtype=float)

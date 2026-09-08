@@ -82,3 +82,56 @@ def test_matvec3_three_dots():
         rtol=1e-12,
         atol=1e-14,
     )
+
+
+def _ijk_matmul(a, b):
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    squeeze = False
+    if b.ndim == 1:
+        b = b.reshape(-1, 1)
+        squeeze = True
+    nrow, nmid = a.shape
+    ncol = b.shape[1]
+    result = np.zeros((nrow, ncol), dtype=float)
+    for i in range(nrow * ncol):
+        r = i // ncol
+        c = i % ncol
+        acc = 0.0
+        for k in range(nmid):
+            acc += a[r, k] * b[k, c]
+        result[r, c] = acc
+    if squeeze:
+        return result.reshape(nrow)
+    return result
+
+
+def test_cadac_matmul_3x3_matches_ijk_not_required_to_match_at():
+    from cadac.math.frames import cadac_matmul
+
+    rng = np.random.default_rng(0)
+    a = rng.standard_normal((3, 3))
+    b = rng.standard_normal((3, 3))
+    got = cadac_matmul(a, b)
+    np.testing.assert_array_equal(got, _ijk_matmul(a, b))
+    v = rng.standard_normal(3)
+    np.testing.assert_array_equal(cadac_matmul(a, v), _ijk_matmul(a, v))
+    col = rng.standard_normal((3, 1))
+    np.testing.assert_array_equal(cadac_matmul(a, col), _ijk_matmul(a, col))
+
+
+def test_cadac_matmul_generic_shape_still_ijk():
+    from cadac.math.frames import cadac_matmul
+
+    a = np.arange(8, dtype=float).reshape(2, 4)
+    b = np.arange(12, dtype=float).reshape(4, 3)
+    np.testing.assert_array_equal(cadac_matmul(a, b), _ijk_matmul(a, b))
+
+
+def test_cadac_matmul_3x3_unrolled_documented():
+    import inspect
+    from cadac.math.frames import cadac_matmul
+
+    src = inspect.getsource(cadac_matmul)
+    assert "a[0, 0] * b[0, 0]" in src or "nrow == 3" in src
+    assert "3×3 unrolled, same ijk as C++ `Matrix::operator*`" in cadac_matmul.__doc__
