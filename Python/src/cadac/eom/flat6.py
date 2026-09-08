@@ -7,7 +7,7 @@ from cadac.env.gravity import gravity
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr, mat3tr, cadac_sign, skew
+from cadac.math.frames import cadac_sign, hypot3, mat2tr, mat3tr, quat_to_dcm, skew
 
 
 class Flat6Environment:
@@ -45,7 +45,7 @@ class Flat6Environment:
         vsound = math.sqrt(1.4 * R * tempk)
         vael = np.zeros(3)
         vbal = vbel - vael
-        dvba = float(np.linalg.norm(vbal))
+        dvba = hypot3(vbal)
         vmach = abs(dvba / vsound)
         pdynmc = 0.5 * rho * dvba**2
         store.set("grav", gravity(hbe))
@@ -154,16 +154,7 @@ class Flat6Kinematics:
         q2d = new_q2d
         q3d = new_q3d
 
-        tbl = np.zeros((3, 3))
-        tbl[0, 0] = q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3
-        tbl[0, 1] = 2.0 * (q1 * q2 + q0 * q3)
-        tbl[0, 2] = 2.0 * (q1 * q3 - q0 * q2)
-        tbl[1, 0] = 2.0 * (q1 * q2 - q0 * q3)
-        tbl[1, 1] = q0 * q0 - q1 * q1 + q2 * q2 - q3 * q3
-        tbl[1, 2] = 2.0 * (q2 * q3 + q0 * q1)
-        tbl[2, 0] = 2.0 * (q1 * q3 + q0 * q2)
-        tbl[2, 1] = 2.0 * (q2 * q3 - q0 * q1)
-        tbl[2, 2] = q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3
+        tbl = quat_to_dcm(q0, q1, q2, q3)
 
         tlb = tbl.T.copy()
         ubl = tlb @ tbl
@@ -414,7 +405,7 @@ class Flat6Newton:
         psivl, thtvl = _flight_path_angles(vbel)
         psivlx = psivl * DEG
         thtvlx = thtvl * DEG
-        dvbe = float(np.linalg.norm(vbel))
+        dvbe = hypot3(vbel)
         hbe = -float(sbel[2])
         anx = -fspb[2] / grav
         ayx = fspb[1] / grav
@@ -435,7 +426,7 @@ class Flat6Newton:
 
         del_sbel = np.asarray(sbel - sbelm, dtype=float).copy()
         del_sbel[2] = 0.0
-        groundrange = groundrange + float(np.linalg.norm(del_sbel))
+        groundrange = groundrange + hypot3(del_sbel)
         sbelm = sbel
 
         store.set("VBEBD", vbebd)

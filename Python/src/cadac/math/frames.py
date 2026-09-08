@@ -21,6 +21,32 @@ def skew(vec):
     )
 
 
+def hypot3(vec):
+    x, y, z = vec
+    return float(np.sqrt(x * x + y * y + z * z))
+
+
+def quat_to_dcm(q0, q1, q2, q3):
+    tbl = np.zeros((3, 3))
+    tbl[0, 0] = q0 * q0 + q1 * q1 - q2 * q2 - q3 * q3
+    tbl[0, 1] = 2.0 * (q1 * q2 + q0 * q3)
+    tbl[0, 2] = 2.0 * (q1 * q3 - q0 * q2)
+    tbl[1, 0] = 2.0 * (q1 * q2 - q0 * q3)
+    tbl[1, 1] = q0 * q0 - q1 * q1 + q2 * q2 - q3 * q3
+    tbl[1, 2] = 2.0 * (q2 * q3 + q0 * q1)
+    tbl[2, 0] = 2.0 * (q1 * q3 + q0 * q2)
+    tbl[2, 1] = 2.0 * (q2 * q3 - q0 * q1)
+    tbl[2, 2] = q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3
+    return tbl
+
+
+def matvec3(mat, vec):
+    return np.array(
+        [np.dot(mat[0], vec), np.dot(mat[1], vec), np.dot(mat[2], vec)],
+        dtype=float,
+    )
+
+
 def polar_from_cart(v):
     v1 = v[0]
     v2 = v[1]

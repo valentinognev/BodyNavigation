@@ -7,6 +7,7 @@ from cadac.constants import DEG, EPS, PI, RAD
 from cadac.eom.flat6 import Flat6Kinematics
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
+from cadac.math.frames import quat_to_dcm
 
 
 def _vehicle():
@@ -133,6 +134,12 @@ def test_execute_after_init_tbl_finite_and_alphax_approx_1():
     kin.execute(vehicle, SimpleNamespace(int_step=0.001))
     assert np.all(np.isfinite(store.get("TBL")))
     np.testing.assert_allclose(store.get("alphax"), 1.0, atol=1e-6)
+    np.testing.assert_allclose(
+        store.get("TBL"),
+        quat_to_dcm(store.get("q0"), store.get("q1"), store.get("q2"), store.get("q3")),
+        rtol=1e-12,
+        atol=1e-14,
+    )
 
 
 def test_execute_zero_rates_identity_uses_stored_slope_integrate():

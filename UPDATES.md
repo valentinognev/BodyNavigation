@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.5 - hypot3, quat_to_dcm, matvec3; Flat6 kinematics DCM
+- `hypot3(vec)` is `sqrt(x*x+y*y+z*z)` (not `np.linalg.norm`). `quat_to_dcm(q0,q1,q2,q3)` is the former Flat6 TBL nine assignments. `matvec3` is three row dots.
+- `Flat6Kinematics.execute` builds TBL via `quat_to_dcm`; still four `integrate` calls and `q0..q3` keys. `TBL @ vbal` kept. Environment `dvba` and Newton `dvbe`/`groundrange` use `hypot3`.
+- Tests: `test_hypot3_zero_and_3_4_12`, `test_quat_to_dcm_identity`, kinematics TBL equals `quat_to_dcm` from the store. No CADAC `.cpp` edits.
+
 ## 0.169.4 - Shared cadac_sign and skew
 - `cadac_sign` / `skew` live in `cadac.math.frames` and re-export from `cadac.math`. `cadac_sign`: `< 0.0 → -1`, else `+1` (`+0` is `+1`). `skew` is the 3×3 cross-product matrix.
 - Replaced every production `_cadac_sign` / `_skew` copy (21 skew, 9 sign). Call-site argument order unchanged; no leftover private wrappers.
