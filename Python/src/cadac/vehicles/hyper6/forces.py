@@ -28,9 +28,8 @@ class Hyper6Forces:
         cll = store.get("cll")
         clm = store.get("clm")
         cln = store.get("cln")
-        names = store.names()
-        farcs = store.get("FARCS") if "FARCS" in names else np.zeros(3)
-        fmrcs = store.get("FMRCS") if "FMRCS" in names else np.zeros(3)
+        farcs = store.get("FARCS") if "FARCS" in store else np.zeros(3)
+        fmrcs = store.get("FMRCS") if "FMRCS" in store else np.zeros(3)
         fapb = np.array(
             [
                 pdynmc * refa * cx + thrust,

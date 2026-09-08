@@ -229,11 +229,10 @@ class Rocket6Aero:
         vmass = store.get("vmass")
         xcg = store.get("xcg")
         ibbb = store.get("IBBB")
-        names = store.names()
-        mtvc = store.get("mtvc") if "mtvc" in names else 0
-        gtvc = store.get("gtvc") if "gtvc" in names else 0.0
-        parm = store.get("parm") if "parm" in names else 0.0
-        thrust = store.get("thrust") if "thrust" in names else 0.0
+        mtvc = store.get("mtvc") if "mtvc" in store else 0
+        gtvc = store.get("gtvc") if "gtvc" in store else 0.0
+        parm = store.get("parm") if "parm" in store else 0.0
+        thrust = store.get("thrust") if "thrust" in store else 0.0
         cla = store.get("cla")
         clde = store.get("clde")
         cyb = store.get("cyb")

@@ -95,7 +95,7 @@ class Flat3Newton:
             Field("thtvl", 0.0, "real", "out", "newton"),
             Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):
@@ -106,7 +106,7 @@ class Flat3Newton:
         sbel1 = store.get("sbel1")
         sbel2 = store.get("sbel2")
         sbel3 = store.get("sbel3")
-        phiavout = store.get("phiavout") if "phiavout" in store.names() else 0.0
+        phiavout = store.get("phiavout") if "phiavout" in store else 0.0
 
         psivl = psivlx * RAD
         thtvl = thtvlx * RAD
@@ -141,7 +141,7 @@ class Flat3Newton:
         store = vehicle.store
         fspv = store.get("FSPV")
         grav = store.get("grav")
-        phiavout = store.get("phiavout") if "phiavout" in store.names() else 0.0
+        phiavout = store.get("phiavout") if "phiavout" in store else 0.0
         tbl = store.get("TBL")
         sbel = store.get("SBEL")
         vbel = store.get("VBEL")
@@ -249,7 +249,7 @@ class Flat3AircraftNewton:
             Field("thtal", 0.0, "real", "out", "newton", ("com",)),
             Field("alt", 0.0, "real", "out", "newton", ("scrn", "plot")),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):
@@ -260,7 +260,7 @@ class Flat3AircraftNewton:
         sael1 = store.get("sael1")
         sael2 = store.get("sael2")
         sael3 = store.get("sael3")
-        phiavout = store.get("phiavout") if "phiavout" in store.names() else 0.0
+        phiavout = store.get("phiavout") if "phiavout" in store else 0.0
 
         psial = psialx * RAD
         thtal = thtalx * RAD
@@ -295,7 +295,7 @@ class Flat3AircraftNewton:
         store = vehicle.store
         fspa = store.get("FSPA")
         grav = store.get("grav")
-        phiavout = store.get("phiavout") if "phiavout" in store.names() else 0.0
+        phiavout = store.get("phiavout") if "phiavout" in store else 0.0
         tal = store.get("TAL")
         sael = store.get("SAEL")
         vael = store.get("VAEL")

@@ -33,7 +33,7 @@ class Cruise5Targeting:
             Field("clost_tgt_slot", 0, "int", "out", "targeting"),
             Field("tgtng_sat_slot", 0, "int", "out", "targeting"),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

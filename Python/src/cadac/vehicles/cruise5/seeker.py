@@ -21,7 +21,7 @@ class Cruise5Seeker:
             Field("UTBB", zeros3, "vec", "out", "seeker"),
             Field("acquisition", 0, "int", "init/save", "seeker", ("scrn",)),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

@@ -78,7 +78,7 @@ class Round6Environment:
             Field("gauss_value", 0.0, "real", "diag", "environment"),
             Field("tempc", 0.0, "real", "diag", "environment"),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):
@@ -188,8 +188,7 @@ class Round6Environment:
         vmach = abs(dvba / vsound)
         pdynmc = 0.5 * rho * dvba * dvba
 
-        names = store.names()
-        if "trcode" in names and "mguid" in names:
+        if "trcode" in store and "mguid" in store:
             if store.get("mguid") == 6:
                 trcode = store.get("trcode")
                 if vmach <= store.get("trmach"):
@@ -198,7 +197,7 @@ class Round6Environment:
                     trcode = 3.0
                 store.set("trcode", trcode)
 
-        if "mfreeze" in names:
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             mfreeze_evrn = store.get("mfreeze_evrn")
             pdynmcf = store.get("pdynmcf")
@@ -620,8 +619,7 @@ class Round6Newton:
         gndtrkmx = 0.001 * grndtrck
         gndtrnmx = NMILES * grndtrck
 
-        names = store.names()
-        if "mfreeze" in names:
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_newt = 0

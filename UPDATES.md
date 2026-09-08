@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.3 - Membership via in store
+- Production membership is `"mfreeze" in store` / `n in store`, not `in store.names()`. Unused `names = store.names()` dropped.
+- Leftover `names()` only where the list is the value (plot/combus column lists). Scanner `store_names` 104→23. `baseline.json` not rewritten.
+- Test: `test_src_membership_does_not_use_names_list`. No CADAC `.cpp` edits.
+
 ## 0.169.2 - Executive bind-once SimContext reuse
 - `run_loop` binds `{module.name: module}` and execute chains once before the time loop. One `SimContext` per vehicle; mutates `sim_time`, `int_step`, `event_time` each step.
 - Same loop semantics: `sim_time <= end_time + int_step`, health/status skip, last vehicle's `ctx.int_step` wins, skip missing module names.

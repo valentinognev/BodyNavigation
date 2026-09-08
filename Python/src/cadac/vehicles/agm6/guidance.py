@@ -78,7 +78,7 @@ class Agm6Guidance:
         store = vehicle.store
         mguid = store.get("mguid")
         mnav = store.get("mnav")
-        if "launch_time" in store.names():
+        if "launch_time" in store:
             launch_time = store.get("launch_time")
         else:
             launch_time = ctx.sim_time

@@ -123,9 +123,8 @@ class Sam6Kinematics:
             msl_time = del_time
 
         ortho_error = 1.0 - (q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3)
-        names = store.names()
-        trcond = store.get("trcond") if "trcond" in names else None
-        if trcond is not None and "trortho" in names:
+        trcond = store.get("trcond") if "trcond" in store else None
+        if trcond is not None and "trortho" in store:
             if math.fabs(ortho_error) > store.get("trortho"):
                 trcond = 1
 
@@ -204,7 +203,7 @@ class Sam6Kinematics:
         alppx = alpp * DEG
         phipx = phip * DEG
 
-        if trcond is not None and "tralp" in names:
+        if trcond is not None and "tralp" in store:
             if alpp > store.get("tralp"):
                 trcond = 2
 

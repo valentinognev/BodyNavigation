@@ -62,7 +62,7 @@ class Sraam6Propulsion:
         else:
             raise ValueError(f"unknown mprop {mprop}")
 
-        if "mfreeze" in store.names():
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_prop = 0

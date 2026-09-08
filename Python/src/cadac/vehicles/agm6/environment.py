@@ -151,7 +151,7 @@ class Agm6Environment:
     def _environment_dryden(self, store, dvba, int_step):
         turb_length = store.get("turb_length")
         turb_sigma = store.get("turb_sigma")
-        tbd = store.get("TBD") if "TBD" in store.names() else store.get("TBL")
+        tbd = store.get("TBD") if "TBD" in store else store.get("TBL")
         alppx = store.get("alppx")
         phipx = store.get("phipx")
         prepare_for_dryden(store)

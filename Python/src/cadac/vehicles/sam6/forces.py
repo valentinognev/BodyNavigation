@@ -17,8 +17,7 @@ class Sam6Forces:
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
-        names = store.names()
-        mtvc = store.get("mtvc") if "mtvc" in names else 0
+        mtvc = store.get("mtvc") if "mtvc" in store else 0
         if mtvc != 0:
             raise ValueError(f"mtvc={mtvc!r} not supported in this slice")
         pdynmc = store.get("pdynmc")
@@ -31,8 +30,8 @@ class Sam6Forces:
         cll = store.get("cll")
         clm = store.get("clm")
         cln = store.get("cln")
-        farcs = store.get("FARCS") if "FARCS" in names else np.zeros(3)
-        fmrcs = store.get("FMRCS") if "FMRCS" in names else np.zeros(3)
+        farcs = store.get("FARCS") if "FARCS" in store else np.zeros(3)
+        fmrcs = store.get("FMRCS") if "FMRCS" in store else np.zeros(3)
         fapb = np.array(
             [
                 -pdynmc * refa * ca + thrust,

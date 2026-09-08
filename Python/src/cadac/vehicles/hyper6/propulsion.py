@@ -153,8 +153,7 @@ class Hyper6Propulsion:
             fmassd = 0.0
             thrust = 0.0
 
-        names = store.names()
-        if "mfreeze" in names:
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_prop = 0

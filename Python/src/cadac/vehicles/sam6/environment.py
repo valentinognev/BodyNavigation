@@ -43,8 +43,7 @@ class Sam6Environment:
         vmach = abs(dvbe / vsound)
         pdynmc = 0.5 * rho * dvbe * dvbe
 
-        names = store.names()
-        if "mguide" in names and "trdynm" in names and "trcond" in names:
+        if "mguide" in store and "trdynm" in store and "trcond" in store:
             trcond = store.get("trcond")
             guid_term = store.get("mguide") % 10
             if guid_term == 6:
@@ -52,7 +51,7 @@ class Sam6Environment:
                     trcond = 3
             store.set("trcond", trcond)
 
-        if "mfreeze" in names:
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_environ = 0

@@ -11,7 +11,7 @@ from cadac.math.frames import mat2tr, polar_from_cart
 
 
 def _phiavout(store):
-    return store.get("phiavout") if "phiavout" in store.names() else 0.0
+    return store.get("phiavout") if "phiavout" in store else 0.0
 
 
 def _tav_from_phiavout(phiavout):

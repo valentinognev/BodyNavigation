@@ -21,7 +21,7 @@ class Cruise5Intercept:
             Field("STMEG", zeros3, "vec", "save", "intercept"),
             Field("SBMEG", zeros3, "vec", "save", "intercept"),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

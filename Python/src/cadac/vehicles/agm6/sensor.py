@@ -198,7 +198,7 @@ class Agm6Sensor:
         wlq2 = store.get("wlq2")
         wlr2d = store.get("wlr2d")
         wlr2 = store.get("wlr2")
-        if "TTL" in store.names():
+        if "TTL" in store:
             ttl = np.asarray(store.get("TTL"), dtype=float)
         else:
             ttl = np.eye(3)
@@ -314,9 +314,8 @@ class Agm6Sensor:
         thb = np.array(store.get("THB"), dtype=float, copy=True)
         time = store.get("time")
         sbel = np.asarray(store.get("SBEL"), dtype=float)
-        names = store.names()
-        trcond = store.get("trcond") if "trcond" in names else 0
-        mguid = store.get("mguid") if "mguid" in names else 0
+        trcond = store.get("trcond") if "trcond" in store else 0
+        mguid = store.get("mguid") if "mguid" in store else 0
 
         stel = np.zeros(3)
         vtel = np.zeros(3)
@@ -431,7 +430,7 @@ class Agm6Sensor:
         store.set("thtpbx", thtpb * DEG)
         store.set("psipbx", psipb * DEG)
         store.set("SBTL", sbtl)
-        if "trcond" in names:
+        if "trcond" in store:
             store.set("trcond", trcond)
-        if "mguid" in names:
+        if "mguid" in store:
             store.set("mguid", mguid)

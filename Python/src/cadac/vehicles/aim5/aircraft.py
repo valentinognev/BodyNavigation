@@ -37,7 +37,7 @@ class Aim5AircraftForces:
             Field("FSPV", (0.0, 0.0, 0.0), "vec", "out", "forces"),
             Field("acc_longx", 0.0, "real", "data", "forces"),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):
@@ -75,7 +75,7 @@ class Aim5AircraftControl:
             Field("wingloading", 0.0, "real", "data", "control"),
             Field("phiavout", 0.0, "real", "out", "control"),
         ):
-            if field.name == "phiavout" and field.name in store.names():
+            if field.name == "phiavout" and field.name in store:
                 continue
             store.define(field)
 

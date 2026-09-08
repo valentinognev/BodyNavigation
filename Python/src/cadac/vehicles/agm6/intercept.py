@@ -8,7 +8,7 @@ from cadac.math.frames import mat2tr
 
 
 def _optional(store, name, default=0):
-    if name in store.names():
+    if name in store:
         return store.get(name)
     return default
 

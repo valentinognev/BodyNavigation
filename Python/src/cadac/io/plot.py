@@ -41,7 +41,8 @@ _VEC_COMPONENT = {
 
 def flagged_plot_columns(store):
     columns = []
-    for name in store.names():
+    names = store.names()
+    for name in names:
         field = store.field(name)
         if "plot" not in field.outputs:
             continue
@@ -64,7 +65,7 @@ def plot_row(store, columns=None):
             continue
         if column and column[-1] in "123":
             name = column[:-1]
-            if name in store.names() and store.field(name).type == "vec":
+            if name in store and store.field(name).type == "vec":
                 row[column] = float(store.get(name)[int(column[-1]) - 1])
                 continue
         value = store.get(column)

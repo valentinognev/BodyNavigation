@@ -45,8 +45,7 @@ class Sraam6Forces:
             dtype=float,
         )
 
-        names = store.names()
-        mtvc = store.get("mtvc") if "mtvc" in names else 0
+        mtvc = store.get("mtvc") if "mtvc" in store else 0
         if mtvc == 0:
             fapb[0] = fapb[0] + thrust
         else:

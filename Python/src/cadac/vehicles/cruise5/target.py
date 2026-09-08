@@ -11,7 +11,7 @@ class Cruise5TargetForces:
     def define(self, vehicle):
         store = vehicle.store
         zeros3 = (0.0, 0.0, 0.0)
-        if "FSPV" not in store.names():
+        if "FSPV" not in store:
             store.define(Field("FSPV", zeros3, "vec", "out", "forces"))
         for field in (
             Field("fwd_accel", 0.0, "real", "data", "forces"),

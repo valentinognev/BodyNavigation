@@ -15,7 +15,7 @@ class Aim5Forces:
             Field("alx", 0.0, "real", "diag", "forces", plot),
             Field("anx", 0.0, "real", "diag", "forces", plot),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

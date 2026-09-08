@@ -57,7 +57,7 @@ class Hyper5Control:
             Field("alphacx", 0.0, "real", "data", "control"),
             Field("phimvcx", 0.0, "real", "data", "control"),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

@@ -124,7 +124,7 @@ class Sam6Newton:
         anx = -float(fspb[2]) / grav
         ayx = float(fspb[1]) / grav
 
-        if "mfreeze" in store.names():
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_newt = 0

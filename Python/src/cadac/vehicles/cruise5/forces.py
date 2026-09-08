@@ -11,7 +11,7 @@ class Cruise5Forces:
 
     def define(self, vehicle):
         store = vehicle.store
-        if "FSPV" not in store.names():
+        if "FSPV" not in store:
             store.define(
                 Field("FSPV", (0.0, 0.0, 0.0), "vec", "out", "forces", ("plot",))
             )

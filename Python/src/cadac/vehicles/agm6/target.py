@@ -14,7 +14,7 @@ class Agm6TargetForces:
         zeros3 = (0.0, 0.0, 0.0)
         com = ("com",)
         store.define(Field("FSPA", zeros3, "vec", "out", "forces"))
-        if "FSPV" not in store.names():
+        if "FSPV" not in store:
             store.define(Field("FSPV", zeros3, "vec", "out", "forces"))
         for field in (
             Field("aax", 0.0, "real", "diag", "forces", com),

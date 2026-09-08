@@ -42,7 +42,7 @@ class Cruise5Guidance:
             Field("rad_geometric", 0.0, "real", "diag", "guidance"),
             Field("wp_flag", 0, "int", "diag", "guidance", ("plot",)),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

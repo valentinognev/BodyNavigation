@@ -78,8 +78,7 @@ class Agm6Propulsion:
         ibbb = np.diag([ai11, ai33, ai33])
         eng_ang_mom = 0.0
 
-        names = store.names()
-        if "mfreeze" in names:
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_prop = 0

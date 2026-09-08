@@ -360,8 +360,7 @@ class Rocket6Ins:
         sbii = np.asarray(store.get("SBII"), dtype=float)
         vbii = np.asarray(store.get("VBII"), dtype=float)
         time = store.get("time")
-        names = store.names()
-        mroll = store.get("mroll") if "mroll" in names else 0
+        mroll = store.get("mroll") if "mroll" in store else 0
         int_step = ctx.int_step
 
         if mins == 0:
@@ -395,7 +394,7 @@ class Rocket6Ins:
             rici = integrate(ricid_new, ricid, rici, int_step)
             ricid = ricid_new
 
-            if "mstar" in names and store.get("mstar") == 3 and "URIC" in names:
+            if "mstar" in store and store.get("mstar") == 3 and "URIC" in store:
                 rici = rici - np.asarray(store.get("URIC"), dtype=float)
                 store.set("mstar", 2)
 
@@ -419,10 +418,10 @@ class Rocket6Ins:
             esbid = esbid_new
 
             if (
-                "mgps" in names
+                "mgps" in store
                 and store.get("mgps") == 3
-                and "SXH" in names
-                and "VXH" in names
+                and "SXH" in store
+                and "VXH" in store
             ):
                 sxh = np.asarray(store.get("SXH"), dtype=float)
                 vxh = np.asarray(store.get("VXH"), dtype=float)

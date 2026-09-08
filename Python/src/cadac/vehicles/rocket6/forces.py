@@ -31,11 +31,10 @@ class Rocket6Forces:
         cx = store.get("cx")
         cz = store.get("cz")
         mtvc = store.get("mtvc")
-        names = store.names()
-        farcs = store.get("FARCS") if "FARCS" in names else np.zeros(3)
-        fmrcs = store.get("FMRCS") if "FMRCS" in names else np.zeros(3)
-        fpb = store.get("FPB") if "FPB" in names else np.zeros(3)
-        fmpb = store.get("FMPB") if "FMPB" in names else np.zeros(3)
+        farcs = store.get("FARCS") if "FARCS" in store else np.zeros(3)
+        fmrcs = store.get("FMRCS") if "FMRCS" in store else np.zeros(3)
+        fpb = store.get("FPB") if "FPB" in store else np.zeros(3)
+        fmpb = store.get("FMPB") if "FMPB" in store else np.zeros(3)
 
         fapb = np.array(
             [pdynmc * refa * cx, pdynmc * refa * cy, pdynmc * refa * cz],

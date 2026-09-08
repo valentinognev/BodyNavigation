@@ -52,7 +52,7 @@ class Sraam6Environment:
             if pdynmc <= trdynm:
                 trcond = 3
 
-        if "mfreeze" in store.names():
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_environ = 0

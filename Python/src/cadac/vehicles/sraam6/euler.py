@@ -8,7 +8,6 @@ class Sraam6Euler:
 
     def define(self, vehicle):
         store = vehicle.store
-        names = store.names()
         for field in (
             Field("ppd", 0.0, "real", "state", "euler"),
             Field("pp", 0.0, "real", "state", "euler"),
@@ -21,7 +20,7 @@ class Sraam6Euler:
             Field("rrx", 0.0, "real", "out", "euler", ("plot",)),
             Field("WBEB", (0.0, 0.0, 0.0), "vec", "diag", "euler"),
         ):
-            if field.name not in names:
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

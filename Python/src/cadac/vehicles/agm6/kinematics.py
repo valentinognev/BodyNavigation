@@ -24,7 +24,7 @@ class Agm6Kinematics(Flat6Kinematics):
         vbeb = np.asarray(store.get("VBEB"), dtype=float)
         # C++ Flat6::kinematics loads flat6[72] VAELS (smoothed wind), not
         # plotted VAEL=VAELS+Dryden (flat6[74]).
-        wind = store.get("VAELS") if "VAELS" in store.names() else store.get("VAEL")
+        wind = store.get("VAELS") if "VAELS" in store else store.get("VAEL")
         vael = np.asarray(wind, dtype=float)
         dvba = store.get("dvba")
         vbab = vbeb - tbl @ vael
@@ -53,6 +53,6 @@ class Agm6Kinematics(Flat6Kinematics):
         store.set("phipx", phipx)
         store.set("alpp", alpp)
         store.set("phip", phip)
-        if "tralp" in store.names() and alpp > store.get("tralp"):
-            if "trcond" in store.names():
+        if "tralp" in store and alpp > store.get("tralp"):
+            if "trcond" in store:
                 store.set("trcond", 5)

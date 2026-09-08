@@ -204,7 +204,7 @@ class Agm6AircraftForces:
         store = vehicle.store
         zeros3 = (0.0, 0.0, 0.0)
         store.define(Field("FSPA", zeros3, "vec", "out", "forces"))
-        if "FSPV" not in store.names():
+        if "FSPV" not in store:
             store.define(Field("FSPV", zeros3, "vec", "out", "forces"))
         store.define(Field("acc_longx", 0.0, "real", "data", "forces"))
 

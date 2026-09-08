@@ -5,7 +5,7 @@ from cadac.kernel.state import Field
 
 
 def _optional(store, name, default=0.0):
-    if name in store.names():
+    if name in store:
         return store.get(name)
     return default
 

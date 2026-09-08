@@ -228,8 +228,7 @@ class Sam6Sensor:
         time = store.get("time")
         sbel = np.asarray(store.get("SBEL"), dtype=float)
         trcond = store.get("trcond")
-        names = store.names()
-        mguide = store.get("mguide") if "mguide" in names else 0
+        mguide = store.get("mguide") if "mguide" in store else 0
         int_step = ctx.int_step
 
         ehz = 0.0
@@ -366,7 +365,7 @@ class Sam6Sensor:
         store.set("aztbx", aztbx)
         store.set("eltbx", eltbx)
         store.set("dab", dab)
-        if "mguide" in names:
+        if "mguide" in store:
             store.set("mguide", mguide)
         store.set("thtpb", thtpb)
         store.set("psipb", psipb)

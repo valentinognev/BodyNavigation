@@ -117,7 +117,6 @@ def prepare_for_dryden(store=None, markov_count=_AGM6_MARKOV_COUNT):
     for _ in range(markov_count):
         gauss(0.0, 1.0)
     if store is not None:
-        names = store.names()
         for name in AGM6_MARKOV_NAMES:
-            if name in names:
+            if name in store:
                 store.set(name, 0.0)

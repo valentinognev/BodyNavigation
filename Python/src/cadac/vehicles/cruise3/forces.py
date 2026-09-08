@@ -13,7 +13,7 @@ class Cruise3Forces:
             Field("FSPV", (0.0, 0.0, 0.0), "vec", "out", "forces", ("plot",)),
             Field("phimvx", 0.0, "real", "data", "aerodynamics"),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

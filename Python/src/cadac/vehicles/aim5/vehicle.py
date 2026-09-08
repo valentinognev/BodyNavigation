@@ -26,19 +26,18 @@ class Aim5Flat3Newton(Flat3Newton):
         super().define(vehicle)
         store = vehicle.store
         for field in _sael_fields():
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):
         store = vehicle.store
-        names = store.names()
-        if "sael1" in names:
+        if "sael1" in store:
             store.set("sbel1", store.get("sael1"))
-        if "sael2" in names:
+        if "sael2" in store:
             store.set("sbel2", store.get("sael2"))
-        if "sael3" in names:
+        if "sael3" in store:
             store.set("sbel3", store.get("sael3"))
-        if "dvae" in names:
+        if "dvae" in store:
             store.set("dvbe", store.get("dvae"))
         super().initialize(vehicle, ctx)
 
@@ -48,7 +47,7 @@ def _define_aim5_vehicle(vehicle):
     orig_define = store.define
 
     def define_skip_if_exists(field):
-        if field.name not in store.names():
+        if field.name not in store:
             orig_define(field)
 
     store.define = define_skip_if_exists
@@ -59,9 +58,10 @@ def _define_aim5_vehicle(vehicle):
             store.define(field)
     finally:
         store.define = orig_define
+    names = store.names()
     flagged = [
         name
-        for name in store.names()
+        for name in names
         if "com" in store.field(name).outputs
     ]
     extra = [name for name in _COM_EXTRA if name not in flagged]

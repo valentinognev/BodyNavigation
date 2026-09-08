@@ -105,7 +105,7 @@ class Rocket6Propulsion:
                 mprop = 0
                 thrust = 0.0
 
-        if "mfreeze" in store.names():
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_prop = 0

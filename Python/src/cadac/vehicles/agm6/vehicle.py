@@ -47,7 +47,7 @@ class Agm6Missile:
         orig_define = store.define
 
         def define_skip_if_exists(field):
-            if field.name not in store.names():
+            if field.name not in store:
                 orig_define(field)
 
         store.define = define_skip_if_exists

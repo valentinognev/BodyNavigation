@@ -238,8 +238,7 @@ class Flat6Kinematics:
         alppx = alpp * DEG
         phipx = phip * DEG
 
-        names = store.names()
-        if all(n in names for n in ("trcode", "tralppx", "tralpnx", "trbetx")):
+        if all(n in store for n in ("trcode", "tralppx", "tralpnx", "trbetx")):
             trcode = store.get("trcode")
             tralppx = store.get("tralppx")
             tralpnx = store.get("tralpnx")
@@ -442,7 +441,7 @@ class Flat6Newton:
         fspv = tvb @ fspb
         alx = fspv[1] / grav
 
-        if "mfreeze" in store.names():
+        if "mfreeze" in store:
             mfreeze = store.get("mfreeze")
             if mfreeze == 0:
                 mfreeze_newt = 0

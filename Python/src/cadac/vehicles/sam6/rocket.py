@@ -67,10 +67,9 @@ class Sam6RocketAero:
         cnalp = CNALP0
         store.set("cnalp", cnalp)
         store.set("cybet", -cnalp)
-        names = store.names()
-        if "alphax" in names:
+        if "alphax" in store:
             store.set("alphax", store.get("alpha_t0x"))
-        if "betax" in names:
+        if "betax" in store:
             store.set("betax", store.get("beta_t0x"))
 
     def execute(self, vehicle, ctx):
@@ -582,7 +581,7 @@ class Sam6Rocket:
         orig_define = store.define
 
         def define_skip_if_exists(field):
-            if field.name not in store.names():
+            if field.name not in store:
                 orig_define(field)
 
         store.define = define_skip_if_exists

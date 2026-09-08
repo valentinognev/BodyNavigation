@@ -56,7 +56,7 @@ class Cruise5Control:
             Field("altd", 0.0, "real", "diag", "control", ("plot",)),
             Field("altcom", 0.0, "real", "data", "control", ("plot",)),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

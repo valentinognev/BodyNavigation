@@ -58,7 +58,7 @@ class Sraam6Kinematics:
         ):
             store.define(field)
         for name in ("pp", "qq", "rr"):
-            if name not in store.names():
+            if name not in store:
                 store.define(Field(name, 0.0, "real", "state", "euler"))
 
     def initialize(self, vehicle, ctx):
@@ -92,8 +92,7 @@ class Sraam6Kinematics:
         int_step_new = store.get("int_step_new")
         out_step_fact = store.get("out_step_fact")
         ck = store.get("ck")
-        names = store.names()
-        trcond = store.get("trcond") if "trcond" in names else 0
+        trcond = store.get("trcond") if "trcond" in store else 0
         trcvel = store.get("trcvel")
         tralp = store.get("tralp")
         vbeb = store.get("VBEB")
@@ -213,7 +212,7 @@ class Sraam6Kinematics:
         store.set("phipx", phipx)
         store.set("alpp", alpp)
         store.set("phip", phip)
-        if "trcond" in names:
+        if "trcond" in store:
             store.set("trcond", trcond)
         store.set("psibl", psibl)
         store.set("thtbl", thtbl)

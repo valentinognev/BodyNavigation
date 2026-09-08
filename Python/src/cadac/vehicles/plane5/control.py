@@ -56,7 +56,7 @@ class Plane5Control:
             Field("gcp", 0.0, "real", "data", "control"),
             Field("alx", 0.0, "real", "diag", "control", ("plot",)),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):

@@ -5,46 +5,44 @@ from cadac.kernel.state import Field
 
 
 def copy_in(store):
-    names = store.names()
-    _alias(store, names, "sael1", "sbel1")
-    _alias(store, names, "sael2", "sbel2")
-    _alias(store, names, "sael3", "sbel3")
-    _alias(store, names, "dvae", "dvbe")
-    _alias(store, names, "FSPA", "FSPV")
-    if "SAEL" not in names:
+    _alias(store, "sael1", "sbel1")
+    _alias(store, "sael2", "sbel2")
+    _alias(store, "sael3", "sbel3")
+    _alias(store, "dvae", "dvbe")
+    _alias(store, "FSPA", "FSPV")
+    if "SAEL" not in store:
         return
     sael = np.asarray(store.get("SAEL"), dtype=float)
-    if np.all(sael == 0.0) and all(n in names for n in ("sael1", "sael2", "sael3")):
+    if np.all(sael == 0.0) and all(n in store for n in ("sael1", "sael2", "sael3")):
         sael = np.array(
             [store.get("sael1"), store.get("sael2"), store.get("sael3")],
             dtype=float,
         )
         store.set("SAEL", sael)
-    if "SBEL" in names:
+    if "SBEL" in store:
         store.set("SBEL", sael)
 
 
 def copy_out(store):
-    names = store.names()
-    if "SBEL" in names:
+    if "SBEL" in store:
         sbel = np.asarray(store.get("SBEL"), dtype=float)
-        if "SAEL" in names:
+        if "SAEL" in store:
             store.set("SAEL", sbel)
-        if "sbel1" in names:
+        if "sbel1" in store:
             store.set("sbel1", float(sbel[0]))
-        if "sbel2" in names:
+        if "sbel2" in store:
             store.set("sbel2", float(sbel[1]))
-        if "sbel3" in names:
+        if "sbel3" in store:
             store.set("sbel3", float(sbel[2]))
-    _alias(store, names, "VBEL", "VAEL")
-    _alias(store, names, "dvbe", "dvae")
-    _alias(store, names, "TBL", "TAL")
-    _alias(store, names, "TBV", "TAV")
-    _alias(store, names, "ABEL", "AAEL")
+    _alias(store, "VBEL", "VAEL")
+    _alias(store, "dvbe", "dvae")
+    _alias(store, "TBL", "TAL")
+    _alias(store, "TBV", "TAV")
+    _alias(store, "ABEL", "AAEL")
 
 
-def _alias(store, names, src, dst):
-    if src in names and dst in names:
+def _alias(store, src, dst):
+    if src in store and dst in store:
         store.set(dst, store.get(src))
 
 
@@ -65,7 +63,7 @@ class Agm6Flat3Environment:
             Field("vsound", 0.0, "real", "diag", "environment"),
             Field("press", 0.0, "real", "out", "environment"),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
 
     def initialize(self, vehicle, ctx):
@@ -110,7 +108,7 @@ class Agm6Flat3Newton:
             Field("thtvl", 0.0, "real", "out", "newton"),
             Field("alt", 0.0, "real", "out", "newton", com),
         ):
-            if field.name not in store.names():
+            if field.name not in store:
                 store.define(field)
         self._inner.define(vehicle)
 
