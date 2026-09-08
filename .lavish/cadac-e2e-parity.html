@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="corporate">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CADAC Python vs C++ e2e — after the seven-family fixes</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :where(.grid, .flex) > * { min-width: 0; }
+    :where(p, h1, h2, h3, li, td, th, .badge) { overflow-wrap: anywhere; }
+    body { background: var(--color-base-200); color: var(--color-base-content); }
+  </style>
+</head>
+<body>
+  <main class="mx-auto max-w-6xl p-6 lg:p-10">
+    <header class="mb-8">
+      <p class="text-sm uppercase tracking-wide text-base-content/60">Python vs harvested g++ goldens</p>
+      <h1 class="text-3xl font-bold mt-1">CADAC e2e comparison after the seven-family fixes</h1>
+      <p class="mt-3 max-w-3xl text-base-content/70">
+        Fresh live pytest on 2026-09-08. CSV tolerances unchanged
+        (<code class="text-sm">rtol=1e-5</code>,
+        <code class="text-sm">atol=max(1e-6, 5e-6*|golden|)</code>).
+        Sentinel <code class="text-sm">time=-1</code> skipped. Plot is vehicle slot 0 only.
+      </p>
+    </header>
+
+    <section class="alert alert-success mb-8" role="status">
+      <span>
+        <strong>28 passed, 1 skipped, 0 failed</strong> in 588.02 s (9:48).
+        The 2026-09-07 snapshot of the same 14 named tests was
+        <strong>9 failed, 5 passed</strong> in 146 s.
+      </span>
+    </section>
+
+    <section class="stats stats-vertical lg:stats-horizontal bg-base-100 border border-base-300 w-full mb-8">
+      <div class="stat">
+        <div class="stat-title">Original 14-test set</div>
+        <div class="stat-value text-success">14 / 14</div>
+        <div class="stat-desc">was 5 pass / 9 fail</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">JSONC families vs golden</div>
+        <div class="stat-value">14 / 14</div>
+        <div class="stat-desc">plus SAM6 RF skip (no JSONC)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Failures now</div>
+        <div class="stat-value text-success">0</div>
+        <div class="stat-desc">tolerances not loosened</div>
+      </div>
+      <div class="stat">
+        <div class="stat-title">Wall time</div>
+        <div class="stat-value">9:48</div>
+        <div class="stat-desc">ROCKET6 ~7.5 min of that</div>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold mb-3">Before vs after — original 14 named tests</h2>
+      <p class="text-sm text-base-content/70 mb-4">
+        Same tests as <code class="text-sm">docs/superpowers/plans/2026-09-07-cadac-parity-e2e-failures.md</code>.
+        AGM6 used to crash before producing a plot; those two families now run the full case.
+      </p>
+      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+        <table class="table table-zebra table-sm">
+          <thead>
+            <tr>
+              <th>Family</th>
+              <th>Test</th>
+              <th>2026-09-07</th>
+              <th>This run</th>
+              <th class="text-right">Duration</th>
+              <th>What failed then</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AGM6 free flight</td>
+              <td><code>hbe @ t0</code></td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">4.5 s</td>
+              <td>ValueError in <code>atmosphere76</code> (hbe left US76)</td>
+            </tr>
+            <tr>
+              <td>AGM6 free flight</td>
+              <td><code>hbe + vmach</code> shared times</td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">4.4 s</td>
+              <td>same crash; no plot</td>
+            </tr>
+            <tr>
+              <td>AGM6 test case</td>
+              <td><code>hbe @ t0</code></td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">42.4 s</td>
+              <td><code>ZeroDivisionError</code> <code>dna==0</code> in <code>aerodynamics_der</code></td>
+            </tr>
+            <tr>
+              <td>AGM6 test case</td>
+              <td><code>hbe + vmach</code> shared times</td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">41.9 s</td>
+              <td>same crash; no plot</td>
+            </tr>
+            <tr>
+              <td>FALCON5 turning</td>
+              <td><code>alt @ t0</code></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">0.3 s</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>FALCON5 turning</td>
+              <td>shared plot columns</td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">1.5 s</td>
+              <td><code>FSPV3</code> @ t=0: −0.724651 vs −0.724621</td>
+            </tr>
+            <tr>
+              <td>HYPER5 Demo 4.7</td>
+              <td><code>alt @ t0</code></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">0.1 s</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>HYPER5 Demo 4.7</td>
+              <td>shared plot columns</td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">0.4 s</td>
+              <td><code>psivgx</code> @ t=0: 0.000292 vs 0.000294</td>
+            </tr>
+            <tr>
+              <td>MAGSIX attitude</td>
+              <td><code>hbe @ t0</code></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">0.1 s</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>MAGSIX attitude</td>
+              <td>all shared columns</td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">0.1 s</td>
+              <td><code>KeyError ('sim_time', 0.3501)</code></td>
+            </tr>
+            <tr>
+              <td>ROCKET6 insertion</td>
+              <td><code>alt @ t0</code></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">228.6 s</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>ROCKET6 insertion</td>
+              <td><code>alt + vmach</code> shared times</td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">224.0 s</td>
+              <td><code>vmach</code> @ t=0.1 then later alt/vmach (closed through 0.168.12)</td>
+            </tr>
+            <tr>
+              <td>SAM6 autopilot</td>
+              <td><code>time @ t0</code></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">6.8 s</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>SAM6 autopilot</td>
+              <td>shared missile columns</td>
+              <td><span class="badge badge-error badge-sm">FAIL</span></td>
+              <td><span class="badge badge-success badge-sm">PASS</span></td>
+              <td class="text-right tabular-nums">7.8 s</td>
+              <td><code>thtvlcx</code> @ t=0: 80.0 vs 79.9238</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold mb-3">Already-green families — still pass</h2>
+      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+        <table class="table table-zebra table-sm">
+          <thead>
+            <tr>
+              <th>Family</th>
+              <th>Live tests this run</th>
+              <th>Outcome</th>
+              <th class="text-right">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>HYPER3 climb</td><td>alt t0/t0.2 + plot grid</td><td><span class="badge badge-success badge-sm">PASS</span></td><td class="text-right tabular-nums">1.2 s</td></tr>
+            <tr><td>FALCON6 gamma</td><td>hbe @ t0 + hbe/vmach shared</td><td><span class="badge badge-success badge-sm">PASS</span></td><td class="text-right tabular-nums">6.7 s</td></tr>
+            <tr><td>HYPER6 climb</td><td>alt @ t0 + alt/vmach shared</td><td><span class="badge badge-success badge-sm">PASS</span></td><td class="text-right tabular-nums">4.3 s</td></tr>
+            <tr><td>AIM5 hori</td><td>alt @ t0 + shared columns</td><td><span class="badge badge-success badge-sm">PASS</span></td><td class="text-right tabular-nums">1.0 s</td></tr>
+            <tr><td>CRUISE5 input_1</td><td>alt @ t0 + shared columns</td><td><span class="badge badge-success badge-sm">PASS</span></td><td class="text-right tabular-nums">4.6 s</td></tr>
+            <tr><td>MAGSIX trajectory</td><td>hbe @ t0 + all shared columns</td><td><span class="badge badge-success badge-sm">PASS</span></td><td class="text-right tabular-nums">3.3 s</td></tr>
+            <tr><td>SRAAM6 1v1</td><td>hbe @ t0 + hbe/vmach shared</td><td><span class="badge badge-success badge-sm">PASS</span></td><td class="text-right tabular-nums">4.0 s</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid gap-4 lg:grid-cols-2 mb-10">
+      <div class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Not a comparison failure</h2>
+          <p>
+            SAM6 RF (<code class="text-sm">test_sam6_rf.py::test_rf_e2e_skips_without_golden</code>)
+            still skips: no JSONC and no harvested golden. Same as 2026-09-07.
+          </p>
+        </div>
+      </div>
+      <div class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">What this does not claim</h2>
+          <p>
+            Tolerances were not loosened. No CADAC C++ was edited. This is
+            Python vs already-harvested goldens, not a re-harvest.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-3">Fixes that closed each miss</h2>
+      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+        <table class="table table-sm">
+          <thead>
+            <tr><th>Family</th><th>Fix</th><th>Version</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>AGM6 free flight</td><td>Aero reads <code>phip</code>; Agm6Kinematics incidence <code>VBEB−TBL·VAEL</code></td><td>0.168.2</td></tr>
+            <tr><td>AGM6 test case</td><td>Dryden <code>rand()</code> + MARKOV gauss then zero stores; INS gauss RTL</td><td>0.168.3–0.168.4</td></tr>
+            <tr><td>MAGSIX attitude</td><td>Post-loop last-int-step plot row (<code>sim_time=0.3501</code>)</td><td>0.168.5</td></tr>
+            <tr><td>SAM6 autopilot</td><td><code>nmonte==0</code> still draws <code>init_ins</code> gauss / <code>ins()</code> uniform</td><td>0.168.6</td></tr>
+            <tr><td>FALCON5</td><td><code>Flat3Newton.initialize</code> does not write <code>alt</code></td><td>0.168.7</td></tr>
+            <tr><td>HYPER5</td><td><code>cadsph</code> wrap uses C++ <code>180*RAD</code> / <code>360*RAD</code></td><td>0.168.8</td></tr>
+            <tr><td>ROCKET6</td><td><code>mair=0</code>, Euler pole, INS Cholesky, US76 84.852 km, <code>cadac_matmul</code> / adjoint inverse</td><td>0.168.9–0.168.12</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="text-sm text-base-content/60">
+      Evidence: <code>python -m pytest</code> from <code>Python/</code>,
+      junit <code>/tmp/cadac-e2e-junit.xml</code>, exit 0.
+      Design: DaisyUI v5 + Tailwind CDN — this workspace has no web design system.
+    </footer>
+  </main>
+</body>
+</html>
