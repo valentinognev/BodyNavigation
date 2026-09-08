@@ -1,8 +1,12 @@
+"""Zipfel 0-DOF ground-fixed kinematics (CADAC Flat0)."""
+
 from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
 
 
 class Flat0Kinematics(ModuleBase):
+    """Zipfel ground-fixed launch-time kinematics (CADAC ``flat0_kinematics``)."""
+
     name = "kinematics"
     fields = (
         Field("time", 0.0, "real", "out", "kinematics", ("com",)),
@@ -23,6 +27,8 @@ class Flat0Kinematics(ModuleBase):
 
 
 class Flat0Newton(ModuleBase):
+    """Zipfel ground-fixed relative position Newton (CADAC ``flat0_newton``)."""
+
     name = "newton"
     fields = (
         Field("srel1", 0.0, "real", "data", "newton"),

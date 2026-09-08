@@ -1,5 +1,10 @@
 # Updates
 
+## 0.169.10 - EOM class docstrings; Round6 Euler inverse comment
+- Remaining EOM classes (`Round6*`, `Round3*`, `Flat3*`, `Flat0*`, `Rotor*`) have Zipfel topic + CADAC C++-style name docstrings. `Flat3Aircraft*` included. Module one-liners on those files.
+- `Round6Euler.execute` comment: keep `cadac_inverse` (adjoint/det); do not use `np.linalg.inv` (LAPACK, 1 ulp; 0.168.12). Flat6 still `np.linalg.inv`.
+- Test: `test_eom_docs.py`. No numeric kinematics edits. No CADAC `.cpp` edits. No README.
+
 ## 0.169.9 - Flat6 incidence_angles; Euler inverse comment
 - `incidence_angles(vbab, dvba)` in `cadac.math.frames` returns `(alpha, beta, alpp, phip)`. C++ branches: `|dum|>1` clamp, `vbab2==0 and vbab3==0`, `|vbab2|<EPS` then `vbab3>0` → 0 / `vbab3<0` → PI, else `atan2`. No dead `phip=0` before the `vbab3` tests.
 - `Flat6Kinematics.execute` uses the helper. `Agm6Kinematics` formulas unchanged. `Flat6Newton` still uses `_flight_path_angles`.

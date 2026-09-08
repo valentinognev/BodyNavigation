@@ -1,3 +1,5 @@
+"""Zipfel 3-DOF flat-Earth equations of motion (CADAC Flat3)."""
+
 import math
 
 import numpy as np
@@ -12,6 +14,8 @@ from cadac.math.frames import mat2tr, polar_from_cart
 
 
 class Flat3Environment(ModuleBase):
+    """Zipfel 3-DOF flat Earth atmosphere and gravity (CADAC ``flat3_environment``)."""
+
     name = "environment"
     fields = (
         Field("grav", 0.0, "real", "out", "environment"),
@@ -40,6 +44,8 @@ class Flat3Environment(ModuleBase):
 
 
 class Flat3Kinematics(ModuleBase):
+    """Zipfel 3-DOF flat Earth time kinematics (CADAC ``flat3_kinematics``)."""
+
     name = "kinematics"
     fields = (
         Field("time", 0.0, "real", "exec", "kinematics", ("scrn", "plot")),
@@ -56,6 +62,8 @@ class Flat3Kinematics(ModuleBase):
 
 
 class Flat3Newton(ModuleBase):
+    """Zipfel 3-DOF flat Earth translational Newton (CADAC ``flat3_newton``)."""
+
     name = "newton"
     fields = (
         Field("TBL", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "out", "newton"),
@@ -162,6 +170,8 @@ class Flat3Newton(ModuleBase):
 
 
 class Flat3AircraftEnvironment(ModuleBase):
+    """Zipfel 3-DOF flat Earth aircraft atmosphere (CADAC ``flat3_aircraft_environment``)."""
+
     name = "environment"
     fields = (
         Field("grav", 0.0, "real", "out", "environment"),
@@ -190,6 +200,8 @@ class Flat3AircraftEnvironment(ModuleBase):
 
 
 class Flat3AircraftNewton(ModuleBase):
+    """Zipfel 3-DOF flat Earth aircraft Newton (CADAC ``flat3_aircraft_newton``)."""
+
     name = "newton"
     fields = (
         Field("TAL", ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "mat", "out", "newton"),

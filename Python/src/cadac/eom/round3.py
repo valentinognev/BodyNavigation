@@ -1,3 +1,5 @@
+"""Zipfel 3-DOF round-Earth equations of motion (CADAC Round3)."""
+
 import numpy as np
 
 from cadac.constants import DEG, RAD, REARTH, WEII3
@@ -11,6 +13,8 @@ from cadac.math.frames import mat2tr, polar_from_cart
 
 
 class Round3Environment(ModuleBase):
+    """Zipfel 3-DOF round Earth atmosphere (CADAC ``round3_environment``)."""
+
     name = "environment"
     fields = (
         Field("time", 0.0, "real", "exec", "environment", ("scrn", "plot", "com")),
@@ -47,6 +51,8 @@ class Round3Environment(ModuleBase):
 
 
 class Round3Newton(ModuleBase):
+    """Zipfel 3-DOF round Earth translational Newton (CADAC ``round3_newton``)."""
+
     name = "newton"
     fields = (
         Field("psivg", 0.0, "real", "out", "newton"),

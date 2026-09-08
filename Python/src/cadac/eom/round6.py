@@ -1,3 +1,5 @@
+"""Zipfel 6-DOF round-Earth equations of motion (CADAC Round6)."""
+
 import math
 
 import numpy as np
@@ -16,6 +18,8 @@ NMILES = 5.399568e-4
 
 
 class Round6Environment(ModuleBase):
+    """Zipfel 6-DOF round Earth atmosphere (CADAC ``round6_environment``)."""
+
     name = "environment"
     fields = (
         Field("mair", 0, "int", "data", "environment"),
@@ -209,6 +213,8 @@ class Round6Environment(ModuleBase):
 
 
 class Round6Kinematics(ModuleBase):
+    """Zipfel 6-DOF round Earth DCM kinematics (CADAC ``round6_kinematics``)."""
+
     name = "kinematics"
     fields = (
         Field("time", 0.0, "real", "exec", "kinematics", ("scrn", "plot", "com")),
@@ -371,6 +377,8 @@ class Round6Kinematics(ModuleBase):
 
 
 class Round6Euler(ModuleBase):
+    """Zipfel 6-DOF round Earth rigid-body Euler (CADAC ``round6_euler``)."""
+
     name = "euler"
     fields = (
         Field("ppx", 0.0, "real", "out", "euler", ("plot",)),
@@ -401,6 +409,8 @@ class Round6Euler(ModuleBase):
         wbib = store.get("WBIB")
         wbibd = store.get("WBIBD")
         int_step = ctx.int_step
+        # cadac_inverse (adjoint/det) matches C++ Matrix::inverse(); np.linalg.inv
+        # is LAPACK and 1 ulp off (UPDATES 0.168.12). Do not replace with numpy.
         wacc_next = cadac_matmul(
             cadac_inverse(ibbb),
             fmb - cadac_matmul(cadac_matmul(skew(wbib), ibbb), wbib),
@@ -420,6 +430,8 @@ class Round6Euler(ModuleBase):
 
 
 class Round6Newton(ModuleBase):
+    """Zipfel 6-DOF round Earth translational Newton (CADAC ``round6_newton``)."""
+
     name = "newton"
     fields = (
         Field("minit", 0, "int", "data", "newton"),

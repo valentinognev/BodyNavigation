@@ -1,3 +1,5 @@
+"""Zipfel MAGSIX rotorcraft equations of motion (CADAC Rotor)."""
+
 import math
 
 import numpy as np
@@ -15,6 +17,8 @@ RHO_SL = 1.225
 
 
 class RotorEnvironment(ModuleBase):
+    """Zipfel rotorcraft atmosphere and gravity (CADAC ``rotor_environment``)."""
+
     name = "environment"
     fields = (
         Field("mwind", 0, "int", "data", "environment"),
@@ -67,6 +71,8 @@ class RotorEnvironment(ModuleBase):
 
 
 class RotorTrajectory(ModuleBase):
+    """Zipfel rotorcraft translational trajectory (CADAC ``rotor_trajectory``)."""
+
     name = "trajectory"
     fields = (
         Field("time", 0.0, "real", "diag", "trajectory", ("scrn", "plot")),
@@ -240,6 +246,8 @@ class RotorTrajectory(ModuleBase):
 
 
 class RotorAttitude(ModuleBase):
+    """Zipfel rotorcraft attitude dynamics (CADAC ``rotor_attitude``)."""
+
     name = "attitude"
     fields = (
         Field("nonlinear", 0, "int", "data", "attitude"),
