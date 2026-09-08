@@ -122,6 +122,16 @@ def test_src_membership_does_not_use_names_list():
     assert hits == [], "use `name in store`:\n" + "\n".join(hits)
 
 
+def test_overhaul_improved_survey_counters():
+    root = Path(__file__).resolve().parents[2] / "src" / "cadac"
+    now = scan_cadac(root)
+    base = load_metrics(BASELINE)
+    assert now["skew_defs"] == 1
+    assert now["cadac_sign_defs"] == 1
+    assert now["typed_defs"] > base["typed_defs"]
+    assert now["store_names"] < base["store_names"]
+
+
 def test_only_one_skew_and_sign_definition():
     skews, signs = [], []
     for path in ROOT.rglob("*.py"):

@@ -1,0 +1,17 @@
+{
+  "files": 168,
+  "loc": 24295,
+  "code": 21838,
+  "store_get": 2687,
+  "store_set": 2120,
+  "store_names": 23,
+  "look_up": 229,
+  "np_zeros": 114,
+  "np_array": 233,
+  "typed_defs": 136,
+  "untyped_defs": 801,
+  "empty_terminate": 123,
+  "empty_initialize": 102,
+  "skew_defs": 1,
+  "cadac_sign_defs": 1
+}

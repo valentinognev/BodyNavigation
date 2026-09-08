@@ -1,5 +1,29 @@
 # Updates
 
+## 0.169.13 - Re-survey quality metrics after overhaul
+- Live scan `Python/tools/cadac_quality/latest.json` (`cadac_quality.metrics --out`). `baseline.json` not rewritten.
+- E2E (Task 14): 135 collected, 134 passed, 1 skipped, 0 failed. Skip is `test_sam6_rf` (golden absent). All 14 golden families passed.
+- Canvas scores (0–10, same rubric): style 4→8, speed 3→8, vectorization 2→4, readability 5→7. Targets were 8, 8, 5, 8. Vectorization stays ≤5 (no batch API).
+- Test: `test_overhaul_improved_survey_counters` (`skew_defs==1`, `cadac_sign_defs==1`, `typed_defs` up, `store_names` down). Does not assert `store_get` or loc dropped.
+
+| key | baseline | latest |
+|---|---|---|
+| files | 168 | 168 |
+| loc | 24518 | 24295 |
+| code | 22011 | 21838 |
+| store_get | 2687 | 2687 |
+| store_set | 2120 | 2120 |
+| store_names | 104 | 23 |
+| look_up | 229 | 229 |
+| np_zeros | 112 | 114 |
+| np_array | 252 | 233 |
+| typed_defs | 45 | 136 |
+| untyped_defs | 957 | 801 |
+| empty_terminate | 143 | 123 |
+| empty_initialize | 106 | 102 |
+| skew_defs | 21 | 1 |
+| cadac_sign_defs | 9 | 1 |
+
 ## 0.169.12 - Unit suite green after quality overhaul
 - `pytest tests/unit -q --ignore-glob='*harvest*' -m 'not integration'`: 2139 passed, 0 failed. `test_agm6_sensor_dyn` now imports sibling `test_agm6_sensor_kin` so pytest prepend can collect it.
 
