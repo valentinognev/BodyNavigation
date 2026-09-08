@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from cadac.constants import EPS, PI
@@ -45,6 +47,36 @@ def matvec3(mat, vec):
         [np.dot(mat[0], vec), np.dot(mat[1], vec), np.dot(mat[2], vec)],
         dtype=float,
     )
+
+
+def incidence_angles(vbab, dvba):
+    """Aerodynamic incidence (alpha, beta, alpp, phip) from body airspeed.
+
+    CADAC ``Flat6::kinematics`` branches: ``fabs(dum)>1`` clamp,
+    ``vbab2==0 and vbab3==0``, ``fabs(vbab2)<EPS`` then ``vbab3>0`` → 0,
+    ``vbab3<0`` → ``PI``, else ``atan2(vbab2, vbab3)``.
+    """
+    vbab1 = float(vbab[0])
+    vbab2 = float(vbab[1])
+    vbab3 = float(vbab[2])
+    alpha = math.atan2(vbab3, vbab1)
+    beta = math.asin(vbab2 / dvba)
+    dum = vbab1 / dvba
+    if math.fabs(dum) > 1.0:
+        dum = 1.0 * cadac_sign(dum)
+    alpp = math.acos(dum)
+    if vbab2 == 0.0 and vbab3 == 0.0:
+        phip = 0.0
+    elif math.fabs(vbab2) < EPS:
+        if vbab3 > 0.0:
+            phip = 0.0
+        elif vbab3 < 0.0:
+            phip = PI
+        else:
+            phip = 0.0
+    else:
+        phip = math.atan2(vbab2, vbab3)
+    return alpha, beta, alpp, phip
 
 
 def polar_from_cart(v):

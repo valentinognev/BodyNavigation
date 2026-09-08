@@ -8,10 +8,12 @@ from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
-from cadac.math.frames import cadac_sign, hypot3, mat2tr, mat3tr, quat_to_dcm, skew
+from cadac.math.frames import cadac_sign, hypot3, incidence_angles, mat2tr, mat3tr, quat_to_dcm, skew
 
 
 class Flat6Environment(ModuleBase):
+    """Zipfel 6-DOF flat Earth atmosphere and gravity (CADAC ``flat6_environment``)."""
+
     name = "environment"
     fields = (
         Field("mwind", 0, "int", "data", "environment"),
@@ -54,6 +56,8 @@ class Flat6Environment(ModuleBase):
 
 
 class Flat6Kinematics(ModuleBase):
+    """Zipfel 6-DOF flat Earth quaternion kinematics (CADAC ``flat6_kinematics``)."""
+
     name = "kinematics"
     fields = (
         Field("ck", 50.0, "real", "data", "kinematics"),
@@ -172,25 +176,7 @@ class Flat6Kinematics(ModuleBase):
         phiblx = DEG * phibl
 
         vbab = tbl @ vbal
-        vbab1 = vbab[0]
-        vbab2 = vbab[1]
-        vbab3 = vbab[2]
-        alpha = math.atan2(vbab3, vbab1)
-        beta = math.asin(vbab2 / dvba)
-        dum = vbab1 / dvba
-        if math.fabs(dum) > 1.0:
-            dum = 1.0 * cadac_sign(dum)
-        alpp = math.acos(dum)
-        if vbab2 == 0.0 and vbab3 == 0.0:
-            phip = 0.0
-        elif math.fabs(vbab2) < EPS:
-            phip = 0.0
-            if vbab3 > 0.0:
-                phip = 0.0
-            if vbab3 < 0.0:
-                phip = PI
-        else:
-            phip = math.atan2(vbab2, vbab3)
+        alpha, beta, alpp, phip = incidence_angles(vbab, dvba)
         alphax = alpha * DEG
         betax = beta * DEG
         alppx = alpp * DEG
@@ -236,6 +222,8 @@ class Flat6Kinematics(ModuleBase):
 
 
 class Flat6Euler(ModuleBase):
+    """Zipfel 6-DOF flat Earth rigid-body Euler (CADAC ``flat6_euler``)."""
+
     name = "euler"
     fields = (
         Field("ppx", 0.0, "real", "init/out", "euler", ("plot",)),
@@ -261,6 +249,8 @@ class Flat6Euler(ModuleBase):
         wbebd = store.get("WBEBD")
         int_step = ctx.int_step
         l_engine = np.array([eng_ang_mom, 0.0, 0.0], dtype=float)
+        # Flat6 goldens use np.linalg.inv; Round6/ROCKET6 use cadac_inverse
+        # (UPDATES 0.168.12). Do not unify.
         wacc_next = np.linalg.inv(ibbb) @ (
             fmb - skew(wbeb) @ (ibbb @ wbeb + l_engine)
         )
@@ -286,6 +276,8 @@ def _flight_path_angles(vbel):
 
 
 class Flat6Newton(ModuleBase):
+    """Zipfel 6-DOF flat Earth translational Newton (CADAC ``flat6_newton``)."""
+
     name = "newton"
     fields = (
         Field("time", 0.0, "real", "exec", "newton", ("scrn", "plot", "com")),

@@ -7,7 +7,7 @@ from cadac.constants import DEG, EPS, PI, RAD
 from cadac.eom.flat6 import Flat6Kinematics
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.math.frames import quat_to_dcm
+from cadac.math.frames import incidence_angles, quat_to_dcm
 
 
 def _vehicle():
@@ -75,6 +75,19 @@ def _cpp_quat(psiblx, thtblx, phiblx):
     q2 = cpsi * stht * cphi + spsi * ctht * sphi
     q3 = -cpsi * stht * sphi + spsi * ctht * cphi
     return q0, q1, q2, q3
+
+
+def test_incidence_phip_eps_negative_vbab3():
+    alpha, beta, alpp, phip = incidence_angles(
+        np.array([1.0, 0.5 * EPS, -1.0]), 2.0
+    )
+    # |vbab2| < EPS → PI when vbab3 < 0
+    assert phip == PI
+
+
+def test_incidence_phip_zero_when_both_zero():
+    _, _, _, phip = incidence_angles(np.array([1.0, 0.0, 0.0]), 1.0)
+    assert phip == 0.0
 
 
 def test_name_is_kinematics():

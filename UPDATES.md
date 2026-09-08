@@ -1,5 +1,11 @@
 # Updates
 
+## 0.169.9 - Flat6 incidence_angles; Euler inverse comment
+- `incidence_angles(vbab, dvba)` in `cadac.math.frames` returns `(alpha, beta, alpp, phip)`. C++ branches: `|dum|>1` clamp, `vbab2==0 and vbab3==0`, `|vbab2|<EPS` then `vbab3>0` → 0 / `vbab3<0` → PI, else `atan2`. No dead `phip=0` before the `vbab3` tests.
+- `Flat6Kinematics.execute` uses the helper. `Agm6Kinematics` formulas unchanged. `Flat6Newton` still uses `_flight_path_angles`.
+- Each Flat6 class docstring: Zipfel 6-DOF flat Earth + CADAC `flat6_*` module. Euler comment: Flat6 goldens keep `np.linalg.inv`; Round6/ROCKET6 use `cadac_inverse` (0.168.12).
+- Tests: `test_incidence_phip_eps_negative_vbab3`, `test_incidence_phip_zero_when_both_zero`. No CADAC `.cpp` edits. No README.
+
 ## 0.169.8 - ModuleBase copies Fields; EOM define via fields tuples
 - `ModuleBase.define` constructs a new `Field(name, value, type, role, module, outputs)` per vehicle so class-level Field tuples are not shared. Default `initialize`/`terminate` are `pass`; `execute` raises `NotImplementedError`. `DummyModule` subclasses it.
 - EOM classes (`flat6`, `flat3`, `flat0`, `round3`, `round6`, `rotor`) set `fields` and inherit; empty `initialize`/`terminate` removed; real `initialize` bodies kept. `Agm6Kinematics(Flat6Kinematics)` still works.

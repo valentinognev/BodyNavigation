@@ -1,9 +1,11 @@
 import numpy as np
+from cadac.constants import EPS, PI
 from cadac.math.frames import (
     angle,
     cadac_sign,
     cart_from_pol,
     hypot3,
+    incidence_angles,
     mat2tr,
     matvec3,
     polar_from_cart,
@@ -135,3 +137,16 @@ def test_cadac_matmul_3x3_unrolled_documented():
     src = inspect.getsource(cadac_matmul)
     assert "a[0, 0] * b[0, 0]" in src or "nrow == 3" in src
     assert "3×3 unrolled, same ijk as C++ `Matrix::operator*`" in cadac_matmul.__doc__
+
+
+def test_incidence_phip_eps_negative_vbab3():
+    alpha, beta, alpp, phip = incidence_angles(
+        np.array([1.0, 0.5 * EPS, -1.0]), 2.0
+    )
+    # |vbab2| < EPS → PI when vbab3 < 0
+    assert phip == PI
+
+
+def test_incidence_phip_zero_when_both_zero():
+    _, _, _, phip = incidence_angles(np.array([1.0, 0.0, 0.0]), 1.0)
+    assert phip == 0.0
