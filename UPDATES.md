@@ -1,5 +1,9 @@
 # Updates
 
+## 0.170.5 - README catalog architecture
+- Architecture: `cadac.io.catalog` (walk, skip stems, family, no-overwrite, `PYTHONPATH=src:tools python -m cadac.io.catalog`). Workbench UI still unbuilt; catalog JSONC is filled.
+- Plan list item 15: catalog done (`22662a1`); remaining four workbench plans not executed. HYPER6 case row names §10.4.
+
 ## 0.170.4 - Quality scan files skip
 - Quality scan `files` 168→169 after `cadac/io/catalog.py`; `baseline.json` not rewritten.
 - `test_scan_matches_checked_in_baseline` skips `files` (same as loc/code) and asserts `data["files"] >= base["files"]`.

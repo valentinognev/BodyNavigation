@@ -8,6 +8,7 @@ __pycache__/
 Python/.venv/
 Python/cases/**/plot.csv
 .superpowers/sdd/
+.superpowers/brainstorm/
 .worktrees/
 Python/tools/cadac_cpp/build/
 CADAC_Simulations/**/plot*.asc
