@@ -121,3 +121,34 @@ def test_write_report(tmp_path):
     out = write_report(payload, dest)
     assert out == dest
     assert json.loads(dest.read_text()) == payload
+
+
+SEC104_STEMS = [
+    "10_1_1_input_aero", "10_1_2_input_roll_doublet", "10_1_3_input_roll_doublet_freeze",
+    "10_1_4_input_yaw_pitch", "10_1_5_input_altitude_heading", "10_2_2_input_gain_opt",
+    "10_3_2_input_gamma_fan", "10_3_3_input_heading_fan",
+]
+
+
+def test_all_sec104_jsonc_exist_after_catalog():
+    from cadac.io.catalog import run_catalog, repo_root
+    run_catalog()
+    cases = repo_root() / "Python/cases/hyper6"
+    for stem in SEC104_STEMS:
+        assert (cases / f"{stem}.jsonc").is_file(), stem
+
+
+def test_main_writes_report(tmp_path, monkeypatch):
+    from cadac.io import catalog
+    rc = catalog.main()
+    assert rc == 0
+    report = repo_root() / "Python/cases/catalog-report.json"
+    assert report.is_file()
+    data = json.loads(report.read_text())
+    assert set(data) >= {"translated", "skipped", "failed"}
+
+
+def test_main_exits_1_when_zero_source_directories(monkeypatch):
+    monkeypatch.setattr(catalog, "PROGRAM_DIRS", {"GONE": "no/such/cadac/dir"})
+    monkeypatch.setattr(catalog, "EXTRA_SOURCES", [])
+    assert catalog.main() == 1

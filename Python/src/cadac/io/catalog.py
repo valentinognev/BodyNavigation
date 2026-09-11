@@ -128,3 +128,26 @@ def write_report(report: dict, path: Path | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return path
+
+
+def _source_directories() -> list[Path]:
+    root = repo_root()
+    sources: list[tuple[str, str]] = list(PROGRAM_DIRS.items()) + list(EXTRA_SOURCES)
+    return [root / rel for _program, rel in sources if (root / rel).is_dir()]
+
+
+def main() -> int:
+    if not _source_directories():
+        print("no CADAC source directories found")
+        return 1
+    report = run_catalog()
+    print(
+        f"translated {len(report['translated'])}  "
+        f"skipped {len(report['skipped'])}  "
+        f"failed {len(report['failed'])}"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

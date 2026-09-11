@@ -1,5 +1,10 @@
 # Updates
 
+## 0.170.3 - Catalog CLI
+- `cadac.io.catalog.main`: `python -m cadac.io.catalog` writes `Python/cases/catalog-report.json`, prints translated/skipped/failed counts, exit 0 even if some ASC failed.
+- Exit 1 only when zero `PROGRAM_DIRS`/`EXTRA_SOURCES` directories exist (not an empty job list from skip filters).
+- All eight HYPER6 §10.4 JSONC present under `Python/cases/hyper6/`. No `cadac/io/__main__.py`; no `cadac catalog` subcommand.
+
 ## 0.170.2 - Walk Zipfel ASC catalog + report
 - `iter_asc_jobs` walks `PROGRAM_DIRS` then `EXTRA_SOURCES` (HYPER6 §10.4, AGM6 extra); unique dest stem per program; skip stems are not jobs.
 - `translate_one` returns `(status, error)`; `run_catalog` maps written→translated, exists→skipped, failed→`{path, error}`.
