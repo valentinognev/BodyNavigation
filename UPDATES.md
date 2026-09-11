@@ -1,5 +1,19 @@
 # Updates
 
+## 0.170.22 - handshake review fix-wave
+- ROCKET6 `map_payload` copies leftover template tables after the required-name loop (slv1 map keeps slv2/slv3; confirm cannot shrink `aero_deck_SLV.jsonc`).
+- SAM6 3-D wrap advertises a single β (`x2=[0.0]` if present, else one β); 2-D polars no longer write `x2` longer than `values`.
+- `ca0_values` guards empty α (omit ca0, status missing). Handshake GET/confirm catch mapper failures → HTTP 400 `{ok: false}`.
+- Tests: `test_aero_map_rocket6.py`, `test_aero_map_sam6.py`, `test_aero_map_sraam.py`, `test_handshake_api.py`.
+
+## 0.170.21 - aero_map + handshake sessions
+- `cadac.aero_map`: `AeroPayload`, required `look_up` schemas, `map_payload` preview (mapped/merged/missing, `can_confirm`).
+- Workbench handshake: `POST /handshake/sessions` → `{id, callback}`; `POST .../complete` stores AeroPayload JSON; `GET` maps against the vehicle `aero_deck` template; `POST .../confirm` writes that sibling file iff `can_confirm`, else 400.
+- Callback `http://127.0.0.1:8001/handshake/sessions/{id}/complete`. In-memory sessions, TTL 3600 s; unknown id 404.
+- `CADAC_CASES` env overrides `CASES_ROOT` so tests copy cases to tmp (does not mutate `Python/cases`).
+- Launch MISDC/AID UI still plan 5.
+- Tests: `workbench/api/tests/test_handshake_api.py` (SRAAM 2×2 MDT complete → `can_confirm`; confirm under tmp).
+
 ## 0.170.20 - start.sh restarts by killing first
 - `workbench/start.sh` runs `kill.sh` before spawning API/Vite. A second `./start.sh` stops the previous instance, then starts from scratch. No "already running" skip.
 - README workbench line: start/kill, catalog/forms/run/plot, Open file not catalogued, handshake stubs. Plan 2 marked done.

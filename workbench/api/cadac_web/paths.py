@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 
@@ -12,6 +13,9 @@ class CasePathError(ValueError):
 
 
 def CASES_ROOT() -> Path:
+    override = os.environ.get("CADAC_CASES")
+    if override:
+        return Path(override)
     return repo_root() / "Python" / "cases"
 
 

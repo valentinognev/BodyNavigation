@@ -8,12 +8,13 @@ from pathlib import Path
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from cadac.io import jsonc
 from cadac.io.scenario import load_scenario
 from cadac.io.translate import translate_scenario_asc
 
+from cadac_web import handshake
 from cadac_web.paths import CASES_ROOT, CasePathError, resolve_case
 from cadac_web.runs import cancel_run, run_status, start_run
 
@@ -57,6 +58,23 @@ class RunBody(BaseModel):
     stem: str
     end_time: float | None = None
     scenario: dict | None = None
+
+
+class HandshakeSessionBody(BaseModel):
+    vehicle: str
+    family: str | None = None
+    type: str
+    program: str
+    stem: str
+
+
+class HandshakeCompleteBody(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    source: str
+    solver: str
+    axes: dict
+    tables: dict
+    ref: dict = {}
 
 
 def _pretty_jsonc(data: dict) -> str:
@@ -217,3 +235,42 @@ def post_cancel(run_id: str):
     if not cancel_run(run_id):
         raise HTTPException(status_code=404)
     return {"ok": True}
+
+
+@app.post("/handshake/sessions")
+def post_handshake_session(body: HandshakeSessionBody):
+    return handshake.create_session(
+        vehicle=body.vehicle,
+        family=body.family,
+        vtype=body.type,
+        program=body.program,
+        stem=body.stem,
+    )
+
+
+@app.post("/handshake/sessions/{session_id}/complete")
+def post_handshake_complete(session_id: str, body: HandshakeCompleteBody):
+    result = handshake.complete_session(session_id, body.model_dump())
+    if result is None:
+        raise HTTPException(status_code=404)
+    return result
+
+
+@app.get("/handshake/sessions/{session_id}")
+def get_handshake_session(session_id: str):
+    result = handshake.get_session(session_id)
+    if result is None:
+        raise HTTPException(status_code=404)
+    if result.get("ok") is False:
+        return JSONResponse(status_code=400, content=result)
+    return result
+
+
+@app.post("/handshake/sessions/{session_id}/confirm")
+def post_handshake_confirm(session_id: str):
+    status, payload = handshake.confirm_session(session_id)
+    if status == 404:
+        raise HTTPException(status_code=404)
+    if status != 200:
+        return JSONResponse(status_code=status, content=payload)
+    return payload
