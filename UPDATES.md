@@ -1,5 +1,10 @@
 # Updates
 
+## 0.170.1 - Catalog dest/family/no-overwrite
+- `cadac.io.catalog`: `PROGRAM_FAMILY`, `repo_root`, `cases_dir`, `dest_jsonc`, `family_for`, `translate_one` (`written` / `exists` / `skipped` / `failed`).
+- Existing dest JSONC is never overwritten (`exists`). Family via `.get` (HYPER3 is None).
+- Tests: family map, HYPER6 Sec 10.4 dest path, overwrite guard (monkeypatched `cases_dir`).
+
 ## 0.170.0 - ASC catalog classifier
 - Public `cadac.io.translate.parse_scenario_asc` (alias `_parse_scenario_asc` kept).
 - `cadac.io.catalog`: `SKIP_STEMS` plus `classify_asc` → skip / scenario / deck / fail.
