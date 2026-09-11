@@ -59,9 +59,10 @@ def test_scan_matches_checked_in_baseline():
     # loc/code/untyped_defs/np_array/np_zeros drift with later quality tasks;
     # store_names and skew/sign defs drop after shared helpers.
     # typed_defs rise after kernel/math/env/eom annotations (Task 12).
-    # Do not rewrite baseline.json.
+    # files rose when catalog.py added a module (0.170). Do not rewrite baseline.json.
     for key in base:
         if key in (
+            "files",
             "loc",
             "code",
             "store_names",
@@ -76,6 +77,7 @@ def test_scan_matches_checked_in_baseline():
         ):
             continue
         assert data[key] == base[key], key
+    assert data["files"] >= base["files"]
     assert data["store_names"] < base["store_names"]
     assert data["skew_defs"] < base["skew_defs"]
     assert data["cadac_sign_defs"] < base["cadac_sign_defs"]

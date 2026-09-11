@@ -1,5 +1,9 @@
 # Updates
 
+## 0.170.4 - Quality scan files skip
+- Quality scan `files` 168→169 after `cadac/io/catalog.py`; `baseline.json` not rewritten.
+- `test_scan_matches_checked_in_baseline` skips `files` (same as loc/code) and asserts `data["files"] >= base["files"]`.
+
 ## 0.170.3 - Catalog CLI
 - `cadac.io.catalog.main`: `python -m cadac.io.catalog` writes `Python/cases/catalog-report.json`, prints translated/skipped/failed counts, exit 0 even if some ASC failed.
 - Exit 1 only when zero `PROGRAM_DIRS`/`EXTRA_SOURCES` directories exist (not an empty job list from skip filters).
