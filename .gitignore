@@ -16,3 +16,6 @@ CADAC_Simulations/**/plot*.csv
 CADAC_Simulations/**/tabout.asc
 CADAC_Simulations/**/traj.asc
 CADAC_Simulations/**/traj.csv
+workbench/.run/
+workbench/web/node_modules/
+workbench/api/.venv/

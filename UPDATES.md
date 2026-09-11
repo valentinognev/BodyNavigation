@@ -1,5 +1,86 @@
 # Updates
 
+## 0.170.20 - start.sh restarts by killing first
+- `workbench/start.sh` runs `kill.sh` before spawning API/Vite. A second `./start.sh` stops the previous instance, then starts from scratch. No "already running" skip.
+- README workbench line: start/kill, catalog/forms/run/plot, Open file not catalogued, handshake stubs. Plan 2 marked done.
+
+## 0.170.19 - Workbench run uses in-memory scenario
+- `POST /run` optional `scenario`: write that JSONC into the temp dir; still copy sibling `*.jsonc` decks. Absent → copy-from-library. Does not mutate `Python/cases/`.
+- `startRun` flushes a dirty drawer then sends `scenarioToJson(current scenario)`.
+- Catalog fetch failure sets `catalogError` ("API unreachable"); empty catalog stays distinct from loading.
+- Run failure/timeout/POST `ok: false`/thrown fetch set `runError` on the editor top bar; cleared on a new Run; last plot stays.
+- `applyFormPatch` applies a dirty drawer first; aborts the form patch if parse still fails.
+- Tests: `test_run_posted_scenario_is_written_to_temp`; `npm test`; `npx tsc --noEmit`.
+
+## 0.170.18 - Imported Save/Run disabled
+- Save and Run disabled when `program` is null (Open file). Title `not in catalog`. No Save As.
+- Covering: `nav.test.ts`, `store.test.ts` imported no POST.
+
+## 0.170.17 - Workbench start/kill + Open file
+- `workbench/start.sh` / `kill.sh` (API :8001, Vite :5174; prefer `api/.venv`; PIDs in `workbench/.run/`).
+- `POST /cases/import` multipart `file`: `.jsonc` via `jsonc.loads`, `.asc` via `translate_scenario_asc` to temp (not catalogued). Fail → HTTP 200 `{ok: false, error}`.
+- Start screen **Open file** loads returned scenario (`program` null, stem from filename).
+- `.gitignore`: `workbench/.run/`, `workbench/web/node_modules/`, `workbench/api/.venv/`.
+- Tests: `test_start_script.py`, `test_import_asc`; `cd workbench/api && python -m pytest`; `cd workbench/web && npm test`.
+
+## 0.170.16 - Cancel abandons before runId
+- Store `runAbandoned`. Cancel sets it even before `POST /run` returns. After POST, abandoned runs call `/run/{id}/cancel` and never `setLastPlot`.
+- Covering: `run.test.ts` cancel during in-flight POST.
+
+## 0.170.15 - Shared Results column selection
+- Store `selectedColumns` + `toggleSelectedColumn`. `setLastPlot` applies `defaultColumns` when selection is empty or the column set changed; otherwise keeps the picker.
+- Left Results nav and right pane read the same store (checkboxes stay in sync).
+
+## 0.170.14 - Results column picker + plots
+- Store `lastPlot` / `activeRunId`. `POST /run` then poll `GET /run/{id}`; `done`+`ok` sets `lastPlot`. Error/cancel/timeout leave the previous plot.
+- Run button becomes **Cancel** while in-flight (`POST /run/{id}/cancel`). Disabled on `parseError` when idle.
+- `ResultsPane`: column checkboxes (defaults `alt`/`mach`/`dvbe`/`alphax` else first four after `time`), SVG vs `time`, extra `latx` vs `lonx` when both exist. Right pane + left Results nav.
+- Tests: `cd workbench/web && npm test` (`plot.test.ts`, `run.test.ts`).
+
+## 0.170.13 - Editor save/parse/phases fixes
+- Save applies dirty drawer first and aborts PUT if parse still fails.
+- Modules phases commit on blur so a trailing comma can start a new phase.
+- `openCase` and validate catch fetch rejection and set `parseError`.
+- Drawer parse rejects a vehicle object missing string `type`/`name` (keeps last-good scenario). GET/`scenarioFromJson` stays lenient.
+
+## 0.170.12 - Forms + JSONC drawer
+- Editor chrome: top bar (case name, ThemeToggle, Save, Run), left nav Overview/Modules/Vehicles/Timing/Events/Decks/Results, bottom JSONC drawer.
+- Forms are the source of truth. `scenarioFromJson`/`scenarioToJson` keep unknown option keys (e.g. `nope`). Failed drawer parse keeps last-good scenario; Run disabled on `parseError` or `runInFlight`.
+- `openCase` GET `/cases/{program}/{stem}` (HTTP status). Save PUT. Debounced 300 ms `POST /cases/validate`. Launch MISDC/AID disabled `title="plan 5"`.
+- Test: `cd workbench/web && npm test`.
+
+## 0.170.11 - Vite React start library
+- Scaffold `workbench/web` Vite + React 18 + TS + Tailwind 3 (`darkMode: ["selector", ".dark"]`) + Zustand + Vitest. No three/r3f. Proxy `/catalog`, `/cases`, `/run` → `http://127.0.0.1:8001` (dev port 5174).
+- `GET /catalog` via `fetchCatalog` + `parseCatalog`. Start screen lists program folders then cases; selecting a case sets `view: "editor"` with program/stem (editor heading stub).
+- Theme: first visit `prefers-color-scheme`; after click persist `localStorage` `cadac-theme` + `html.dark`.
+- Test: `cd workbench/web && npm test` (`src/catalog.test.ts` maps hyper3 climb).
+
+## 0.170.10 - Late cancel keeps timeout
+- Worker only writes `cancelled` when status is still `running` (or already `cancelled`). Late cancel after timeout does not rewrite GET `error`/`timeout`.
+- `test_cancel_marks_run` asserts GET `cancelled` immediately (no worker wait). Covering: `test_late_cancel_does_not_overwrite_timeout`.
+
+## 0.170.9 - Async run + honest cancel
+- `POST /run` starts a thread and returns `{ok, runId}` immediately. Unknown stem: `{ok: false, error}` with no thread.
+- `GET /run/{runId}` → `{status: running|done|error|cancelled, ok, columns?, rows?, error?}`. Plot only when `status` is `done` and `ok` is true.
+- `POST /run/{runId}/cancel` sets a flag. Honest v1: abandon the client wait; the worker may still finish. Cancel-before-done → `cancelled` and `ok` false.
+- Worker-side 120 s timeout (`RUN_TIMEOUT_S`): GET `{status: error, ok: false, error: "timeout"}` if `run_scenario` is still running. Does not kill the thread. Cancel-before-timeout wins (`cancelled`). Tests poll GET after POST (`end_time` 0.05 for hyper3).
+
+## 0.170.8 - POST /run short scenario
+- `POST /run` body `{program, stem, end_time?}` copies program `*.jsonc` to a temp dir (optional `end_time` patched there only), calls `cadac.run_scenario`, returns `{ok, columns, rows}` from `plot_rows`.
+- `ValueError` / unknown stem: HTTP 200 `{ok: false, error}`. Timeout 120 s via asyncio wait in a thread → `{ok: false, error: "timeout"}`. Does not write `Python/cases/`.
+- Tests: `workbench/api/tests/test_run_api.py` (hyper3 climb `end_time` 0.05, unknown stem).
+
+## 0.170.7 - Case JSONC GET/PUT/validate
+- `GET /cases/{program}/{stem}` → `{ok, path, scenario}` via `jsonc.loads`, or 404. Program `^[a-z0-9_]+$`, stem `^[A-Za-z0-9._ -]+$`; `..` / extra slashes → 400 or 404.
+- `PUT /cases/{program}/{stem}` writes pretty JSONC (indent 2, trailing newline). After write, `load_scenario` must succeed or 400 `{ok: false, error}` without keeping a corrupt file (temp then replace; restore previous).
+- `POST /cases/validate` temp JSONC + `load_scenario`; HTTP 200 `{ok: true}` or `{ok: false, error}`; does not persist.
+- Catalog still lists only title AND (`vehicles` or `modules`); aero/prop decks stay off the library list.
+
+## 0.170.6 - FastAPI catalog index
+- Scaffold `workbench/api` (`cadac-web`) wrapping `cadac`; `GET /catalog` lists `Python/cases/<program>/*.jsonc` (title via `cadac.io.jsonc.loads`; omit on load failure; skip empty program folders).
+- Program order HYPER3 … AGM6; CORS `http://127.0.0.1:5173|:5174|:5175`. `CASES_ROOT()` = `repo_root() / "Python" / "cases"`.
+- Test: `cd workbench/api && python -m pytest tests/test_catalog_api.py::test_catalog_lists_hyper3_climb -v`.
+
 ## 0.170.5 - README catalog architecture
 - Architecture: `cadac.io.catalog` (walk, skip stems, family, no-overwrite, `PYTHONPATH=src:tools python -m cadac.io.catalog`). Workbench UI still unbuilt; catalog JSONC is filled.
 - Plan list item 15: catalog done (`22662a1`); remaining four workbench plans not executed. HYPER6 case row names §10.4.

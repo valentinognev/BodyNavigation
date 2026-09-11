@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadac-web"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "cadac @ file:../../Python",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "httpx",
+    "python-multipart",
+]
+
+[tool.setuptools]
+packages = ["cadac_web"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
