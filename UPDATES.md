@@ -1,5 +1,22 @@
 # Updates
 
+## 0.170.0 - ASC catalog classifier
+- Public `cadac.io.translate.parse_scenario_asc` (alias `_parse_scenario_asc` kept).
+- `cadac.io.catalog`: `SKIP_STEMS` plus `classify_asc` → skip / scenario / deck / fail.
+- Tests: `Python/tests/unit/test_catalog.py` (HYPER3 skip/climb/aero-deck, Sec 10.4 scenario).
+
+## 0.169.16 - Workbench implementation plans
+- Five plans for spec `2026-09-11-cadac-workbench-ui-design.md`: catalog, workbench, handshake, AID web, round-trip. Not executed.
+
+## 0.169.15 - CADAC workbench UI spec
+- Draft: `docs/superpowers/specs/2026-09-11-cadac-workbench-ui-design.md` (not implemented).
+- Three sibling web apps: CADAC workbench (this repo), MISDC, AID-web. Catalog all Zipfel `.asc` → JSONC; forms+drawer; run/plot; aero handshake + `cadac.aero_map`.
+- `.gitignore`: `.superpowers/brainstorm/`.
+
+## 0.169.14 - README quality-overhaul plan list
+- Architecture quality-kernel line now names bind-once `run_loop`, lookup cache, unrolled ijk `cadac_matmul`, and shared `frames` helpers.
+- Design/plans list: 2026-09-08 spec + plan marked executed (merged `aa90bd2`). Spec/plan status lines match. No production code.
+
 ## 0.169.13 - Re-survey quality metrics after overhaul
 - Live scan `Python/tools/cadac_quality/latest.json` (`cadac_quality.metrics --out`). `baseline.json` not rewritten.
 - E2E (Task 14): 135 collected, 134 passed, 1 skipped, 0 failed. Skip is `test_sam6_rf` (golden absent). All 14 golden families passed.

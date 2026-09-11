@@ -166,7 +166,7 @@ def _parse_vehicle(lines: list[str], i: int) -> tuple[dict, int]:
     return vehicle, i
 
 
-def _parse_scenario_asc(src: Path) -> dict:
+def parse_scenario_asc(src: Path) -> dict:
     lines = _content_lines(src)
     i = 0
     n = len(lines)
@@ -227,6 +227,9 @@ def _parse_scenario_asc(src: Path) -> dict:
         "end_time": end_time,
         "vehicles": vehicles,
     }
+
+
+_parse_scenario_asc = parse_scenario_asc
 
 
 def translate_scenario_asc(src, dst_dir, family=None) -> None:
