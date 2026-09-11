@@ -1,0 +1,224 @@
+{
+  "title": "input_TV.asc Transfer Vehicle's orbital insertion",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "stat": false,
+    "merge": false,
+    "traj": false
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "gps",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "startrack",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "datalink",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "rcs",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 10.0,
+    "plot_step": 0.1,
+    "int_step": 0.01
+  },
+  "end_time": 220.0,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "T.V.",
+      "params": {
+        "lonx": -73,
+        "latx": 33,
+        "alt": 50000,
+        "dvbe": 5200,
+        "phibdx": 0,
+        "thtbdx": 10,
+        "psibdx": 50,
+        "alpha0x": 7.5,
+        "beta0x": 0,
+        "maero": 2,
+        "mprop": 4,
+        "vmass0": 16000,
+        "fmass0": 12000,
+        "fmasse": 0,
+        "moi_roll_exo_0": 11250.0,
+        "moi_roll_exo_1": 6750.0,
+        "moi_trans_exo_0": 169000.0,
+        "moi_trans_exo_1": 101400.0,
+        "isp_fuel": 306,
+        "fuel_flow_rate": 80,
+        "mrcs_moment": 21,
+        "roll_mom_max": 500,
+        "pitch_mom_max": 15000,
+        "yaw_mom_max": 5000,
+        "rcs_zeta": 0.7,
+        "rcs_freq": 1,
+        "dead_zone": 0.4,
+        "hysteresis": 0.1,
+        "rcs_tau": 1,
+        "thtbdcomx": 10,
+        "psibdcomx": 50
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 1
+            }
+          },
+          "set": {
+            "thtbdcomx": 50
+          }
+        },
+        {
+          "when": {
+            "fmassr": {
+              "<": 5000
+            }
+          },
+          "set": {
+            "mrcs_moment": 22,
+            "mguide": 5,
+            "fmasse": 0,
+            "ltg_step": 0.1,
+            "num_stages": 1,
+            "dbi_desired": 6572000.0,
+            "dvbi_desired": 7788,
+            "thtvdx_desired": 2.5,
+            "delay_ignition": 0.1,
+            "amin": 5,
+            "lamd_limit": 0.28,
+            "vmass0": 9000,
+            "exhaust_vel1": 3000,
+            "fmass0": 5000,
+            "char_time1": 330,
+            "burnout_epoch1": 185
+          }
+        }
+      ]
+    }
+  ]
+}

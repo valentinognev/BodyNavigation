@@ -1,0 +1,177 @@
+{
+  "title": "input_Demo_5_8_moving_target.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "plot": true,
+    "traj": true,
+    "merge": false,
+    "doc": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "targeting",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 10.0,
+    "plot_step": 1.0,
+    "traj_step": 1.0,
+    "int_step": 0.05
+  },
+  "end_time": 300.0,
+  "vehicles": [
+    {
+      "type": "HYPER5",
+      "name": "RR3X_h1",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "prop_deck": "hyper5_prop_deck.jsonc",
+      "params": {
+        "lonx": -106.3,
+        "latx": 32,
+        "alt": 20011,
+        "psivgx": 2,
+        "thtvgx": 0,
+        "dvbe": 1181,
+        "alphax": 0,
+        "phimvx": -2.6,
+        "area": 11.6986,
+        "alpposlimx": 6,
+        "alpneglimx": -4,
+        "mprop": 0,
+        "aintake": 0.184,
+        "mass0": 1352,
+        "fmass0": 0,
+        "phi_min": 0.5,
+        "phi_max": 1.2,
+        "qhold": 71820,
+        "tq": 10,
+        "tlag": 1,
+        "mcontrol": 44,
+        "gcp": 2,
+        "allimx": 1,
+        "philimx": 70,
+        "tphi": 1,
+        "anposlimx": 2,
+        "anneglimx": -2,
+        "gacp": 10,
+        "ta": 0.8,
+        "mtargeting": 1,
+        "mguidance": 44,
+        "point_gain": 0.04
+      },
+      "events": [
+        {
+          "when": {
+            "wp_sltrange": {
+              "<": 6000
+            }
+          },
+          "set": {
+            "mseeker": 1,
+            "acq_range": 6000,
+            "mguidance": 66,
+            "pronav_gain": 3.5,
+            "bias": 5
+          }
+        }
+      ]
+    },
+    {
+      "type": "TARGET3",
+      "name": "Truck_t1",
+      "params": {
+        "lonx": -106.28,
+        "latx": 33.4,
+        "alt": 1200,
+        "psivgx": 45,
+        "dvbe": 10,
+        "side_accel": 0.5
+      },
+      "events": []
+    },
+    {
+      "type": "SATELLITE3",
+      "name": "Satellite_s1",
+      "params": {
+        "lonx": -120,
+        "latx": 20,
+        "alt": 500000,
+        "psivgx": 30,
+        "thtvgx": 0,
+        "dvbe": 7700
+      },
+      "events": []
+    }
+  ]
+}

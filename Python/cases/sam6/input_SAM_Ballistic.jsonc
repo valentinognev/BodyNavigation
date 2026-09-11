@@ -1,0 +1,91 @@
+{
+  "title": "input_SAM_Ballistic.asc",
+  "options": {
+    "scrn": true,
+    "plot": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 0.2,
+    "plot_step": 0.01,
+    "int_step": 0.001
+  },
+  "end_time": 1.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "SAM",
+      "aero_deck": "SAM_aero_deck.jsonc",
+      "prop_deck": "SAM_prop_deck.jsonc",
+      "params": {
+        "launch_delay": 0,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -6000,
+        "psiblx": 0,
+        "thtblx": 0,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 250,
+        "xcgref": 2.5
+      },
+      "events": [],
+      "family": "sam6"
+    }
+  ],
+  "family": "sam6"
+}

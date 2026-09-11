@@ -1,0 +1,112 @@
+{
+  "title": "input_mcontrol=16.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "doc": true,
+    "tabout": true,
+    "plot": true,
+    "csv": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "plot_step": 0.1,
+    "int_step": 0.05
+  },
+  "end_time": 30.0,
+  "vehicles": [
+    {
+      "type": "PLANE",
+      "name": "FALCON5",
+      "aero_deck": "Falcon5_aero_deck.jsonc",
+      "prop_deck": "Falcon5_prop_deck.jsonc",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -3000,
+        "psivlx": 0,
+        "thtvlx": 0,
+        "dvbe": 200,
+        "area": 27.87,
+        "mac": 30,
+        "alpposlimx": 15,
+        "alpneglimx": -10,
+        "mprop": 4,
+        "mach_com": 0.6,
+        "mass_init": 12701,
+        "fuel_init": 4461,
+        "gfthm": 893620,
+        "tfth": 1,
+        "mcontrol": 16,
+        "ancomx": 1.2,
+        "anposlimx": 3,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "philimx": 70,
+        "tphi": 0.5,
+        "altcom": 3200,
+        "altdlim": 50,
+        "gh": 0.3,
+        "gv": 1.0,
+        "psivlcx": 10,
+        "gain_psivg": 12.0
+      },
+      "events": []
+    }
+  ]
+}

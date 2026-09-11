@@ -1,0 +1,127 @@
+{
+  "title": "input_Demo_4_6_point_guid.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "plot": true,
+    "traj": true,
+    "merge": false,
+    "doc": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 10.0,
+    "plot_step": 1.0,
+    "traj_step": 1.0,
+    "int_step": 0.05
+  },
+  "end_time": 300.0,
+  "vehicles": [
+    {
+      "type": "HYPER5",
+      "name": "RR3X",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "params": {
+        "lonx": -106.3,
+        "latx": 32,
+        "alt": 20000,
+        "psivgx": 0,
+        "thtvgx": 0,
+        "dvbe": 1181,
+        "alphax": 0,
+        "phimvx": 0,
+        "area": 11.6986,
+        "alpposlimx": 6,
+        "alpneglimx": -4,
+        "mprop": 0,
+        "mass0": 1352,
+        "mcontrol": 44,
+        "gcp": 2,
+        "allimx": 1,
+        "philimx": 70,
+        "tphi": 1,
+        "anposlimx": 2,
+        "anneglimx": -2,
+        "gacp": 10,
+        "ta": 0.8,
+        "mguidance": 44,
+        "point_gain": 0.04,
+        "wp_lonx": -106.28,
+        "wp_latx": 33.4,
+        "wp_alt": 1200
+      },
+      "events": [
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "halt": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "title": "input_multi.asc Horizontal and vertical engagements",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": true,
+    "plot": true,
+    "traj": true,
+    "merge": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 1.0,
+    "com_step": 5.0,
+    "plot_step": 0.02,
+    "traj_step": 0.1,
+    "int_step": 0.002
+  },
+  "end_time": 15.0,
+  "vehicles": [
+    {
+      "type": "AIM5",
+      "name": "Missile_Hori",
+      "aero_deck": "aim5_aero_deck.jsonc",
+      "prop_deck": "aim5_prop_deck.jsonc",
+      "params": {
+        "tgt_num": 1,
+        "sael1": 0,
+        "sael2": -9000,
+        "sael3": -10000,
+        "psivlx": 45,
+        "thtvlx": 0,
+        "alphax": 0,
+        "betax": 0,
+        "dvae": 269,
+        "area": 0.01767,
+        "alpmax": 35,
+        "mprop": 1,
+        "mass": 63.8,
+        "aexit": 0.00948,
+        "mseek": 1,
+        "mguid": 1,
+        "gnav": 4,
+        "tr": 0.1,
+        "ta": 2,
+        "gacp": 40
+      },
+      "events": [],
+      "family": "aim5"
+    },
+    {
+      "type": "AIM5",
+      "name": "Missile_Verti",
+      "aero_deck": "aim5_aero_deck.jsonc",
+      "prop_deck": "aim5_prop_deck.jsonc",
+      "params": {
+        "tgt_num": 2,
+        "sael1": -9000,
+        "sael2": 0,
+        "sael3": -10000,
+        "psivlx": 0,
+        "thtvlx": 0,
+        "alphax": 0,
+        "betax": 0,
+        "dvae": 269,
+        "area": 0.01767,
+        "alpmax": 35,
+        "mprop": 1,
+        "mass": 63.8,
+        "aexit": 0.00948,
+        "mseek": 1,
+        "mguid": 1,
+        "gnav": 4,
+        "tr": 0.1,
+        "ta": 2,
+        "gacp": 40
+      },
+      "events": [],
+      "family": "aim5"
+    },
+    {
+      "type": "AIRCRAFT3",
+      "name": "Target_1",
+      "params": {
+        "sael1": 0,
+        "sael2": 0,
+        "sael3": -10000,
+        "psivlx": -90,
+        "thtvlx": 0,
+        "dvae": 269,
+        "acft_option": 0,
+        "clalpha": 0.0523,
+        "wingloading": 3247,
+        "philimx": 60,
+        "alplimx": 12
+      },
+      "events": [],
+      "family": "aim5"
+    },
+    {
+      "type": "AIRCRAFT3",
+      "name": "Target_2",
+      "params": {
+        "sael1": 0,
+        "sael2": 0,
+        "sael3": -6000,
+        "psivlx": -180,
+        "thtvlx": 0,
+        "dvae": 284,
+        "acft_option": 0,
+        "clalpha": 0.0523,
+        "wingloading": 3247,
+        "philimx": 60,
+        "alplimx": 12
+      },
+      "events": [],
+      "family": "aim5"
+    }
+  ],
+  "family": "aim5"
+}

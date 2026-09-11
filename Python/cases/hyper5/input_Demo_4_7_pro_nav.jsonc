@@ -1,0 +1,133 @@
+{
+  "title": "input_Demo_4_7_pro_nav.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "tabout": false,
+    "plot": true,
+    "traj": true,
+    "merge": true,
+    "doc": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "plot_step": 0.1,
+    "int_step": 0.05
+  },
+  "end_time": 25.0,
+  "vehicles": [
+    {
+      "type": "HYPER5",
+      "name": "RR3X",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "params": {
+        "lonx": -106.28,
+        "latx": 33.35,
+        "alt": 2400,
+        "psivgx": 0,
+        "thtvgx": -10.5,
+        "dvbe": 254,
+        "alphax": -1.5,
+        "phimvx": 0,
+        "area": 11.6986,
+        "alpposlimx": 6,
+        "alpneglimx": -4,
+        "mprop": 0,
+        "mass0": 1352,
+        "mcontrol": 44,
+        "gcp": 2,
+        "allimx": 1,
+        "philimx": 70,
+        "tphi": 1,
+        "anposlimx": 2,
+        "anneglimx": -2,
+        "gacp": 10,
+        "ta": 0.8,
+        "mseeker": 1,
+        "acq_range": 6000,
+        "mguidance": 66,
+        "pronav_gain": 3.5,
+        "bias": 5
+      },
+      "events": []
+    },
+    {
+      "type": "TARGET3",
+      "name": "Truck_t1",
+      "params": {
+        "lonx": -106.28,
+        "latx": 33.4,
+        "alt": 1200
+      },
+      "events": []
+    }
+  ]
+}

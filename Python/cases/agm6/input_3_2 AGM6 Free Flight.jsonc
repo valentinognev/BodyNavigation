@@ -1,0 +1,101 @@
+{
+  "title": "input_3_2 AGM6 Free Flight.asc",
+  "options": {
+    "scrn": true,
+    "doc": true,
+    "plot": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "plot_step": 0.1,
+    "int_step": 0.001
+  },
+  "end_time": 30.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "AGM6",
+      "aero_deck": "AGM6_aero_deck.jsonc",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -10000,
+        "psiblx": 0,
+        "thtblx": 20,
+        "phiblx": 0,
+        "alpha0x": 3,
+        "beta0x": 3,
+        "dvbe": 200,
+        "alplimx": 20,
+        "ai11": 42.5,
+        "ai33": 2632,
+        "vmass0": 1360,
+        "fmass0": 250,
+        "mprop": 1,
+        "aexit": 0.02,
+        "spi": 210,
+        "thrsl": 10000,
+        "throtl": 1
+      },
+      "events": [],
+      "family": "agm6"
+    }
+  ],
+  "family": "agm6"
+}

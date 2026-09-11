@@ -1,0 +1,173 @@
+{
+  "title": "input_altitude_heading.asc: Heading and altitude autopilot",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": false,
+    "doc": true,
+    "tabout": true,
+    "plot": true,
+    "stat": false,
+    "merge": false,
+    "traj": false
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "plot_step": 0.1,
+    "int_step": 0.01
+  },
+  "end_time": 100.0,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "Hypersonic",
+      "aero_deck": "ghame6_aero_deck.jsonc",
+      "prop_deck": "ghame6_prop_deck.jsonc",
+      "params": {
+        "lonx": 10,
+        "latx": 10,
+        "alt": 10000,
+        "dvbe": 1000,
+        "alpha0x": 2.5,
+        "thtbdx": 2.5,
+        "maero": 1,
+        "alpplimx": 21,
+        "alpnlimx": -3,
+        "strct_pos_limitx": 3,
+        "strct_neg_limitx": -2,
+        "mprop": 2,
+        "vmass0": 136077,
+        "fmass0": 81646,
+        "qhold": 200000,
+        "tq": 1,
+        "acowl": 27.87,
+        "thrtl_idle": 0.05,
+        "thrtl_max": 2,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 45,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "phicomx": 0,
+        "philimx": 60,
+        "wrcl": 8,
+        "zrcl": 0.9,
+        "zetlagr": 1.1,
+        "ancomx": 1,
+        "gainp": -0.01,
+        "zaclp": 1.2,
+        "waclp": 3,
+        "paclp": 5,
+        "altcom": 10000,
+        "gainalt": 0.5,
+        "gainaltrate": 0.5,
+        "facthead": -0.95
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 20
+            }
+          },
+          "set": {
+            "altcom": 10050
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 40
+            }
+          },
+          "set": {
+            "psivdcomx": 30
+          }
+        }
+      ]
+    }
+  ]
+}

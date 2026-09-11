@@ -1,0 +1,390 @@
+{
+  "title": "input_head-on_auto.asc  Cape Canaveral launch, automated head-on engagement",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "stat": false,
+    "merge": false,
+    "traj": true
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "gps",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "startrack",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "datalink",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "rcs",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 50.0,
+    "plot_step": 1.0,
+    "traj_step": 10.0,
+    "int_step": 0.01,
+    "com_step": 50.0
+  },
+  "end_time": 1300.0,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "Hypersonic",
+      "aero_deck": "ghame6_aero_deck.jsonc",
+      "prop_deck": "ghame6_prop_deck.jsonc",
+      "params": {
+        "sat_num": 1,
+        "alt": 3000,
+        "dvbe": 150,
+        "thtbdx": 8,
+        "alpha0x": 4,
+        "minit": 1,
+        "headon_flag": 1,
+        "ranglex_l_t": 128,
+        "tgo_insertion": 1300,
+        "sat_semi": 6900000,
+        "sat_ecc": 0.0622,
+        "sat_inclx": 126,
+        "sat_lon_anodex": 77,
+        "sat_arg_perix": 60,
+        "sat_true_anomx": -46,
+        "latx_bias": 0,
+        "dbi_bias": 0,
+        "dvbi_bias": 0,
+        "thtvdx_bias": 0,
+        "maero": 1,
+        "mair": 100,
+        "alpplimx": 21,
+        "alpnlimx": -3,
+        "strct_pos_limitx": 3,
+        "strct_neg_limitx": -2,
+        "mprop": 2,
+        "vmass0": 136077,
+        "fmass0": 81646,
+        "qhold": 58000,
+        "tq": 1,
+        "acowl": 27.87,
+        "thrtl_idle": 0.05,
+        "thrtl_max": 2,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 24,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "mroll": 0,
+        "philimx": 60,
+        "wrcl": 8,
+        "zrcl": 0.9,
+        "zetlagr": 1.1,
+        "thtvdcomx": 4,
+        "pgam": 4,
+        "wgam": 2,
+        "zgam": 0.7,
+        "mguide": 4,
+        "mins": 1,
+        "mgps": 1,
+        "almanac_time": 0,
+        "del_rearth": 2317000,
+        "gps_acqtime": 10,
+        "gps_step": 1,
+        "ucfreq_noise": 0,
+        "ucbias_error": 0,
+        "pr1_bias": 0,
+        "pr2_bias": 0,
+        "pr3_bias": 0,
+        "pr4_bias": 0,
+        "pr1_noise": 0,
+        "pr2_noise": 0,
+        "pr3_noise": 0,
+        "pr4_noise": 0,
+        "dr1_noise": 0,
+        "dr2_noise": 0,
+        "dr3_noise": 0,
+        "dr4_noise": 0,
+        "uctime_cor": 100,
+        "ppos": 5,
+        "pvel": 0.2,
+        "pclockb": 3,
+        "pclockf": 1,
+        "qpos": 0.1,
+        "qvel": 0.01,
+        "qclockb": 0.5,
+        "qclockf": 0.1,
+        "rpos": 1,
+        "rvel": 0.1,
+        "factp": 0,
+        "factq": 0,
+        "factr": 0,
+        "mstar": 1,
+        "star_el_min": 1,
+        "startrack_alt": 30000,
+        "star_acqtime": 20,
+        "star_step": 10,
+        "az1_bias": 0,
+        "az2_bias": 0,
+        "az3_bias": 0,
+        "az1_noise": 0,
+        "az2_noise": 0,
+        "az3_noise": 0,
+        "el1_bias": 0,
+        "el2_bias": 0,
+        "el3_bias": 0,
+        "el1_noise": 0,
+        "el2_noise": 0,
+        "el3_noise": 0
+      },
+      "events": [
+        {
+          "when": {
+            "event_time": {
+              ">": 560
+            }
+          },
+          "set": {
+            "thtvdcomx": 3.5,
+            "qhold": 90000
+          }
+        },
+        {
+          "when": {
+            "alt": {
+              ">": 75000
+            }
+          },
+          "set": {
+            "mguide": 0,
+            "mact": 0,
+            "maut": 0,
+            "maero": 2,
+            "mprop": 4,
+            "vmass0": 16000,
+            "fmass0": 12000,
+            "fmasse": 0,
+            "moi_roll_exo_0": 11250.0,
+            "moi_roll_exo_1": 6750.0,
+            "moi_trans_exo_0": 169000.0,
+            "moi_trans_exo_1": 101400.0,
+            "isp_fuel": 306,
+            "fuel_flow_rate": 80,
+            "mrcs_moment": 21,
+            "rcs_zeta": 0.7,
+            "rcs_freq": 0.4,
+            "roll_mom_max": 500,
+            "pitch_mom_max": 15000,
+            "yaw_mom_max": 5000,
+            "side_force_max": 100000.0,
+            "dead_zone": 0.4,
+            "hysteresis": 0.1,
+            "rcs_tau": 1,
+            "thtbdcomx": 50
+          }
+        },
+        {
+          "when": {
+            "fmassr": {
+              "<": 5000
+            }
+          },
+          "set": {
+            "mrcs_moment": 12,
+            "mguide": 5,
+            "fmasse": 0,
+            "ltg_step": 0.1,
+            "num_stages": 1,
+            "delay_ignition": 0.1,
+            "amin": 5,
+            "lamd_limit": 0.28,
+            "vmass0": 9000,
+            "exhaust_vel1": 3000,
+            "fmass0": 5000,
+            "char_time1": 330,
+            "burnout_epoch1": 185
+          }
+        },
+        {
+          "when": {
+            "beco_flag": {
+              "=": 1
+            }
+          },
+          "set": {
+            "out_step_fact": -0.5,
+            "int_step_new": 0.005,
+            "mguide": 6,
+            "gnav": 3,
+            "mseek": 2,
+            "mprop": 4,
+            "vmass0": 500,
+            "fmass0": 250,
+            "fmasse": 0,
+            "moi_roll_exo_0": 62.5,
+            "moi_roll_exo_1": 25,
+            "moi_trans_exo_0": 1685,
+            "moi_trans_exo_1": 674,
+            "isp_fuel": 350,
+            "fuel_flow_rate": 0.7,
+            "mrcs_moment": 12,
+            "mrcs_force": 1,
+            "rcs_zeta": 0.7,
+            "rcs_freq": 0.4,
+            "roll_mom_max": 50,
+            "pitch_mom_max": 150,
+            "yaw_mom_max": 150,
+            "side_force_max": 10000
+          }
+        }
+      ]
+    },
+    {
+      "type": "SAT3",
+      "name": "Satellite",
+      "params": {
+        "minit": 1,
+        "semi": 6900000,
+        "ecc": 0.0622,
+        "inclx": 126,
+        "lon_anodex": 77,
+        "arg_perix": 60,
+        "true_anomx": -46
+      },
+      "events": []
+    },
+    {
+      "type": "RADAR0",
+      "name": "Ground",
+      "params": {
+        "radar_on": 1,
+        "track_step": 0,
+        "lonx": -25,
+        "latx": 37,
+        "alt": 0
+      },
+      "events": []
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "title": "input_3waypoint.asc Three Waypoints",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "plot": true,
+    "merge": false,
+    "traj": true,
+    "doc": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "plot_step": 0.1,
+    "traj_step": 1.0,
+    "int_step": 0.001
+  },
+  "end_time": 200.0,
+  "vehicles": [
+    {
+      "type": "PLANE6",
+      "name": "F16",
+      "aero_deck": "f16_aero_deck.jsonc",
+      "prop_deck": "f16_prop_deck.jsonc",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -1000,
+        "dvbe": 180,
+        "psiblx": 0,
+        "thtblx": 1,
+        "phiblx": 0,
+        "alpha0x": 1,
+        "beta0x": 0,
+        "alplimpx": 16,
+        "alplimnx": -6,
+        "xcgr": 1,
+        "xcg": 1,
+        "mprop": 2,
+        "vmachcom": 0.6,
+        "gmach": 30,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 35,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "anlimpx": 9,
+        "anlimnx": 6,
+        "philimx": 70,
+        "wrcl": 15,
+        "zrcl": 0.7,
+        "zetlagr": 0.7,
+        "gainp": 0,
+        "waclp": 4,
+        "zaclp": 0.3,
+        "paclp": 10,
+        "gainl": 1,
+        "mguid": 30,
+        "line_gain": 1,
+        "decrement": 500,
+        "nl_gain_fact": 0.4,
+        "altcom": 1000,
+        "gainalt": 0.3,
+        "gainaltrate": 0.7,
+        "swel1": 5000,
+        "swel2": 2000,
+        "psiflx": 20
+      },
+      "events": [
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "swel1": 12000,
+            "swel2": 8000,
+            "psiflx": 0
+          }
+        },
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "swel1": 16000,
+            "swel2": -6000,
+            "psiflx": -90,
+            "halt": 1
+          }
+        }
+      ]
+    }
+  ]
+}

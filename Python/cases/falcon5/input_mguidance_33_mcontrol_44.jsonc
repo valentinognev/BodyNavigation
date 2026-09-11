@@ -1,0 +1,138 @@
+{
+  "title": "input_mguidance_33_mcontrol_44.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "tabout": false,
+    "plot": true,
+    "doc": true,
+    "csv": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 2.0,
+    "plot_step": 0.1,
+    "int_step": 0.05
+  },
+  "end_time": 40.0,
+  "vehicles": [
+    {
+      "type": "PLANE",
+      "name": "FALCON5",
+      "aero_deck": "Falcon5_aero_deck.jsonc",
+      "prop_deck": "Falcon5_prop_deck.jsonc",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -3500,
+        "psivlx": 0,
+        "thtvlx": 0,
+        "dvbe": 200,
+        "area": 27.87,
+        "mac": 35,
+        "alpposlimx": 15,
+        "alpneglimx": -10,
+        "mprop": 4,
+        "mach_com": 0.6,
+        "mass_init": 12701,
+        "fuel_init": 4461,
+        "gfthm": 893620,
+        "tfth": 1,
+        "point_gain": 1,
+        "anposlimx": 3,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "alcomx": 0.5,
+        "gcp": 2,
+        "allimx": 1,
+        "phicx": 0,
+        "philimx": 70,
+        "tphi": 1,
+        "altcom": 3000,
+        "altdlim": 50,
+        "gh": 0.3,
+        "gv": 1.0,
+        "swel1": 5000,
+        "swel2": 0,
+        "swel3": 0,
+        "mguidance": 33,
+        "mcontrol": 44,
+        "line_gain": 1,
+        "nl_gain_fact": 0.6,
+        "decrement": 1000,
+        "psiflx": 10,
+        "thtflx": -30,
+        "stop_run": 1
+      },
+      "events": []
+    }
+  ]
+}

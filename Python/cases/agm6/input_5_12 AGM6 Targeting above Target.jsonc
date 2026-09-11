@@ -1,0 +1,275 @@
+{
+  "title": "input_5_12 AGM6 Targeting above Target.asc",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "traj": true,
+    "stat": false,
+    "merge": true,
+    "csv": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "datalink",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "sensor",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "com_step": 5.0,
+    "plot_step": 0.1,
+    "traj_step": 1.0,
+    "int_step": 0.001
+  },
+  "end_time": 100.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "AGM6",
+      "aero_deck": "AGM6_aero_deck.jsonc",
+      "weather_deck": "weather_deck.jsonc",
+      "params": {
+        "tgt_num": 1,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -7000,
+        "psiblx": 0,
+        "thtblx": 0,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 293,
+        "mair": 212,
+        "dvae": 5,
+        "twind": 1,
+        "turb_length": 100,
+        "turb_sigma": 0.5,
+        "alplimx": 20,
+        "ai11": 42.5,
+        "ai33": 2632,
+        "vmass0": 1360,
+        "fmass0": 250,
+        "mprop": 0,
+        "aexit": 0.02,
+        "spi": 210,
+        "thrsl": 10000,
+        "throtl": 1,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 600,
+        "wnact": 62.8,
+        "zetact": 0.7,
+        "maut": 3,
+        "alimit": 3,
+        "dqlimx": 25,
+        "drlimx": 25,
+        "dplimx": 25,
+        "phicomx": 0,
+        "zrcl": 0.9,
+        "wrcl": 5,
+        "zetlagr": 0.9,
+        "wacl": 2,
+        "zacl": 0.7,
+        "pacl": 10,
+        "mins": 1,
+        "biasal": 0,
+        "randal": 0,
+        "mseek": 0,
+        "skr_dyn": 1,
+        "racq": 7000,
+        "fovyaw": 0.035,
+        "fovpitch": 0.035,
+        "dtimac": 0.3,
+        "dblind": 10,
+        "gk": 10,
+        "wnk": 100,
+        "zetak": 0.9,
+        "trate": 2,
+        "trtht": 1.2,
+        "trthtd": 20,
+        "biast": 0,
+        "randt": 0,
+        "trphid": 20,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 3
+            }
+          },
+          "set": {
+            "mnav": 3,
+            "mprop": 1,
+            "mseek": 2,
+            "mguid": 30,
+            "grav_bias": 1.5,
+            "gnav": 3
+          }
+        },
+        {
+          "when": {
+            "mseek": {
+              "=": 4
+            }
+          },
+          "set": {
+            "mguid": 6,
+            "gnav": 3
+          }
+        }
+      ],
+      "family": "agm6"
+    },
+    {
+      "type": "TARGET3",
+      "name": "Ground",
+      "params": {
+        "sael1": 33000,
+        "sael2": 10000,
+        "sael3": -100,
+        "dvae": 5,
+        "psivlx": -90,
+        "acc_latx": 0.01
+      },
+      "events": [],
+      "family": "agm6"
+    },
+    {
+      "type": "AIRCRAFT3",
+      "name": "Blue",
+      "params": {
+        "sael1": 33000,
+        "sael2": 10000,
+        "sael3": -10000,
+        "psivlx": 0,
+        "thtvlx": 0,
+        "dvae": 293,
+        "acft_option": 1,
+        "gturn": 1.5,
+        "tphi": 0.5,
+        "tanx": 0.5,
+        "clalpha": 0.0523,
+        "wingloading": 3247,
+        "philimx": 60,
+        "alplimx": 12,
+        "track_step": 1,
+        "dat_sigma": 1,
+        "azat_sigma": 0.001,
+        "elat_sigma": 0.001,
+        "vel_sigma": 0.5
+      },
+      "events": [],
+      "family": "agm6"
+    }
+  ],
+  "family": "agm6"
+}

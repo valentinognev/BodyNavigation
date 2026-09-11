@@ -1,5 +1,10 @@
 # Updates
 
+## 0.170.2 - Walk Zipfel ASC catalog + report
+- `iter_asc_jobs` walks `PROGRAM_DIRS` then `EXTRA_SOURCES` (HYPER6 §10.4, AGM6 extra); unique dest stem per program; skip stems are not jobs.
+- `translate_one` returns `(status, error)`; `run_catalog` maps written→translated, exists→skipped, failed→`{path, error}`.
+- Writes missing JSONC under `Python/cases/` plus `Python/cases/catalog-report.json`. HYPER6 `10_1_1_input_aero.jsonc` loads via `load_scenario`.
+
 ## 0.170.1 - Catalog dest/family/no-overwrite
 - `cadac.io.catalog`: `PROGRAM_FAMILY`, `repo_root`, `cases_dir`, `dest_jsonc`, `family_for`, `translate_one` (`written` / `exists` / `skipped` / `failed`).
 - Existing dest JSONC is never overwritten (`exists`). Family via `.get` (HYPER3 is None).

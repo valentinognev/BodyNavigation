@@ -1,0 +1,114 @@
+{
+  "title": "input_SRBM_Ballistic.asc",
+  "options": {
+    "scrn": false,
+    "comscrn": true,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": false,
+    "traj": true,
+    "csv": true,
+    "stat": false,
+    "merge": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "com_step": 10.0,
+    "traj_step": 2.0,
+    "int_step": 0.001
+  },
+  "end_time": 470.0,
+  "vehicles": [
+    {
+      "type": "ROCKET5",
+      "name": "SRBM",
+      "aero_deck": "SRBM_aero_deck.jsonc",
+      "params": {
+        "sael1": 1000,
+        "sael2": -250000.0,
+        "sael3": 0,
+        "psivlx": 90,
+        "thtvlx": 85,
+        "alpha_t0x": 5,
+        "beta_t0x": 0,
+        "alpmax": 40,
+        "dvae": 10,
+        "mprop": 1,
+        "maut": 1,
+        "alt_endo": 30000,
+        "ancomx_bias": 0.5
+      },
+      "events": [],
+      "family": "sam6"
+    }
+  ],
+  "family": "sam6"
+}

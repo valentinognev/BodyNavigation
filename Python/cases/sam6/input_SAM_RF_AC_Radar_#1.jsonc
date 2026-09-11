@@ -1,0 +1,261 @@
+{
+  "title": "input_SAM_RF_AC_Radar_#1.asc",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "traj": true,
+    "csv": false,
+    "stat": false,
+    "merge": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "sensor",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "com_step": 5.0,
+    "plot_step": 0.1,
+    "traj_step": 1.0,
+    "int_step": 0.001
+  },
+  "end_time": 77.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "SAM1",
+      "aero_deck": "SAM_aero_deck.jsonc",
+      "prop_deck": "SAM_prop_deck.jsonc",
+      "params": {
+        "stop": 0,
+        "mterm": 1,
+        "mtarget": 2,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": 0,
+        "psiblx": -90,
+        "thtblx": 45,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 16,
+        "xcgref": 2.5,
+        "mass": 300,
+        "xcg": 2.9,
+        "ai11": 2.9,
+        "ai33": 440,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 600,
+        "zetact": 0.7,
+        "mins": 2,
+        "mseek": 12,
+        "skr_dyn": 1,
+        "racq_rf": 7000,
+        "dtimac_rf": 0.1,
+        "forlim_rfx": 40,
+        "fovlim_rfx": 10,
+        "gain_rf": 5,
+        "biasaz": 0,
+        "biasel": 0,
+        "randgl1": 0,
+        "randgl2": 0,
+        "randgl3": 0,
+        "biasgl1": 0,
+        "biasgl2": 0,
+        "biasgl3": 0,
+        "plc5": 1.0,
+        "plc4": 4.7,
+        "plc3": 8.2,
+        "plc2": 6.9,
+        "plc1": 3.0,
+        "plc0": 1.0,
+        "freqghz": 16,
+        "rngegw": 15,
+        "thta_3db": 7,
+        "powrs": 500,
+        "gainsdb": 26,
+        "gainmdb": 26,
+        "tgt_rcs": 2,
+        "rltotldb": 7,
+        "dwltm": 0.005,
+        "maut": 2,
+        "alimitx": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "zrcl": 0.9,
+        "tp": 0.1,
+        "zetlagr": 1.2
+      },
+      "events": [
+        {
+          "when": {
+            "msl_time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "maut": 3,
+            "mtvc": 0,
+            "wacl_bias": -0.6,
+            "pacl_bias": 0.6,
+            "zacl_bias": 0,
+            "mguide": 20,
+            "line_gain": 1,
+            "nl_gain_fact": 0.5,
+            "decrement": 7000,
+            "thtflx": 0
+          }
+        },
+        {
+          "when": {
+            "mseek": {
+              "=": 14
+            }
+          },
+          "set": {
+            "mguide": 7,
+            "gnav": 3.1
+          }
+        }
+      ],
+      "family": "sam6"
+    },
+    {
+      "type": "AIRCRAFT3",
+      "name": "AC1",
+      "params": {
+        "sael1": 0,
+        "sael2": -30000.0,
+        "sael3": -10000.0,
+        "psivlx": 90,
+        "thtvlx": 0,
+        "dvae": 250,
+        "acft_option": 0,
+        "clalpha": 0.0523,
+        "wingloading": 3247,
+        "philimx": 80,
+        "alplimx": 12
+      },
+      "events": [],
+      "family": "sam6"
+    },
+    {
+      "type": "RADAR0",
+      "name": "Radar",
+      "params": {
+        "mtrack": 2,
+        "lethal_rng": 20000.0,
+        "srel1": 0,
+        "srel2": 0,
+        "srel3": 0,
+        "track_step": 0.01,
+        "dat_sigma": 1,
+        "azat_sigma": 0.0005,
+        "elat_sigma": 0.0005,
+        "vel_sigma": 0.1
+      },
+      "events": [],
+      "family": "sam6"
+    }
+  ],
+  "family": "sam6"
+}

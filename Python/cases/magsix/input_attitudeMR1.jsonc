@@ -1,0 +1,84 @@
+{
+  "title": "input_attitudeMR1 Attitude test case (RECT.MR1 Run13 in MR Report)",
+  "options": {
+    "scrn": true,
+    "events": false,
+    "tabout": false,
+    "plot": true,
+    "merge": false,
+    "doc": true,
+    "csv": true,
+    "comscrn": false,
+    "traj": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "trajectory",
+      "phases": [
+        "def",
+        "init",
+        "exec",
+        "term"
+      ]
+    },
+    {
+      "name": "attitude",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 0.05,
+    "plot_step": 0.005,
+    "int_step": 0.0001
+  },
+  "end_time": 0.35,
+  "vehicles": [
+    {
+      "type": "ROTOR",
+      "name": "RECT.MR1",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "hbe": 1000,
+        "hbg": 0,
+        "dvbe": 16.6,
+        "psivlx": 0,
+        "thtvlx": -77,
+        "omega_rpm": 850,
+        "nonlinear": 0,
+        "betax": 0,
+        "phix": 3,
+        "psix": 0,
+        "rrx": -40,
+        "mass": 1.5,
+        "moi_spin": 0.004,
+        "moi_trans": 0.0268,
+        "ref_area": 0.0468,
+        "ref_length": 0.0625,
+        "cd": 1.31,
+        "cmdw": -0.45,
+        "clw": 2.51,
+        "cma": 0.508,
+        "cyb": -3.82,
+        "clwb": -0.357,
+        "clp": -5.82,
+        "cnb": -0.737,
+        "cnr": -13.8
+      },
+      "events": [],
+      "family": "magsix"
+    }
+  ],
+  "family": "magsix"
+}

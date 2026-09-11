@@ -1,0 +1,291 @@
+{
+  "title": "input_Demo_5_3_alt_var.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "plot": true,
+    "merge": true,
+    "doc": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 100.0,
+    "plot_step": 1.0,
+    "int_step": 0.05
+  },
+  "end_time": 1500.0,
+  "vehicles": [
+    {
+      "type": "HYPER5",
+      "name": "RR3X_h1",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "prop_deck": "hyper5_prop_deck.jsonc",
+      "params": {
+        "lonx": -120.6,
+        "latx": 34.7,
+        "alt": 20000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 1475,
+        "alphax": 0,
+        "phimvx": 0,
+        "area": 11.6986,
+        "mprop": 2,
+        "aintake": 0.184,
+        "mass0": 1976,
+        "fmass0": 624,
+        "phi_min": 0.5,
+        "phi_max": 1.2,
+        "qhold": 72000,
+        "tq": 7,
+        "tlag": 10,
+        "mcontrol": 16,
+        "psivgcx": 90,
+        "gain_psivg": 2,
+        "philimx": 60,
+        "tphi": 10,
+        "altcom": 24000,
+        "altdlim": 50,
+        "gh": 0.2,
+        "gv": 0.3,
+        "anposlimx": 2,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "alpposlimx": 6,
+        "alpneglimx": -4
+      },
+      "events": [
+        {
+          "when": {
+            "fmassr": {
+              "<": 0
+            }
+          },
+          "set": {
+            "halt": 1
+          }
+        }
+      ]
+    },
+    {
+      "type": "HYPER5",
+      "name": "RR3X_h2",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "prop_deck": "hyper5_prop_deck.jsonc",
+      "params": {
+        "lonx": -120.6,
+        "latx": 34.7,
+        "alt": 20000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 1475,
+        "alphax": 0,
+        "phimvx": 0,
+        "area": 11.6986,
+        "mprop": 2,
+        "aintake": 0.184,
+        "mass0": 1976,
+        "fmass0": 624,
+        "phi_min": 0.5,
+        "phi_max": 1.2,
+        "qhold": 62000,
+        "tq": 7,
+        "tlag": 10,
+        "mcontrol": 16,
+        "psivgcx": 90,
+        "gain_psivg": 2,
+        "philimx": 60,
+        "tphi": 10,
+        "altcom": 26000,
+        "altdlim": 50,
+        "gh": 0.2,
+        "gv": 0.3,
+        "anposlimx": 2,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "alpposlimx": 6,
+        "alpneglimx": -4
+      },
+      "events": [
+        {
+          "when": {
+            "fmassr": {
+              "<": 0
+            }
+          },
+          "set": {
+            "halt": 1
+          }
+        }
+      ]
+    },
+    {
+      "type": "HYPER5",
+      "name": "RR3X_h3",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "prop_deck": "hyper5_prop_deck.jsonc",
+      "params": {
+        "lonx": -120.6,
+        "latx": 34.7,
+        "alt": 20000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 1475,
+        "alphax": 0,
+        "phimvx": 0,
+        "area": 11.6986,
+        "mprop": 2,
+        "aintake": 0.184,
+        "mass0": 1976,
+        "fmass0": 624,
+        "phi_min": 0.5,
+        "phi_max": 1.2,
+        "qhold": 52000,
+        "tq": 7,
+        "tlag": 10,
+        "mcontrol": 16,
+        "psivgcx": 90,
+        "gain_psivg": 2,
+        "philimx": 60,
+        "tphi": 10,
+        "altcom": 28000,
+        "altdlim": 50,
+        "gh": 0.2,
+        "gv": 0.3,
+        "anposlimx": 2,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "alpposlimx": 6,
+        "alpneglimx": -4
+      },
+      "events": [
+        {
+          "when": {
+            "fmassr": {
+              "<": 0
+            }
+          },
+          "set": {
+            "halt": 1
+          }
+        }
+      ]
+    },
+    {
+      "type": "HYPER5",
+      "name": "RR3X_h4",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "prop_deck": "hyper5_prop_deck.jsonc",
+      "params": {
+        "lonx": -120.6,
+        "latx": 34.7,
+        "alt": 20000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 1475,
+        "alphax": 0,
+        "phimvx": 0,
+        "area": 11.6986,
+        "mprop": 2,
+        "aintake": 0.184,
+        "mass0": 1976,
+        "fmass0": 624,
+        "phi_min": 0.5,
+        "phi_max": 1.2,
+        "qhold": 42000,
+        "tq": 7,
+        "tlag": 10,
+        "mcontrol": 16,
+        "psivgcx": 90,
+        "gain_psivg": 2,
+        "philimx": 60,
+        "tphi": 10,
+        "altcom": 30000,
+        "altdlim": 50,
+        "gh": 0.2,
+        "gv": 0.3,
+        "anposlimx": 2,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "alpposlimx": 6,
+        "alpneglimx": -4
+      },
+      "events": [
+        {
+          "when": {
+            "fmassr": {
+              "<": 0
+            }
+          },
+          "set": {
+            "halt": 1
+          }
+        }
+      ]
+    }
+  ]
+}

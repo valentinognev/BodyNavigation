@@ -1,0 +1,238 @@
+{
+  "title": "input_arc.asc Arc-guidance, three waypoints",
+  "options": {
+    "scrn": false,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "stat": false,
+    "merge": false,
+    "traj": false,
+    "csv": true
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "gps",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "startrack",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "datalink",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "rcs",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 10.0,
+    "plot_step": 0.2,
+    "int_step": 0.01
+  },
+  "end_time": 150.0,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "Hypersonic",
+      "aero_deck": "ghame6_aero_deck.jsonc",
+      "prop_deck": "ghame6_prop_deck.jsonc",
+      "params": {
+        "lonx": 45,
+        "latx": 35,
+        "alt": 10000,
+        "dvbe": 1000,
+        "psibdx": 30,
+        "thtbdx": 3,
+        "alpha0x": 3,
+        "maero": 1,
+        "alpplimx": 21,
+        "alpnlimx": -3,
+        "strct_pos_limitx": 3,
+        "strct_neg_limitx": -2,
+        "mprop": 2,
+        "vmass0": 136077,
+        "fmass0": 81646,
+        "qhold": 180000,
+        "tq": 1,
+        "acowl": 27.87,
+        "thrtl_idle": 0.05,
+        "thrtl_max": 2,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 25,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "philimx": 60,
+        "wrcl": 8,
+        "zrcl": 0.9,
+        "zetlagr": 1.1,
+        "ancomx": 1,
+        "gainp": -0.01,
+        "zaclp": 1.2,
+        "waclp": 3,
+        "paclp": 5,
+        "altcom": 10000,
+        "gainalt": 0.5,
+        "gainaltrate": 0.5,
+        "mins": 1,
+        "mguide": 0
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 10
+            }
+          },
+          "set": {
+            "wp_lonx": 45.2,
+            "wp_latx": 35.3,
+            "mguide": 4
+          }
+        },
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "wp_lonx": 45.6,
+            "wp_latx": 35.7
+          }
+        },
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "wp_lonx": 46,
+            "wp_latx": 35.9
+          }
+        }
+      ]
+    }
+  ]
+}

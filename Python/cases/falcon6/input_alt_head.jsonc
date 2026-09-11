@@ -1,0 +1,161 @@
+{
+  "title": "input_alt_head.asc Altitude and heading autopilot",
+  "options": {
+    "scrn": true,
+    "events": false,
+    "tabout": false,
+    "plot": true,
+    "merge": false,
+    "doc": true,
+    "comscrn": false,
+    "traj": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 1.0,
+    "plot_step": 0.05,
+    "int_step": 0.001
+  },
+  "end_time": 20.0,
+  "vehicles": [
+    {
+      "type": "PLANE6",
+      "name": "F16",
+      "aero_deck": "f16_aero_deck.jsonc",
+      "prop_deck": "f16_prop_deck.jsonc",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -1000,
+        "dvbe": 180,
+        "psiblx": 0,
+        "thtblx": 1,
+        "alpha0x": 1,
+        "beta0x": 0,
+        "alplimpx": 16,
+        "alplimnx": -6,
+        "xcgr": 1,
+        "xcg": 1,
+        "mprop": 2,
+        "vmachcom": 0.6,
+        "gmach": 30,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 45,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "anlimpx": 9,
+        "anlimnx": 6,
+        "phicomx": 0,
+        "philimx": 80,
+        "wrcl": 15,
+        "zrcl": 0.7,
+        "zetlagr": 0.7,
+        "psivlcomx": 0,
+        "facthead": -0.9,
+        "ancomx": 1,
+        "gainp": 0,
+        "waclp": 4,
+        "zaclp": 0.3,
+        "paclp": 10,
+        "altcom": 1000,
+        "gainalt": 0.3,
+        "gainaltrate": 0.7
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "altcom": 1100
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 10
+            }
+          },
+          "set": {
+            "psivlcomx": 45
+          }
+        }
+      ]
+    }
+  ]
+}

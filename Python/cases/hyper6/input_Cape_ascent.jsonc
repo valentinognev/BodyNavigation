@@ -1,0 +1,229 @@
+{
+  "title": "input_Cape_ascent.asc Ascent from Cape Canaveral",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "stat": false,
+    "merge": false,
+    "traj": false
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "gps",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "startrack",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "datalink",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "rcs",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 20.0,
+    "plot_step": 0.5,
+    "int_step": 0.01
+  },
+  "end_time": 610.0,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "Hypersonic",
+      "aero_deck": "ghame6_aero_deck.jsonc",
+      "prop_deck": "ghame6_prop_deck.jsonc",
+      "params": {
+        "lonx": -80.6,
+        "latx": 28.4,
+        "alt": 3000,
+        "dvbe": 150,
+        "psibdx": 68,
+        "thtbdx": 8,
+        "alpha0x": 4,
+        "maero": 1,
+        "alpplimx": 21,
+        "alpnlimx": -3,
+        "strct_pos_limitx": 3,
+        "strct_neg_limitx": -2,
+        "mprop": 2,
+        "vmass0": 136077,
+        "fmass0": 81646,
+        "qhold": 60000,
+        "tq": 1,
+        "acowl": 27.87,
+        "thrtl_idle": 0.05,
+        "thrtl_max": 2,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 44,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "philimx": 60,
+        "wrcl": 8,
+        "zrcl": 0.9,
+        "zetlagr": 1.1,
+        "thtvdcomx": 4,
+        "pgam": 4,
+        "wgam": 2,
+        "zgam": 0.7,
+        "psivdcomx": 70,
+        "facthead": -0.95,
+        "mins": 1,
+        "mguide": 0
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 20
+            }
+          },
+          "set": {
+            "wp_lonx": -78,
+            "wp_latx": 30,
+            "mguide": 4,
+            "maut": 24
+          }
+        },
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "mguide": 0,
+            "maut": 44,
+            "psivdcomx": 40,
+            "facthead": -0.98,
+            "thtvdcomx": 3,
+            "qhold": 100000
+          }
+        }
+      ]
+    }
+  ]
+}

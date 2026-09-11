@@ -1,0 +1,168 @@
+{
+  "title": "input_yaw_pitch.asc: Yaw/pitch rate control",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": false,
+    "doc": true,
+    "tabout": true,
+    "plot": true,
+    "stat": false,
+    "merge": false,
+    "traj": false
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 1.0,
+    "plot_step": 0.05,
+    "int_step": 0.01
+  },
+  "end_time": 20.0,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "Hypersonic",
+      "aero_deck": "ghame6_aero_deck.jsonc",
+      "params": {
+        "lonx": 10,
+        "latx": 10,
+        "alt": 10000,
+        "dvbe": 1000,
+        "alpha0x": 2.5,
+        "thtbdx": 2.5,
+        "maero": 1,
+        "alpplimx": 21,
+        "alpnlimx": -3,
+        "strct_pos_limitx": 3,
+        "strct_neg_limitx": -2,
+        "vmass0": 136077,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 22,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "phicomx": 0,
+        "philimx": 60,
+        "wrcl": 8,
+        "zrcl": 0.9,
+        "zetlagr": 1.1
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "rcomx": 0.5
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 10
+            }
+          },
+          "set": {
+            "rcomx": 0,
+            "qcomx": 5
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 15
+            }
+          },
+          "set": {
+            "rcomx": 0,
+            "qcomx": 0
+          }
+        }
+      ]
+    }
+  ]
+}

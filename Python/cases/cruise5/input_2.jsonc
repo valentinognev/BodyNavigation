@@ -1,0 +1,250 @@
+{
+  "title": "input_2.asc: 1 UAV 2 targets and 2 targeting satellites",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "tabout": false,
+    "plot": true,
+    "traj": true,
+    "merge": false,
+    "doc": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "targeting",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 50.0,
+    "plot_step": 0.2,
+    "traj_step": 0.5,
+    "int_step": 0.05,
+    "com_step": 40.0
+  },
+  "end_time": 450.0,
+  "vehicles": [
+    {
+      "type": "CRUISE5",
+      "name": "UAV",
+      "aero_deck": "cruise3_aero_deck.jsonc",
+      "prop_deck": "cruise3_prop_deck.jsonc",
+      "params": {
+        "lonx": 14.7,
+        "latx": 35.4,
+        "alt": 7000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 200,
+        "alphax": 0,
+        "phimvx": 0.0,
+        "mprop": 4,
+        "mach_com": 0.7,
+        "mass_init": 1000,
+        "fuel_init": 150,
+        "gfthm": 893620,
+        "tfth": 1,
+        "mseeker": 0,
+        "acq_range": 10000,
+        "mguidance": 30,
+        "pronav_gain": 3,
+        "line_gain": 1,
+        "nl_gain_fact": 0.6,
+        "decrement": 1000,
+        "mcontrol": 46,
+        "anposlimx": 3,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "alpposlimx": 15,
+        "alpneglimx": -10,
+        "gcp": 2,
+        "allimx": 1,
+        "philimx": 70,
+        "tphi": 0.5,
+        "altcom": 7000,
+        "altdlim": 50,
+        "gh": 0.3,
+        "gv": 1.0,
+        "psivgcx": 90,
+        "gain_psivg": 12.0,
+        "gain_thtvg": 30,
+        "wp_lonx": 14.9,
+        "wp_latx": 35.4,
+        "psifgx": 90
+      },
+      "events": [
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "wp_lonx": 15.25,
+            "wp_latx": 35.54,
+            "psifgx": 90,
+            "altcom": 5000
+          }
+        },
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "wp_lonx": 15.43,
+            "wp_latx": 35.44,
+            "psifgx": 180,
+            "altcom": 2000
+          }
+        },
+        {
+          "when": {
+            "wp_flag": {
+              "=": -1
+            }
+          },
+          "set": {
+            "mtargeting": 1,
+            "del_radius": 5000,
+            "mguidance": 43,
+            "point_gain": 1,
+            "line_gain": 1,
+            "nl_gain_fact": 0.6,
+            "decrement": 1000,
+            "thtfgx": -50,
+            "mcontrol": 44
+          }
+        }
+      ],
+      "family": "cruise5"
+    },
+    {
+      "type": "TARGET3",
+      "name": "Tank_t1",
+      "params": {
+        "lonx": 15.4,
+        "latx": 35.3,
+        "alt": 100,
+        "psivgx": 45,
+        "dvbe": 10
+      },
+      "events": [],
+      "family": "cruise5"
+    },
+    {
+      "type": "TARGET3",
+      "name": "Tank_t2",
+      "params": {
+        "lonx": 15.38,
+        "latx": 35.25,
+        "alt": 100,
+        "psivgx": -45,
+        "dvbe": 10
+      },
+      "events": [],
+      "family": "cruise5"
+    },
+    {
+      "type": "SATELLITE3",
+      "name": "Satellite_s1",
+      "params": {
+        "lonx": -30,
+        "latx": 0,
+        "alt": 300000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 7743
+      },
+      "events": [],
+      "family": "cruise5"
+    },
+    {
+      "type": "SATELLITE3",
+      "name": "Satellite_s2",
+      "params": {
+        "lonx": 10,
+        "latx": 30,
+        "alt": 500000,
+        "psivgx": 45,
+        "thtvgx": 0,
+        "dvbe": 7700
+      },
+      "events": [],
+      "family": "cruise5"
+    }
+  ],
+  "family": "cruise5"
+}

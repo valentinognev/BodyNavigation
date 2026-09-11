@@ -1,0 +1,510 @@
+{
+  "title": "input_SAM_IR_SRBM_Radar_#1_#2_#3.asc",
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": false,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "traj": true,
+    "csv": false,
+    "stat": false,
+    "merge": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "sensor",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "com_step": 5.0,
+    "plot_step": 0.1,
+    "traj_step": 5.0,
+    "int_step": 0.001
+  },
+  "end_time": 460.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "SAM1",
+      "aero_deck": "SAM_aero_deck.jsonc",
+      "prop_deck": "SAM_prop_deck.jsonc",
+      "params": {
+        "stop": 1,
+        "mterm": 1,
+        "mtarget": 1,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": 0,
+        "psiblx": 55,
+        "thtblx": 78,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 16,
+        "xcgref": 2.5,
+        "mass": 300,
+        "xcg": 2.9,
+        "ai11": 2.9,
+        "ai33": 440,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 600,
+        "zetact": 0.7,
+        "mins": 2,
+        "mseek": 22,
+        "skr_dyn": 1,
+        "racq_ir": 7000,
+        "fovyaw_ir": 0.035,
+        "fovpitch_ir": 0.035,
+        "dtimac_ir": 0.3,
+        "dblind": 10,
+        "gk": 17,
+        "wnk": 200,
+        "zetak": 0.9,
+        "trate": 2,
+        "trtht": 1.2,
+        "trthtd": 20,
+        "biast": 0,
+        "randt": 0,
+        "trphid": 20,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0,
+        "maut": 2,
+        "alimitx": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "zrcl": 0.9,
+        "factwrcl": 0,
+        "tp": 0.1,
+        "zetlagr": 1.2
+      },
+      "events": [
+        {
+          "when": {
+            "msl_time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "maut": 3,
+            "wacl_bias": -0.6,
+            "pacl_bias": 0.6,
+            "zacl_bias": 0,
+            "mguide": 20,
+            "line_gain": 2,
+            "nl_gain_fact": 0.85,
+            "decrement": 5000,
+            "thtflx": 85
+          }
+        },
+        {
+          "when": {
+            "mseek": {
+              "=": 24
+            }
+          },
+          "set": {
+            "mguide": 6,
+            "gnav": 3.5,
+            "gn": 2,
+            "tgnav": 1
+          }
+        }
+      ],
+      "family": "sam6"
+    },
+    {
+      "type": "MISSILE6",
+      "name": "SAM2",
+      "aero_deck": "SAM_aero_deck.jsonc",
+      "prop_deck": "SAM_prop_deck.jsonc",
+      "params": {
+        "stop": 1,
+        "mterm": 1,
+        "mtarget": 1,
+        "sbel1": 1000,
+        "sbel2": 8000,
+        "sbel3": 0,
+        "psiblx": -90,
+        "thtblx": 70,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 16,
+        "xcgref": 2.5,
+        "mass": 300,
+        "xcg": 2.9,
+        "ai11": 2.9,
+        "ai33": 440,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 600,
+        "zetact": 0.7,
+        "mtvc": 0,
+        "tvclimx": 10,
+        "dtvclimx": 200,
+        "wntvc": 200,
+        "zettvc": 0.7,
+        "parm": 2.5,
+        "gtvc0": 0.5,
+        "mrcs_force": 0,
+        "rcs_thrust": 200,
+        "acc_gain": 1,
+        "mins": 2,
+        "mseek": 22,
+        "skr_dyn": 1,
+        "racq_ir": 7000,
+        "fovyaw_ir": 0.035,
+        "fovpitch_ir": 0.035,
+        "dtimac_ir": 0.3,
+        "dblind": 10,
+        "gk": 17,
+        "wnk": 200,
+        "zetak": 0.9,
+        "trate": 2,
+        "trtht": 1.2,
+        "trthtd": 20,
+        "biast": 0,
+        "randt": 0,
+        "trphid": 20,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0,
+        "maut": 2,
+        "alimitx": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "zrcl": 0.9,
+        "factwrcl": 0,
+        "tp": 0.1,
+        "zetlagr": 1.2
+      },
+      "events": [
+        {
+          "when": {
+            "msl_time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "maut": 3,
+            "mtvc": 0,
+            "wacl_bias": -0.6,
+            "pacl_bias": 0.6,
+            "zacl_bias": 0,
+            "mguide": 20,
+            "line_gain": 1,
+            "nl_gain_fact": 0.5,
+            "decrement": 12000,
+            "thtflx": 60
+          }
+        },
+        {
+          "when": {
+            "mseek": {
+              "=": 24
+            }
+          },
+          "set": {
+            "mguide": 6,
+            "gnav": 3.5
+          }
+        }
+      ],
+      "family": "sam6"
+    },
+    {
+      "type": "MISSILE6",
+      "name": "SAM3",
+      "aero_deck": "SAM_aero_deck.jsonc",
+      "prop_deck": "SAM_prop_deck.jsonc",
+      "params": {
+        "stop": 1,
+        "mterm": 1,
+        "mtarget": 1,
+        "sbel1": 1000,
+        "sbel2": 8000,
+        "sbel3": 0,
+        "psiblx": -90,
+        "thtblx": 70,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 16,
+        "xcgref": 2.5,
+        "mass": 300,
+        "xcg": 2.9,
+        "ai11": 2.9,
+        "ai33": 440,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 600,
+        "zetact": 0.7,
+        "mtvc": 0,
+        "tvclimx": 10,
+        "dtvclimx": 200,
+        "wntvc": 200,
+        "zettvc": 0.7,
+        "parm": 2.5,
+        "gtvc0": 0.5,
+        "mrcs_force": 0,
+        "rcs_thrust": 200,
+        "acc_gain": 1,
+        "mins": 2,
+        "mseek": 22,
+        "skr_dyn": 1,
+        "racq_ir": 7000,
+        "fovyaw_ir": 0.035,
+        "fovpitch_ir": 0.035,
+        "dtimac_ir": 0.3,
+        "dblind": 10,
+        "gk": 17,
+        "wnk": 200,
+        "zetak": 0.9,
+        "trate": 2,
+        "trtht": 1.2,
+        "trthtd": 20,
+        "biast": 0,
+        "randt": 0,
+        "trphid": 20,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0,
+        "maut": 2,
+        "alimitx": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "zrcl": 0.9,
+        "factwrcl": 0,
+        "tp": 0.1,
+        "zetlagr": 1.2
+      },
+      "events": [
+        {
+          "when": {
+            "msl_time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "maut": 3,
+            "mtvc": 0,
+            "wacl_bias": -0.6,
+            "pacl_bias": 0.6,
+            "zacl_bias": 0,
+            "mguide": 20,
+            "line_gain": 1.8,
+            "nl_gain_fact": 0.5,
+            "decrement": 5000,
+            "thtflx": 65
+          }
+        },
+        {
+          "when": {
+            "mseek": {
+              "=": 24
+            }
+          },
+          "set": {
+            "mguide": 6,
+            "gnav": 3.5
+          }
+        }
+      ],
+      "family": "sam6"
+    },
+    {
+      "type": "ROCKET5",
+      "name": "SRBM1",
+      "aero_deck": "SRBM_aero_deck.jsonc",
+      "params": {
+        "sael1": 1000,
+        "sael2": -250000.0,
+        "sael3": 0,
+        "psivlx": 90,
+        "thtvlx": 85,
+        "alpha_t0x": 5,
+        "beta_t0x": 0,
+        "alpmax": 40,
+        "dvae": 10,
+        "mprop": 1,
+        "maut": 1,
+        "alt_endo": 30000,
+        "ancomx_bias": 0.5
+      },
+      "events": [],
+      "family": "sam6"
+    },
+    {
+      "type": "ROCKET5",
+      "name": "SRBM2",
+      "aero_deck": "SRBM_aero_deck.jsonc",
+      "params": {
+        "launch_delay": 2,
+        "sael1": 1000,
+        "sael2": -250000.0,
+        "sael3": 0,
+        "psivlx": 90,
+        "thtvlx": 85,
+        "alpha_t0x": 5,
+        "beta_t0x": 0,
+        "alpmax": 40,
+        "dvae": 10,
+        "mprop": 1,
+        "maut": 1,
+        "alt_endo": 30000,
+        "ancomx_bias": 0.5
+      },
+      "events": [],
+      "family": "sam6"
+    },
+    {
+      "type": "ROCKET5",
+      "name": "SRBM3",
+      "aero_deck": "SRBM_aero_deck.jsonc",
+      "params": {
+        "launch_delay": 4,
+        "sael1": 1000,
+        "sael2": -250000.0,
+        "sael3": 0,
+        "psivlx": 90,
+        "thtvlx": 85,
+        "alpha_t0x": 5,
+        "beta_t0x": 0,
+        "alpmax": 40,
+        "dvae": 10,
+        "mprop": 1,
+        "maut": 1,
+        "alt_endo": 30000,
+        "ancomx_bias": 0.5
+      },
+      "events": [],
+      "family": "sam6"
+    },
+    {
+      "type": "RADAR0",
+      "name": "Radar",
+      "sam_deck": "SAM_traj_deck.jsonc",
+      "srmb_deck": "SRBM_traj_deck_ballistic.jsonc",
+      "params": {
+        "mtrack": 1,
+        "srel1": 0,
+        "srel2": 0,
+        "srel3": 0,
+        "alt_engage": 15000,
+        "track_step": 0.01,
+        "dat_sigma": 1,
+        "azat_sigma": 0.0005,
+        "elat_sigma": 0.0005,
+        "vel_sigma": 0.1,
+        "lnch_dly_bias2": 2,
+        "lnch_dly_bias3": 4
+      },
+      "events": [],
+      "family": "sam6"
+    }
+  ],
+  "family": "sam6"
+}

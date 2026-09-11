@@ -1,0 +1,409 @@
+{
+  "title": "10_2_2_input_gain_opt.asc Missile against 3g target",
+  "options": {
+    "scrn": true,
+    "doc": true,
+    "plot": true,
+    "merge": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 1.0,
+    "com_step": 1.0,
+    "plot_step": 0.05,
+    "traj_step": 0.2,
+    "int_step": 0.001
+  },
+  "end_time": 12.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "Missile",
+      "aero_deck": "sraam6_aero_deck.jsonc",
+      "prop_deck": "sraam6_prop_deck.jsonc",
+      "params": {
+        "tgt_num": 1,
+        "mterm": 1,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -5000,
+        "psiblx": 0,
+        "thtblx": 0,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 250,
+        "alplimx": 46,
+        "mprop": 1,
+        "aexit": 0.0125,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 100,
+        "zetact": 0.7,
+        "maut": 2,
+        "alimit": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "dplimx": 28,
+        "phicomx": 0,
+        "wrcl": 20,
+        "zrcl": 0.9,
+        "zetlagr": 0.6,
+        "mseek": 2,
+        "ms1dyn": 1,
+        "dblind": 3,
+        "racq": 7000,
+        "dtimac": 0.25,
+        "gk": 10,
+        "zetak": 0.9,
+        "wnk": 60,
+        "fovyaw": 0.0314,
+        "fovpitch": 0.0314,
+        "trphid": 14,
+        "trtht": 1,
+        "trthtd": 10,
+        "trate": 1,
+        "biast": 0,
+        "randt": 0,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0,
+        "mnav": 3,
+        "gnav": 2
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 0.25
+            }
+          },
+          "set": {
+            "maut": 3,
+            "mguid": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "MISSILE6",
+      "name": "Missile",
+      "aero_deck": "sraam6_aero_deck.jsonc",
+      "prop_deck": "sraam6_prop_deck.jsonc",
+      "params": {
+        "tgt_num": 1,
+        "mterm": 1,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -5000,
+        "psiblx": 0,
+        "thtblx": 0,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 250,
+        "alplimx": 46,
+        "mprop": 1,
+        "aexit": 0.0125,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 100,
+        "zetact": 0.7,
+        "maut": 2,
+        "alimit": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "dplimx": 28,
+        "phicomx": 0,
+        "wrcl": 20,
+        "zrcl": 0.9,
+        "zetlagr": 0.6,
+        "mseek": 2,
+        "ms1dyn": 1,
+        "dblind": 3,
+        "racq": 7000,
+        "dtimac": 0.25,
+        "gk": 10,
+        "zetak": 0.9,
+        "wnk": 60,
+        "fovyaw": 0.0314,
+        "fovpitch": 0.0314,
+        "trphid": 14,
+        "trtht": 1,
+        "trthtd": 10,
+        "trate": 1,
+        "biast": 0,
+        "randt": 0,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0,
+        "mnav": 3,
+        "gnav": 3
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 0.25
+            }
+          },
+          "set": {
+            "maut": 3,
+            "mguid": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "MISSILE6",
+      "name": "Missile",
+      "aero_deck": "sraam6_aero_deck.jsonc",
+      "prop_deck": "sraam6_prop_deck.jsonc",
+      "params": {
+        "tgt_num": 1,
+        "mterm": 1,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -5000,
+        "psiblx": 0,
+        "thtblx": 0,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 250,
+        "alplimx": 46,
+        "mprop": 1,
+        "aexit": 0.0125,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 100,
+        "zetact": 0.7,
+        "maut": 2,
+        "alimit": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "dplimx": 28,
+        "phicomx": 0,
+        "wrcl": 20,
+        "zrcl": 0.9,
+        "zetlagr": 0.6,
+        "mseek": 2,
+        "ms1dyn": 1,
+        "dblind": 3,
+        "racq": 7000,
+        "dtimac": 0.25,
+        "gk": 10,
+        "zetak": 0.9,
+        "wnk": 60,
+        "fovyaw": 0.0314,
+        "fovpitch": 0.0314,
+        "trphid": 14,
+        "trtht": 1,
+        "trthtd": 10,
+        "trate": 1,
+        "biast": 0,
+        "randt": 0,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0,
+        "mnav": 3,
+        "gnav": 4
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 0.25
+            }
+          },
+          "set": {
+            "maut": 3,
+            "mguid": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "MISSILE6",
+      "name": "Missile",
+      "aero_deck": "sraam6_aero_deck.jsonc",
+      "prop_deck": "sraam6_prop_deck.jsonc",
+      "params": {
+        "tgt_num": 1,
+        "mterm": 1,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -5000,
+        "psiblx": 0,
+        "thtblx": 0,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 250,
+        "alplimx": 46,
+        "mprop": 1,
+        "aexit": 0.0125,
+        "mact": 2,
+        "dlimx": 28,
+        "ddlimx": 600,
+        "wnact": 100,
+        "zetact": 0.7,
+        "maut": 2,
+        "alimit": 50,
+        "dqlimx": 28,
+        "drlimx": 28,
+        "dplimx": 28,
+        "phicomx": 0,
+        "wrcl": 20,
+        "zrcl": 0.9,
+        "zetlagr": 0.6,
+        "mseek": 2,
+        "ms1dyn": 1,
+        "dblind": 3,
+        "racq": 7000,
+        "dtimac": 0.25,
+        "gk": 10,
+        "zetak": 0.9,
+        "wnk": 60,
+        "fovyaw": 0.0314,
+        "fovpitch": 0.0314,
+        "trphid": 14,
+        "trtht": 1,
+        "trthtd": 10,
+        "trate": 1,
+        "biast": 0,
+        "randt": 0,
+        "biasp": 0,
+        "randp": 0,
+        "biaseh": 0,
+        "randeh": 0,
+        "mnav": 3,
+        "gnav": 5
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 0.25
+            }
+          },
+          "set": {
+            "maut": 3,
+            "mguid": 3
+          }
+        }
+      ]
+    },
+    {
+      "type": "TARGET3",
+      "name": "Target",
+      "params": {
+        "msl_num": 1,
+        "tgt_option": 1,
+        "gturn": 3,
+        "guid_gain": 1,
+        "sael1": 10000,
+        "sael2": 500,
+        "sael3": -2000,
+        "psialx": 180,
+        "thtalx": 0,
+        "dvae": 250
+      },
+      "events": []
+    }
+  ]
+}

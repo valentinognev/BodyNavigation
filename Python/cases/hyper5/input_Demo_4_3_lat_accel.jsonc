@@ -1,0 +1,117 @@
+{
+  "title": "input_Demo_4_3_lat_accel.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "plot": true,
+    "doc": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 1.0,
+    "plot_step": 0.01,
+    "int_step": 0.01
+  },
+  "end_time": 15.0,
+  "vehicles": [
+    {
+      "type": "HYPER5",
+      "name": "RRX3",
+      "aero_deck": "hyper5_aero_deck.jsonc",
+      "prop_deck": "hyper5_prop_deck.jsonc",
+      "params": {
+        "lonx": -120.6,
+        "latx": 34.7,
+        "alt": 20000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 1277,
+        "alphax": 0,
+        "phimvx": 0,
+        "area": 11.6986,
+        "mprop": 2,
+        "aintake": 0.184,
+        "mass0": 1976,
+        "fmass0": 624,
+        "phi_min": 0.5,
+        "phi_max": 1.2,
+        "qhold": 72000,
+        "tq": 10,
+        "tlag": 1,
+        "mcontrol": 40,
+        "gcp": 2,
+        "allimx": 1,
+        "philimx": 70,
+        "tphi": 1
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 5
+            }
+          },
+          "set": {
+            "alcomx": 0.5
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 10
+            }
+          },
+          "set": {
+            "alcomx": 0
+          }
+        }
+      ]
+    }
+  ]
+}

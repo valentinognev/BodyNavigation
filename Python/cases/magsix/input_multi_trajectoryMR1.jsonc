@@ -1,0 +1,88 @@
+{
+  "title": "input_multi_trajectoryMR1 Multi-Run Trajectory test case (RECT.MR1 Run13 in MR Report)",
+  "options": {
+    "scrn": true,
+    "events": false,
+    "tabout": false,
+    "plot": true,
+    "merge": true,
+    "doc": true,
+    "comscrn": false,
+    "traj": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "trajectory",
+      "phases": [
+        "def",
+        "init",
+        "exec",
+        "term"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 2.0,
+    "plot_step": 0.01,
+    "int_step": 0.001
+  },
+  "end_time": 60.0,
+  "vehicles": [
+    {
+      "type": "ROTOR",
+      "name": "RECT.MR1_1",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "hbe": 1000,
+        "hbg": 0,
+        "dvbe": 16.6,
+        "psivlx": 0,
+        "thtvlx": -77,
+        "omega_rpm": 850,
+        "mass": 1.5,
+        "moi_spin": 0.004,
+        "ref_area": 0.0468,
+        "ref_length": 0.0625,
+        "cd": 1.31,
+        "cmdw": -0.45,
+        "clw": 2.51,
+        "cma": 0.508
+      },
+      "events": [],
+      "family": "magsix"
+    },
+    {
+      "type": "ROTOR",
+      "name": "RECT.MR1_2",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "hbe": 1200,
+        "hbg": 0,
+        "dvbe": 16.6,
+        "psivlx": 30,
+        "thtvlx": -60,
+        "omega_rpm": 1000,
+        "mass": 1.5,
+        "moi_spin": 0.004,
+        "ref_area": 0.0468,
+        "ref_length": 0.0625,
+        "cd": 1.31,
+        "cmdw": -0.45,
+        "clw": 2.51,
+        "cma": 0.508
+      },
+      "events": [],
+      "family": "magsix"
+    }
+  ],
+  "family": "magsix"
+}

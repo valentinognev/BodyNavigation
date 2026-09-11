@@ -1,0 +1,195 @@
+{
+  "title": "input_4_7 AGM6 Terminal.asc",
+  "options": {
+    "scrn": true,
+    "events": true,
+    "doc": true,
+    "plot": true,
+    "traj": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "sensor",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 2.0,
+    "plot_step": 0.02,
+    "traj_step": 1.0,
+    "int_step": 0.001
+  },
+  "end_time": 25.0,
+  "vehicles": [
+    {
+      "type": "MISSILE6",
+      "name": "AGM6",
+      "aero_deck": "AGM6_aero_deck.jsonc",
+      "params": {
+        "tgt_num": 1,
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -4000,
+        "psiblx": 0,
+        "thtblx": 0,
+        "phiblx": 0,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "dvbe": 293,
+        "alplimx": 20,
+        "ai11": 42.5,
+        "ai33": 2632,
+        "vmass0": 1360,
+        "fmass0": 250,
+        "mprop": 0,
+        "aexit": 0.02,
+        "spi": 210,
+        "thrsl": 10000,
+        "throtl": 1,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 600,
+        "wnact": 62.8,
+        "zetact": 0.7,
+        "maut": 2,
+        "alimit": 3,
+        "dqlimx": 25,
+        "drlimx": 25,
+        "dplimx": 25,
+        "phicomx": 0,
+        "zrcl": 0.9,
+        "wrcl": 5,
+        "zetlagr": 0.9,
+        "wacl": 2,
+        "zacl": 0.7,
+        "pacl": 10,
+        "mseek": 2,
+        "skr_dyn": 0,
+        "racq": 7000,
+        "dtimac": 0.3
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 1
+            }
+          },
+          "set": {
+            "mprop": 1,
+            "maut": 3,
+            "mguid": 5,
+            "gnav": 3,
+            "grav_bias": 1.5
+          }
+        }
+      ],
+      "family": "agm6"
+    },
+    {
+      "type": "TARGET3",
+      "name": "Ground",
+      "params": {
+        "sael1": 6000,
+        "sael2": 0,
+        "sael3": -100
+      },
+      "events": [],
+      "family": "agm6"
+    }
+  ],
+  "family": "agm6"
+}
