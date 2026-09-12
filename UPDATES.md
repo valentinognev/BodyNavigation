@@ -1,5 +1,11 @@
 # Updates
 
+## 0.170.23 - AID web sibling (plan 4)
+- AID web lives in AircraftIntuitiveDesign (not this repo): FastAPI :8002 + Vite :5175, `./start-web.sh` / `./kill-web.sh`, PySide `./start.sh` unchanged.
+- Analyze DATCOM/Tornado/AVL/flow5; handshake POST `:8001/handshake/sessions/{id}/complete` `source: "aid"`; `?cadacSession=` auto-opens New.
+- CADAC Launch MISDC/AID chrome still plan 5. AID merged on `feature/flow5-v1` (`0afb344`).
+- Tests (AID): `cd api && pytest` 24 passed; `cd web && npm test` 39 passed.
+
 ## 0.170.22 - handshake review fix-wave
 - ROCKET6 `map_payload` copies leftover template tables after the required-name loop (slv1 map keeps slv2/slv3; confirm cannot shrink `aero_deck_SLV.jsonc`).
 - SAM6 3-D wrap advertises a single β (`x2=[0.0]` if present, else one β); 2-D polars no longer write `x2` longer than `values`.
