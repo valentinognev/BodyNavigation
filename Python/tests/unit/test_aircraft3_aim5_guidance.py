@@ -4,7 +4,7 @@ import pytest
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.aim5.aircraft import (
+from cadac.vehicles.flat3.aim5.aircraft import (
     Aim5AircraftControl,
     Aim5AircraftForces,
     Aim5AircraftGuidance,

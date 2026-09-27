@@ -85,6 +85,28 @@ it("openCase GETs case JSONC into scenario using HTTP status", async () => {
   expect(store.getState().program).toBe("hyper3");
   expect(store.getState().stem).toBe("input_climb");
   expect(store.getState().scenario?.vehicles[0].params.alt).toBe(3000);
+  expect(store.getState().caseDescription).toBe("");
+});
+
+it("openCase stores the file description for Overview", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        path: "p",
+        scenario: hyper3Like,
+        description: "HYPER3, 3-DOF round earth. One CRUISE3. Two-phase climb.",
+      }),
+    }),
+  );
+  const store = createStore();
+  await store.getState().openCase("hyper3", "input_climb");
+  expect(store.getState().caseDescription).toBe(
+    "HYPER3, 3-DOF round earth. One CRUISE3. Two-phase climb.",
+  );
 });
 
 it("openCase fetch rejection sets parseError", async () => {
@@ -245,6 +267,25 @@ it("openImportedFile POSTs import then loads editor", async () => {
   expect(store.getState().program).toBeNull();
   expect(store.getState().stem).toBe("input_climb");
   expect(store.getState().scenario?.vehicles[0].type).toBe("CRUISE3");
+  expect(store.getState().caseDescription).toBe("");
+});
+
+it("openImportedFile stores the imported description", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        scenario: hyper3Like,
+        description: "Two vehicles. Horizontal engagement.",
+      }),
+    }),
+  );
+  const store = createStore();
+  await openImportedFile(store, new File(["{}"], "input_hori.jsonc"));
+  expect(store.getState().caseDescription).toBe("Two vehicles. Horizontal engagement.");
 });
 
 it("imported case disables Save/Run and does not POST", async () => {

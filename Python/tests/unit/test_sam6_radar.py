@@ -5,7 +5,7 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck, Table
-from cadac.vehicles.sam6.radar import Sam6Radar, Sam6RadarSensor
+from cadac.vehicles.flat6.sam6.radar import Sam6Radar, Sam6RadarSensor
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -366,6 +366,6 @@ def test_mtrack_4_raises():
 
 def test_sensor_name_and_small():
     assert Sam6RadarSensor.name == "sensor"
-    from cadac.vehicles.sam6 import radar as radar_mod
+    from cadac.vehicles.flat6.sam6 import radar as radar_mod
 
     assert radar_mod.SMALL == SMALL

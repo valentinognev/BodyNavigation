@@ -7,7 +7,7 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.earth import cadine
-from cadac.vehicles.cruise5.targeting import Cruise5Targeting
+from cadac.vehicles.round3.cruise5.targeting import Cruise5Targeting
 
 UAV_LONX, UAV_LATX, UAV_ALT = 14.7, 35.4, 7000.0
 TGT_LONX, TGT_LATX, TGT_ALT = 15.4, 35.3, 100.0
@@ -21,6 +21,7 @@ TARGETING_PY = (
     / "src"
     / "cadac"
     / "vehicles"
+    / "round3"
     / "cruise5"
     / "targeting.py"
 )
@@ -233,7 +234,7 @@ def test_define_registers_def_targeting_fields():
 
 
 def test_big_is_module_level_not_in_constants():
-    from cadac.vehicles.cruise5 import targeting as targeting_mod
+    from cadac.vehicles.round3.cruise5 import targeting as targeting_mod
     import cadac.constants as constants
 
     assert targeting_mod.BIG == 1e10

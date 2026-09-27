@@ -105,7 +105,7 @@ def _prepare_from_scenario(path: Path):
 
 
 def test_aim5_type_health_and_module_order():
-    from cadac.vehicles.aim5.vehicle import Aim5
+    from cadac.vehicles.flat3.aim5.vehicle import Aim5
 
     vehicle = Aim5("Missile", None, None)
     assert vehicle.type == "AIM5"
@@ -114,7 +114,7 @@ def test_aim5_type_health_and_module_order():
 
 
 def test_aircraft3_constructor_has_no_aero_deck_required():
-    from cadac.vehicles.aim5.aircraft import Aim5Aircraft
+    from cadac.vehicles.flat3.aim5.aircraft import Aim5Aircraft
 
     vehicle = Aim5Aircraft("Target")
     assert vehicle.type == "AIRCRAFT3"
@@ -124,7 +124,7 @@ def test_aircraft3_constructor_has_no_aero_deck_required():
 
 
 def test_sael2_applied_after_init_sbel_east():
-    from cadac.vehicles.aim5.vehicle import Aim5
+    from cadac.vehicles.flat3.aim5.vehicle import Aim5
 
     vehicle = Aim5("Missile", _aero_deck(), _prop_deck())
     vehicle.define()

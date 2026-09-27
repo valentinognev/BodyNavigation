@@ -1,3 +1,5 @@
+/* FALCON6, 6-DOF flat earth. One vehicle: PLANE6 (F-16).
+   Altitude and heading autopilot. */
 {
   "title": "input_alt_head.asc Altitude and heading autopilot",
   "options": {

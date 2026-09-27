@@ -25,7 +25,7 @@ def _attitude_smoke(tmp_path: Path) -> Path:
 
 
 def test_rotor_type_health_and_module_order():
-    from cadac.vehicles.rotor.vehicle import Rotor
+    from cadac.vehicles.planar.magsix.vehicle import Rotor
 
     vehicle = Rotor("RECT.MR1")
     assert vehicle.type == "ROTOR"
@@ -34,7 +34,7 @@ def test_rotor_type_health_and_module_order():
 
 
 def test_rotor_define_skips_existing_field():
-    from cadac.vehicles.rotor.vehicle import Rotor
+    from cadac.vehicles.planar.magsix.vehicle import Rotor
 
     vehicle = Rotor("RECT.MR1")
     vehicle.store.define(Field("hbe", 42.0, "real", "out", "pre", ("plot",)))

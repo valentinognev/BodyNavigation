@@ -18,7 +18,7 @@ HYPER6 Satellite, Radar, Ground0. GPS, startrack, seeker, datalink, RCS, interce
 
 ```
 Python/src/cadac/eom/round6.py     # Environment, Kinematics, Euler, Newton
-Python/src/cadac/vehicles/hyper6/
+Python/src/cadac/vehicles/round6/hyper6/
   vehicle.py      # Hyper6 type="HYPER6"
   aero.py
   propulsion.py

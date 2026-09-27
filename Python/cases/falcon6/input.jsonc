@@ -1,3 +1,5 @@
+/* FALCON6, 6-DOF flat earth. Eleven vehicles, all PLANE6 (F-16).
+   Default case: the flight-path controller flown as a fan of trajectories. */
 {
   "title": "10_3_2_input_gamma_fan.asc Flight path controller",
   "options": {

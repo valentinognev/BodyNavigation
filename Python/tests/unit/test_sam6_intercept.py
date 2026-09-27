@@ -9,7 +9,7 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat2tr, polar_from_cart
-from cadac.vehicles.sam6.intercept import Sam6Intercept
+from cadac.vehicles.flat6.sam6.intercept import Sam6Intercept
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -594,7 +594,7 @@ def test_does_not_sys_exit_on_halt():
 
 
 def test_no_sys_exit_or_print():
-    import cadac.vehicles.sam6.intercept as mod
+    import cadac.vehicles.flat6.sam6.intercept as mod
 
     text = Path(mod.__file__).read_text(encoding="utf-8")
     assert "sys.exit" not in text
@@ -602,7 +602,7 @@ def test_no_sys_exit_or_print():
 
 
 def test_no_flat6_hyper5_or_plane_imports():
-    import cadac.vehicles.sam6.intercept as mod
+    import cadac.vehicles.flat6.sam6.intercept as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

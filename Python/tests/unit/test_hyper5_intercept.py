@@ -4,7 +4,7 @@ import pytest
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.intercept import Hyper5Intercept
+from cadac.vehicles.round3.hyper5.intercept import Hyper5Intercept
 
 RTOL = 1e-12
 ATOL = 1e-14

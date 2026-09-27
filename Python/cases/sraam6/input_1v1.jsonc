@@ -1,3 +1,5 @@
+/* SRAAM6, 6-DOF flat earth. Two vehicles: one MISSILE6 and one TARGET3.
+   One short-range missile against one target. */
 {
   "title": "input_1v1.asc 1 Missile against 1 target",
   "options": {

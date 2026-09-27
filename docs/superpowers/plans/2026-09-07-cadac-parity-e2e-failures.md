@@ -61,7 +61,7 @@ JSONC families whose live golden comparisons **all passed** (not in the failure 
 - Tests: `test_hbe_matches_golden_at_t0`, `test_hbe_and_vmach_match_golden_at_shared_times`
 
 ```
-src/cadac/vehicles/agm6/environment.py:88  atmosphere76(hbe)
+src/cadac/vehicles/flat6/agm6/environment.py:88  atmosphere76(hbe)
 src/cadac/env/us76.py:46
 ValueError: math domain error
   delta = ptab[i] * math.pow((tbase / tlocal), (gmr / tgrad))
@@ -78,8 +78,8 @@ Python never produces a plot row. Typical cause: `hbe` left the US76 table (nega
 - Tests: `test_hbe_matches_golden_at_t0`, `test_hbe_and_vmach_match_golden_at_shared_times`
 
 ```
-src/cadac/vehicles/agm6/aero.py:200  aerodynamics_der
-src/cadac/vehicles/agm6/aero.py:261
+src/cadac/vehicles/flat6/agm6/aero.py:200  aerodynamics_der
+src/cadac/vehicles/flat6/agm6/aero.py:261
 ZeroDivisionError: division by zero
   a12 = dma / dna
 ```

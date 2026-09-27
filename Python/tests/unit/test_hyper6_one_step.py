@@ -60,7 +60,7 @@ def _jsonc(tmp_path: Path, name: str, vehicles: list, **extra) -> Path:
 
 
 def test_hyper6_type_health_and_module_order():
-    from cadac.vehicles.hyper6.vehicle import Hyper6
+    from cadac.vehicles.round6.hyper6.vehicle import Hyper6
 
     vehicle = Hyper6("Hypersonic", None, None)
     assert vehicle.type == "HYPER6"
@@ -69,7 +69,7 @@ def test_hyper6_type_health_and_module_order():
 
 
 def test_hyper6_define_registers_guidance_when_omitted_from_modules():
-    from cadac.vehicles.hyper6.vehicle import Hyper6
+    from cadac.vehicles.round6.hyper6.vehicle import Hyper6
 
     vehicle = Hyper6("Hypersonic", None, None)
     vehicle.define()
@@ -77,7 +77,7 @@ def test_hyper6_define_registers_guidance_when_omitted_from_modules():
 
 
 def test_hyper6_define_skips_existing_field():
-    from cadac.vehicles.hyper6.vehicle import Hyper6
+    from cadac.vehicles.round6.hyper6.vehicle import Hyper6
 
     vehicle = Hyper6("Hypersonic", None, None)
     vehicle.store.define(Field("alt", 42.0, "real", "out", "pre", ("plot",)))

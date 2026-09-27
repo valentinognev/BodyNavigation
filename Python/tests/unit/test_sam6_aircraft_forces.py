@@ -5,7 +5,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sam6.aircraft import Sam6AircraftForces
+from cadac.vehicles.flat6.sam6.aircraft import Sam6AircraftForces
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -167,7 +167,7 @@ def test_terminate_is_pass():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.aircraft as mod
+    import cadac.vehicles.flat6.sam6.aircraft as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

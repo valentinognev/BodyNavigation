@@ -19,7 +19,7 @@ HYPER6 Ground0 radar. Monte Carlo / `gauss` / `uniform` / `MARKOV` / `GAUSS` dra
 
 ```
 Python/src/cadac/eom/flat0.py          # Flat0 kinematics + newton (parent reserved)
-Python/src/cadac/vehicles/sam6/
+Python/src/cadac/vehicles/flat6/sam6/
   vehicle.py      # Sam6Missile type="MISSILE6"
   environment.py  # Sam6Environment — port SAM6 environment.cpp (not Flat6Environment)
   kinematics.py   # Sam6Kinematics — port SAM6 kinematics.cpp (copy quaternion math; not Flat6Kinematics)
@@ -152,7 +152,7 @@ Port SAM6 `environment.cpp` and `kinematics.cpp` in the sam6 package.
 
 ## Flat3 reuse (aircraft + rocket)
 
-Do **not** modify `cadac.eom.flat3` (PLANE uses `SBEL`/`dvbe`/`FSPV`). SAM6 Flat3 names are `SAEL`/`VAEL`/`dvae`/`FSPA`/`TAL`/`TAV`/`phiavout`. Port SAM6 `flat3_modules.cpp` as `Sam6Flat3Environment` / `Sam6Flat3Kinematics` / `Sam6Flat3Newton` in `vehicles/sam6/flat3.py`. Reuse `atmosphere76`, `gravity`, `integrate`, `mat2tr`, `polar_from_cart`. C++ comments NASA Marshall US76 — **use existing `atmosphere76`** (parent Flat3 policy). Skip `us76_nasa2002`.
+Do **not** modify `cadac.eom.flat3` (PLANE uses `SBEL`/`dvbe`/`FSPV`). SAM6 Flat3 names are `SAEL`/`VAEL`/`dvae`/`FSPA`/`TAL`/`TAV`/`phiavout`. Port SAM6 `flat3_modules.cpp` as `Sam6Flat3Environment` / `Sam6Flat3Kinematics` / `Sam6Flat3Newton` in `vehicles/flat6/sam6/flat3.py`. Reuse `atmosphere76`, `gravity`, `integrate`, `mat2tr`, `polar_from_cart`. C++ comments NASA Marshall US76 — **use existing `atmosphere76`** (parent Flat3 policy). Skip `us76_nasa2002`.
 
 Kinematics: `time`, `launch_delay`, `launch_epoch`, `launch_time` as SAM6 Flat3.
 

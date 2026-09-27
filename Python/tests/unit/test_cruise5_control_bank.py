@@ -1,6 +1,6 @@
 import pytest
 from cadac.kernel.state import StateStore
-from cadac.vehicles.cruise5.control import Cruise5Control
+from cadac.vehicles.round3.cruise5.control import Cruise5Control
 
 PHILIMX = 70.0
 TPHI = 0.5

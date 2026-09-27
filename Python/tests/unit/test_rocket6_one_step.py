@@ -74,7 +74,7 @@ def _jsonc(tmp_path: Path, name: str, vehicles: list, **extra) -> Path:
 
 
 def test_rocket6_type_family_health_and_module_order():
-    from cadac.vehicles.rocket6.vehicle import Rocket6
+    from cadac.vehicles.round6.rocket6.vehicle import Rocket6
 
     vehicle = Rocket6("SLV", None)
     assert vehicle.type == "HYPER6"
@@ -86,7 +86,7 @@ def test_rocket6_type_family_health_and_module_order():
 
 
 def test_rocket6_environment_uses_weather_deck():
-    from cadac.vehicles.rocket6.vehicle import Rocket6
+    from cadac.vehicles.round6.rocket6.vehicle import Rocket6
 
     vehicle = Rocket6("SLV", None, weather_deck="weather")
     env = next(module for module in vehicle.modules if module.name == "environment")
@@ -94,7 +94,7 @@ def test_rocket6_environment_uses_weather_deck():
 
 
 def test_rocket6_define_skips_existing_field():
-    from cadac.vehicles.rocket6.vehicle import Rocket6
+    from cadac.vehicles.round6.rocket6.vehicle import Rocket6
 
     vehicle = Rocket6("SLV", None)
     vehicle.store.define(Field("alt", 42.0, "real", "out", "pre", ("plot",)))
@@ -114,7 +114,7 @@ def test_insertion_tenth_second_time_and_alt(tmp_path: Path):
 
 
 def test_family_jsonc_hyper6_runs_rocket6(tmp_path: Path):
-    from cadac.vehicles.rocket6.vehicle import Rocket6
+    from cadac.vehicles.round6.rocket6.vehicle import Rocket6
 
     path = _insertion_tenth_second(tmp_path)
     spec = load_scenario(path).vehicles[0]
@@ -128,7 +128,7 @@ def test_family_jsonc_hyper6_runs_rocket6(tmp_path: Path):
 
 
 def test_no_family_hyper6_still_hyper6():
-    from cadac.vehicles.hyper6.vehicle import Hyper6
+    from cadac.vehicles.round6.hyper6.vehicle import Hyper6
 
     assert _VEHICLE_TYPES["HYPER6"] is Hyper6
     path = HYPER6_CASES / "input_climb.jsonc"

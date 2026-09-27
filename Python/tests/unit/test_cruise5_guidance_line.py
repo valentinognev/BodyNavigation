@@ -7,7 +7,7 @@ from cadac.constants import RAD
 from cadac.kernel.state import Field, StateStore
 from cadac.math.earth import cadine, cadtei, cadtge
 from cadac.math.frames import mat2tr, polar_from_cart
-from cadac.vehicles.cruise5.guidance import Cruise5Guidance
+from cadac.vehicles.round3.cruise5.guidance import Cruise5Guidance
 
 RTOL = 1e-12
 ATOL = 1e-14

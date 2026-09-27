@@ -8,7 +8,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.earth import cadine, cadtei, cadtge
 from cadac.math.frames import mat2tr, polar_from_cart
-from cadac.vehicles.hyper5.guidance import Hyper5Guidance
+from cadac.vehicles.round3.hyper5.guidance import Hyper5Guidance
 
 # Demo 4.6 Point guidance against WSMR coordinates
 LONX = -106.3

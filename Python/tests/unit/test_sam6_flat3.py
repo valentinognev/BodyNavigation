@@ -2,7 +2,7 @@ import inspect
 
 import numpy as np
 from cadac.env.us76 import atmosphere76
-from cadac.vehicles.sam6.flat3 import Sam6Flat3Environment, Sam6Flat3Newton
+from cadac.vehicles.flat6.sam6.flat3 import Sam6Flat3Environment, Sam6Flat3Newton
 from cadac.kernel.state import StateStore, Field
 from cadac.kernel.executive import SimContext
 
@@ -40,7 +40,7 @@ from cadac.constants import DEG, R, RAD
 from cadac.env.gravity import gravity
 from cadac.kernel.integrate import integrate
 from cadac.math.frames import mat2tr, polar_from_cart
-from cadac.vehicles.sam6.flat3 import Sam6Flat3Kinematics
+from cadac.vehicles.flat6.sam6.flat3 import Sam6Flat3Kinematics
 
 
 def test_module_names():
@@ -192,7 +192,7 @@ def test_newton_execute_next_acc_from_tal_fspa():
 
 
 def test_does_not_import_flat6_or_shared_flat3():
-    import cadac.vehicles.sam6.flat3 as sam6_flat3
+    import cadac.vehicles.flat6.sam6.flat3 as sam6_flat3
 
     src = inspect.getsource(sam6_flat3)
     assert "cadac.eom.flat6" not in src

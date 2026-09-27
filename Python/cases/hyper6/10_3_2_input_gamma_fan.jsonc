@@ -1,3 +1,5 @@
+/* 6-DOF flat-earth aircraft case stored with the HYPER6 inputs. Eleven vehicles, all PLANE6 (F-16).
+   Section 10.3.2 flight-path controller, flown as a fan of trajectories. */
 {
   "title": "10_3_2_input_gamma_fan.asc Flight path controller",
   "options": {

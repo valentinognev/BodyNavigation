@@ -1,3 +1,5 @@
+/* ROCKET6, 6-DOF round earth. One vehicle: a three-stage SLV (type HYPER6, family rocket6).
+   Default case: ascent to orbital insertion. */
 {
   "title": "input_insertion.asc  Three-stage rocket ascent",
   "iseed": 1234,

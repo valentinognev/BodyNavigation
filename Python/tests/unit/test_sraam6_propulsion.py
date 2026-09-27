@@ -8,7 +8,7 @@ from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.sraam6.propulsion import Sraam6Propulsion
+from cadac.vehicles.flat6.sraam6.propulsion import Sraam6Propulsion
 
 SRAAM6 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/SRAAM6_250130/SRAAM6"
 PROP = SRAAM6 / "sraam6_prop_deck.asc"

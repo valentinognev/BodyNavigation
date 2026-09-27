@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Two vehicles: MISSILE6 and a ground TARGET3.
+   Lock-on after launch: the seeker acquires the target once the missile is flying. */
 {
   "title": "input_5_10 AGM6 Lock-on After Launch.asc",
   "options": {

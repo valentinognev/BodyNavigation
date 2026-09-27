@@ -1,5 +1,25 @@
 # Updates
 
+## 0.174.0 - vehicle packages grouped by kernel
+- Packages moved under round3/flat3/flat6/round6/planar; program names replace cruise3/plane5/plane6/rotor.
+- Type tokens and scenario JSON unchanged.
+- Design specs and port plans under `docs/superpowers/` use the new package paths. Older entries in this file keep the paths from when those modules were added.
+
+## 0.173.1 - cruise5 input_2 vehicle type
+- `Python/cases/cruise5/input_2.jsonc` UAV type is `CRUISE3`. The CADAC `input_2.asc` token `CRUISE5` is not a `set_obj_type` name; family `cruise5` only builds `CRUISE3`.
+- Overview comment on that case says one `CRUISE3` UAV.
+- Test: `test_input_2_uav_builds_as_cruise5_vehicle`.
+
+## 0.173.0 - Case description on Overview
+- Each catalog scenario JSONC opens with a block comment: vehicle count and types, simulation kind, and what the run is for. Aero and propulsion decks are unchanged.
+- GET `/cases/{program}/{stem}` and import return that text as `description`. Overview shows it read-only. PUT writes the comment back in front of the scenario.
+- Tests: `test_jsonc.py` leading comment and catalog coverage; `test_cases_api.py`; `Overview.test.ts`, `store.test.ts`, `api.test.ts`.
+
+## 0.172.0 - Entrance page groups simulations
+- Catalog programs carry `dimension` and `subgroup`. The start screen files them under 2D (X-Z), 3 DOF, 5 DOF, and 6 DOF, then flat, round, or spinner.
+- 2D (X-Z) offers flat and spinner only. MAGSIX is 2D spinner. A spinner line can appear under 3, 5, or 6 when a program is tagged that way. Empty lines stay hidden. Untagged programs go under Other.
+- Tests: `test_catalog_stamps_dimension_and_subgroup`; `workbench/web/src/catalog.test.ts`.
+
 ## 0.171.0 - Editor Home returns to the entrance page
 - Editor header Home button sets the view back to the start screen (program list and Open file).
 - The open case stays in memory until another case is opened.

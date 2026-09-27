@@ -1,3 +1,5 @@
+/* HYPER5, 5-DOF round earth. Seven vehicles, all HYPER5.
+   Demo 5.2 fly-out fan: the same vehicle launched on several headings. */
 {
   "title": "input_Demo_5_2_fly_out_fan.asc",
   "options": {

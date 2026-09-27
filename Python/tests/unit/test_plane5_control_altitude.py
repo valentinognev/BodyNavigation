@@ -4,7 +4,7 @@ import numpy as np
 
 from cadac.constants import RAD
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.plane5.control import Plane5Control
+from cadac.vehicles.flat3.falcon5.control import Plane5Control
 
 # turning_to_IP
 GH = 0.3

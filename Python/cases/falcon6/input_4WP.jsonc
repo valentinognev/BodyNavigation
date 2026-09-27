@@ -1,3 +1,5 @@
+/* FALCON6, 6-DOF flat earth. One vehicle: PLANE6 (F-16).
+   Three waypoints, then a terminal glide slope to the intercept point. */
 {
   "title": "input_4WP.asc 3 Waypoints and terminal glide slope to IP",
   "options": {

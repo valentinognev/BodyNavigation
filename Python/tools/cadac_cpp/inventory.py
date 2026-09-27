@@ -133,11 +133,16 @@ def _vehicle_python(name: str, program: str, global_types: set[str], family_keys
     return "missing", None
 
 
+_VEHICLE_KERNELS = frozenset({"round3", "flat3", "flat6", "round6", "planar"})
+
+
 def _python_vehicle_family(python: str | None) -> str | None:
     if not python:
         return None
     parts = python.split(".")
     if len(parts) >= 3 and parts[0] == "cadac" and parts[1] == "vehicles":
+        if len(parts) >= 4 and parts[2] in _VEHICLE_KERNELS:
+            return parts[3]
         return parts[2]
     return None
 

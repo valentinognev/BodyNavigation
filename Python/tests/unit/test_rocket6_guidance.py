@@ -6,7 +6,7 @@ import pytest
 from cadac.constants import RAD, REARTH
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.rocket6.guidance import Rocket6Guidance
+from cadac.vehicles.round6.rocket6.guidance import Rocket6Guidance
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -288,7 +288,7 @@ def test_mguide_5_utbc_unit_after_skip_clears():
 
 def test_ltg_igrl_a1_a2_replica():
     # Break: C++ _igrl a1/a2 (including x==2 factor 1.001) not used.
-    from cadac.vehicles.rocket6.guidance import _ltg_igrl_a1_a2
+    from cadac.vehicles.round6.rocket6.guidance import _ltg_igrl_a1_a2
 
     x = 0.5
     a1, a2 = _ltg_igrl_a1_a2(x)
@@ -310,7 +310,7 @@ def test_ltg_x_equals_1_raises_valueerror():
 
 def test_crct_unit_cross_replica():
     # Break: C++ operator% (unitized cross) not used for UY.
-    from cadac.vehicles.rocket6.guidance import _unit_cross
+    from cadac.vehicles.round6.rocket6.guidance import _unit_cross
 
     vbiic = np.array(VBIIC, dtype=float)
     sbiic = np.array(SBIIC, dtype=float)

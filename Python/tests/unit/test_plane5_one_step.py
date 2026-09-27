@@ -28,7 +28,7 @@ def _turning_one_second(tmp_path: Path) -> Path:
 
 
 def test_plane5_type_health_and_module_order():
-    from cadac.vehicles.plane5.vehicle import Plane5
+    from cadac.vehicles.flat3.falcon5.vehicle import Plane5
 
     vehicle = Plane5("FALCON5", None, None)
     assert vehicle.type == "PLANE"

@@ -10,7 +10,7 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat2tr
-from cadac.vehicles.agm6.intercept import Agm6Intercept
+from cadac.vehicles.flat6.agm6.intercept import Agm6Intercept
 
 RTOL = 1e-12
 ATOL = 1e-14

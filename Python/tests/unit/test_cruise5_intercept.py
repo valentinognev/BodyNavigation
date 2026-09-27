@@ -3,7 +3,7 @@ import pytest
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise5.intercept import Cruise5Intercept
+from cadac.vehicles.round3.cruise5.intercept import Cruise5Intercept
 
 def _vehicle():
     v = type("V", (), {})()

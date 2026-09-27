@@ -6,7 +6,7 @@ import pytest
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.agm6.actuator import Agm6Actuator
+from cadac.vehicles.flat6.agm6.actuator import Agm6Actuator
 
 RTOL = 1e-12
 ATOL = 1e-14

@@ -17,7 +17,7 @@ Monte Carlo (`MONTE`, sampled `GAUSS`/`MARKOV`/`RAYL`). CADAC packet-slot indexi
 ## Layout
 
 ```
-Python/src/cadac/vehicles/agm6/
+Python/src/cadac/vehicles/flat6/agm6/
   vehicle.py      # Agm6Missile type="MISSILE6"
   aero.py
   propulsion.py

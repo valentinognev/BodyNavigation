@@ -1,3 +1,5 @@
+/* HYPER5, 5-DOF round earth. Four vehicles, all HYPER5.
+   Demo 5.3 compares four copies of the cruise vehicle at different altitudes. */
 {
   "title": "input_Demo_5_3_alt_var.asc",
   "options": {

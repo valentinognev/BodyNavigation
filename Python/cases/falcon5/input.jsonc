@@ -1,3 +1,5 @@
+/* FALCON5, 5-DOF flat earth. One vehicle: PLANE.
+   Default case: the airplane turns onto an intercept point. */
 {
   "title": "input_turning_to_IP.asc",
   "options": {

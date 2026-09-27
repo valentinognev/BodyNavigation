@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Section 10.1.1 open-loop aerodynamics of the hypersonic vehicle. */
 {
   "title": "10_1_1 input_aero.asc: Open loop",
   "options": {

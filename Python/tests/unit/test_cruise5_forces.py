@@ -5,7 +5,7 @@ import pytest
 
 from cadac.constants import RAD
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise5.forces import Cruise5Forces
+from cadac.vehicles.round3.cruise5.forces import Cruise5Forces
 
 RTOL = 1e-12
 ATOL = 1e-14

@@ -34,7 +34,9 @@ export async function putCase(program: string, stem: string, scenario: Scenario)
 
 export type ValidateResult = { ok: true } | { ok: false; error: string };
 
-export type ImportResult = { ok: true; scenario: unknown } | { ok: false; error: string };
+export type ImportResult =
+  | { ok: true; scenario: unknown; description: string }
+  | { ok: false; error: string };
 
 export async function validateScenario(scenario: Scenario): Promise<ValidateResult> {
   try {
@@ -56,8 +58,16 @@ export async function importFile(file: File): Promise<ImportResult> {
   body.append("file", file);
   try {
     const res = await fetch("/cases/import", { method: "POST", body });
-    const data = (await res.json()) as { ok?: boolean; scenario?: unknown; error?: unknown };
-    if (data.ok === true) return { ok: true, scenario: data.scenario };
+    const data = (await res.json()) as {
+      ok?: boolean;
+      scenario?: unknown;
+      description?: unknown;
+      error?: unknown;
+    };
+    if (data.ok === true) {
+      const description = typeof data.description === "string" ? data.description : "";
+      return { ok: true, scenario: data.scenario, description };
+    }
     return { ok: false, error: String(data.error ?? "import failed") };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };

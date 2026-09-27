@@ -8,7 +8,7 @@ from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.aim5.propulsion import Aim5Propulsion
+from cadac.vehicles.flat3.aim5.propulsion import Aim5Propulsion
 
 AIM5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/AIM5_250114/AIM5"
 PROP = AIM5 / "aim5_prop_deck.asc"

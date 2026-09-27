@@ -6,7 +6,7 @@ from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.plane5.aero import Plane5Aero
+from cadac.vehicles.flat3.falcon5.aero import Plane5Aero
 
 FALCON5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/FALCON5_250116/FALCON5"
 AERO = FALCON5 / "Falcon5_aero_deck.asc"

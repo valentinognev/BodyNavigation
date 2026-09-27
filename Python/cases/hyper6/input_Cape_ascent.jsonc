@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Ascent from Cape Canaveral. */
 {
   "title": "input_Cape_ascent.asc Ascent from Cape Canaveral",
   "options": {

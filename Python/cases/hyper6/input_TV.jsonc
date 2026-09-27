@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6 transfer vehicle.
+   Orbital insertion of the transfer vehicle. */
 {
   "title": "input_TV.asc Transfer Vehicle's orbital insertion",
   "options": {

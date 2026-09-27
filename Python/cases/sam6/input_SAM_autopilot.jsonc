@@ -1,3 +1,5 @@
+/* SAM6, 6-DOF flat earth. One vehicle: MISSILE6 SAM.
+   Autopilot checkout of the surface-to-air missile. */
 {
   "title": "input_SAM_autopilot.asc",
   "iseed": 0,

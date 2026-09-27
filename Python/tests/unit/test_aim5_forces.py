@@ -3,7 +3,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.aim5.forces import Aim5Forces
+from cadac.vehicles.flat3.aim5.forces import Aim5Forces
 
 RTOL = 1e-12
 ATOL = 1e-14

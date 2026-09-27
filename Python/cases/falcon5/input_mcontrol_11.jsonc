@@ -1,3 +1,5 @@
+/* FALCON5, 5-DOF flat earth. One vehicle: PLANE.
+   Heading and flight-path-angle control (mcontrol 11). */
 {
   "title": "input_mcontrol=11.asc",
   "options": {

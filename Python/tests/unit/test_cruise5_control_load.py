@@ -5,7 +5,7 @@ from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import cadtbv
-from cadac.vehicles.cruise5.control import Cruise5Control
+from cadac.vehicles.round3.cruise5.control import Cruise5Control
 
 GACP = 10.0
 TA = 0.8

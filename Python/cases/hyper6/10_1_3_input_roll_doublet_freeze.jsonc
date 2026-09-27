@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Section 10.1.3 roll-control doublet with the flight condition frozen. */
 {
   "title": "10_1_3_input_roll_doublet_freeze.asc: Roll control doublet with freeze of flight conditions",
   "options": {

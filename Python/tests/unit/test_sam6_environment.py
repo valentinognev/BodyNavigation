@@ -7,8 +7,8 @@ from cadac.constants import EARTH_MASS, G, R, REARTH
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sam6.environment import Sam6Environment
-from cadac.vehicles.sam6.newton import Sam6Newton
+from cadac.vehicles.flat6.sam6.environment import Sam6Environment
+from cadac.vehicles.flat6.sam6.newton import Sam6Newton
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -254,7 +254,7 @@ def test_mfreeze_latches_vmach_and_pdynmc_when_present():
 
 
 def test_importing_environment_does_not_import_flat6_classes():
-    import cadac.vehicles.sam6.environment as envmod
+    import cadac.vehicles.flat6.sam6.environment as envmod
 
     assert "Flat6Environment" not in dir(envmod)
     from cadac.eom.flat6 import Flat6Environment
@@ -263,7 +263,7 @@ def test_importing_environment_does_not_import_flat6_classes():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.environment as mod
+    import cadac.vehicles.flat6.sam6.environment as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

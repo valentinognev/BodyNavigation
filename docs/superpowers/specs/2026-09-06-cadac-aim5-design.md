@@ -18,7 +18,7 @@ SAM6 / AGM6 / SRAAM6 Aircraft. `input.asc` / `input_multi.asc` / `input_verti.as
 ## Layout
 
 ```
-Python/src/cadac/vehicles/aim5/
+Python/src/cadac/vehicles/flat3/aim5/
   vehicle.py      # Aim5 type="AIM5"; Aim5Flat3Newton alias wrapper
   aero.py
   propulsion.py

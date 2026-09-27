@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Ten vehicles: five MISSILE6 and five ground TARGET3.
+   Second engagement fan, again five missiles and five ground targets. */
 {
   "title": "input_5_7 AGM6 Engagement Fan.asc",
   "options": {

@@ -17,7 +17,7 @@ SAM6, AGM6, Plane6 vehicle modules. HYPER5 Round3 `TARGET3` behavior (stays the 
 ## Layout
 
 ```
-Python/src/cadac/vehicles/sraam6/
+Python/src/cadac/vehicles/flat6/sraam6/
   vehicle.py       # Sraam6Missile type="MISSILE6"
   target.py        # Sraam6Target type="TARGET3"
   environment.py   # SRAAM6 Flat6 environment (not FALCON6 Flat6Environment)
@@ -38,7 +38,7 @@ Python/tests/unit/test_sraam6_*.py
 Python/tests/e2e/test_sraam6_1v1.py
 ```
 
-Reuse `cadac.eom.flat6.Flat6Newton` (body-velocity stored-slope matches SRAAM6 `newton.cpp`). Do **not** import `cadac.vehicles.plane6` or SAM6/AGM6 (those packages may not exist). Do **not** reuse `Flat6Euler` (FALCON6 `IBBB`/`eng_ang_mom` vs SRAAM6 `ai11`/`ai33`). Do **not** reuse `Flat6Kinematics` (FALCON6 incidence from `VBAL`; SRAAM6 from `VBEB`; SRAAM6 writes `time`/`trcond`/`int_step_new`). Do **not** reuse `Flat6Environment` (SRAAM6 Mach from `dvbe` plus `mguid==6` `trcond` and `mfreeze` latch).
+Reuse `cadac.eom.flat6.Flat6Newton` (body-velocity stored-slope matches SRAAM6 `newton.cpp`). Do **not** import `cadac.vehicles.flat6.falcon6` or SAM6/AGM6 (those packages may not exist). Do **not** reuse `Flat6Euler` (FALCON6 `IBBB`/`eng_ang_mom` vs SRAAM6 `ai11`/`ai33`). Do **not** reuse `Flat6Kinematics` (FALCON6 incidence from `VBAL`; SRAAM6 from `VBEB`; SRAAM6 writes `time`/`trcond`/`int_step_new`). Do **not** reuse `Flat6Environment` (SRAAM6 Mach from `dvbe` plus `mguid==6` `trcond` and `mfreeze` latch).
 
 SRAAM6 Target is **not** HYPER5 Round3 `Target3`. Reuse Flat3 numerics (US76, stored-slope, `TAL=TAV@TVL`) with SRAAM6 names (`SAEL`, `VAEL`, `dvae`, `FSPA`, `sael1`/`sael2`/`sael3`, `psialx`/`thtalx`). Add `Flat3AircraftEnvironment` and `Flat3AircraftNewton` in `cadac.eom.flat3` so FALCON5 `PLANE` (`SBEL`/`dvbe`/`FSPV`) is unchanged. Reuse `Flat3Kinematics` (time only).
 

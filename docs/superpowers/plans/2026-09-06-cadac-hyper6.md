@@ -29,7 +29,7 @@
 
 - `Python/src/cadac/math/wgs84.py` — WGS84 helpers + constants
 - `Python/src/cadac/eom/round6.py` — Environment, Kinematics, Euler, Newton
-- `Python/src/cadac/vehicles/hyper6/{aero,propulsion,actuator,control,forces,guidance,ins,vehicle}.py`
+- `Python/src/cadac/vehicles/round6/hyper6/{aero,propulsion,actuator,control,forces,guidance,ins,vehicle}.py`
 - Tests `test_wgs84.py`, `test_round6_*.py`, `test_hyper6_*.py`
 - Case `Python/cases/hyper6/` from `input_climb.asc` + `ghame6_*_deck.asc`
 - C++: `environment.cpp`, `kinematics.cpp`, `euler.cpp`, `newton.cpp`, `aerodynamics.cpp`, `propulsion.cpp`, `actuator.cpp`, `control.cpp`, `forces.cpp`, `guidance.cpp`, `ins.cpp`, `utility_functions.cpp`
@@ -134,7 +134,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 7: Hyper6 aerodynamics (GHAME + der)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/__init__.py`, `Python/src/cadac/vehicles/hyper6/aero.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/__init__.py`, `Python/src/cadac/vehicles/round6/hyper6/aero.py`
 - Test: `Python/tests/unit/test_hyper6_aero.py`
 
 **Interfaces:** Port `Hyper::init_aerodynamics`, `aerodynamics`, `aerodynamics_der`. `maero==1` GHAME tables from `ghame6_aero_deck.asc`. Else `ValueError`. `define` C++ `def_aerodynamics`. Tests parse ASC (JSONC in Task 16).
@@ -147,7 +147,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 8: Hyper6 propulsion
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/propulsion.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/propulsion.py`
 - Test: `Python/tests/unit/test_hyper6_propulsion.py`
 
 **Interfaces:** Port `Hyper::propulsion` `mprop` 0/1/2 only (climb is 2). Else `ValueError` (no 3/4). Parse `ghame6_prop_deck.asc`. Fuel/mass as C++.
@@ -160,7 +160,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 9: Hyper6 actuator
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/actuator.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/actuator.py`
 - Test: `Python/tests/unit/test_hyper6_actuator.py`
 
 **Interfaces:** Port HYPER6 `actuator.cpp`. `mact` 0 limit-only and 2 `actuator_scnd`. Else `ValueError`. CADAC sign local helper. `dt=ctx.int_step`. Do not import `flat6._cadac_sign` or `np.sign`.
@@ -173,7 +173,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 10: control roll and rate SAS
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/control.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/control.py`
 - Test: `Python/tests/unit/test_hyper6_control_roll.py`
 
 **Interfaces:** Port HYPER6 `control_roll`, `control_roll_rate`, `control_pitch_rate`, `control_yaw_rate`. `define` full C++ `def_control`. `execute` pass until Task 12. `SMALL` module-level if C++ uses it; not in `cadac.constants`.
@@ -208,7 +208,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 13: Hyper6 forces
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/forces.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/forces.py`
 - Test: `Python/tests/unit/test_hyper6_forces.py`
 
 **Interfaces:** Port `Hyper::forces`. Writes `FAPB`/`FMB` only. `FSPB` newton-owned. If `FARCS`/`FMRCS` absent, treat as zero (RCS out of this plan). `FAPB=[pdynmc*refa*cx+thrust, pdynmc*refa*cy, pdynmc*refa*cz]`; moments as C++.
@@ -221,7 +221,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 14: guidance stub
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/guidance.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/guidance.py`
 - Test: `Python/tests/unit/test_hyper6_guidance_noop.py`
 
 **Interfaces:** `define` C++ `def_guidance`. `mguide==0` return (climb default). Else `ValueError`. No LTG/line/pronav.
@@ -234,7 +234,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 15: INS mins=0
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/ins.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/ins.py`
 - Test: `Python/tests/unit/test_hyper6_ins_ideal.py`
 
 **Interfaces:** Port `init_ins` / `ins` `mins==0` paths: copy `TBI`→`TBIC`, `FSPB`→`FSPCB`, `SBII`→`SBIIC`, `VBII`→`VBIIC`, `WBIB`→`WBICB`, and the C++-written lon/lat/alt/Euler/flight-path computed names. `init` is no-op for mins=0. `mins!=0` → `ValueError`. Skip GPS/star names if absent.
@@ -247,7 +247,7 @@ Also pin one `cad_tdi84(0,0,0,0)` element against C++ `assign_loc`.
 ### Task 16: HYPER6 vehicle + translate climb
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper6/vehicle.py`
+- Create: `Python/src/cadac/vehicles/round6/hyper6/vehicle.py`
 - Modify: `Python/src/cadac/cli.py`
 - Translate: `input_climb.asc` + `ghame6_aero_deck.asc` + `ghame6_prop_deck.asc` → `Python/cases/hyper6/`
 - Test: `Python/tests/unit/test_hyper6_one_step.py`

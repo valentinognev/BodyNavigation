@@ -9,7 +9,7 @@ from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.sam6.aero import Sam6Aero
+from cadac.vehicles.flat6.sam6.aero import Sam6Aero
 
 SAM6 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/SAM6_250217/SAM6"
 AERO = SAM6 / "SAM_aero_deck.asc"
@@ -678,7 +678,7 @@ def test_comma_table_names():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.aero as mod
+    import cadac.vehicles.flat6.sam6.aero as mod
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src
     assert "plane5" not in src

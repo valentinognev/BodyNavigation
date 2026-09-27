@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. Three vehicles: HYPER6, a SAT3 satellite, and a RADAR0 ground station.
+   Cape Canaveral launch into an automated head-on engagement. */
 {
   "title": "input_head-on_auto.asc  Cape Canaveral launch, automated head-on engagement",
   "options": {

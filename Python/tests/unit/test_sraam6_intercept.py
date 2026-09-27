@@ -6,7 +6,7 @@ import pytest
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.intercept import Sraam6Intercept
+from cadac.vehicles.flat6.sraam6.intercept import Sraam6Intercept
 
 INT_STEP = 0.5
 TIME_CLOSE = 1.0

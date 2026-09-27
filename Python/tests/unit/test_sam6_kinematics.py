@@ -11,7 +11,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
-from cadac.vehicles.sam6.kinematics import Sam6Kinematics
+from cadac.vehicles.flat6.sam6.kinematics import Sam6Kinematics
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -419,13 +419,13 @@ def test_skips_trcond_when_absent():
 
 def test_not_a_subclass_of_flat6_kinematics():
     assert not issubclass(Sam6Kinematics, Flat6Kinematics)
-    import cadac.vehicles.sam6.kinematics as kinmod
+    import cadac.vehicles.flat6.sam6.kinematics as kinmod
 
     assert "Flat6Kinematics" not in dir(kinmod)
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.kinematics as mod
+    import cadac.vehicles.flat6.sam6.kinematics as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

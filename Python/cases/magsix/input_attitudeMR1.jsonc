@@ -1,3 +1,5 @@
+/* MAGSIX rotor, planar X-Z. One vehicle: ROTOR (RECT.MR1).
+   Attitude test, matching run 13 of the MR report. */
 {
   "title": "input_attitudeMR1 Attitude test case (RECT.MR1 Run13 in MR Report)",
   "options": {

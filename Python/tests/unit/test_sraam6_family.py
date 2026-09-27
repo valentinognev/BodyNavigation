@@ -5,7 +5,7 @@ import pytest
 
 from cadac.cli import _build_vehicle, run_scenario
 from cadac.io.scenario import load_scenario
-from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.round3.hyper5.target import Target3
 
 
 def _write(path: Path, payload: dict) -> Path:
@@ -52,7 +52,7 @@ def test_vehicle_family_overrides_scenario_family(tmp_path: Path):
 
 
 def test_family_sraam6_target3_constructs_sraam6_target(tmp_path: Path):
-    from cadac.vehicles.sraam6.target import Sraam6Target
+    from cadac.vehicles.flat6.sraam6.target import Sraam6Target
 
     path = _write(tmp_path / "s.jsonc", _minimal("TARGET3", vehicle_family="sraam6"))
     cfg = load_scenario(path)

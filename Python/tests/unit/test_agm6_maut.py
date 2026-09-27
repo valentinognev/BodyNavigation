@@ -8,7 +8,7 @@ from cadac.constants import AGRAV, DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.agm6.control import SMALL, Agm6Control
+from cadac.vehicles.flat6.agm6.control import SMALL, Agm6Control
 
 RTOL = 1e-12
 ATOL = 1e-14

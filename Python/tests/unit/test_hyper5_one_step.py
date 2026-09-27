@@ -11,7 +11,7 @@ from cadac.io.scenario import load_scenario
 from cadac.io.translate import deck_asc_to_jsonc, translate_scenario_asc
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.round3.hyper5.target import Target3
 
 ROOT = Path(__file__).resolve().parents[3]
 HYPER5_ASC = ROOT / "CADAC_Simulations/HYPER5_250113/HYPER5"
@@ -118,7 +118,7 @@ def _demo_short(tmp_path: Path) -> Path:
 
 
 def test_hyper5_type_health_and_module_order():
-    from cadac.vehicles.hyper5.vehicle import Hyper5
+    from cadac.vehicles.round3.hyper5.vehicle import Hyper5
 
     vehicle = Hyper5("RR3X", None, None)
     assert vehicle.type == "HYPER5"
@@ -127,7 +127,7 @@ def test_hyper5_type_health_and_module_order():
 
 
 def test_hyper5_define_registers_targeting_when_omitted_from_modules():
-    from cadac.vehicles.hyper5.vehicle import Hyper5
+    from cadac.vehicles.round3.hyper5.vehicle import Hyper5
 
     vehicle = Hyper5("RR3X", None, None)
     vehicle.define()
@@ -135,7 +135,7 @@ def test_hyper5_define_registers_targeting_when_omitted_from_modules():
 
 
 def test_hyper5_target3_run_loop_one_step():
-    from cadac.vehicles.hyper5.vehicle import Hyper5
+    from cadac.vehicles.round3.hyper5.vehicle import Hyper5
 
     hyper = Hyper5("RR3X", _aero_deck(), None)
     target = Target3("Truck_t1")

@@ -1,3 +1,5 @@
+/* FALCON5, 5-DOF flat earth. One vehicle: PLANE.
+   Heading and altitude-hold control (mcontrol 16). */
 {
   "title": "input_mcontrol=16.asc",
   "options": {

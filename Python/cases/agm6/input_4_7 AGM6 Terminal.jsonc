@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Two vehicles: MISSILE6 and a ground TARGET3.
+   Terminal homing of the air-to-ground missile onto the target. */
 {
   "title": "input_4_7 AGM6 Terminal.asc",
   "options": {

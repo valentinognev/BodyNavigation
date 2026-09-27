@@ -1,3 +1,5 @@
+/* AIM5, 5-DOF flat earth. Two vehicles: an AIM5 missile and an AIRCRAFT3 target.
+   Vertical engagement against the aircraft. */
 {
   "title": "input_verti.asc Vertical engagement",
   "options": {

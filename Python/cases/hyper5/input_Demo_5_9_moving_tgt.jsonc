@@ -1,3 +1,5 @@
+/* HYPER5, 5-DOF round earth. Three vehicles: HYPER5, a moving TARGET3 truck, and one SATELLITE3.
+   Demo 5.9 engagement against a moving truck with satellite targeting. */
 {
   "title": "input_Demo_5_9_moving_tgt.asc",
   "options": {

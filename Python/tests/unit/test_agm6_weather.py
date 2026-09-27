@@ -14,7 +14,7 @@ from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
 from cadac.stoch import seed
-from cadac.vehicles.agm6.environment import Agm6Environment
+from cadac.vehicles.flat6.agm6.environment import Agm6Environment
 
 RTOL = 1e-12
 ATOL = 1e-14

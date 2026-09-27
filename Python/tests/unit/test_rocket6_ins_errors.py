@@ -9,7 +9,7 @@ from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
 from cadac.math.wgs84 import GM, cad_in_geo84, cad_tdi84
 from cadac.stoch import seed
-from cadac.vehicles.rocket6.ins import Rocket6Ins
+from cadac.vehicles.round6.rocket6.ins import Rocket6Ins
 
 RTOL = 1e-12
 ATOL = 1e-14

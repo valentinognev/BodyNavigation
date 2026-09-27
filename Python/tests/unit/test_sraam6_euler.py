@@ -4,7 +4,7 @@ from cadac.constants import DEG
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.euler import Sraam6Euler
+from cadac.vehicles.flat6.sraam6.euler import Sraam6Euler
 
 RTOL = 1e-12
 ATOL = 1e-14

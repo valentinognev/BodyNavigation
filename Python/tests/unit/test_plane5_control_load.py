@@ -4,7 +4,7 @@ from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import cadtbv
-from cadac.vehicles.plane5.control import Plane5Control
+from cadac.vehicles.flat3.falcon5.control import Plane5Control
 
 # turning_to_IP
 GACP = 10.0

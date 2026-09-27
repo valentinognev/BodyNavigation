@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Section 10.1.4 yaw and pitch rate control. */
 {
   "title": "input_yaw_pitch.asc: Yaw/pitch rate control",
   "options": {

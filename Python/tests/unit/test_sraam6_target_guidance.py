@@ -6,7 +6,7 @@ import pytest
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.target import Sraam6TargetGuidance
+from cadac.vehicles.flat6.sraam6.target import Sraam6TargetGuidance
 
 RTOL = 1e-12
 ATOL = 1e-14

@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Three vehicles: MISSILE6, a ground TARGET3, and the launch AIRCRAFT3.
+   The missile is targeted from a position above the target. */
 {
   "title": "input_5_12 AGM6 Targeting above Target.asc",
   "options": {

@@ -7,7 +7,7 @@ from cadac.constants import RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat2tr, polar_from_cart
-from cadac.vehicles.plane5.guidance import Plane5Guidance
+from cadac.vehicles.flat3.falcon5.guidance import Plane5Guidance
 
 # turning_to_IP waypoint #1 / origin heading 0; line ICs from later events
 SWEL1 = 5000.0

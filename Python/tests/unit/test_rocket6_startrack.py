@@ -5,7 +5,7 @@ from cadac.constants import RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.wgs84 import cad_in_geo84
-from cadac.vehicles.rocket6.startrack import (
+from cadac.vehicles.round6.rocket6.startrack import (
     STAR_CATALOG,
     Rocket6Startrack,
     star_init,

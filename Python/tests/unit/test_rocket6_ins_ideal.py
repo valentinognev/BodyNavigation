@@ -10,7 +10,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import cadac_matmul, mat3tr
 from cadac.math.wgs84 import cad_geo84_in, cad_in_geo84, cad_tdi84
-from cadac.vehicles.rocket6.ins import Rocket6Ins, _geodetic_euler_from_tbd
+from cadac.vehicles.round6.rocket6.ins import Rocket6Ins, _geodetic_euler_from_tbd
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -341,7 +341,7 @@ def test_terminate_exists_and_is_pass():
 
 
 def test_module_does_not_import_hyper6():
-    import cadac.vehicles.rocket6.ins as ins_mod
+    import cadac.vehicles.round6.rocket6.ins as ins_mod
 
     text = Path(ins_mod.__file__).read_text(encoding="utf-8")
     assert "hyper6" not in text.lower()

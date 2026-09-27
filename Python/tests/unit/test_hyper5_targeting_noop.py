@@ -4,7 +4,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.targeting import Hyper5Targeting
+from cadac.vehicles.round3.hyper5.targeting import Hyper5Targeting
 
 TARGETING_FIELDS = {
     "mtargeting": ("int", "data", 0, ("scrn", "plot")),

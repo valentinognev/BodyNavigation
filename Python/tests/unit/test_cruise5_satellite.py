@@ -6,7 +6,7 @@ import numpy as np
 from cadac.eom.round3 import Round3Environment, Round3Newton
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise5.satellite import (
+from cadac.vehicles.round3.cruise5.satellite import (
     Cruise5Satellite,
     Cruise5SatelliteForces,
 )
@@ -31,6 +31,7 @@ SATELLITE_PY = (
     / "src"
     / "cadac"
     / "vehicles"
+    / "round3"
     / "cruise5"
     / "satellite.py"
 )
@@ -113,7 +114,7 @@ def test_thrust_100_fspv0_is_one():
 
 def test_no_hyper5_satellite_import():
     text = SATELLITE_PY.read_text()
-    assert "cadac.vehicles.hyper5.satellite" not in text
+    assert "cadac.vehicles.round3.hyper5.satellite" not in text
     assert "Satellite3" not in text
     assert "Cruise3" not in text
     assert "Hyper5" not in text

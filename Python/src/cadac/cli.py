@@ -9,29 +9,29 @@ from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns, plot_row, write_pl
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.agm6.aircraft import Agm6Aircraft
-from cadac.vehicles.agm6.target import Agm6Target
-from cadac.vehicles.agm6.vehicle import Agm6Missile
-from cadac.vehicles.aim5.aircraft import Aim5Aircraft
-from cadac.vehicles.aim5.vehicle import Aim5
-from cadac.vehicles.cruise3.vehicle import Cruise3
-from cadac.vehicles.cruise5.satellite import Cruise5Satellite
-from cadac.vehicles.cruise5.target import Cruise5Target
-from cadac.vehicles.cruise5.vehicle import Cruise5
-from cadac.vehicles.hyper5.satellite import Satellite3
-from cadac.vehicles.hyper5.target import Target3
-from cadac.vehicles.hyper5.vehicle import Hyper5
-from cadac.vehicles.hyper6.vehicle import Hyper6
-from cadac.vehicles.plane5.vehicle import Plane5
-from cadac.vehicles.plane6.vehicle import Plane6
-from cadac.vehicles.rocket6.vehicle import Rocket6
-from cadac.vehicles.rotor.vehicle import Rotor
-from cadac.vehicles.sam6.aircraft import Sam6Aircraft
-from cadac.vehicles.sam6.radar import Sam6Radar
-from cadac.vehicles.sam6.rocket import Sam6Rocket
-from cadac.vehicles.sam6.vehicle import Sam6Missile
-from cadac.vehicles.sraam6.target import Sraam6Target
-from cadac.vehicles.sraam6.vehicle import Sraam6Missile
+from cadac.vehicles.flat6.agm6.aircraft import Agm6Aircraft
+from cadac.vehicles.flat6.agm6.target import Agm6Target
+from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
+from cadac.vehicles.flat3.aim5.aircraft import Aim5Aircraft
+from cadac.vehicles.flat3.aim5.vehicle import Aim5
+from cadac.vehicles.round3.hyper3.vehicle import Cruise3
+from cadac.vehicles.round3.cruise5.satellite import Cruise5Satellite
+from cadac.vehicles.round3.cruise5.target import Cruise5Target
+from cadac.vehicles.round3.cruise5.vehicle import Cruise5
+from cadac.vehicles.round3.hyper5.satellite import Satellite3
+from cadac.vehicles.round3.hyper5.target import Target3
+from cadac.vehicles.round3.hyper5.vehicle import Hyper5
+from cadac.vehicles.round6.hyper6.vehicle import Hyper6
+from cadac.vehicles.flat3.falcon5.vehicle import Plane5
+from cadac.vehicles.flat6.falcon6.vehicle import Plane6
+from cadac.vehicles.round6.rocket6.vehicle import Rocket6
+from cadac.vehicles.planar.magsix.vehicle import Rotor
+from cadac.vehicles.flat6.sam6.aircraft import Sam6Aircraft
+from cadac.vehicles.flat6.sam6.radar import Sam6Radar
+from cadac.vehicles.flat6.sam6.rocket import Sam6Rocket
+from cadac.vehicles.flat6.sam6.vehicle import Sam6Missile
+from cadac.vehicles.flat6.sraam6.target import Sraam6Target
+from cadac.vehicles.flat6.sraam6.vehicle import Sraam6Missile
 
 _VEHICLE_TYPES = {
     "CRUISE3": Cruise3,

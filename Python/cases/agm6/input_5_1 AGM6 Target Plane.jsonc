@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Two vehicles: MISSILE6 and a ground TARGET3.
+   Engagement laid out in the target plane. */
 {
   "title": "input_5_1 AGM6 Target Plane.asc",
   "options": {

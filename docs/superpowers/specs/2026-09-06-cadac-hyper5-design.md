@@ -16,7 +16,7 @@ HYPER6 / Round6. Targeting e2e (sat demos). Unused C++ guidance 30/33/40/43. AIM
 ## Layout
 
 ```
-Python/src/cadac/vehicles/hyper5/
+Python/src/cadac/vehicles/round3/hyper5/
   vehicle.py      # Hyper5 type="HYPER5"
   aero.py
   propulsion.py

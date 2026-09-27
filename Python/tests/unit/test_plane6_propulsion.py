@@ -10,7 +10,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.plane6.propulsion import Plane6Propulsion
+from cadac.vehicles.flat6.falcon6.propulsion import Plane6Propulsion
 
 FALCON6 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/FALCON6_250201/FALCON6"
 PROP = FALCON6 / "f16_prop_deck.asc"

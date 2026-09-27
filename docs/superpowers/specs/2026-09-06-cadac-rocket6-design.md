@@ -8,7 +8,7 @@ Sibling: `docs/superpowers/specs/2026-09-06-cadac-hyper6-design.md`
 
 ## Goal
 
-Add JSONC three-stage SLV vehicle **Rocket6** that reuses the existing Round6 EOM and WGS84 layer. CADAC type token is `HYPER6` (input.asc `HYPER6 SLV`) and **collides** with the existing Python hypersonic `Hyper6`. Bind via family dispatch: `("rocket6", "HYPER6")`. First case: `CADAC_Simulations/ROCKET6_250122/ROCKET6/input.asc` (Vandenberg insertion, `ENDTIME 190`). Numerics regression-close to that C++ tree. Do not import `cadac.vehicles.hyper6.*`.
+Add JSONC three-stage SLV vehicle **Rocket6** that reuses the existing Round6 EOM and WGS84 layer. CADAC type token is `HYPER6` (input.asc `HYPER6 SLV`) and **collides** with the existing Python hypersonic `Hyper6`. Bind via family dispatch: `("rocket6", "HYPER6")`. First case: `CADAC_Simulations/ROCKET6_250122/ROCKET6/input.asc` (Vandenberg insertion, `ENDTIME 190`). Numerics regression-close to that C++ tree. Do not import `cadac.vehicles.round6.hyper6.*`.
 
 ## Non-goals
 
@@ -17,7 +17,7 @@ HYPER6 hypersonic climb vehicle (stays `_VEHICLE_TYPES["HYPER6"]`). `input_balli
 ## Layout
 
 ```
-Python/src/cadac/vehicles/rocket6/
+Python/src/cadac/vehicles/round6/rocket6/
   vehicle.py      # Rocket6 type="HYPER6", family="rocket6"
   aero.py
   propulsion.py   # analytic; no PROP_DECK

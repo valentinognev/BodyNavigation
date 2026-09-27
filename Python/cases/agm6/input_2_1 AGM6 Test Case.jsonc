@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Three vehicles: MISSILE6, a TARGET3 on the ground, and the launch AIRCRAFT3.
+   Test case for the missile, the ground target, and the launch aircraft together. */
 {
   "title": "input_2_1 AGM6 Test Case.asc",
   "options": {

@@ -1,3 +1,5 @@
+/* HYPER5, 5-DOF round earth. One vehicle: HYPER5.
+   Demo 5.6 combined yaw and pitch evasion. */
 {
   "title": "input_Demo_5_6_evade_yaw_pitch.asc",
   "options": {

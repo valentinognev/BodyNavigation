@@ -8,7 +8,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.hyper5.propulsion import Hyper5Propulsion
+from cadac.vehicles.round3.hyper5.propulsion import Hyper5Propulsion
 
 HYPER5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/HYPER5_250113/HYPER5"
 PROP = HYPER5 / "hyper5_prop_deck.asc"

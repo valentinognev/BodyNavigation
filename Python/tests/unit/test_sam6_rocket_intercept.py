@@ -5,7 +5,7 @@ import pytest
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sam6.rocket import Sam6RocketIntercept
+from cadac.vehicles.flat6.sam6.rocket import Sam6RocketIntercept
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -232,7 +232,7 @@ def test_does_not_sys_exit_on_ground():
 
 
 def test_no_sys_exit_or_print():
-    import cadac.vehicles.sam6.rocket as mod
+    import cadac.vehicles.flat6.sam6.rocket as mod
 
     text = Path(mod.__file__).read_text(encoding="utf-8")
     assert "sys.exit" not in text
@@ -240,7 +240,7 @@ def test_no_sys_exit_or_print():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.rocket as mod
+    import cadac.vehicles.flat6.sam6.rocket as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src
@@ -253,5 +253,5 @@ def test_no_flat6_or_plane_imports():
     assert "hyper5" not in src
     assert "hyper6" not in src
     assert "class Sam6RocketIntercept:" in src
-    assert "from cadac.vehicles.sam6.intercept" not in src
+    assert "from cadac.vehicles.flat6.sam6.intercept" not in src
     assert "from cadac.eom.flat3" not in src

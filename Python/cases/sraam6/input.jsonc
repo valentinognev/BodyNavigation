@@ -1,3 +1,5 @@
+/* SRAAM6, 6-DOF flat earth. Five vehicles: four MISSILE6 and one TARGET3.
+   Default case: gain optimization of the short-range missile against a 3 g target. */
 {
   "title": "10_2_2_input_gain_opt.asc Missile against 3g target",
   "options": {

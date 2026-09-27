@@ -1,3 +1,5 @@
+/* FALCON6, 6-DOF flat earth. One vehicle: PLANE6 (F-16).
+   The aircraft flies three waypoints. */
 {
   "title": "input_3waypoint.asc Three Waypoints",
   "options": {

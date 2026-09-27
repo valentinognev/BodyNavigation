@@ -8,7 +8,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.cruise3.propulsion import Cruise3Propulsion
+from cadac.vehicles.round3.hyper3.propulsion import Cruise3Propulsion
 
 HYPER3 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/HYPER3_250114/HYPER3"
 PROP = HYPER3 / "ghame3_prop_deck.asc"

@@ -2,7 +2,7 @@ import numpy as np
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.forces import Sraam6Forces
+from cadac.vehicles.flat6.sraam6.forces import Sraam6Forces
 
 RTOL = 1e-12
 ATOL = 1e-14

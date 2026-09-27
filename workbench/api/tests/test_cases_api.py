@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from cadac.io.jsonc import leading_comment, loads
 from cadac_web.app import app
 from cadac_web.paths import CASES_ROOT
 
@@ -42,6 +43,27 @@ def test_get_missing_returns_404():
     assert r.status_code == 404
 
 
+def test_get_returns_leading_comment_as_description(tmp_path, monkeypatch):
+    monkeypatch.setattr("cadac_web.paths.CASES_ROOT", lambda: tmp_path)
+    folder = tmp_path / "hyper3"
+    folder.mkdir()
+    note = "/* HYPER3, 3-DOF round earth. One CRUISE3. Two-phase climb. */\n"
+    (folder / "input_climb.jsonc").write_text(note + json.dumps(_VALID), encoding="utf-8")
+    r = TestClient(app).get("/cases/hyper3/input_climb")
+    assert r.status_code == 200
+    assert r.json()["description"] == "HYPER3, 3-DOF round earth. One CRUISE3. Two-phase climb."
+
+
+def test_get_description_empty_without_leading_comment(tmp_path, monkeypatch):
+    monkeypatch.setattr("cadac_web.paths.CASES_ROOT", lambda: tmp_path)
+    folder = tmp_path / "hyper3"
+    folder.mkdir()
+    (folder / "input_climb.jsonc").write_text(json.dumps(_VALID), encoding="utf-8")
+    r = TestClient(app).get("/cases/hyper3/input_climb")
+    assert r.status_code == 200
+    assert r.json()["description"] == ""
+
+
 def test_get_hyper3_climb_shape():
     r = TestClient(app).get("/cases/hyper3/input_climb")
     assert r.status_code == 200
@@ -70,6 +92,23 @@ def test_put_writes_pretty_jsonc(tmp_path, monkeypatch):
     text = dest.read_text(encoding="utf-8")
     assert text.endswith("\n")
     assert text == json.dumps(_VALID, indent=2) + "\n"
+
+
+def test_put_preserves_leading_comment(tmp_path, monkeypatch):
+    monkeypatch.setattr("cadac_web.paths.CASES_ROOT", lambda: tmp_path)
+    monkeypatch.setattr("cadac_web.app.CASES_ROOT", lambda: tmp_path)
+    folder = tmp_path / "hyper3"
+    folder.mkdir()
+    dest = folder / "my_case.jsonc"
+    note = "/* HYPER3, 3-DOF round earth. One CRUISE3.\n   Two-phase climb. */\n"
+    dest.write_text(note + json.dumps(_VALID, indent=2) + "\n", encoding="utf-8")
+    edited = {**_VALID, "title": "edited"}
+    r = TestClient(app).put("/cases/hyper3/my_case", json={"scenario": edited})
+    assert r.status_code == 200
+    text = dest.read_text(encoding="utf-8")
+    assert text.startswith(note)
+    assert leading_comment(text) == "HYPER3, 3-DOF round earth. One CRUISE3.\nTwo-phase climb."
+    assert loads(text)["title"] == "edited"
 
 
 def test_put_invalid_restores_previous(tmp_path, monkeypatch):
@@ -109,6 +148,19 @@ def test_import_jsonc():
     assert body["ok"] is True
     assert body["scenario"]["title"] == "imported"
     assert body["scenario"]["vehicles"][0]["type"] == "CRUISE3"
+    assert body["description"] == ""
+
+
+def test_import_jsonc_returns_leading_comment():
+    payload = (
+        b"/* Two vehicles. Horizontal engagement. */\n"
+        b'{ "title": "imported", "vehicles": [{"type": "AIM5", "name": "Missile"}] }\n'
+    )
+    r = TestClient(app).post("/cases/import", files={"file": ("hori.jsonc", payload)})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["ok"] is True
+    assert body["description"] == "Two vehicles. Horizontal engagement."
 
 
 def test_import_parse_fail_is_http_200():

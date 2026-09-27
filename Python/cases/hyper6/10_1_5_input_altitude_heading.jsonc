@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Section 10.1.5 heading and altitude autopilot. */
 {
   "title": "input_altitude_heading.asc: Heading and altitude autopilot",
   "options": {

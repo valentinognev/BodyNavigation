@@ -16,7 +16,7 @@ HYPER3 `Cruise3` / HYPER5 `Hyper5` / `Target3` / `Satellite3` imports. AIM5, MAG
 ## Layout
 
 ```
-Python/src/cadac/vehicles/cruise5/
+Python/src/cadac/vehicles/round3/cruise5/
   vehicle.py      # Cruise5 type="CRUISE3"
   aero.py
   propulsion.py
@@ -56,7 +56,7 @@ CRUISE5 registers **only** the family map (never overwrite global `CRUISE3`/`TAR
 | `("cruise5", "TARGET3")` | `Cruise5Target` |
 | `("cruise5", "SATELLITE3")` | `Cruise5Satellite` |
 
-Plot columns: HYPER3 class `cadac.vehicles.cruise3.vehicle.Cruise3` keeps `PLOT_COLUMNS`. `Cruise5` (`type=="CRUISE3"`) uses flagged plot names (PLANE / HYPER5 path). Dispatch by **class**, not the type string.
+Plot columns: HYPER3 class `cadac.vehicles.round3.hyper3.vehicle.Cruise3` keeps `PLOT_COLUMNS`. `Cruise5` (`type=="CRUISE3"`) uses flagged plot names (PLANE / HYPER5 path). Dispatch by **class**, not the type string.
 
 ## JSONC types (family `cruise5`)
 

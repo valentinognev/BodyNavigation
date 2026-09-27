@@ -8,7 +8,7 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat2tr, polar_from_cart
-from cadac.vehicles.sraam6.seeker import SMALL, Sraam6Seeker
+from cadac.vehicles.flat6.sraam6.seeker import SMALL, Sraam6Seeker
 
 RTOL = 1e-12
 ATOL = 1e-14

@@ -6,7 +6,7 @@ import pytest
 from cadac.cli import _VEHICLE_TYPES, _resolve_vehicle, run_scenario
 from cadac.io.scenario import load_scenario
 from cadac.io.translate import translate_scenario_asc
-from cadac.vehicles.plane6.vehicle import Plane6
+from cadac.vehicles.flat6.falcon6.vehicle import Plane6
 
 
 def test_no_family_uses_global_types():

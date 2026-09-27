@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Arc guidance through three waypoints. */
 {
   "title": "input_arc.asc Arc-guidance, three waypoints",
   "options": {

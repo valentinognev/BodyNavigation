@@ -2,7 +2,7 @@ import math
 
 from cadac.constants import RAD
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.plane5.control import Plane5Control
+from cadac.vehicles.flat3.falcon5.control import Plane5Control
 
 # input_mcontrol_11 (not turning-to-IP)
 GAIN_PSIVG = 12.0

@@ -9,7 +9,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
 from cadac.math.wgs84 import cad_geo84_in, cad_in_geo84, cad_tdi84
-from cadac.vehicles.hyper6.ins import Hyper6Ins
+from cadac.vehicles.round6.hyper6.ins import Hyper6Ins
 
 RTOL = 1e-12
 ATOL = 1e-14

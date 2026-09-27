@@ -20,6 +20,7 @@ export type WorkbenchState = {
   program: string | null;
   stem: string | null;
   scenario: Scenario | null;
+  caseDescription: string;
   drawerText: string;
   drawerDirty: boolean;
   revision: number;
@@ -43,7 +44,7 @@ export type WorkbenchState = {
   setLastPlot: (lastPlot: PlotData | null) => void;
   toggleSelectedColumn: (name: string) => void;
   openCase: (program: string, stem: string) => Promise<void>;
-  openImported: (raw: unknown, stem: string) => void;
+  openImported: (raw: unknown, stem: string, description?: string) => void;
   applyFormPatch: (partial: Partial<Scenario>) => void;
   setDrawerText: (text: string) => void;
   applyDrawerJson: () => void;
@@ -74,6 +75,7 @@ export function createStore() {
     program: null,
     stem: null,
     scenario: null,
+    caseDescription: "",
     drawerText: "",
     drawerDirty: false,
     revision: 0,
@@ -117,6 +119,7 @@ export function createStore() {
         program,
         stem,
         scenario: null,
+        caseDescription: "",
         drawerText: "",
         drawerDirty: false,
         parseError: null,
@@ -128,10 +131,12 @@ export function createStore() {
           set({ parseError: { message: `case ${res.status}` } });
           return;
         }
-        const body = (await res.json()) as { scenario?: unknown };
+        const body = (await res.json()) as { scenario?: unknown; description?: unknown };
         const scenario = scenarioFromJson(body.scenario);
+        const caseDescription = typeof body.description === "string" ? body.description : "";
         set((s) => ({
           scenario,
+          caseDescription,
           drawerText: JSON.stringify(scenario, null, 2),
           drawerDirty: false,
           parseError: null,
@@ -143,13 +148,14 @@ export function createStore() {
         });
       }
     },
-    openImported: (raw, stem) => {
+    openImported: (raw, stem, description = "") => {
       const scenario = scenarioFromJson(raw);
       set((s) => ({
         view: "editor",
         program: null,
         stem,
         scenario,
+        caseDescription: description,
         drawerText: JSON.stringify(scenario, null, 2),
         drawerDirty: false,
         parseError: null,

@@ -9,7 +9,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.earth import cadtei, cadtge
 from cadac.math.frames import cadtbv, mat2tr, polar_from_cart
-from cadac.vehicles.hyper5.seeker import Hyper5Seeker
+from cadac.vehicles.round3.hyper5.seeker import Hyper5Seeker
 
 # Demo 4.7 Terminal pro-nav with seeker
 LONX = -106.28

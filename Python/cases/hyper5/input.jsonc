@@ -1,3 +1,5 @@
+/* HYPER5, 5-DOF round earth. Two vehicles: HYPER5 and a TARGET3 truck.
+   Default case is Demo 4.7, proportional navigation onto the truck. */
 {
   "title": "input_Demo_4_7_pro_nav.asc",
   "options": {

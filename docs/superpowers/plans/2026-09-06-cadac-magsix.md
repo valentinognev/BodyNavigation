@@ -4,7 +4,7 @@
 
 **Goal:** Add unique Rotor EOM and JSONC type `ROTOR` (`family="magsix"`); unit-test each C++ module used by MAGSIX `input.asc` (attitude RECT.MR1) and `input_trajectoryMR1.asc`; e2e vs CADAC CSV when goldens exist.
 
-**Architecture:** New `cadac.eom.rotor` (US76 + spherical `gravity(hbe)`, DNU Magnus trajectory + attitude). Vehicle `cadac.vehicles.rotor.vehicle.Rotor` composes environment/trajectory/attitude. No Flat6/Flat3/Round6 classes. No aero/prop decks.
+**Architecture:** New `cadac.eom.rotor` (US76 + spherical `gravity(hbe)`, DNU Magnus trajectory + attitude). Vehicle `cadac.vehicles.planar.magsix.vehicle.Rotor` composes environment/trajectory/attitude. No Flat6/Flat3/Round6 classes. No aero/prop decks.
 
 **Tech Stack:** Python >= 3.11, numpy, pytest. Work in `Python/`.
 
@@ -39,7 +39,7 @@
 - `Python/src/cadac/io/translate.py` — `translate_scenario_asc(..., family=None)`
 - `Python/src/cadac/cli.py` — `_VEHICLE_FAMILIES`, ROTOR factory, `_NO_DECK_TYPES`
 - `Python/src/cadac/eom/rotor.py` — Environment, Trajectory, Attitude
-- `Python/src/cadac/vehicles/rotor/{__init__,vehicle}.py`
+- `Python/src/cadac/vehicles/planar/magsix/{__init__,vehicle}.py`
 - Tests `test_rotor_family.py`, `test_rotor_*.py`, `test_magsix_*.py` (do not overwrite `test_vehicle_family.py`)
 - Cases `Python/cases/magsix/`
 - C++: `environment.cpp`, `trajectory.cpp`, `attitude.cpp`, `global_constants.hpp`, `class_hierarchy.hpp`
@@ -804,7 +804,7 @@ def test_phi_uses_new_beta_then_psidd_uses_new_phid():
 ### Task 7: ROTOR vehicle + translate attitude `input.asc`
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rotor/__init__.py`, `Python/src/cadac/vehicles/rotor/vehicle.py`
+- Create: `Python/src/cadac/vehicles/planar/magsix/__init__.py`, `Python/src/cadac/vehicles/planar/magsix/vehicle.py`
 - Modify: `Python/src/cadac/cli.py`
 - Translate: `CADAC_Simulations/MAGSIX_231111/MAGSIX/input.asc` → `Python/cases/magsix/input.jsonc` with `family="magsix"`
 - Test: `Python/tests/unit/test_rotor_one_step.py`
@@ -844,7 +844,7 @@ def _attitude_smoke(tmp_path: Path) -> Path:
 
 
 def test_rotor_type_health_and_module_order():
-    from cadac.vehicles.rotor.vehicle import Rotor
+    from cadac.vehicles.planar.magsix.vehicle import Rotor
 
     vehicle = Rotor("RECT.MR1")
     assert vehicle.type == "ROTOR"
@@ -853,7 +853,7 @@ def test_rotor_type_health_and_module_order():
 
 
 def test_rotor_define_skips_existing_field():
-    from cadac.vehicles.rotor.vehicle import Rotor
+    from cadac.vehicles.planar.magsix.vehicle import Rotor
 
     vehicle = Rotor("RECT.MR1")
     vehicle.store.define(Field("hbe", 42.0, "real", "out", "pre", ("plot",)))

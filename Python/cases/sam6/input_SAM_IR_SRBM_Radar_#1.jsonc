@@ -1,3 +1,5 @@
+/* SAM6, 6-DOF flat earth. Three vehicles: one MISSILE6 SAM, one ROCKET5 SRBM, and one RADAR0.
+   Infrared engagement of a short-range ballistic missile, first geometry. */
 {
   "title": "input_SAM_IR_SRBM_Radar_#1.asc",
   "options": {

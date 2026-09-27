@@ -29,7 +29,7 @@
 - `Python/src/cadac/math/earth.py` — add `cadine`
 - `Python/src/cadac/kernel/executive.py` — skip missing modules
 - `Python/src/cadac/cli.py` — deck policy, plot slot 0, type map
-- `Python/src/cadac/vehicles/hyper5/{aero,propulsion,forces,control,guidance,seeker,intercept,targeting,target,satellite,vehicle}.py`
+- `Python/src/cadac/vehicles/round3/hyper5/{aero,propulsion,forces,control,guidance,seeker,intercept,targeting,target,satellite,vehicle}.py`
 - Tests `Python/tests/unit/test_cadine.py`, `test_executive.py`, `test_hyper5_*.py`, `test_target3_*.py`, `test_satellite3_*.py`
 - Case `Python/cases/hyper5/` from `input.asc` + `hyper5_aero_deck.asc`
 - C++: `hyper_modules.cpp`, `target_modules.cpp`, `satellite_modules.cpp`, `utility_functions.cpp` (`cadine`)
@@ -118,7 +118,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 3: Hyper5 aerodynamics
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/__init__.py`, `Python/src/cadac/vehicles/hyper5/aero.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/__init__.py`, `Python/src/cadac/vehicles/round3/hyper5/aero.py`
 - Test: `Python/tests/unit/test_hyper5_aero.py`
 
 **Interfaces:**
@@ -133,7 +133,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 4: Hyper5 propulsion
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/propulsion.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/propulsion.py`
 - Test: `Python/tests/unit/test_hyper5_propulsion.py`
 
 **Interfaces:**
@@ -148,7 +148,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 5: Hyper5 forces
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/forces.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/forces.py`
 - Test: `Python/tests/unit/test_hyper5_forces.py`
 
 **Interfaces:**
@@ -162,7 +162,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 6: control_bank
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/control.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/control.py`
 - Test: `Python/tests/unit/test_hyper5_control_bank.py`
 
 **Interfaces:**
@@ -220,7 +220,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 11: guidance_point
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/guidance.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/guidance.py`
 - Test: `Python/tests/unit/test_hyper5_guidance_point.py`
 
 **Interfaces:**
@@ -257,7 +257,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 14: seeker
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/seeker.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/seeker.py`
 - Test: `Python/tests/unit/test_hyper5_seeker.py`
 
 **Interfaces:** Port `Hyper::seeker` / `seeker_grnd_ranges`. `mseeker==0` return. `1` acquire if ground range `< acq_range`, then `mseeker=3`. `3` track: `range_go`, `STBG`, `WOEB`, `closing_speed`, `UTBB`, `targ_com_slot`. Else `ValueError`. Target packets: `ctx.combus[i].type=="TARGET3"`; kinematics from `packet.vars` names `lonx`,`latx`,`alt`,`psivgx`,`thtvgx`,`dvbe`,`VBEG`,`SBII`. Demo 4.7 `acq_range=6000`.
@@ -270,7 +270,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 15: Hyper intercept
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/intercept.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/intercept.py`
 - Test: `Python/tests/unit/test_hyper5_intercept.py`
 
 **Interfaces:** Port `Hyper::intercept` without `cout`/`exit`. `halt` and `write` → `vehicle.health=0`, `ctx.combus[slot].status=0`. Ground `alt<=0` same. `mseeker==3` and `range_go<1000` closest-approach interpolation as C++ (status 0 on intercept). `write` latch. No `sys.exit`.
@@ -283,7 +283,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 16: targeting stub (mtargeting 0)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/targeting.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/targeting.py`
 - Test: `Python/tests/unit/test_hyper5_targeting_noop.py`
 
 **Interfaces:** `define` C++ `def_targeting`. `execute`: `mtargeting==0` return; else `ValueError` until Task 19. Include module on Hyper5 vehicle later so define always runs.
@@ -296,7 +296,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 17: Target3
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/target.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/target.py`
 - Test: `Python/tests/unit/test_target3_forces.py`, `Python/tests/unit/test_target3_intercept.py`
 
 **Interfaces:**
@@ -312,7 +312,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 18: Satellite3
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/satellite.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/satellite.py`
 - Test: `Python/tests/unit/test_satellite3_forces.py`
 
 **Interfaces:** `Satellite3.type=="SATELLITE3"`. Modules: Round3 env/newton + forces. `sat_thrust`, `sat_mass` default 100. `FSPV=[sat_thrust/sat_mass, 0, 0]`. Constructor `(name, events=None)`.
@@ -336,7 +336,7 @@ Also: two dummy vehicles with the same `dummy` module; after `run_scenario` (or 
 ### Task 20: HYPER5 vehicle + TARGET3 registry + translate Demo 4.7
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/hyper5/vehicle.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper5/vehicle.py`
 - Modify: `Python/src/cadac/cli.py`
 - Translate: `CADAC_Simulations/HYPER5_250113/HYPER5/input.asc` + `hyper5_aero_deck.asc` → `Python/cases/hyper5/`
 - Test: `Python/tests/unit/test_hyper5_one_step.py`

@@ -2,7 +2,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.control import Hyper5Control
+from cadac.vehicles.round3.hyper5.control import Hyper5Control
 
 # Demo 4.7
 PHILIMX = 70.0

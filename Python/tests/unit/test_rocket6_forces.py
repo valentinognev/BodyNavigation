@@ -5,7 +5,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.rocket6.forces import Rocket6Forces
+from cadac.vehicles.round6.rocket6.forces import Rocket6Forces
 
 RTOL = 1e-12
 ATOL = 1e-14

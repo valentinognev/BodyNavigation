@@ -1,3 +1,5 @@
+/* SAM6, 6-DOF flat earth. Seven vehicles: three MISSILE6 SAMs, three ROCKET5 SRBMs, and one RADAR0.
+   Three infrared engagements of ballistic missiles, flown together. */
 {
   "title": "input_SAM_IR_SRBM_Radar_#1_#2_#3.asc",
   "options": {

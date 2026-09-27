@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Section 10.1.2 roll-control doublet. */
 {
   "title": "10_1_2_input_roll_doublet.asc: Roll control doublet",
   "options": {

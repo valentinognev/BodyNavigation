@@ -3,7 +3,7 @@ import numpy as np
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.plane5.intercept import Plane5Intercept
+from cadac.vehicles.flat3.falcon5.intercept import Plane5Intercept
 
 SWBL = np.array([100.0, 200.0, 50.0])
 TIME = 12.0

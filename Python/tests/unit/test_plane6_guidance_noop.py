@@ -5,7 +5,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.plane6.guidance import Plane6Guidance
+from cadac.vehicles.flat6.falcon6.guidance import Plane6Guidance
 
 DEFINED = (
     "mguid",

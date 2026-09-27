@@ -1,3 +1,5 @@
+/* FALCON6, 6-DOF flat earth. Two vehicles, both PLANE6 (F-16).
+   Open-loop roll dynamics of two aircraft. */
 {
   "title": "input_2_roll.asc open loop dynamics",
   "options": {

@@ -35,7 +35,7 @@
 - `Python/src/cadac/cli.py` — `_VEHICLE_FAMILIES`, `_build_vehicle(path, spec)`
 - `Python/src/cadac/io/translate.py` — `family=` writes on each vehicle; GAUSS/MARKOV store means (do not skip if parser exists)
 - `Python/src/cadac/eom/flat3.py` — `Flat3AircraftEnvironment`, `Flat3AircraftNewton`
-- `Python/src/cadac/vehicles/sraam6/{__init__,vehicle,target,environment,kinematics,euler,aero,propulsion,seeker,guidance,control,actuator,forces,tvc,intercept}.py`
+- `Python/src/cadac/vehicles/flat6/sraam6/{__init__,vehicle,target,environment,kinematics,euler,aero,propulsion,seeker,guidance,control,actuator,forces,tvc,intercept}.py`
 - Tests `Python/tests/unit/test_sraam6_*.py`
 - Case `Python/cases/sraam6/` from `input_1v1.asc` + `sraam6_*_deck.asc`
 - E2E `Python/tests/e2e/test_sraam6_1v1.py`
@@ -63,7 +63,7 @@ import pytest
 
 from cadac.cli import _build_vehicle, run_scenario
 from cadac.io.scenario import load_scenario
-from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.round3.hyper5.target import Target3
 
 
 def _write(path: Path, payload: dict) -> Path:
@@ -195,7 +195,7 @@ def test_translate_without_family_omits_vehicle_key(tmp_path: Path):
 ### Task 3: SRAAM6 Flat6 environment
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/__init__.py`, `Python/src/cadac/vehicles/sraam6/environment.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/__init__.py`, `Python/src/cadac/vehicles/flat6/sraam6/environment.py`
 - Test: `Python/tests/unit/test_sraam6_environment.py`
 
 **Interfaces:**
@@ -214,7 +214,7 @@ from cadac.constants import R
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.environment import Sraam6Environment
+from cadac.vehicles.flat6.sraam6.environment import Sraam6Environment
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -263,7 +263,7 @@ def test_mguid6_low_mach_sets_trcond_2():
 ### Task 4: SRAAM6 Flat6 kinematics
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/kinematics.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/kinematics.py`
 - Test: `Python/tests/unit/test_sraam6_kinematics.py`
 
 **Interfaces:**
@@ -278,7 +278,7 @@ def test_mguid6_low_mach_sets_trcond_2():
 ### Task 5: SRAAM6 Flat6 euler
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/euler.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/euler.py`
 - Test: `Python/tests/unit/test_sraam6_euler.py`
 
 **Interfaces:**
@@ -294,7 +294,7 @@ from cadac.constants import DEG
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.euler import Sraam6Euler
+from cadac.vehicles.flat6.sraam6.euler import Sraam6Euler
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -336,7 +336,7 @@ def test_roll_moment_integrates_pp():
 ### Task 6: SRAAM6 aerodynamics tables
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/aero.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/aero.py`
 - Test: `Python/tests/unit/test_sraam6_aero.py`
 
 **Interfaces:**
@@ -362,7 +362,7 @@ def test_roll_moment_integrates_pp():
 ### Task 8: SRAAM6 propulsion
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/propulsion.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/propulsion.py`
 - Test: `Python/tests/unit/test_sraam6_propulsion.py`
 
 **Interfaces:** Port `Missile::propulsion`. Constructor takes Datadeck. `mprop==0` thrust 0. `mprop==1` tables `thrust_vs_time`,`mass_vs_time`,`cg_vs_time`,`moipitch_vs_time`,`moiroll_vs_time`; `thrust=tsl+(101325-press)*aexit`; `time>2.69` → `mprop=0`. Else `ValueError`. `mfreeze` latch as C++. Parse `sraam6_prop_deck.asc`. Defaults `vmass=92`, `xcg=1.536`, `ai11=0.308`, `ai33=59.80`.
@@ -375,7 +375,7 @@ def test_roll_moment_integrates_pp():
 ### Task 9: SRAAM6 actuator
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/actuator.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/actuator.py`
 - Test: `Python/tests/unit/test_sraam6_actuator.py`
 
 **Interfaces:** Port `actuator.cpp`. `mact==0` limit-only four fins; `mact==2` `actuator_scnd`. Else `ValueError`. Mix: `delcx1=-dpcx+dqcx-drcx` etc. Recover `dpx,dqx,drx` as C++. Local CADAC `sign`. `dt=ctx.int_step`. 1v1: `mact=2`, `dlimx=28`, `ddlimx=600`, `wnact=100`, `zetact=0.7`.
@@ -388,7 +388,7 @@ def test_roll_moment_integrates_pp():
 ### Task 10: control_roll
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/control.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/control.py`
 - Test: `Python/tests/unit/test_sraam6_control_roll.py`
 
 **Interfaces:** Port `def_control` (all C++ names) and `control_roll`. `gkp=(2*zrcl*wrcl+dlp)/dld`; `gkphi=wrcl*wrcl/dld`; `dpcx` as C++. `execute` pass until Task 13. 1v1: `phicomx=0`, `wrcl=20`, `zrcl=0.9`.
@@ -434,7 +434,7 @@ def test_roll_moment_integrates_pp():
 ### Task 14: SRAAM6 forces
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/forces.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/forces.py`
 - Test: `Python/tests/unit/test_sraam6_forces.py`
 
 **Interfaces:** Port `Missile::forces`. Writes `FAPB`/`FMB` only. If `mtvc` absent or `==0`, `FAPB[0]+=thrust`. Else add `FPB`/`FMPB`. Do not write `FSPB`.
@@ -447,7 +447,7 @@ def test_roll_moment_integrates_pp():
 ### Task 15: SRAAM6 TVC
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/tvc.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/tvc.py`
 - Test: `Python/tests/unit/test_sraam6_tvc.py`
 
 **Interfaces:** Port `tvc.cpp` / `tvc_scnd`. `mtvc==0` return. `{1,2,3}` as spec. Else `ValueError`. Local CADAC `sign`. Include on the missile vehicle in Task 25 so `define` runs.
@@ -460,7 +460,7 @@ def test_roll_moment_integrates_pp():
 ### Task 16: seeker download, kinematic, modes 0/2/3/4
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/seeker.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/seeker.py`
 - Test: `Python/tests/unit/test_sraam6_seeker.py`
 
 **Interfaces:**
@@ -486,7 +486,7 @@ def test_roll_moment_integrates_pp():
 ### Task 18: guidance midcourse + mnav
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/guidance.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/guidance.py`
 - Test: `Python/tests/unit/test_sraam6_guidance_mid.py`
 
 **Interfaces:** Port `def_guidance`, `guidance` extrapolation, `guidance_mid`. `mnav==3` store `STEL`/`VTEL` then `mnav=0`; `mnav==0` keep; else `ValueError`. `mguid==0` skip laws. `mguid==3` mid. `mguid==6` calls `guidance_term` (this task: method `pass`; Task 19 fills C++ `guidance_term`). Else `ValueError`. 1v1: `gnav=3.75`, `mnav=3`.
@@ -510,7 +510,7 @@ def test_roll_moment_integrates_pp():
 ### Task 20: missile intercept
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/intercept.py`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/intercept.py`
 - Test: `Python/tests/unit/test_sraam6_intercept.py`
 
 **Interfaces:** Port `intercept.cpp` without `cout`/`exit`. `mterm` in `{0,1,2}` else `ValueError`. 1v1 `mterm=1`. C++ fires on `closing_speed>0 && write` where `closing_speed=UTBL·VTBEL` is LOS range-rate (positive = opening after CPA). Halt / ground / `trcond and stop` kill missile. Hit kills missile and TARGET3 at `tgt_com_slot`. `write` default 1.
@@ -538,7 +538,7 @@ def test_roll_moment_integrates_pp():
 ### Task 22: SRAAM6 target guidance
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/target.py` (guidance class here or `target_guidance.py` — prefer methods/classes in `target.py` until the file needs a split; if split, `target_guidance.py`)
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/target.py` (guidance class here or `target_guidance.py` — prefer methods/classes in `target.py` until the file needs a split; if split, `target_guidance.py`)
 - Test: `Python/tests/unit/test_sraam6_target_guidance.py`
 
 **Interfaces:** Port `Target::def_guidance` / `guidance`. `tgt_option` in `{0,1,2}` else `ValueError`. Option 1: 1v1 `gturn=1`. Option 2: 1-based MISSILE6 packet; `mseek%10==4` escape as C++ using `SBEL`/`VBEL`/`SAEL`/`VAEL` field names.
@@ -573,7 +573,7 @@ def test_roll_moment_integrates_pp():
 ### Task 25: Vehicles, registry, 1v1 case, smoke
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/sraam6/vehicle.py`; finish `target.py` `Sraam6Target`
+- Create: `Python/src/cadac/vehicles/flat6/sraam6/vehicle.py`; finish `target.py` `Sraam6Target`
 - Modify: `Python/src/cadac/cli.py` — register family pairs; missile both decks; Target no decks
 - Translate + decks → `Python/cases/sraam6/`
 - Test: `Python/tests/unit/test_sraam6_one_step.py`
@@ -597,8 +597,8 @@ import pytest
 from cadac import run_scenario
 from cadac.io.jsonc import loads
 from cadac.io.translate import deck_asc_to_jsonc, translate_scenario_asc
-from cadac.vehicles.sraam6.target import Sraam6Target
-from cadac.vehicles.sraam6.vehicle import Sraam6Missile
+from cadac.vehicles.flat6.sraam6.target import Sraam6Target
+from cadac.vehicles.flat6.sraam6.vehicle import Sraam6Missile
 
 ROOT = Path(__file__).resolve().parents[3]
 SRC = ROOT / "CADAC_Simulations/SRAAM6_250130/SRAAM6"

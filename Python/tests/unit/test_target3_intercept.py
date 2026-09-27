@@ -1,7 +1,7 @@
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import StateStore
-from cadac.vehicles.hyper5.target import Target3, Target3Intercept
+from cadac.vehicles.round3.hyper5.target import Target3, Target3Intercept
 
 RTOL = 1e-12
 ATOL = 1e-14

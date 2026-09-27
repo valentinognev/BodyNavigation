@@ -11,7 +11,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.hyper6.propulsion import Hyper6Propulsion
+from cadac.vehicles.round6.hyper6.propulsion import Hyper6Propulsion
 
 HYPER6 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/HYPER6_250125/HYPER6"
 PROP = HYPER6 / "ghame6_prop_deck.asc"

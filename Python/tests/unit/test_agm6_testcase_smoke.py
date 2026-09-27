@@ -12,8 +12,8 @@ from cadac.io.scenario import OPTION_KEYS, load_scenario
 from cadac.io.translate import deck_asc_to_jsonc, translate_scenario_asc
 from cadac.kernel.events import EventSpec
 from cadac.kernel.executive import SimContext, run_loop
-from cadac.vehicles.agm6.target import Agm6Target
-from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.flat6.agm6.target import Agm6Target
+from cadac.vehicles.round3.hyper5.target import Target3
 
 ROOT = Path(__file__).resolve().parents[3]
 AGM6_ASC = ROOT / "CADAC_Simulations/AGM6_250217/AGM6"

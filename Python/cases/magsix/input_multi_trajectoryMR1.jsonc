@@ -1,3 +1,5 @@
+/* MAGSIX rotor, planar X-Z. Two vehicles, both ROTOR (RECT.MR1).
+   Multi-run trajectory test of two copies of the MR report run 13 rotor. */
 {
   "title": "input_multi_trajectoryMR1 Multi-Run Trajectory test case (RECT.MR1 Run13 in MR Report)",
   "options": {

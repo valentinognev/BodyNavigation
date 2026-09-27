@@ -5,7 +5,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper6.guidance import Hyper6Guidance
+from cadac.vehicles.round6.hyper6.guidance import Hyper6Guidance
 
 PLOT = ("plot",)
 

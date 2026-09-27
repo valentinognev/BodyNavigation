@@ -6,8 +6,8 @@ import pytest
 from cadac.constants import RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.control import Hyper5Control
-from cadac.vehicles.hyper5.vehicle import Hyper5
+from cadac.vehicles.round3.hyper5.control import Hyper5Control
+from cadac.vehicles.round3.hyper5.vehicle import Hyper5
 
 # Demo 5.1 fly-out
 GH = 0.2

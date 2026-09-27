@@ -1,3 +1,5 @@
+/* SRAAM6, 6-DOF flat earth. Six vehicles: three MISSILE6 and three TARGET3.
+   Three missiles against three targets, to see sensitivity to aircraft g turns. */
 {
   "title": "input_3v3_gturn.asc 3 Missiles against 3 targets; aircraft maneuver sensitivity",
   "options": {

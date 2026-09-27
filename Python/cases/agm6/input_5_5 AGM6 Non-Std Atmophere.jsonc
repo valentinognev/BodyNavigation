@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Three vehicles: two MISSILE6 and one ground TARGET3.
+   The engagement is flown in a non-standard atmosphere. */
 {
   "title": "input_5_5 AGM6 Non-Std Atmophere.asc",
   "options": {

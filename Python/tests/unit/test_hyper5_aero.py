@@ -8,7 +8,7 @@ from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.hyper5.aero import Hyper5Aero
+from cadac.vehicles.round3.hyper5.aero import Hyper5Aero
 
 HYPER5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/HYPER5_250113/HYPER5"
 AERO = HYPER5 / "hyper5_aero_deck.asc"

@@ -7,7 +7,7 @@ import pytest
 from cadac.eom.round3 import Round3Environment, Round3Newton
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.satellite import Satellite3, Satellite3Forces
+from cadac.vehicles.round3.hyper5.satellite import Satellite3, Satellite3Forces
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -51,6 +51,7 @@ SATELLITE_PY = (
     / "src"
     / "cadac"
     / "vehicles"
+    / "round3"
     / "hyper5"
     / "satellite.py"
 )

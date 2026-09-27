@@ -4,7 +4,7 @@ import numpy as np
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.kinematics import Sraam6Kinematics
+from cadac.vehicles.flat6.sraam6.kinematics import Sraam6Kinematics
 
 RTOL = 1e-12
 ATOL = 1e-14

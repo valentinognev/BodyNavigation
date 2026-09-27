@@ -7,7 +7,7 @@ from cadac.constants import R
 from cadac.env.us76 import atmosphere76
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.environment import Sraam6Environment
+from cadac.vehicles.flat6.sraam6.environment import Sraam6Environment
 
 RTOL = 1e-12
 ATOL = 1e-14

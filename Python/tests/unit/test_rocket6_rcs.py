@@ -4,7 +4,7 @@ import pytest
 from cadac.constants import DEG
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.rocket6.rcs import Rocket6Rcs, rcs_schmitt
+from cadac.vehicles.round6.rocket6.rcs import Rocket6Rcs, rcs_schmitt
 
 RTOL = 1e-12
 ATOL = 1e-14

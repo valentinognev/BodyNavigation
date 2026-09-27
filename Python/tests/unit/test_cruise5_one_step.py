@@ -10,11 +10,11 @@ from cadac.cli import _VEHICLE_FAMILIES, _VEHICLE_TYPES, _build_vehicle
 from cadac.io.jsonc import loads
 from cadac.io.scenario import VehicleSpec, load_scenario
 from cadac.kernel.executive import SimContext, run_loop
-from cadac.vehicles.cruise3.vehicle import Cruise3
-from cadac.vehicles.cruise5.satellite import Cruise5Satellite
-from cadac.vehicles.cruise5.target import Cruise5Target
-from cadac.vehicles.cruise5.vehicle import Cruise5
-from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.round3.hyper3.vehicle import Cruise3
+from cadac.vehicles.round3.cruise5.satellite import Cruise5Satellite
+from cadac.vehicles.round3.cruise5.target import Cruise5Target
+from cadac.vehicles.round3.cruise5.vehicle import Cruise5
+from cadac.vehicles.round3.hyper5.target import Target3
 
 CASES = Path(__file__).resolve().parents[2] / "cases" / "cruise5"
 

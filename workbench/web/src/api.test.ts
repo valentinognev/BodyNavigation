@@ -94,7 +94,28 @@ it("importFile POSTs multipart file to /cases/import", async () => {
   );
   const init = fetchMock.mock.calls[0][1] as RequestInit;
   expect(init.body).toBeInstanceOf(FormData);
-  expect(result).toEqual({ ok: true, scenario: hyper3Like });
+  expect(result).toEqual({ ok: true, scenario: hyper3Like, description: "" });
+});
+
+it("importFile keeps a leading description", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        scenario: hyper3Like,
+        description: "Two vehicles. Horizontal engagement.",
+      }),
+    }),
+  );
+  const result = await importFile(new File(["{}"], "input_hori.jsonc"));
+  expect(result).toEqual({
+    ok: true,
+    scenario: hyper3Like,
+    description: "Two vehicles. Horizontal engagement.",
+  });
 });
 
 it("importFile ok false returns error", async () => {

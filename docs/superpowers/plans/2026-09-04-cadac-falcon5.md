@@ -24,7 +24,7 @@
 ## File map
 
 - `Python/src/cadac/eom/flat3.py`
-- `Python/src/cadac/vehicles/plane5/{aero,propulsion,forces,control,guidance,intercept,vehicle}.py`
+- `Python/src/cadac/vehicles/flat3/falcon5/{aero,propulsion,forces,control,guidance,intercept,vehicle}.py`
 - Tests under `Python/tests/unit/test_flat3_*.py`, `test_plane5_*.py`
 - Cases: `Python/cases/falcon5/` from `CADAC_Simulations/FALCON5_250116/FALCON5/input_turning_to_IP.asc`
 - C++: `CADAC_Simulations/FALCON5_250116/FALCON5/flat3_modules.cpp`, `plane_modules.cpp`
@@ -123,7 +123,7 @@ def test_time_copy():
 
 ### Task 5: Plane5 aerodynamics
 
-**Files:** Create `Python/src/cadac/vehicles/plane5/aero.py`, `Python/tests/unit/test_plane5_aero.py`
+**Files:** Create `Python/src/cadac/vehicles/flat3/falcon5/aero.py`, `Python/tests/unit/test_plane5_aero.py`
 
 **Interfaces:** Port `Plane::aerodynamics` in `plane_modules.cpp` (table names from `Falcon5_aero_deck.asc`). Translate deck to JSONC using existing translator.
 

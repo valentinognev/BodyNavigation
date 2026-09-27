@@ -11,7 +11,7 @@ from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
 from cadac.stoch import gauss, seed, uniform
-from cadac.vehicles.sam6.ins import Sam6Ins, _PP0, _cholesky, _gauss
+from cadac.vehicles.flat6.sam6.ins import Sam6Ins, _PP0, _cholesky, _gauss
 
 # C++ gauss(0,1) after srand(0) on Linux glibc (CADAC unituni Box-Muller).
 _CPP_GAUSS01_SRAND0 = (
@@ -584,14 +584,14 @@ def test_terminate_exists_and_is_pass():
 
 def test_not_a_subclass_of_flat6_and_no_hyper_plane_ins():
     assert not issubclass(Sam6Ins, Flat6Environment)
-    import cadac.vehicles.sam6.ins as insmod
+    import cadac.vehicles.flat6.sam6.ins as insmod
 
     assert "Flat6Environment" not in dir(insmod)
     assert "Hyper6Ins" not in dir(insmod)
 
 
 def test_no_flat6_or_plane_or_hyper_ins_imports():
-    import cadac.vehicles.sam6.ins as mod
+    import cadac.vehicles.flat6.sam6.ins as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

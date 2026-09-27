@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. One vehicle: MISSILE6.
+   Acceleration-control checkout of the air-to-ground missile. */
 {
   "title": "input_4_5 AGM6 Acceleration Control.asc",
   "options": {

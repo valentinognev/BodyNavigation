@@ -33,6 +33,22 @@ PROGRAM_ORDER = (
     "AGM6",
 )
 
+# dimension, subgroup. Spinner is allowed under any dimension; 2D is flat or spinner.
+PROGRAM_GROUPS = {
+    "HYPER3": ("3", "round"),
+    "FALCON5": ("5", "flat"),
+    "FALCON6": ("6", "flat"),
+    "HYPER5": ("5", "round"),
+    "HYPER6": ("6", "round"),
+    "AIM5": ("5", "flat"),
+    "CRUISE5": ("5", "round"),
+    "MAGSIX": ("xz", "spinner"),
+    "ROCKET6": ("6", "round"),
+    "SAM6": ("6", "flat"),
+    "SRAAM6": ("6", "flat"),
+    "AGM6": ("6", "flat"),
+}
+
 CORS_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
@@ -81,6 +97,17 @@ def _pretty_jsonc(data: dict) -> str:
     return json.dumps(data, indent=2) + "\n"
 
 
+def _with_leading_comment(previous: str | None, body: str) -> str:
+    if not previous:
+        return body
+    prefix = jsonc.leading_comment_prefix(previous)
+    return f"{prefix}{body}" if prefix else body
+
+
+def _description(text: str) -> str:
+    return jsonc.leading_comment(text) or ""
+
+
 def _case_from_jsonc(path: Path) -> dict[str, str] | None:
     try:
         data = jsonc.loads(path.read_text(encoding="utf-8"))
@@ -118,7 +145,11 @@ def get_catalog() -> dict:
                 cases.append(entry)
         if not cases:
             continue
-        programs.append({"id": label.lower(), "label": label, "cases": cases})
+        entry = {"id": label.lower(), "label": label, "cases": cases}
+        group = PROGRAM_GROUPS.get(label)
+        if group is not None:
+            entry["dimension"], entry["subgroup"] = group
+        programs.append(entry)
     return {"programs": programs}
 
 
@@ -131,12 +162,13 @@ def get_case(program: str, stem: str):
     if not path.is_file():
         raise HTTPException(status_code=404)
     try:
-        scenario = jsonc.loads(path.read_text(encoding="utf-8"))
+        raw = path.read_text(encoding="utf-8")
+        scenario = jsonc.loads(raw)
     except Exception:
         raise HTTPException(status_code=404) from None
     if not isinstance(scenario, dict):
         raise HTTPException(status_code=404)
-    return {"ok": True, "path": str(path), "scenario": scenario}
+    return {"ok": True, "path": str(path), "scenario": scenario, "description": _description(raw)}
 
 
 @app.put("/cases/{program}/{stem}")
@@ -155,7 +187,7 @@ def put_case(program: str, stem: str, body: ScenarioBody):
     tmp_path = Path(tmp_name)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(_pretty_jsonc(body.scenario))
+            handle.write(_with_leading_comment(previous, _pretty_jsonc(body.scenario)))
         try:
             load_scenario(tmp_path)
         except Exception as exc:
@@ -199,7 +231,9 @@ async def import_case(file: UploadFile = File(...)):
     raw = await file.read()
     try:
         if suffix == ".jsonc":
-            scenario = jsonc.loads(raw.decode("utf-8"))
+            text = raw.decode("utf-8")
+            scenario = jsonc.loads(text)
+            description = _description(text)
         elif suffix == ".asc":
             with tempfile.TemporaryDirectory() as tmpdir:
                 src = Path(tmpdir) / Path(name).name
@@ -207,14 +241,16 @@ async def import_case(file: UploadFile = File(...)):
                 dst_dir = Path(tmpdir) / "out"
                 translate_scenario_asc(src, dst_dir, family=None)
                 dest = dst_dir / f"{src.stem}.jsonc"
-                scenario = jsonc.loads(dest.read_text(encoding="utf-8"))
+                written = dest.read_text(encoding="utf-8")
+                scenario = jsonc.loads(written)
+                description = _description(written)
         else:
             return {"ok": False, "error": f"unsupported type {suffix}"}
     except Exception as exc:
         return _import_fail(exc)
     if not isinstance(scenario, dict):
         return {"ok": False, "error": "not an object"}
-    return {"ok": True, "scenario": scenario}
+    return {"ok": True, "scenario": scenario, "description": description}
 
 
 @app.post("/run")

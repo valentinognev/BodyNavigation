@@ -7,7 +7,7 @@ from cadac.constants import DEG
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sam6.euler import Sam6Euler
+from cadac.vehicles.flat6.sam6.euler import Sam6Euler
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -222,7 +222,7 @@ def test_is_not_flat6_euler_subclass():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.euler as mod
+    import cadac.vehicles.flat6.sam6.euler as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

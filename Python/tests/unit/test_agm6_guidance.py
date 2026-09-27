@@ -8,7 +8,7 @@ from cadac.constants import AGRAV, DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr, polar_from_cart
-from cadac.vehicles.agm6.guidance import Agm6Guidance
+from cadac.vehicles.flat6.agm6.guidance import Agm6Guidance
 
 RTOL = 1e-12
 ATOL = 1e-14

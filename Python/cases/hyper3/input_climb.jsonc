@@ -1,3 +1,5 @@
+/* HYPER3, 3-DOF round earth. One vehicle: CRUISE3.
+   Two-phase climb of the hypersonic cruise vehicle. */
 {
   "title": "input_climb.asc HYPER3 Two-phased climb",
   "options": {

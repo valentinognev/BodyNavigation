@@ -5,8 +5,8 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import StateStore
-from cadac.vehicles.sam6.rcs import Sam6Rcs
-from cadac.vehicles.sam6.tvc import Sam6Tvc
+from cadac.vehicles.flat6.sam6.rcs import Sam6Rcs
+from cadac.vehicles.flat6.sam6.tvc import Sam6Tvc
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -390,7 +390,7 @@ def test_tvc_terminate_is_pass():
 
 
 def test_tvc_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.tvc as mod
+    import cadac.vehicles.flat6.sam6.tvc as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src
@@ -494,7 +494,7 @@ def test_rcs_terminate_is_pass():
 
 
 def test_rcs_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.rcs as mod
+    import cadac.vehicles.flat6.sam6.rcs as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

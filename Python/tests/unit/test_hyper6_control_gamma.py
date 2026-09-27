@@ -7,7 +7,7 @@ import pytest
 from cadac.constants import DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper6.control import Hyper6Control
+from cadac.vehicles.round6.hyper6.control import Hyper6Control
 
 RTOL = 1e-12
 ATOL = 1e-14

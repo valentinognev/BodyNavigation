@@ -26,7 +26,7 @@
 ## File map
 
 - `Python/src/cadac/eom/flat6.py`
-- `Python/src/cadac/vehicles/plane6/{aero,propulsion,actuator,control,forces,guidance,vehicle}.py`
+- `Python/src/cadac/vehicles/flat6/falcon6/{aero,propulsion,actuator,control,forces,guidance,vehicle}.py`
 - Extend `asc_deck.py` 3DIM; `look_up` 3-arg
 - Tests `test_lookup_3d.py`, `test_mat3tr.py`, `test_flat6_*.py`, `test_plane6_*.py`
 - C++: `environment.cpp`, `kinematics.cpp`, `euler.cpp`, `newton.cpp`, `aerodynamics.cpp`, `propulsion.cpp`, `actuator.cpp`, `control.cpp`, `forces.cpp`

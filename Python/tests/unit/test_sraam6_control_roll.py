@@ -6,7 +6,7 @@ import pytest
 from cadac.constants import DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.control import Sraam6Control
+from cadac.vehicles.flat6.sraam6.control import Sraam6Control
 
 RTOL = 1e-12
 ATOL = 1e-14

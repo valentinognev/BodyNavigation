@@ -3,7 +3,7 @@ from unittest.mock import patch
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.rocket6.intercept import Rocket6Intercept
+from cadac.vehicles.round6.rocket6.intercept import Rocket6Intercept
 
 SCRN_PLOT = ("scrn", "plot")
 

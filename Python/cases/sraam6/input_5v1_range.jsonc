@@ -1,3 +1,5 @@
+/* SRAAM6, 6-DOF flat earth. Six vehicles: five MISSILE6 and one TARGET3.
+   Five missiles against one target, to see downrange capability. */
 {
   "title": "input_5v1_range.asc 4 Missile against 1 targets; downrange capability",
   "options": {

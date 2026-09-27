@@ -8,7 +8,7 @@ from cadac.env.us76 import atmosphere76
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.control import SMALL, Sraam6Control
+from cadac.vehicles.flat6.sraam6.control import SMALL, Sraam6Control
 
 RTOL = 1e-12
 ATOL = 1e-14

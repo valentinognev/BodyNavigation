@@ -96,11 +96,11 @@ def test_cross_family_module_note_is_name_match_only():
         [
             InventoryRow(
                 "HYPER6", "module", "seeker", "HYPER6/seeker_modules.cpp",
-                "cadac.vehicles.aim5.seeker", "ported", "",
+                "cadac.vehicles.flat3.aim5.seeker", "ported", "",
             ),
             InventoryRow(
                 "AIM5", "module", "seeker", "AIM5/seeker_modules.cpp",
-                "cadac.vehicles.aim5.seeker", "ported", "",
+                "cadac.vehicles.flat3.aim5.seeker", "ported", "",
             ),
             InventoryRow(
                 "HYPER6", "module", "kinematics", "HYPER6/ground0_modules.cpp",

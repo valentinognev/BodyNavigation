@@ -7,7 +7,7 @@ from cadac.constants import DEG, EPS, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.aim5.aircraft import Aim5AircraftControl, Aim5AircraftForces
+from cadac.vehicles.flat3.aim5.aircraft import Aim5AircraftControl, Aim5AircraftForces
 
 RTOL = 1e-12
 ATOL = 1e-14

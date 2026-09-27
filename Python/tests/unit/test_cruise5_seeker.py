@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import StateStore
-from cadac.vehicles.cruise5.seeker import Cruise5Seeker
+from cadac.vehicles.round3.cruise5.seeker import Cruise5Seeker
 
 SEEKER_FIELDS = {
     "mseeker": ("int", "data/save", ("scrn",), 0),

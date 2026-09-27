@@ -6,7 +6,7 @@ from cadac.constants import EPS
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.agm6.datalink import Agm6Datalink
+from cadac.vehicles.flat6.agm6.datalink import Agm6Datalink
 
 RTOL = 1e-12
 ATOL = 1e-14

@@ -6,7 +6,7 @@ from cadac.constants import DEG, EPS, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sraam6.target import Sraam6TargetControl
+from cadac.vehicles.flat6.sraam6.target import Sraam6TargetControl
 
 RTOL = 1e-12
 ATOL = 1e-14

@@ -7,7 +7,7 @@ from cadac.eom.round3 import Round3Environment, Round3Newton
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise5.target import (
+from cadac.vehicles.round3.cruise5.target import (
     Cruise5Target,
     Cruise5TargetForces,
     Cruise5TargetIntercept,
@@ -33,6 +33,7 @@ TARGET_PY = (
     / "src"
     / "cadac"
     / "vehicles"
+    / "round3"
     / "cruise5"
     / "target.py"
 )
@@ -126,5 +127,5 @@ def test_intercept_combus_status_0_sets_targ_health_0():
 
 def test_no_hyper5_target_import():
     text = TARGET_PY.read_text()
-    assert "cadac.vehicles.hyper5.target" not in text
+    assert "cadac.vehicles.round3.hyper5.target" not in text
     assert "Target3" not in text

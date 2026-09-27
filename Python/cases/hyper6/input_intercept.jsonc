@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. Three vehicles: HYPER6, a SAT3 satellite, and a RADAR0 ground station.
+   Cape ascent, then a glideslope and seeker intercept. */
 {
   "title": "input_intercept: Ascent frome Cape, glideslope and seeker intercept",
   "options": {

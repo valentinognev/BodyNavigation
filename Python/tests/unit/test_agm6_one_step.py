@@ -11,7 +11,7 @@ from cadac.io.scenario import VehicleSpec, load_scenario
 from cadac.io.translate import deck_asc_to_jsonc, translate_scenario_asc
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.kernel.state import Field
-from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.round3.hyper5.target import Target3
 
 ROOT = Path(__file__).resolve().parents[3]
 AGM6_ASC = ROOT / "CADAC_Simulations/AGM6_250217/AGM6"
@@ -66,7 +66,7 @@ def _jsonc(tmp_path: Path, name: str, vehicles: list, **extra) -> Path:
 
 
 def test_agm6_type_health_and_module_order():
-    from cadac.vehicles.agm6.vehicle import Agm6Missile
+    from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
 
     vehicle = Agm6Missile("AGM6", None)
     assert vehicle.type == "MISSILE6"
@@ -75,7 +75,7 @@ def test_agm6_type_health_and_module_order():
 
 
 def test_agm6_define_registers_modules_omitted_from_freeflight_asc():
-    from cadac.vehicles.agm6.vehicle import Agm6Missile
+    from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
 
     vehicle = Agm6Missile("AGM6", None)
     vehicle.define()
@@ -89,7 +89,7 @@ def test_agm6_define_registers_modules_omitted_from_freeflight_asc():
 
 
 def test_agm6_define_skips_existing_field():
-    from cadac.vehicles.agm6.vehicle import Agm6Missile
+    from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
 
     vehicle = Agm6Missile("AGM6", None)
     vehicle.store.define(Field("hbe", 42.0, "real", "out", "pre", ("plot",)))
@@ -99,7 +99,7 @@ def test_agm6_define_skips_existing_field():
 
 
 def test_agm6_com_names_from_com_flags():
-    from cadac.vehicles.agm6.vehicle import Agm6Missile
+    from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
 
     vehicle = Agm6Missile("AGM6", None)
     vehicle.define()
@@ -108,7 +108,7 @@ def test_agm6_com_names_from_com_flags():
 
 
 def test_agm6_environment_receives_weather_deck():
-    from cadac.vehicles.agm6.vehicle import Agm6Missile
+    from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
 
     sentinel = object()
     vehicle = Agm6Missile("AGM6", None, weather_deck=sentinel)
@@ -117,9 +117,9 @@ def test_agm6_environment_receives_weather_deck():
 
 
 def test_family_agm6_types_registered_not_global():
-    from cadac.vehicles.agm6.aircraft import Agm6Aircraft
-    from cadac.vehicles.agm6.target import Agm6Target
-    from cadac.vehicles.agm6.vehicle import Agm6Missile
+    from cadac.vehicles.flat6.agm6.aircraft import Agm6Aircraft
+    from cadac.vehicles.flat6.agm6.target import Agm6Target
+    from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
 
     assert _VEHICLE_FAMILIES[("agm6", "MISSILE6")] is Agm6Missile
     assert _VEHICLE_FAMILIES[("agm6", "TARGET3")] is Agm6Target
@@ -210,14 +210,14 @@ def test_agm6_missile6_prop_deck_optional(tmp_path: Path):
     cfg = load_scenario(path)
     assert cfg.vehicles[0].prop_deck is None
     vehicle = _build_vehicle(path, cfg.vehicles[0])
-    from cadac.vehicles.agm6.vehicle import Agm6Missile
+    from cadac.vehicles.flat6.agm6.vehicle import Agm6Missile
 
     assert isinstance(vehicle, Agm6Missile)
 
 
 def test_agm6_target3_aircraft3_no_decks():
-    from cadac.vehicles.agm6.aircraft import Agm6Aircraft
-    from cadac.vehicles.agm6.target import Agm6Target
+    from cadac.vehicles.flat6.agm6.aircraft import Agm6Aircraft
+    from cadac.vehicles.flat6.agm6.target import Agm6Target
 
     dummy = Path("scenario.jsonc")
     target = _build_vehicle(

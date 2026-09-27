@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Two vehicles: MISSILE6 and a ground TARGET3.
+   Imaging-infrared seeker engagement. */
 {
   "title": "input_5_4 AGM6 IIR Seeker.asc",
   "options": {

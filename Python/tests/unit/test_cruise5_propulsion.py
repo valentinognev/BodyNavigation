@@ -9,7 +9,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.cruise5.propulsion import Cruise5Propulsion
+from cadac.vehicles.round3.cruise5.propulsion import Cruise5Propulsion
 
 CRUISE5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/CRUISE5_250115/CRUISE5"
 RTOL = 1e-12

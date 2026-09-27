@@ -1,3 +1,5 @@
+/* SRAAM6, 6-DOF flat earth. Four vehicles: three MISSILE6 and one TARGET3.
+   Three missiles against one evasive target, comparing seeker gimbal limits. */
 {
   "title": "input_3v1_seeker.asc Missile against evasive target; seeker gimbals x5, x10",
   "options": {

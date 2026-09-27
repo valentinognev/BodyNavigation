@@ -10,7 +10,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat3tr
 from cadac.stoch import gauss, seed
-from cadac.vehicles.agm6.ins import Agm6Ins, PP0, _cholesky
+from cadac.vehicles.flat6.agm6.ins import Agm6Ins, PP0, _cholesky
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -501,7 +501,7 @@ def test_execute_unknown_mins_raises(mins):
 
 
 def test_module_does_not_import_plane6():
-    import cadac.vehicles.agm6.ins as ins_mod
+    import cadac.vehicles.flat6.agm6.ins as ins_mod
 
     src = Path(ins_mod.__file__).read_text()
     assert "plane6" not in src.lower()

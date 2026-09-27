@@ -1,3 +1,5 @@
+/* FALCON5, 5-DOF flat earth. One vehicle: PLANE.
+   Lateral point guidance with lateral-acceleration and altitude control (mguidance 40, mcontrol 46). */
 {
   "title": "input_mguidance_40_mcontrol_46.asc",
   "options": {

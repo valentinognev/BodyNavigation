@@ -34,7 +34,7 @@
 - `Python/src/cadac/io/scenario.py` — `VehicleSpec.family: str | None = None`
 - `Python/src/cadac/io/translate.py` — `translate_scenario_asc(src, dst_dir, family=None)`
 - `Python/src/cadac/cli.py` — `_VEHICLE_FAMILIES`, resolve-by-family, plot columns by class
-- `Python/src/cadac/vehicles/cruise5/{aero,propulsion,forces,control,guidance,seeker,intercept,targeting,target,satellite,vehicle}.py`
+- `Python/src/cadac/vehicles/round3/cruise5/{aero,propulsion,forces,control,guidance,seeker,intercept,targeting,target,satellite,vehicle}.py`
 - Tests `Python/tests/unit/test_cruise5_*.py`, `Python/tests/e2e/test_cruise5_input1.py`
 - Case `Python/cases/cruise5/` from `input_1.asc` + `cruise3_aero_deck.asc` + `cruise3_prop_deck.asc`
 - C++: `cruise_modules.cpp`, `target_modules.cpp`, `satellite_modules.cpp`, `utility_functions.cpp` (`cadine`, `cadtbv`, `sign`, `angle`)
@@ -232,7 +232,7 @@ def test_plot_columns_non_cruise3_class_with_type_cruise3_uses_flagged():
 ### Task 2: Cruise5 aerodynamics
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/__init__.py`, `Python/src/cadac/vehicles/cruise5/aero.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/__init__.py`, `Python/src/cadac/vehicles/round3/cruise5/aero.py`
 - Test: `Python/tests/unit/test_cruise5_aero.py`
 
 **Interfaces:**
@@ -249,7 +249,7 @@ import pytest
 from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.cruise5.aero import Cruise5Aero
+from cadac.vehicles.round3.cruise5.aero import Cruise5Aero
 
 CRUISE5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/CRUISE5_250115/CRUISE5"
 RTOL = 1e-12
@@ -314,7 +314,7 @@ def test_execute_drag_polar_vs_lookup_formulas():
 ### Task 3: Cruise5 propulsion
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/propulsion.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/propulsion.py`
 - Test: `Python/tests/unit/test_cruise5_propulsion.py`
 
 **Interfaces:**
@@ -337,7 +337,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.cruise5.propulsion import Cruise5Propulsion
+from cadac.vehicles.round3.cruise5.propulsion import Cruise5Propulsion
 
 CRUISE5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/CRUISE5_250115/CRUISE5"
 RTOL = 1e-12
@@ -490,7 +490,7 @@ def test_mprop_negative_raises():
 ### Task 4: Cruise5 forces
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/forces.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/forces.py`
 - Test: `Python/tests/unit/test_cruise5_forces.py`
 
 **Interfaces:**
@@ -506,7 +506,7 @@ import pytest
 
 from cadac.constants import RAD
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise5.forces import Cruise5Forces
+from cadac.vehicles.round3.cruise5.forces import Cruise5Forces
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -574,7 +574,7 @@ def test_define_skips_existing_fspv():
 ### Task 5: control_bank
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/control.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/control.py`
 - Test: `Python/tests/unit/test_cruise5_control_bank.py`
 
 **Interfaces:**
@@ -585,7 +585,7 @@ def test_define_skips_existing_fspv():
 ```python
 import pytest
 from cadac.kernel.state import StateStore
-from cadac.vehicles.cruise5.control import Cruise5Control
+from cadac.vehicles.round3.cruise5.control import Cruise5Control
 
 PHILIMX = 70.0
 TPHI = 0.5
@@ -690,7 +690,7 @@ import numpy as np
 import pytest
 from cadac.constants import RAD
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise5.control import Cruise5Control
+from cadac.vehicles.round3.cruise5.control import Cruise5Control
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -739,7 +739,7 @@ from cadac.constants import DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import cadtbv
-from cadac.vehicles.cruise5.control import Cruise5Control
+from cadac.vehicles.round3.cruise5.control import Cruise5Control
 
 RTOL = 1e-12
 INT_STEP = 0.05
@@ -875,7 +875,7 @@ Also a unit of `control_lateral` vs replica: `anx=-fspb3/grav`; `phicx=DEG*gcp*s
 ### Task 9: guidance_line
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/guidance.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/guidance.py`
 - Test: `Python/tests/unit/test_cruise5_guidance_line.py`
 
 **Interfaces:**
@@ -979,7 +979,7 @@ Define `_sign` in this test file (CADAC: `<0 → -1` else `+1`). Assert `guidanc
 ```python
 import pytest
 from cadac.kernel.executive import SimContext
-from cadac.vehicles.cruise5.guidance import Cruise5Guidance
+from cadac.vehicles.round3.cruise5.guidance import Cruise5Guidance
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -1063,7 +1063,7 @@ def test_mguidance_66_and_negative_raise():
 ### Task 12: seeker (mseeker 0)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/seeker.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/seeker.py`
 - Test: `Python/tests/unit/test_cruise5_seeker.py`
 
 **Interfaces:** `Cruise5Seeker.name=="seeker"`. `define` C++ `def_seeker`: `mseeker` int data/save scrn default 0, `acq_range`, `range_go` out plot,scrn, `STBG` vec out plot, `WOEB` vec out, `closing_speed` out, `time_go` out plot,scrn, `psisbx`/`thtsbx` out plot,scrn, `targ_com_slot` int save, `UTBB` vec out, `acquisition` int init/save scrn. `execute`: `mseeker==0` return; else `ValueError`. `input_1` `mseeker=0`, `acq_range=10000`.
@@ -1074,7 +1074,7 @@ def test_mguidance_66_and_negative_raise():
 import pytest
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import StateStore
-from cadac.vehicles.cruise5.seeker import Cruise5Seeker
+from cadac.vehicles.round3.cruise5.seeker import Cruise5Seeker
 
 def test_mseeker_0_no_write():
     vehicle = type("V", (), {"store": StateStore()})()
@@ -1103,7 +1103,7 @@ def test_mseeker_1_raises():
 ### Task 13: Cruise intercept
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/intercept.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/intercept.py`
 - Test: `Python/tests/unit/test_cruise5_intercept.py`
 
 **Interfaces:** Port `Cruise::intercept` without `cout`/`exit`. `define` C++ `def_intercept`: `write` int save default **1**, `miss`, `hit_time`, `MISS_G`, `time_m`, `SBTGM`, `STMEG`, `SBMEG`. No `halt`. `execute`: if `alt<=0` and `write`: `write=0`, `vehicle.health=0`, `ctx.combus[ctx.vehicle_slot].status=0`. if `mguidance in (33, 43)` and `alt<=wp_alt` and `write`: `write=0`, `miss=||SWBG||`, health/status 0. `mguidance in (30, 40, 70)` and `wp_flag==-1`: compute horizontal miss, do not print, do not kill. Optional `mseeker==3` and `range_go<100` closest-approach as C++ (target `sbeg` by name; missile status 0, target status -1). No `sys.exit`.
@@ -1116,7 +1116,7 @@ import pytest
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise5.intercept import Cruise5Intercept
+from cadac.vehicles.round3.cruise5.intercept import Cruise5Intercept
 
 def _vehicle():
     v = type("V", (), {})()
@@ -1202,7 +1202,7 @@ def test_mguidance_30_wp_flag_minus1_does_not_kill():
 ### Task 14: targeting mtargeting 0 and 1
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/targeting.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/targeting.py`
 - Test: `Python/tests/unit/test_cruise5_targeting.py`
 
 **Interfaces:** `Cruise5Targeting`. `define` C++ `def_targeting`: `mtargeting` int data scrn,plot; `del_radius` data; `clost_tgt_slot`/`tgtng_sat_slot` int out. Module-level `BIG=1e10`. Local `_angle` / CADAC `sign` not required for targeting except `angle` as C++ `utility_functions.cpp`. `execute`: `mtargeting==0` return; `!=1` `ValueError`. `==1`: `targeting_satellite` then first `visibility` entry with `tracking`; `targeting_grnd_ranges` closest `Packet.type=="TARGET3"`; if satellite found write `wp_lonx`/`wp_latx`/`wp_alt` from that packet **by name**. `targeting_satellite`: packets `type=="SATELLITE3"`; `radius=REARTH+del_radius`; grazing `acos(radius/||SSII||)`; missile-sat `angle(SBII,SSII)`; if angle < grazing: tracking 1; else critical radius `radius/cos(angle-grazing)` if `|cos|>EPS`; tracking if `||SBII||>radius_crit`. Then **C++** `satellite_target_angle=angle(SBII, STII)` (missile vs first TARGET3 `sbii`, not SSII); if `> grazing_angle` set tracking 0. Ground range: `REARTH*acos(sin lat_t sin lat_c + cos lat_t cos lat_c cos(lon_t-lon_c))` with lon/lat in rad. `input_1` event 3: `del_radius=5000`. UAV `sbii` from `cadine(14.7*RAD, 35.4*RAD, 7000, 0)`; Tank `15.4/35.3/100`; Sat `10/30/500000`.
@@ -1213,7 +1213,7 @@ def test_mguidance_30_wp_flag_minus1_does_not_kill():
 from cadac.constants import RAD
 from cadac.kernel.combus import Packet
 from cadac.math.earth import cadine
-from cadac.vehicles.cruise5.targeting import Cruise5Targeting
+from cadac.vehicles.round3.cruise5.targeting import Cruise5Targeting
 
 UAV_LONX, UAV_LATX, UAV_ALT = 14.7, 35.4, 7000.0
 TGT_LONX, TGT_LATX, TGT_ALT = 15.4, 35.3, 100.0
@@ -1229,10 +1229,10 @@ Build combus with `vars` keys `lonx`,`latx`,`alt`,`sbii` on Target and `sbii` on
 ### Task 15: Cruise5Target
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/target.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/target.py`
 - Test: `Python/tests/unit/test_cruise5_target.py`
 
-**Interfaces:** `Cruise5Target.type=="TARGET3"`. Constructor `(name, events=None)` — no decks. `health=1`. Modules: `Round3Environment`, `Round3Newton`, `Cruise5TargetForces`, `Cruise5TargetIntercept` (forces may sit before newton as HYPER5 Target or env/newton/forces — C++ MODULES order is env, aero, prop, forces, newton, …; Target skips aero/prop; use `[Round3Environment(), Cruise5TargetForces(), Round3Newton(), Cruise5TargetIntercept()]` so FSPV exists before newton exec). Forces: C++ `Target::forces` — `WEIG=TGE@WEII@TEG`; `CORIO_V=TVG@WEIG@VBEG*2`; `CENTR_V=TVG@WEIG@WEIG@TGI@SBII`; `GRAV_V=TVG@[0,0,grav]`; `FSPV=[acc_v0+fwd_accel, acc_v1+side_accel, acc_v2]`. Skip-if-exists `FSPV`. Intercept: `targ_health=ctx.combus[slot].status`. `com_names` from `"com"` in outputs. Do not import `cadac.vehicles.hyper5.target.Target3`.
+**Interfaces:** `Cruise5Target.type=="TARGET3"`. Constructor `(name, events=None)` — no decks. `health=1`. Modules: `Round3Environment`, `Round3Newton`, `Cruise5TargetForces`, `Cruise5TargetIntercept` (forces may sit before newton as HYPER5 Target or env/newton/forces — C++ MODULES order is env, aero, prop, forces, newton, …; Target skips aero/prop; use `[Round3Environment(), Cruise5TargetForces(), Round3Newton(), Cruise5TargetIntercept()]` so FSPV exists before newton exec). Forces: C++ `Target::forces` — `WEIG=TGE@WEII@TEG`; `CORIO_V=TVG@WEIG@VBEG*2`; `CENTR_V=TVG@WEIG@WEIG@TGI@SBII`; `GRAV_V=TVG@[0,0,grav]`; `FSPV=[acc_v0+fwd_accel, acc_v1+side_accel, acc_v2]`. Skip-if-exists `FSPV`. Intercept: `targ_health=ctx.combus[slot].status`. `com_names` from `"com"` in outputs. Do not import `cadac.vehicles.round3.hyper5.target.Target3`.
 
 - [ ] **Step 1:** `fwd_accel=side_accel=0`; after `define` + set Tank ICs `lonx=15.4`, `latx=35.3`, `alt=100`, `psivgx=45`, `dvbe=10`, `thtvgx=0`; `initialize` env+newton; `execute` forces → `FSPV` finite shape `(3,)`. Intercept: combus status 0 → `targ_health==0`. Constructor `Cruise5Target("Tank_t1")` has no aero_deck attribute required. `type=="TARGET3"`.
 
@@ -1243,7 +1243,7 @@ Build combus with `vars` keys `lonx`,`latx`,`alt`,`sbii` on Target and `sbii` on
 ### Task 16: Cruise5Satellite
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/satellite.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/satellite.py`
 - Test: `Python/tests/unit/test_cruise5_satellite.py`
 
 **Interfaces:** `Cruise5Satellite.type=="SATELLITE3"`. Constructor `(name, events=None)`. Modules: `Round3Environment`, `Cruise5SatelliteForces`, `Round3Newton`. `sat_thrust` data default 0, `sat_mass` data default **100**. `FSPV=np.array([sat_thrust/sat_mass, 0.0, 0.0])`. Skip-if-exists `FSPV`. After `define()`, `com_names` is the same collection as Cruise5Target: store fields with `"com"` in outputs (Round3: at least `lonx`, `latx`, `alt`, `sbii`). Targeting reads SATELLITE3 packets by those names. Do not import HYPER5 `Satellite3`.
@@ -1257,7 +1257,7 @@ Build combus with `vars` keys `lonx`,`latx`,`alt`,`sbii` on Target and `sbii` on
 ### Task 17: Cruise5 vehicle + family registry + translate input_1
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise5/vehicle.py`
+- Create: `Python/src/cadac/vehicles/round3/cruise5/vehicle.py`
 - Modify: `Python/src/cadac/cli.py` — register three family pairs only
 - Translate: `CADAC_Simulations/CRUISE5_250115/CRUISE5/input_1.asc` + `cruise3_aero_deck.asc` + `cruise3_prop_deck.asc` → `Python/cases/cruise5/` with `family="cruise5"`
 - Test: `Python/tests/unit/test_cruise5_one_step.py`
@@ -1277,11 +1277,11 @@ from pathlib import Path
 
 from cadac.cli import _VEHICLE_FAMILIES, _VEHICLE_TYPES
 from cadac.io.scenario import load_scenario
-from cadac.vehicles.cruise3.vehicle import Cruise3
-from cadac.vehicles.cruise5.satellite import Cruise5Satellite
-from cadac.vehicles.cruise5.target import Cruise5Target
-from cadac.vehicles.cruise5.vehicle import Cruise5
-from cadac.vehicles.hyper5.target import Target3
+from cadac.vehicles.round3.hyper3.vehicle import Cruise3
+from cadac.vehicles.round3.cruise5.satellite import Cruise5Satellite
+from cadac.vehicles.round3.cruise5.target import Cruise5Target
+from cadac.vehicles.round3.cruise5.vehicle import Cruise5
+from cadac.vehicles.round3.hyper5.target import Target3
 
 CASES = Path(__file__).resolve().parents[2] / "cases" / "cruise5"
 

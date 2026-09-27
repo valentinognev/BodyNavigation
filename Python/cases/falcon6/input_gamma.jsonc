@@ -1,3 +1,5 @@
+/* FALCON6, 6-DOF flat earth. One vehicle: PLANE6 (F-16).
+   Flight-path angle (gamma) controller. */
 {
   "title": "input_gamma.asc Flight path controller",
   "options": {

@@ -10,7 +10,7 @@ from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.agm6.aero import Agm6Aero
+from cadac.vehicles.flat6.agm6.aero import Agm6Aero
 
 AGM6 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/AGM6_250217/AGM6"
 AERO = AGM6 / "AGM6_aero_deck.asc"

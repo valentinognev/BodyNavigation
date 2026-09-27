@@ -1,3 +1,5 @@
+/* CRUISE5, 5-DOF round earth. Seven vehicles: three CRUISE3 UAVs, three TARGET3 trucks, and one SATELLITE3.
+   Three cruise vehicles and three targets share one targeting satellite. */
 {
   "title": "input_1_2.asc: Three UAVs, three targets, and one satellites",
   "options": {

@@ -9,13 +9,13 @@ from cadac.eom.flat3 import Flat3Kinematics
 from cadac.env.gravity import gravity
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.agm6.flat3io import (
+from cadac.vehicles.flat6.agm6.flat3io import (
     Agm6Flat3Environment,
     Agm6Flat3Newton,
     copy_in,
     copy_out,
 )
-from cadac.vehicles.agm6.target import Agm6Target, Agm6TargetForces
+from cadac.vehicles.flat6.agm6.target import Agm6Target, Agm6TargetForces
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -242,16 +242,16 @@ def test_define_param_set_initialize_sael_and_one_execute_fspa():
 
 
 def test_hyper5_target3_class_not_imported():
-    import cadac.vehicles.agm6.flat3io as flat3io
-    import cadac.vehicles.agm6.target as target_mod
+    import cadac.vehicles.flat6.agm6.flat3io as flat3io
+    import cadac.vehicles.flat6.agm6.target as target_mod
 
     for mod in (flat3io, target_mod):
         src = Path(mod.__file__).read_text(encoding="utf-8")
         assert "hyper5" not in src.lower()
-        assert "from cadac.vehicles.hyper5" not in src
+        assert "from cadac.vehicles.round3.hyper5" not in src
 
 
 def test_target3_registered_in_families():
-    from cadac.vehicles.agm6.target import Agm6Target
+    from cadac.vehicles.flat6.agm6.target import Agm6Target
 
     assert _VEHICLE_FAMILIES[("agm6", "TARGET3")] is Agm6Target

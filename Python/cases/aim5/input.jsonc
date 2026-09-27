@@ -1,3 +1,5 @@
+/* AIM5, 5-DOF flat earth. Four vehicles: two AIM5 missiles and two AIRCRAFT3 targets.
+   Default multi-shot case: one horizontal engagement and one vertical engagement together. */
 {
   "title": "input_multi.asc Horizontal and vertical engagements",
   "options": {

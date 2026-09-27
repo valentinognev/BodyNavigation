@@ -1,3 +1,5 @@
+/* HYPER3, 3-DOF round earth. One vehicle: CRUISE3.
+   Four-phase profile: the vehicle climbs, then cruises. */
 {
   "title": "input_climb_cruise.asc HYPER3 Four-phased climb & cruise",
   "options": {

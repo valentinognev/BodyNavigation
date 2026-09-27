@@ -7,8 +7,8 @@ import pytest
 from cadac import run_scenario
 from cadac.io.jsonc import loads
 from cadac.io.translate import deck_asc_to_jsonc, translate_scenario_asc
-from cadac.vehicles.sraam6.target import Sraam6Target
-from cadac.vehicles.sraam6.vehicle import Sraam6Missile
+from cadac.vehicles.flat6.sraam6.target import Sraam6Target
+from cadac.vehicles.flat6.sraam6.vehicle import Sraam6Missile
 
 ROOT = Path(__file__).resolve().parents[3]
 SRC = ROOT / "CADAC_Simulations/SRAAM6_250130/SRAAM6"

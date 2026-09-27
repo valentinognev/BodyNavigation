@@ -5,7 +5,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sam6.forces import Sam6Forces
+from cadac.vehicles.flat6.sam6.forces import Sam6Forces
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -278,7 +278,7 @@ def test_mtvc_absent_treated_as_zero():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.forces as mod
+    import cadac.vehicles.flat6.sam6.forces as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src
@@ -287,7 +287,7 @@ def test_no_flat6_or_plane_imports():
     assert "plane6" not in src
     assert "hyper5" not in src
     assert "hyper6" not in src
-    from cadac.vehicles.plane6.forces import Plane6Forces
+    from cadac.vehicles.flat6.falcon6.forces import Plane6Forces
 
     assert not issubclass(Sam6Forces, Plane6Forces)
 

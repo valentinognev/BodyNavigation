@@ -5,7 +5,7 @@ import pytest
 from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.cruise5.aero import Cruise5Aero
+from cadac.vehicles.round3.cruise5.aero import Cruise5Aero
 
 CRUISE5 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/CRUISE5_250115/CRUISE5"
 RTOL = 1e-12

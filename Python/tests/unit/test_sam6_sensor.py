@@ -9,7 +9,7 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import mat2tr, polar_from_cart
-from cadac.vehicles.sam6.sensor import KBOLTZ, SMALL, Sam6Sensor
+from cadac.vehicles.flat6.sam6.sensor import KBOLTZ, SMALL, Sam6Sensor
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -694,7 +694,7 @@ def test_rf_dyn_glint_zero_range_matches_dbtk():
 
 
 def test_cadac_sign_zero_is_plus_one():
-    from cadac.vehicles.sam6.sensor import _sign
+    from cadac.vehicles.flat6.sam6.sensor import _sign
 
     assert _sign(0.0) == 1
     assert _sign(-0.1) == -1
@@ -702,7 +702,7 @@ def test_cadac_sign_zero_is_plus_one():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.sensor as mod
+    import cadac.vehicles.flat6.sam6.sensor as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

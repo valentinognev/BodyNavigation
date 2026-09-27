@@ -1,3 +1,5 @@
+/* FALCON5, 5-DOF flat earth. One vehicle: PLANE.
+   Bank-angle control with altitude hold (mcontrol 36). */
 {
   "title": "input_mcontrol=36.asc",
   "options": {

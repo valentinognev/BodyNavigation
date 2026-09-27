@@ -8,7 +8,7 @@ import pytest
 from cadac.constants import DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper6.control import SMALL, Hyper6Control
+from cadac.vehicles.round6.hyper6.control import SMALL, Hyper6Control
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -568,7 +568,7 @@ def test_control_yaw_rate_clamps_small_dndr_cadac_sign():
 
 
 def test_cadac_sign_zero_is_plus_one_not_numpy_sign():
-    from cadac.vehicles.hyper6.control import _sign as prod_sign
+    from cadac.vehicles.round6.hyper6.control import _sign as prod_sign
 
     assert prod_sign(0.0) == 1
     assert prod_sign(-0.0) == 1

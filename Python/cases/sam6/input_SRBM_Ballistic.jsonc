@@ -1,3 +1,5 @@
+/* SAM6, 6-DOF flat earth. One vehicle: ROCKET5 SRBM.
+   Ballistic trajectory of the short-range ballistic missile. */
 {
   "title": "input_SRBM_Ballistic.asc",
   "options": {

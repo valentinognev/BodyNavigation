@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from cadac.constants import RAD
-from cadac.vehicles.agm6.kinematics import Agm6Kinematics
+from cadac.vehicles.flat6.agm6.kinematics import Agm6Kinematics
 from cadac.kernel.state import Field, StateStore
 
 RTOL = 1e-12

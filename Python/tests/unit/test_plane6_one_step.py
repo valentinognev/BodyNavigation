@@ -28,7 +28,7 @@ def _gamma_tenth_second(tmp_path: Path) -> Path:
 
 
 def test_plane6_type_health_and_module_order():
-    from cadac.vehicles.plane6.vehicle import Plane6
+    from cadac.vehicles.flat6.falcon6.vehicle import Plane6
 
     vehicle = Plane6("F16", None, None)
     assert vehicle.type == "PLANE6"
@@ -48,7 +48,7 @@ def test_plane6_type_health_and_module_order():
 
 
 def test_plane6_define_registers_guidance_when_omitted_from_modules():
-    from cadac.vehicles.plane6.vehicle import Plane6
+    from cadac.vehicles.flat6.falcon6.vehicle import Plane6
 
     vehicle = Plane6("F16", None, None)
     vehicle.define()
@@ -56,7 +56,7 @@ def test_plane6_define_registers_guidance_when_omitted_from_modules():
 
 
 def test_plane6_define_skips_existing_field():
-    from cadac.vehicles.plane6.vehicle import Plane6
+    from cadac.vehicles.flat6.falcon6.vehicle import Plane6
 
     vehicle = Plane6("F16", None, None)
     vehicle.store.define(Field("hbe", 42.0, "real", "out", "pre", ("plot",)))

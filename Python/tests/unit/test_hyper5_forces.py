@@ -6,7 +6,7 @@ import pytest
 from cadac.constants import RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.forces import Hyper5Forces
+from cadac.vehicles.round3.hyper5.forces import Hyper5Forces
 
 RTOL = 1e-12
 ATOL = 1e-14

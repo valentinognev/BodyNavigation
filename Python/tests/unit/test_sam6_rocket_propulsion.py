@@ -4,7 +4,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.sam6.rocket import Sam6RocketPropulsion
+from cadac.vehicles.flat6.sam6.rocket import Sam6RocketPropulsion
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -210,7 +210,7 @@ def test_exact_burnout_threshold():
 
 
 def test_no_flat6_or_plane_imports():
-    import cadac.vehicles.sam6.rocket as mod
+    import cadac.vehicles.flat6.sam6.rocket as mod
 
     src = Path(mod.__file__).read_text(encoding="utf-8")
     assert "cadac.eom.flat6" not in src

@@ -1,3 +1,5 @@
+/* HYPER5, 5-DOF round earth. Four vehicles: two HYPER5, one TARGET3 truck, and one SATELLITE3.
+   Demo 5.12 flies a north shot and a south shot against the same target. */
 {
   "title": "input_Demo_5_12_north_south.asc",
   "options": {

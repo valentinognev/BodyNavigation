@@ -17,7 +17,7 @@ Wind `mwind!=0`. Multi-run `input_multi_trajectoryMR1.asc`. Markov / Monte Carlo
 
 ```
 Python/src/cadac/eom/rotor.py              # RotorEnvironment, RotorTrajectory, RotorAttitude
-Python/src/cadac/vehicles/rotor/
+Python/src/cadac/vehicles/planar/magsix/
   __init__.py
   vehicle.py                               # Rotor type="ROTOR"; composes the three EOM modules
 Python/cases/magsix/                       # translated input.asc + input_trajectoryMR1.asc

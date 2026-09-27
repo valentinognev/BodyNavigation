@@ -5,7 +5,7 @@ from cadac.constants import AGRAV
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import StateStore
-from cadac.vehicles.rocket6.propulsion import Rocket6Propulsion
+from cadac.vehicles.round6.rocket6.propulsion import Rocket6Propulsion
 
 RTOL = 1e-12
 ATOL = 1e-14

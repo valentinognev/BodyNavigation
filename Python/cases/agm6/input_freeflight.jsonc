@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. One vehicle: MISSILE6.
+   Library free-flight case, matching input 3.1. */
 {
   "title": "input_3_1 AGM6 Free Flight.asc",
   "options": {

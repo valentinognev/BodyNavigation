@@ -4,7 +4,7 @@ import pytest
 
 from cadac.constants import RAD
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.control import Hyper5Control
+from cadac.vehicles.round3.hyper5.control import Hyper5Control
 
 # Demo 5.1 heading gain; Demo 4.7 Roadrunner plant / AoA limits
 GAIN_PSIVG = 2.0

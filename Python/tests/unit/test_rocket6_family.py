@@ -11,7 +11,7 @@ def test_hyper6_without_family_stays_hyper6():
 
 def test_vehicle_families_registers_rocket6():
     import cadac.cli as cli
-    from cadac.vehicles.rocket6.vehicle import Rocket6
+    from cadac.vehicles.round6.rocket6.vehicle import Rocket6
 
     assert hasattr(cli, "_VEHICLE_FAMILIES")
     assert cli._VEHICLE_FAMILIES.get(("rocket6", "HYPER6")) is Rocket6

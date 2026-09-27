@@ -7,7 +7,7 @@ from cadac.constants import DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.rocket6.tvc import Rocket6Tvc
+from cadac.vehicles.round6.rocket6.tvc import Rocket6Tvc
 
 RTOL = 1e-12
 ATOL = 1e-14

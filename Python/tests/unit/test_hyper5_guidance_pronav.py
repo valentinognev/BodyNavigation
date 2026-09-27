@@ -3,7 +3,7 @@ import pytest
 
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.hyper5.guidance import Hyper5Guidance
+from cadac.vehicles.round3.hyper5.guidance import Hyper5Guidance
 
 # Demo 4.7 Terminal pro-nav
 PRONAV_GAIN = 3.5

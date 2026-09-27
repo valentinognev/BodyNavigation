@@ -1,6 +1,6 @@
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import StateStore
-from cadac.vehicles.plane5.control import Plane5Control
+from cadac.vehicles.flat3.falcon5.control import Plane5Control
 
 # turning_to_IP
 PHILIMX = 70.0

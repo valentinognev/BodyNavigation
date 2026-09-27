@@ -1,3 +1,5 @@
+/* CRUISE5, 5-DOF round earth. Nine vehicles: three CRUISE3 UAVs, three TARGET3 trucks, and three SATELLITE3.
+   Default case: three cruise vehicles, each with a target and a targeting satellite. */
 {
   "title": "input_1_3.asc: Three UAVs, three targets, and three satellites",
   "options": {

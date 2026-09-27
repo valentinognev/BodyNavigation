@@ -7,7 +7,7 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.math.earth import cadine
-from cadac.vehicles.hyper5.targeting import Hyper5Targeting
+from cadac.vehicles.round3.hyper5.targeting import Hyper5Targeting
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -32,6 +32,7 @@ TARGETING_PY = (
     / "src"
     / "cadac"
     / "vehicles"
+    / "round3"
     / "hyper5"
     / "targeting.py"
 )
@@ -204,7 +205,7 @@ def test_closest_target_by_ground_range():
 
 
 def test_large_is_module_level_not_in_constants():
-    from cadac.vehicles.hyper5 import targeting as targeting_mod
+    from cadac.vehicles.round3.hyper5 import targeting as targeting_mod
     import cadac.constants as constants
 
     assert targeting_mod.LARGE == 1e10

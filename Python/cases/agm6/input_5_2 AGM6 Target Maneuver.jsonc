@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. Two vehicles: MISSILE6 and a ground TARGET3.
+   The ground target maneuvers during the engagement. */
 {
   "title": "input_5_2 AGM6 Target Maneuver.asc",
   "options": {

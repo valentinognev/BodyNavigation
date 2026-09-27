@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. One vehicle: MISSILE6.
+   Second free-flight case for the air-to-ground missile, again with no target. */
 {
   "title": "input_3_2 AGM6 Free Flight.asc",
   "options": {

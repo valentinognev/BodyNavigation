@@ -6,7 +6,7 @@ from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import cadtbv
-from cadac.vehicles.hyper5.control import Hyper5Control
+from cadac.vehicles.round3.hyper5.control import Hyper5Control
 
 # Demo 4.7
 GACP = 10.0

@@ -14,14 +14,14 @@ from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.agm6.aircraft import (
+from cadac.vehicles.flat6.agm6.aircraft import (
     Agm6Aircraft,
     Agm6AircraftControl,
     Agm6AircraftForces,
     Agm6AircraftGuidance,
     Agm6AircraftSensor,
 )
-from cadac.vehicles.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
+from cadac.vehicles.flat6.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -504,19 +504,19 @@ def test_define_param_set_initialize_and_one_execute_option_0():
 
 
 def test_hyper5_plane6_sam6_not_imported():
-    import cadac.vehicles.agm6.aircraft as aircraft_mod
+    import cadac.vehicles.flat6.agm6.aircraft as aircraft_mod
 
     src = Path(aircraft_mod.__file__).read_text(encoding="utf-8")
     lower = src.lower()
     assert "hyper5" not in lower
     assert "plane6" not in lower
     assert "sam6" not in lower
-    assert "from cadac.vehicles.hyper5" not in src
-    assert "from cadac.vehicles.plane6" not in src
-    assert "from cadac.vehicles.sam6" not in src
+    assert "from cadac.vehicles.round3.hyper5" not in src
+    assert "from cadac.vehicles.flat6.falcon6" not in src
+    assert "from cadac.vehicles.flat6.sam6" not in src
 
 
 def test_aircraft3_registered_in_families():
-    from cadac.vehicles.agm6.aircraft import Agm6Aircraft
+    from cadac.vehicles.flat6.agm6.aircraft import Agm6Aircraft
 
     assert _VEHICLE_FAMILIES[("agm6", "AIRCRAFT3")] is Agm6Aircraft

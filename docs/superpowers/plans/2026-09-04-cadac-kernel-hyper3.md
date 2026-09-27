@@ -42,7 +42,7 @@ Create under `Python/`:
 - `src/cadac/env/us76.py`, `iso62.py`, `gravity.py`
 - `src/cadac/math/frames.py`, `earth.py`
 - `src/cadac/eom/round3.py`
-- `src/cadac/vehicles/cruise3/{aero,propulsion,forces,vehicle}.py`
+- `src/cadac/vehicles/round3/hyper3/{aero,propulsion,forces,vehicle}.py`
 - `tests/unit/...`, `tests/translate/...`, `tests/e2e/...`
 - `cases/hyper3/` — translated JSONC + decks after translator exists
 
@@ -56,7 +56,7 @@ C++ sources of truth: `CADAC_Simulations/HYPER3_250114/HYPER3/` (`utility_functi
 - Create: `Python/pyproject.toml`
 - Create: `Python/src/cadac/__init__.py` (empty `__all__ = []`)
 - Create: `Python/tests/unit/test_scaffold.py`
-- Create: `Python/src/cadac/io/__init__.py`, `kernel/__init__.py`, `tables/__init__.py`, `env/__init__.py`, `math/__init__.py`, `eom/__init__.py`, `vehicles/__init__.py`, `vehicles/cruise3/__init__.py`
+- Create: `Python/src/cadac/io/__init__.py`, `kernel/__init__.py`, `tables/__init__.py`, `env/__init__.py`, `math/__init__.py`, `eom/__init__.py`, `vehicles/__init__.py`, `vehicles/round3/hyper3/__init__.py`
 
 **Interfaces:**
 - Consumes: nothing
@@ -784,7 +784,7 @@ def test_time_then_set():
 ### Task 27: Cruise3 aerodynamics
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise3/aero.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper3/aero.py`
 - Create: `Python/tests/unit/test_cruise3_aero.py`
 
 **Interfaces:**
@@ -799,7 +799,7 @@ def test_time_then_set():
 ### Task 28: Cruise3 propulsion mprop 0 and 1
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise3/propulsion.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper3/propulsion.py`
 - Create: `Python/tests/unit/test_cruise3_prop_fixed.py`
 
 **Interfaces:**
@@ -813,7 +813,7 @@ def test_time_then_set():
 ### Task 29: Cruise3 autothrottle mprop 2
 
 **Files:**
-- Modify: `Python/src/cadac/vehicles/cruise3/propulsion.py`
+- Modify: `Python/src/cadac/vehicles/round3/hyper3/propulsion.py`
 - Create: `Python/tests/unit/test_cruise3_prop_auto.py`
 
 **Interfaces:**
@@ -827,7 +827,7 @@ def test_time_then_set():
 ### Task 30: Cruise3 forces
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise3/forces.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper3/forces.py`
 - Create: `Python/tests/unit/test_cruise3_forces.py`
 
 **Interfaces:**
@@ -858,7 +858,7 @@ Wire the test through `Cruise3Forces.execute` on a StateStore.
 ### Task 31: CRUISE3 vehicle + run_scenario
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/cruise3/vehicle.py`
+- Create: `Python/src/cadac/vehicles/round3/hyper3/vehicle.py`
 - Create: `Python/src/cadac/cli.py` (`run_scenario(path)`)
 - Modify: `Python/src/cadac/__init__.py` export `run_scenario`
 - Create: `Python/tests/unit/test_cruise3_one_step.py`

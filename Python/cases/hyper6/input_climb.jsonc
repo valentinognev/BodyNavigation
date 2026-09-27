@@ -1,3 +1,5 @@
+/* HYPER6, 6-DOF round earth. One vehicle: HYPER6.
+   Climb of the hypersonic vehicle. */
 {
   "title": "input_climb.asc",
   "options": {

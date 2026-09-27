@@ -4,7 +4,7 @@
 
 **Goal:** Add family-dispatched JSONC type `("rocket6","HYPER6")` Rocket6 SLV; unit-test each C++ module used by `input.asc`; e2e vs CADAC CSV when a golden exists.
 
-**Architecture:** Reuse `cadac.eom.round6` + `cadac.math.wgs84`. New `cadac.vehicles.rocket6` ports `CADAC_Simulations/ROCKET6_250122/ROCKET6/*.cpp` Hyper modules. Do not import `cadac.vehicles.hyper6.*`. Never overwrite `_VEHICLE_TYPES["HYPER6"]`.
+**Architecture:** Reuse `cadac.eom.round6` + `cadac.math.wgs84`. New `cadac.vehicles.round6.rocket6` ports `CADAC_Simulations/ROCKET6_250122/ROCKET6/*.cpp` Hyper modules. Do not import `cadac.vehicles.round6.hyper6.*`. Never overwrite `_VEHICLE_TYPES["HYPER6"]`.
 
 **Tech Stack:** Python >= 3.11, numpy, pytest. Work in `Python/`.
 
@@ -20,7 +20,7 @@
 - Family set: `_VEHICLE_FAMILIES` only. Family None: `_VEHICLE_TYPES`. `VehicleSpec.family` is canonical (scenario default, vehicle wins). Do not wipe `_VEHICLE_FAMILIES`; `setdefault(("rocket6","HYPER6"), Rocket6)`. Never assign `_VEHICLE_TYPES["HYPER6"]`
 - Do not retarget unknown-type tests (`AIM5`, `NO_SUCH_TYPE`)
 - E2E golden if present is C++ with MONTE off and Dryden drive 0, not raw `input.asc` plot.csv
-- No `cadac.vehicles.hyper6` imports
+- No `cadac.vehicles.round6.hyper6` imports
 - No `sys.exit`; LTG unreachable end-state → `ValueError`
 - Monte Carlo / Markov sampling out of scope: GAUSS→mean, MARKOV→0, RAYL→first, Dryden `gauss_value=0`, INS `gauss`/Cholesky draws 0
 - JSONC first case `input.asc` Vandenberg `end_time` 190, `mair` 12
@@ -32,7 +32,7 @@
 ## File map
 
 - Modify: `Python/src/cadac/io/scenario.py`, `Python/src/cadac/io/translate.py`, `Python/src/cadac/cli.py`, `Python/src/cadac/eom/round6.py`, `Python/src/cadac/math/wgs84.py`, `Python/src/cadac/math/frames.py`
-- Create: `Python/src/cadac/vehicles/rocket6/{__init__,vehicle,aero,propulsion,gps,startrack,ins,guidance,control,rcs,tvc,forces,intercept}.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/{__init__,vehicle,aero,propulsion,gps,startrack,ins,guidance,control,rcs,tvc,forces,intercept}.py`
 - Tests: `test_rocket6_*.py`, `test_wgs84.py` (kepler), `test_frames.py` or extend existing frame tests, `test_round6_environment.py` (mair=12)
 - Case: `Python/cases/rocket6/` from `input.asc` + `aero_deck_SLV.asc` + `weather_deck_Wallops.asc`
 - C++: `environment.cpp`, `aerodynamics.cpp`, `propulsion.cpp`, `tvc.cpp`, `rcs.cpp`, `control.cpp`, `forces.cpp`, `ins.cpp`, `gps.cpp`, `startrack.cpp`, `guidance.cpp`, `intercept.cpp`, `utility_functions.cpp` (`cad_kepler`, `cart_from_pol`, `angle`)
@@ -177,7 +177,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 4: Rocket6 aerodynamics (SLV stages + der)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/__init__.py`, `Python/src/cadac/vehicles/rocket6/aero.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/__init__.py`, `Python/src/cadac/vehicles/round6/rocket6/aero.py`
 - Test: `Python/tests/unit/test_rocket6_aero.py`
 
 **Interfaces:**
@@ -191,7 +191,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 5: Rocket6 propulsion (analytic mprop 0/3/4)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/propulsion.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/propulsion.py`
 - Test: `Python/tests/unit/test_rocket6_propulsion.py`
 
 **Interfaces:**
@@ -205,7 +205,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 6: Rocket6 TVC (mtvc 0/2)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/tvc.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/tvc.py`
 - Test: `Python/tests/unit/test_rocket6_tvc.py`
 
 **Interfaces:**
@@ -219,7 +219,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 7: Rocket6 RCS (Schmitt 20/21/22)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/rcs.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/rcs.py`
 - Test: `Python/tests/unit/test_rocket6_rcs.py`
 
 **Interfaces:**
@@ -233,7 +233,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 8: Rocket6 control (maut 0/53)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/control.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/control.py`
 - Test: `Python/tests/unit/test_rocket6_control.py`
 
 **Interfaces:**
@@ -247,7 +247,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 9: Rocket6 forces
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/forces.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/forces.py`
 - Test: `Python/tests/unit/test_rocket6_forces.py`
 
 **Interfaces:**
@@ -261,7 +261,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 10: Rocket6 INS mins=0
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/ins.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/ins.py`
 - Test: `Python/tests/unit/test_rocket6_ins_ideal.py`
 
 **Interfaces:**
@@ -287,7 +287,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 12: GPS constellation and quadriga
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/gps.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/gps.py`
 - Test: `Python/tests/unit/test_rocket6_gps_quadriga.py`
 
 **Interfaces:**
@@ -313,7 +313,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 14: Rocket6 startrack
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/startrack.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/startrack.py`
 - Test: `Python/tests/unit/test_rocket6_startrack.py`
 
 **Interfaces:**
@@ -327,7 +327,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 15: Rocket6 guidance (mguide 0/5 LTG)
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/guidance.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/guidance.py`
 - Test: `Python/tests/unit/test_rocket6_guidance.py`
 
 **Interfaces:**
@@ -341,7 +341,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 16: Rocket6 intercept
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/intercept.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/intercept.py`
 - Test: `Python/tests/unit/test_rocket6_intercept.py`
 
 **Interfaces:**
@@ -355,7 +355,7 @@ Also: `translate_scenario_asc(src, dst)` without `family` writes no `family` key
 ### Task 17: Rocket6 vehicle + translate insertion
 
 **Files:**
-- Create: `Python/src/cadac/vehicles/rocket6/vehicle.py`
+- Create: `Python/src/cadac/vehicles/round6/rocket6/vehicle.py`
 - Modify: `Python/src/cadac/cli.py` (register family; Rocket6 factory: aero required, prop optional, weather passed into `Round6Environment`)
 - Translate: `input.asc` → `Python/cases/rocket6/` via `translate_scenario_asc(..., family="rocket6")`; call `deck_asc_to_jsonc` on `aero_deck_SLV.asc` and `weather_deck_Wallops.asc` into that directory
 - Test: `Python/tests/unit/test_rocket6_one_step.py`

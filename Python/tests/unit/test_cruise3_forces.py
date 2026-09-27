@@ -3,7 +3,7 @@ import numpy as np
 from cadac.constants import RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise3.forces import Cruise3Forces
+from cadac.vehicles.round3.hyper3.forces import Cruise3Forces
 
 
 class _Vehicle:

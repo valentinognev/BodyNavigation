@@ -9,8 +9,8 @@ from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns
 from cadac.io.scenario import load_scenario
 from cadac.io.translate import translate_scenario_asc
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.cruise3.vehicle import Cruise3
-from cadac.vehicles.cruise5.vehicle import Cruise5
+from cadac.vehicles.round3.hyper3.vehicle import Cruise3
+from cadac.vehicles.round3.cruise5.vehicle import Cruise5
 
 ROOT = Path(__file__).resolve().parents[3]
 HYPER3 = ROOT / "CADAC_Simulations/HYPER3_250114/HYPER3"
@@ -96,6 +96,16 @@ def test_translate_family_cruise5_writes_on_all_vehicles(tmp_path):
     assert cfg.vehicles[0].params["mcontrol"] == 46
     assert cfg.vehicles[0].params["mguidance"] == 30
     assert cfg.end_time == 410
+
+
+def test_input_2_uav_builds_as_cruise5_vehicle():
+    path = ROOT / "Python/cases/cruise5/input_2.jsonc"
+    cfg = load_scenario(path)
+    assert cfg.vehicles[0].name == "UAV"
+    assert cfg.vehicles[0].family == "cruise5"
+    assert cfg.vehicles[0].type == "CRUISE3"
+    vehicle = _build_vehicle(path, cfg.vehicles[0])
+    assert type(vehicle) is Cruise5
 
 
 def test_family_set_does_not_fall_through_to_global_cruise3(tmp_path):

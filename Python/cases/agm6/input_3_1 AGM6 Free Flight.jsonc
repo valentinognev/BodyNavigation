@@ -1,3 +1,5 @@
+/* AGM6, 6-DOF flat earth. One vehicle: MISSILE6.
+   Free-flight check of the air-to-ground missile, with no target in the run. */
 {
   "title": "input_3_1 AGM6 Free Flight.asc",
   "options": {

@@ -1,3 +1,5 @@
+/* FALCON5, 5-DOF flat earth. One vehicle: PLANE.
+   The airplane turns onto an intercept point, changing control mode along the way. */
 {
   "title": "input_turning_to_IP.asc",
   "options": {

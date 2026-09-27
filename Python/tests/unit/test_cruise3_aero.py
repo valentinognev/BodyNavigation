@@ -4,7 +4,7 @@ from cadac.io.asc_deck import parse_asc_deck
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.tables.lookup import Datadeck
-from cadac.vehicles.cruise3.aero import Cruise3Aero
+from cadac.vehicles.round3.hyper3.aero import Cruise3Aero
 
 HYPER3 = Path(__file__).resolve().parents[3] / "CADAC_Simulations/HYPER3_250114/HYPER3"
 AERO = HYPER3 / "ghame3_aero_deck.asc"

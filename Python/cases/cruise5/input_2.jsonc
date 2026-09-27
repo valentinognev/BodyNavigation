@@ -1,3 +1,5 @@
+/* CRUISE5, 5-DOF round earth. Five vehicles: one CRUISE3 UAV, two TARGET3 tanks, and two SATELLITE3.
+   One cruise vehicle, two targets, and two targeting satellites. */
 {
   "title": "input_2.asc: 1 UAV 2 targets and 2 targeting satellites",
   "options": {
@@ -95,7 +97,7 @@
   "end_time": 450.0,
   "vehicles": [
     {
-      "type": "CRUISE5",
+      "type": "CRUISE3",
       "name": "UAV",
       "aero_deck": "cruise3_aero_deck.jsonc",
       "prop_deck": "cruise3_prop_deck.jsonc",

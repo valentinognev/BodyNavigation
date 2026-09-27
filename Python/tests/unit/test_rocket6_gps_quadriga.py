@@ -7,7 +7,7 @@ from cadac.constants import RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import StateStore
 from cadac.math.wgs84 import GM, cad_in_geo84
-from cadac.vehicles.rocket6.gps import (
+from cadac.vehicles.round6.rocket6.gps import (
     LARGE,
     SV_INIT,
     Rocket6Gps,

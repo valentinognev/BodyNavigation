@@ -9,12 +9,12 @@ from cadac.cli import (
     run_scenario,
 )
 from cadac.io.scenario import VehicleSpec
-from cadac.vehicles.sam6.aircraft import Sam6Aircraft
-from cadac.vehicles.sam6.environment import Sam6Environment
-from cadac.vehicles.sam6.kinematics import Sam6Kinematics
-from cadac.vehicles.sam6.radar import Sam6Radar
-from cadac.vehicles.sam6.rocket import Sam6Rocket
-from cadac.vehicles.sam6.vehicle import Sam6Missile
+from cadac.vehicles.flat6.sam6.aircraft import Sam6Aircraft
+from cadac.vehicles.flat6.sam6.environment import Sam6Environment
+from cadac.vehicles.flat6.sam6.kinematics import Sam6Kinematics
+from cadac.vehicles.flat6.sam6.radar import Sam6Radar
+from cadac.vehicles.flat6.sam6.rocket import Sam6Rocket
+from cadac.vehicles.flat6.sam6.vehicle import Sam6Missile
 
 
 DUMMY_DECK = (

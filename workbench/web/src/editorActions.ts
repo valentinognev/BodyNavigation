@@ -54,5 +54,5 @@ export async function openImportedFile(api: StoreApi<WorkbenchState>, file: File
     api.getState().applyParseFail(result.error);
     return;
   }
-  api.getState().openImported(result.scenario, importedStem(file.name));
+  api.getState().openImported(result.scenario, importedStem(file.name), result.description);
 }
