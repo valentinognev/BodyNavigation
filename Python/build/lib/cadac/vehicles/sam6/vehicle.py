@@ -1,20 +1,20 @@
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
-from cadac.vehicles.sam6.actuator import Sam6Actuator
-from cadac.vehicles.sam6.aero import Sam6Aero
-from cadac.vehicles.sam6.control import Sam6Control
-from cadac.vehicles.sam6.environment import Sam6Environment
-from cadac.vehicles.sam6.euler import Sam6Euler
-from cadac.vehicles.sam6.forces import Sam6Forces
-from cadac.vehicles.sam6.guidance import Sam6Guidance
-from cadac.vehicles.sam6.ins import Sam6Ins
-from cadac.vehicles.sam6.intercept import Sam6Intercept
-from cadac.vehicles.sam6.kinematics import Sam6Kinematics
-from cadac.vehicles.sam6.newton import Sam6Newton
-from cadac.vehicles.sam6.propulsion import Sam6Propulsion
-from cadac.vehicles.sam6.rcs import Sam6Rcs
-from cadac.vehicles.sam6.sensor import Sam6Sensor
-from cadac.vehicles.sam6.tvc import Sam6Tvc
+from cadac.vehicles.flat6.sam6.actuator import Sam6Actuator
+from cadac.vehicles.flat6.sam6.aero import Sam6Aero
+from cadac.vehicles.flat6.sam6.control import Sam6Control
+from cadac.vehicles.flat6.sam6.environment import Sam6Environment
+from cadac.vehicles.flat6.sam6.euler import Sam6Euler
+from cadac.vehicles.flat6.sam6.forces import Sam6Forces
+from cadac.vehicles.flat6.sam6.guidance import Sam6Guidance
+from cadac.vehicles.flat6.sam6.ins import Sam6Ins
+from cadac.vehicles.flat6.sam6.intercept import Sam6Intercept
+from cadac.vehicles.flat6.sam6.kinematics import Sam6Kinematics
+from cadac.vehicles.flat6.sam6.newton import Sam6Newton
+from cadac.vehicles.flat6.sam6.propulsion import Sam6Propulsion
+from cadac.vehicles.flat6.sam6.rcs import Sam6Rcs
+from cadac.vehicles.flat6.sam6.sensor import Sam6Sensor
+from cadac.vehicles.flat6.sam6.tvc import Sam6Tvc
 
 
 class Sam6Missile:

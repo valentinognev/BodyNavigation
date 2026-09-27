@@ -7,7 +7,7 @@ from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import skew
-from cadac.vehicles.sam6.flat3 import (
+from cadac.vehicles.flat6.sam6.flat3 import (
     Sam6Flat3Environment,
     Sam6Flat3Kinematics,
     Sam6Flat3Newton,

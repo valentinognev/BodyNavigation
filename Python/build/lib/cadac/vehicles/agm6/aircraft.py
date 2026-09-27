@@ -9,7 +9,7 @@ from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import polar_from_cart, skew
 from cadac.stoch import gauss
-from cadac.vehicles.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
+from cadac.vehicles.flat6.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
 
 
 def _sign(variable):

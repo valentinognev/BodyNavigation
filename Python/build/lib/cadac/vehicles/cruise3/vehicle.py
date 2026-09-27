@@ -1,9 +1,9 @@
 from cadac.eom.round3 import Round3Environment, Round3Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
-from cadac.vehicles.cruise3.aero import Cruise3Aero
-from cadac.vehicles.cruise3.forces import Cruise3Forces
-from cadac.vehicles.cruise3.propulsion import Cruise3Propulsion
+from cadac.vehicles.round3.hyper3.aero import Cruise3Aero
+from cadac.vehicles.round3.hyper3.forces import Cruise3Forces
+from cadac.vehicles.round3.hyper3.propulsion import Cruise3Propulsion
 
 
 class Cruise3:

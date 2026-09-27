@@ -3,7 +3,7 @@ import numpy as np
 from cadac.eom.flat3 import Flat3Kinematics
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
+from cadac.vehicles.flat6.agm6.flat3io import Agm6Flat3Environment, Agm6Flat3Newton
 
 
 class Agm6TargetForces:

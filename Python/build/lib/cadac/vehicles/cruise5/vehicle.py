@@ -1,14 +1,14 @@
 from cadac.eom.round3 import Round3Environment, Round3Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
-from cadac.vehicles.cruise5.aero import Cruise5Aero
-from cadac.vehicles.cruise5.control import Cruise5Control
-from cadac.vehicles.cruise5.forces import Cruise5Forces
-from cadac.vehicles.cruise5.guidance import Cruise5Guidance
-from cadac.vehicles.cruise5.intercept import Cruise5Intercept
-from cadac.vehicles.cruise5.propulsion import Cruise5Propulsion
-from cadac.vehicles.cruise5.seeker import Cruise5Seeker
-from cadac.vehicles.cruise5.targeting import Cruise5Targeting
+from cadac.vehicles.round3.cruise5.aero import Cruise5Aero
+from cadac.vehicles.round3.cruise5.control import Cruise5Control
+from cadac.vehicles.round3.cruise5.forces import Cruise5Forces
+from cadac.vehicles.round3.cruise5.guidance import Cruise5Guidance
+from cadac.vehicles.round3.cruise5.intercept import Cruise5Intercept
+from cadac.vehicles.round3.cruise5.propulsion import Cruise5Propulsion
+from cadac.vehicles.round3.cruise5.seeker import Cruise5Seeker
+from cadac.vehicles.round3.cruise5.targeting import Cruise5Targeting
 
 
 class Cruise5:

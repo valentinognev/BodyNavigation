@@ -1,21 +1,22 @@
-from cadac.eom.flat6 import (
-    Flat6Environment,
-    Flat6Euler,
-    Flat6Kinematics,
-    Flat6Newton,
+from cadac.eom.round6 import (
+    Round6Environment,
+    Round6Euler,
+    Round6Kinematics,
+    Round6Newton,
 )
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
-from cadac.vehicles.flat6.falcon6.actuator import Plane6Actuator
-from cadac.vehicles.flat6.falcon6.aero import Plane6Aero
-from cadac.vehicles.flat6.falcon6.control import Plane6Control
-from cadac.vehicles.flat6.falcon6.forces import Plane6Forces
-from cadac.vehicles.flat6.falcon6.guidance import Plane6Guidance
-from cadac.vehicles.flat6.falcon6.propulsion import Plane6Propulsion
+from cadac.vehicles.round6.hyper6.actuator import Hyper6Actuator
+from cadac.vehicles.round6.hyper6.aero import Hyper6Aero
+from cadac.vehicles.round6.hyper6.control import Hyper6Control
+from cadac.vehicles.round6.hyper6.forces import Hyper6Forces
+from cadac.vehicles.round6.hyper6.guidance import Hyper6Guidance
+from cadac.vehicles.round6.hyper6.ins import Hyper6Ins
+from cadac.vehicles.round6.hyper6.propulsion import Hyper6Propulsion
 
 
-class Plane6:
-    type = "PLANE6"
+class Hyper6:
+    type = "HYPER6"
 
     def __init__(self, name, aero_deck, prop_deck, events=None):
         self.name = name
@@ -25,16 +26,17 @@ class Plane6:
         self.events = EventEngine(events or [])
         self.com_names = []
         self.modules = [
-            Flat6Environment(),
-            Flat6Kinematics(),
-            Plane6Aero(aero_deck),
-            Plane6Propulsion(prop_deck),
-            Plane6Guidance(),
-            Plane6Forces(),
-            Plane6Control(),
-            Plane6Actuator(),
-            Flat6Euler(),
-            Flat6Newton(),
+            Round6Kinematics(),
+            Round6Environment(),
+            Hyper6Aero(aero_deck),
+            Hyper6Propulsion(prop_deck),
+            Hyper6Ins(),
+            Hyper6Guidance(),
+            Hyper6Control(),
+            Hyper6Actuator(),
+            Hyper6Forces(),
+            Round6Newton(),
+            Round6Euler(),
         ]
 
     def define(self):

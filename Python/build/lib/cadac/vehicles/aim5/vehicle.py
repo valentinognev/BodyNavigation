@@ -1,13 +1,13 @@
 from cadac.eom.flat3 import Flat3Environment, Flat3Kinematics, Flat3Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.aim5.aero import Aim5Aero
-from cadac.vehicles.aim5.control import Aim5Control
-from cadac.vehicles.aim5.forces import Aim5Forces
-from cadac.vehicles.aim5.guidance import Aim5Guidance
-from cadac.vehicles.aim5.intercept import Aim5Intercept
-from cadac.vehicles.aim5.propulsion import Aim5Propulsion
-from cadac.vehicles.aim5.seeker import Aim5Seeker
+from cadac.vehicles.flat3.aim5.aero import Aim5Aero
+from cadac.vehicles.flat3.aim5.control import Aim5Control
+from cadac.vehicles.flat3.aim5.forces import Aim5Forces
+from cadac.vehicles.flat3.aim5.guidance import Aim5Guidance
+from cadac.vehicles.flat3.aim5.intercept import Aim5Intercept
+from cadac.vehicles.flat3.aim5.propulsion import Aim5Propulsion
+from cadac.vehicles.flat3.aim5.seeker import Aim5Seeker
 
 _COM_EXTRA = ("SBEL", "VBEL", "psivlx", "thtvlx")
 

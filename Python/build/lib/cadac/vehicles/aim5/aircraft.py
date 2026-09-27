@@ -8,7 +8,7 @@ from cadac.kernel.events import EventEngine
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field, StateStore
 from cadac.math.frames import cadac_sign, skew
-from cadac.vehicles.aim5.vehicle import Aim5Flat3Newton, _define_aim5_vehicle
+from cadac.vehicles.flat3.aim5.vehicle import Aim5Flat3Newton, _define_aim5_vehicle
 
 
 class Aim5AircraftForces:

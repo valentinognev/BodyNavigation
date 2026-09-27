@@ -1,18 +1,18 @@
 from cadac.eom.flat6 import Flat6Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
-from cadac.vehicles.sraam6.actuator import Sraam6Actuator
-from cadac.vehicles.sraam6.aero import Sraam6Aero
-from cadac.vehicles.sraam6.control import Sraam6Control
-from cadac.vehicles.sraam6.environment import Sraam6Environment
-from cadac.vehicles.sraam6.euler import Sraam6Euler
-from cadac.vehicles.sraam6.forces import Sraam6Forces
-from cadac.vehicles.sraam6.guidance import Sraam6Guidance
-from cadac.vehicles.sraam6.intercept import Sraam6Intercept
-from cadac.vehicles.sraam6.kinematics import Sraam6Kinematics
-from cadac.vehicles.sraam6.propulsion import Sraam6Propulsion
-from cadac.vehicles.sraam6.seeker import Sraam6Seeker
-from cadac.vehicles.sraam6.tvc import Sraam6Tvc
+from cadac.vehicles.flat6.sraam6.actuator import Sraam6Actuator
+from cadac.vehicles.flat6.sraam6.aero import Sraam6Aero
+from cadac.vehicles.flat6.sraam6.control import Sraam6Control
+from cadac.vehicles.flat6.sraam6.environment import Sraam6Environment
+from cadac.vehicles.flat6.sraam6.euler import Sraam6Euler
+from cadac.vehicles.flat6.sraam6.forces import Sraam6Forces
+from cadac.vehicles.flat6.sraam6.guidance import Sraam6Guidance
+from cadac.vehicles.flat6.sraam6.intercept import Sraam6Intercept
+from cadac.vehicles.flat6.sraam6.kinematics import Sraam6Kinematics
+from cadac.vehicles.flat6.sraam6.propulsion import Sraam6Propulsion
+from cadac.vehicles.flat6.sraam6.seeker import Sraam6Seeker
+from cadac.vehicles.flat6.sraam6.tvc import Sraam6Tvc
 
 
 class Sraam6Missile:

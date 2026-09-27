@@ -1,18 +1,18 @@
 from cadac.eom.flat6 import Flat6Euler, Flat6Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
-from cadac.vehicles.agm6.actuator import Agm6Actuator
-from cadac.vehicles.agm6.aero import Agm6Aero
-from cadac.vehicles.agm6.control import Agm6Control
-from cadac.vehicles.agm6.datalink import Agm6Datalink
-from cadac.vehicles.agm6.environment import Agm6Environment
-from cadac.vehicles.agm6.forces import Agm6Forces
-from cadac.vehicles.agm6.guidance import Agm6Guidance
-from cadac.vehicles.agm6.ins import Agm6Ins
-from cadac.vehicles.agm6.intercept import Agm6Intercept
-from cadac.vehicles.agm6.kinematics import Agm6Kinematics
-from cadac.vehicles.agm6.propulsion import Agm6Propulsion
-from cadac.vehicles.agm6.sensor import Agm6Sensor
+from cadac.vehicles.flat6.agm6.actuator import Agm6Actuator
+from cadac.vehicles.flat6.agm6.aero import Agm6Aero
+from cadac.vehicles.flat6.agm6.control import Agm6Control
+from cadac.vehicles.flat6.agm6.datalink import Agm6Datalink
+from cadac.vehicles.flat6.agm6.environment import Agm6Environment
+from cadac.vehicles.flat6.agm6.forces import Agm6Forces
+from cadac.vehicles.flat6.agm6.guidance import Agm6Guidance
+from cadac.vehicles.flat6.agm6.ins import Agm6Ins
+from cadac.vehicles.flat6.agm6.intercept import Agm6Intercept
+from cadac.vehicles.flat6.agm6.kinematics import Agm6Kinematics
+from cadac.vehicles.flat6.agm6.propulsion import Agm6Propulsion
+from cadac.vehicles.flat6.agm6.sensor import Agm6Sensor
 
 
 class Agm6Missile:

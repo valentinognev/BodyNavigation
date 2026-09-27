@@ -1,14 +1,14 @@
 from cadac.eom.round3 import Round3Environment, Round3Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
-from cadac.vehicles.hyper5.aero import Hyper5Aero
-from cadac.vehicles.hyper5.control import Hyper5Control
-from cadac.vehicles.hyper5.forces import Hyper5Forces
-from cadac.vehicles.hyper5.guidance import Hyper5Guidance
-from cadac.vehicles.hyper5.intercept import Hyper5Intercept
-from cadac.vehicles.hyper5.propulsion import Hyper5Propulsion
-from cadac.vehicles.hyper5.seeker import Hyper5Seeker
-from cadac.vehicles.hyper5.targeting import Hyper5Targeting
+from cadac.vehicles.round3.hyper5.aero import Hyper5Aero
+from cadac.vehicles.round3.hyper5.control import Hyper5Control
+from cadac.vehicles.round3.hyper5.forces import Hyper5Forces
+from cadac.vehicles.round3.hyper5.guidance import Hyper5Guidance
+from cadac.vehicles.round3.hyper5.intercept import Hyper5Intercept
+from cadac.vehicles.round3.hyper5.propulsion import Hyper5Propulsion
+from cadac.vehicles.round3.hyper5.seeker import Hyper5Seeker
+from cadac.vehicles.round3.hyper5.targeting import Hyper5Targeting
 
 
 class Hyper5:
