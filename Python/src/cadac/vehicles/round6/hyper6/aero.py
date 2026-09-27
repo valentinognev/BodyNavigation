@@ -108,6 +108,48 @@ class Hyper6Aero:
     def execute(self, vehicle, ctx):
         store = vehicle.store
         maero = store.get("maero")
+        if maero == 2:
+            # C++ writes the zero-initialized locals on every call and skips aerodynamics_der.
+            store.set("refa", store.get("refa_st"))
+            store.set("cx", -store.get("caa"))
+            for name in (
+                "cy",
+                "cll",
+                "clm",
+                "cln",
+                "cz",
+                "gmax",
+                "gminx",
+                "cd",
+                "cl",
+                "cd0",
+                "cda",
+                "cl0",
+                "cla",
+                "clde",
+                "cyb",
+                "cyda",
+                "cydr",
+                "cllb",
+                "cllda",
+                "cllp",
+                "cllr",
+                "cm0",
+                "cma",
+                "cmde",
+                "cmq",
+                "clnb",
+                "clnda",
+                "clndr",
+                "clnp",
+                "clnr",
+                "clldr",
+                "clovercd",
+                "gavail_pos",
+                "gavail_neg",
+            ):
+                store.set(name, 0.0)
+            return
         if maero != 1:
             raise ValueError(f"unknown maero {maero}")
 

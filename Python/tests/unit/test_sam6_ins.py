@@ -1,4 +1,4 @@
-from math import acos, asin, atan2, cos, fabs, sqrt
+from math import acos, asin, atan2, cos, fabs, isfinite, sqrt
 from pathlib import Path
 
 import numpy as np
@@ -496,19 +496,53 @@ def test_mins1_one_execute_matches_cadac_error_odes():
             assert _approx(got, value)
 
 
-def test_mins2_initialize_raises():
-    vehicle, ins = _defined(mins=2)
-    with pytest.raises(ValueError, match="unknown mins"):
-        ins.initialize(vehicle, _ctx())
+def _spec_error_draws(rows):
+    seed(0)
+    drawn = {}
+    for name, sig in rows:
+        drawn[name] = np.zeros(3) if sig is None else _gauss3_rtl(sig)
+    return drawn
 
 
-def test_mins2_execute_raises():
-    vehicle, ins = _defined(mins=2)
-    with pytest.raises(ValueError, match="unknown mins"):
-        ins.execute(vehicle, _ctx())
+_BSPEC_ROWS = (
+    ("EUNBG", None),
+    ("EMISG", 10e-5),
+    ("ESCALG", 1.5e-5),
+    ("EBIASG", 1.5e-6),
+    ("EWALKA", 4.1e-5),
+    ("EMISA", 0.54e-4),
+    ("ESCALA", 2e-6),
+    ("EBIASA", 1.5e-3),
+)
+_GSPEC_ROWS = (
+    ("EUNBG", 4.83e-7),
+    ("EMISG", 50e-6),
+    ("ESCALG", 15e-5),
+    ("EBIASG", 4.83e-6),
+    ("EWALKA", 5.08e-5),
+    ("EMISA", 4.85e-4),
+    ("ESCALA", 3e-6),
+    ("EBIASA", 9.81e-3),
+)
 
 
-@pytest.mark.parametrize("mins", [-1, 3, 99])
+@pytest.mark.parametrize("mins,rows", ((2, _BSPEC_ROWS), (3, _GSPEC_ROWS)))
+def test_mins_2_and_3_initialize_draws_spec(mins, rows):
+    expected = _spec_error_draws(rows)
+    vehicle, _ins, _truth = _ready(mins=mins)
+    for name, _sig in rows:
+        np.testing.assert_allclose(
+            vehicle.store.get(name), expected[name], rtol=0.0, atol=0.0
+        )
+
+
+def test_mins2_execute_runs_error_model():
+    vehicle, ins, _truth = _ready(mins=2)
+    ins.execute(vehicle, _ctx())
+    assert isfinite(vehicle.store.get("dvbec"))
+
+
+@pytest.mark.parametrize("mins", [-1, 99])
 def test_mins_not_0_or_1_raises(mins):
     vehicle, ins = _defined(mins=mins)
     with pytest.raises(ValueError, match="unknown mins"):

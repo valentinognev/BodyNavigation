@@ -265,18 +265,18 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "AGM6/aerodynamics.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "AGM6",
     "kind": "module",
     "name": "control",
     "cpp": "AGM6/aircraft_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "AGM6",
@@ -310,18 +310,18 @@
     "kind": "module",
     "name": "forces",
     "cpp": "AGM6/aircraft_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "AGM6",
     "kind": "module",
     "name": "guidance",
     "cpp": "AGM6/aircraft_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "AGM6",
@@ -337,9 +337,9 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "AGM6/intercept.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "AGM6",
@@ -364,9 +364,9 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "AGM6/propulsion.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "AGM6",
@@ -463,18 +463,18 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "AIM5/aim_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "AIM5",
     "kind": "module",
     "name": "control",
     "cpp": "AIM5/aim_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "AIM5",
@@ -490,27 +490,27 @@
     "kind": "module",
     "name": "forces",
     "cpp": "AIM5/aim_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "AIM5",
     "kind": "module",
     "name": "guidance",
     "cpp": "AIM5/aim_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "AIM5",
     "kind": "module",
     "name": "intercept",
     "cpp": "AIM5/aim_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "AIM5",
@@ -535,9 +535,9 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "AIM5/aim_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "AIM5",
@@ -599,7 +599,7 @@
     "name": "mcontrol=1",
     "cpp": "CRUISE5/cruise_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -608,7 +608,7 @@
     "name": "mcontrol=10",
     "cpp": "CRUISE5/cruise_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -617,7 +617,7 @@
     "name": "mcontrol=11",
     "cpp": "CRUISE5/cruise_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -707,8 +707,8 @@
     "name": "mguidance=3",
     "cpp": "CRUISE5/cruise_modules.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "CRUISE5",
@@ -752,8 +752,8 @@
     "name": "mguidance=6",
     "cpp": "CRUISE5/cruise_modules.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "CRUISE5",
@@ -761,8 +761,8 @@
     "name": "mguidance=60",
     "cpp": "CRUISE5/cruise_modules.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "CRUISE5",
@@ -859,7 +859,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "CRUISE5/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -868,7 +868,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "CRUISE5/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -886,7 +886,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "CRUISE5/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -895,7 +895,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "CRUISE5/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -904,7 +904,7 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "CRUISE5/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
     "note": "name match only"
   },
@@ -922,7 +922,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "CRUISE5/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -1004,7 +1004,7 @@
     "name": "mcontrol=1",
     "cpp": "FALCON5/plane_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1013,7 +1013,7 @@
     "name": "mcontrol=10",
     "cpp": "FALCON5/plane_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1022,7 +1022,7 @@
     "name": "mcontrol=11",
     "cpp": "FALCON5/plane_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1112,8 +1112,8 @@
     "name": "mguidance=3",
     "cpp": "FALCON5/plane_modules.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "FALCON5",
@@ -1192,7 +1192,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "FALCON5/plane_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -1201,7 +1201,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "FALCON5/plane_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1219,7 +1219,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "FALCON5/plane_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1228,7 +1228,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "FALCON5/plane_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1237,7 +1237,7 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "FALCON5/plane_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
     "note": "name match only"
   },
@@ -1264,7 +1264,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "FALCON5/plane_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -1337,8 +1337,8 @@
     "name": "mauty=3",
     "cpp": "FALCON6/control.cpp",
     "python": null,
-    "status": "missing",
-    "note": "slice limit"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "FALCON6",
@@ -1346,8 +1346,8 @@
     "name": "mauty=4",
     "cpp": "FALCON6/control.cpp",
     "python": null,
-    "status": "missing",
-    "note": "slice limit"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "FALCON6",
@@ -1364,7 +1364,7 @@
     "name": "mguid=30",
     "cpp": "FALCON6/guidance.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1373,7 +1373,7 @@
     "name": "mguid=33",
     "cpp": "FALCON6/guidance.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1453,7 +1453,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "FALCON6/aerodynamics.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -1462,7 +1462,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "FALCON6/control.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1489,7 +1489,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "FALCON6/forces.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1498,7 +1498,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "FALCON6/guidance.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1525,7 +1525,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "FALCON6/propulsion.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -1588,7 +1588,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "HYPER3/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -1606,7 +1606,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "HYPER3/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1624,7 +1624,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "HYPER3/cruise_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -1670,7 +1670,7 @@
     "name": "mcontrol=1",
     "cpp": "HYPER5/hyper_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1679,7 +1679,7 @@
     "name": "mcontrol=10",
     "cpp": "HYPER5/hyper_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1688,7 +1688,7 @@
     "name": "mcontrol=11",
     "cpp": "HYPER5/hyper_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -1778,8 +1778,8 @@
     "name": "mguidance=3",
     "cpp": "HYPER5/hyper_modules.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER5",
@@ -1832,8 +1832,8 @@
     "name": "mguidance=6",
     "cpp": "HYPER5/hyper_modules.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER5",
@@ -1841,8 +1841,8 @@
     "name": "mguidance=60",
     "cpp": "HYPER5/hyper_modules.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER5",
@@ -1939,7 +1939,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "HYPER5/hyper_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -1948,7 +1948,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "HYPER5/hyper_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1966,7 +1966,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "HYPER5/hyper_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1975,7 +1975,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "HYPER5/hyper_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -1984,7 +1984,7 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "HYPER5/hyper_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
     "note": "name match only"
   },
@@ -2002,7 +2002,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "HYPER5/hyper_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -2093,7 +2093,7 @@
     "name": "maero=1",
     "cpp": "HYPER6/aerodynamics.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -2102,7 +2102,7 @@
     "name": "maero=2",
     "cpp": "HYPER6/aerodynamics.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -2120,8 +2120,8 @@
     "name": "matmo=1",
     "cpp": "HYPER6/environment.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2147,8 +2147,8 @@
     "name": "mauty=3",
     "cpp": "HYPER6/control.cpp",
     "python": null,
-    "status": "missing",
-    "note": "slice limit"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2156,8 +2156,8 @@
     "name": "mauty=4",
     "cpp": "HYPER6/control.cpp",
     "python": null,
-    "status": "missing",
-    "note": "slice limit"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2219,8 +2219,8 @@
     "name": "mguide=3",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2228,8 +2228,8 @@
     "name": "mguide=30",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2237,8 +2237,8 @@
     "name": "mguide=33",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2246,8 +2246,8 @@
     "name": "mguide=4",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2255,8 +2255,8 @@
     "name": "mguide=5",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2264,8 +2264,8 @@
     "name": "mguide=6",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2273,8 +2273,8 @@
     "name": "mguide=7",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2282,8 +2282,8 @@
     "name": "mguide=8",
     "cpp": "HYPER6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
@@ -2291,7 +2291,7 @@
     "name": "minit=0",
     "cpp": "HYPER6/round3_modules.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -2300,7 +2300,7 @@
     "name": "minit=1",
     "cpp": "HYPER6/newton.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -2497,7 +2497,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "HYPER6/aerodynamics.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -2506,7 +2506,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "HYPER6/control.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -2542,7 +2542,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "HYPER6/forces.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -2560,7 +2560,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "HYPER6/guidance.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -2578,7 +2578,7 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "HYPER6/intercept.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
     "note": "name match only"
   },
@@ -2605,7 +2605,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "HYPER6/propulsion.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -2614,7 +2614,7 @@
     "kind": "module",
     "name": "rcs",
     "cpp": "HYPER6/rcs.cpp",
-    "python": "cadac.vehicles.round6.rocket6.rcs",
+    "python": "cadac.vehicles.flat6.sam6.rcs",
     "status": "ported",
     "note": "name match only"
   },
@@ -2650,18 +2650,18 @@
     "kind": "vehicle",
     "name": "RADAR0",
     "cpp": "HYPER6/global_functions.cpp:set_obj_type",
-    "python": null,
-    "status": "missing",
-    "note": "slice limit"
+    "python": "cadac.cli:_VEHICLE_TYPES",
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "HYPER6",
     "kind": "vehicle",
     "name": "SAT3",
     "cpp": "HYPER6/global_functions.cpp:set_obj_type",
-    "python": null,
-    "status": "missing",
-    "note": "slice limit"
+    "python": "cadac.cli:_VEHICLE_TYPES",
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "MAGSIX",
@@ -2813,8 +2813,8 @@
     "name": "matmo=1",
     "cpp": "ROCKET6/environment.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "ROCKET6",
@@ -2894,8 +2894,8 @@
     "name": "mguide=5",
     "cpp": "ROCKET6/guidance.cpp",
     "python": null,
-    "status": "missing",
-    "note": "drop-out"
+    "status": "ported",
+    "note": ""
   },
   {
     "program": "ROCKET6",
@@ -3073,7 +3073,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "ROCKET6/aerodynamics.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -3082,7 +3082,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "ROCKET6/control.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3109,7 +3109,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "ROCKET6/forces.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3127,7 +3127,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "ROCKET6/guidance.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3145,7 +3145,7 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "ROCKET6/intercept.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
     "note": "name match only"
   },
@@ -3172,7 +3172,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "ROCKET6/propulsion.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -3181,9 +3181,9 @@
     "kind": "module",
     "name": "rcs",
     "cpp": "ROCKET6/rcs.cpp",
-    "python": "cadac.vehicles.round6.rocket6.rcs",
+    "python": "cadac.vehicles.flat6.sam6.rcs",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "ROCKET6",
@@ -3199,9 +3199,9 @@
     "kind": "module",
     "name": "tvc",
     "cpp": "ROCKET6/tvc.cpp",
-    "python": "cadac.vehicles.round6.rocket6.tvc",
+    "python": "cadac.vehicles.flat6.sam6.tvc",
     "status": "ported",
-    "note": ""
+    "note": "name match only"
   },
   {
     "program": "ROCKET6",
@@ -3371,7 +3371,7 @@
     "name": "mins=2",
     "cpp": "SAM6/ins.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -3380,7 +3380,7 @@
     "name": "mins=3",
     "cpp": "SAM6/ins.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -3452,7 +3452,7 @@
     "name": "mterm=-1",
     "cpp": "SAM6/intercept.cpp",
     "python": null,
-    "status": "stubbed",
+    "status": "ported",
     "note": ""
   },
   {
@@ -3568,7 +3568,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "SAM6/aerodynamics.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -3577,7 +3577,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "SAM6/aircraft_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3604,7 +3604,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "SAM6/aircraft_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3613,7 +3613,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "SAM6/aircraft_modules.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3631,7 +3631,7 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "SAM6/intercept.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
     "note": "name match only"
   },
@@ -3658,7 +3658,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "SAM6/propulsion.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -3667,9 +3667,9 @@
     "kind": "module",
     "name": "rcs",
     "cpp": "SAM6/rcs.cpp",
-    "python": "cadac.vehicles.round6.rocket6.rcs",
+    "python": "cadac.vehicles.flat6.sam6.rcs",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "SAM6",
@@ -3685,9 +3685,9 @@
     "kind": "module",
     "name": "tvc",
     "cpp": "SAM6/tvc.cpp",
-    "python": "cadac.vehicles.round6.rocket6.tvc",
+    "python": "cadac.vehicles.flat6.sam6.tvc",
     "status": "ported",
-    "note": "name match only"
+    "note": ""
   },
   {
     "program": "SAM6",
@@ -3928,7 +3928,7 @@
     "kind": "module",
     "name": "aerodynamics",
     "cpp": "SRAAM6/aerodynamics.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aero",
+    "python": "cadac.vehicles.flat3.aim5.aero",
     "status": "ported",
     "note": "name match only"
   },
@@ -3937,7 +3937,7 @@
     "kind": "module",
     "name": "control",
     "cpp": "SRAAM6/control.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3964,7 +3964,7 @@
     "kind": "module",
     "name": "forces",
     "cpp": "SRAAM6/forces.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3973,7 +3973,7 @@
     "kind": "module",
     "name": "guidance",
     "cpp": "SRAAM6/guidance.cpp",
-    "python": "cadac.vehicles.flat6.agm6.aircraft",
+    "python": "cadac.vehicles.flat3.aim5.aircraft",
     "status": "ported",
     "note": "name match only"
   },
@@ -3982,7 +3982,7 @@
     "kind": "module",
     "name": "intercept",
     "cpp": "SRAAM6/intercept.cpp",
-    "python": "cadac.vehicles.flat6.agm6.intercept",
+    "python": "cadac.vehicles.flat3.aim5.intercept",
     "status": "ported",
     "note": "name match only"
   },
@@ -4009,7 +4009,7 @@
     "kind": "module",
     "name": "propulsion",
     "cpp": "SRAAM6/propulsion.cpp",
-    "python": "cadac.vehicles.flat6.agm6.propulsion",
+    "python": "cadac.vehicles.flat3.aim5.propulsion",
     "status": "ported",
     "note": "name match only"
   },
@@ -4027,7 +4027,7 @@
     "kind": "module",
     "name": "tvc",
     "cpp": "SRAAM6/tvc.cpp",
-    "python": "cadac.vehicles.round6.rocket6.tvc",
+    "python": "cadac.vehicles.flat6.sam6.tvc",
     "status": "ported",
     "note": "name match only"
   },

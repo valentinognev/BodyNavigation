@@ -152,6 +152,10 @@ class Sam6Intercept:
                                 + miss_vec[2] ** 2
                             )
                         )
+                    if mterm == -1:
+                        miss = sqrt(
+                            float(stbl[0] ** 2 + stbl[1] ** 2 + stbl[2] ** 2)
+                        )
                     vehicle.health = 0
                     ctx.combus[ctx.vehicle_slot].status = 0
                     ctx.combus[tgt_slot].status = 0

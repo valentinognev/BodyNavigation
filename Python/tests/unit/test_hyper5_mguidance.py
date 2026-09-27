@@ -428,7 +428,7 @@ def test_mguidance_0_no_raise_without_writing():
     assert store.get("mguidance") == 0
 
 
-@pytest.mark.parametrize("mguidance", [30, 33, 99, 3, 6, 40, 43, 60])
+@pytest.mark.parametrize("mguidance", [30, 33, 99, 40, 43])
 def test_unused_mguidance_raises_valueerror(mguidance):
     vehicle = _Vehicle()
     guidance = Hyper5Guidance()

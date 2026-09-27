@@ -677,10 +677,58 @@ def test_climb_maero_1_cx_cz_and_der_finite():
     assert _approx(store.get("cz"), want["cz"])
 
 
-def test_maero_2_raises():
-    _deck_obj, vehicle, aero = _ready(maero=2)
-    with pytest.raises(ValueError):
-        aero.execute(vehicle, _ctx())
+_MAERO2_ZERO = (
+    "cy",
+    "cll",
+    "clm",
+    "cln",
+    "cz",
+    "gmax",
+    "gminx",
+    "cd",
+    "cl",
+    "cd0",
+    "cda",
+    "cl0",
+    "cla",
+    "clde",
+    "cyb",
+    "cyda",
+    "cydr",
+    "cllb",
+    "cllda",
+    "cllp",
+    "cllr",
+    "cm0",
+    "cma",
+    "cmde",
+    "cmq",
+    "clnb",
+    "clnda",
+    "clndr",
+    "clnp",
+    "clnr",
+    "clldr",
+    "clovercd",
+    "gavail_pos",
+    "gavail_neg",
+)
+
+
+def test_maero_2_after_maero_1_zeros_coefficients_keeps_derivatives():
+    _deck_obj, vehicle, aero = _ready(maero=1)
+    aero.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert store.get("cd") != 0.0
+    dla = store.get("dla")
+    assert dla != 0.0
+    store.set("maero", 2)
+    aero.execute(vehicle, _ctx())
+    assert store.get("refa") == store.get("refa_st")
+    assert _approx(store.get("cx"), -store.get("caa"))
+    for name in _MAERO2_ZERO:
+        assert store.get(name) == 0.0, name
+    assert store.get("dla") == dla
 
 
 def test_other_maero_raises():

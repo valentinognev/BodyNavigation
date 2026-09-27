@@ -1,4 +1,4 @@
-from math import sqrt
+from math import atan, sqrt
 
 import numpy as np
 
@@ -97,7 +97,7 @@ class Plane6Control:
         maut = store.get("maut")
         if maut == 0:
             return
-        if maut not in (1, 24):
+        if maut not in (1, 24, 30, 40):
             raise ValueError(f"unknown maut {maut}")
 
         delacx = 0.0
@@ -119,8 +119,13 @@ class Plane6Control:
 
         if mauty == 2:
             delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mauty == 3:
+            phicomx = self.control_lateral_accel(vehicle, store.get("alcomx"))
         if mautp == 4:
             delecx = self.control_gamma(vehicle, thtvlcomx)
+        if mauty == 4:
+            phicomx = self.control_heading(vehicle, store.get("psivlcomx"))
+            delrcx = self.control_yaw_rate(vehicle, rcomx)
 
         if mroll == 0:
             if abs(phicomx) > philimx:
@@ -292,6 +297,26 @@ class Plane6Control:
         store.set("GAINGAM", gaingam)
         store.set("gainff", gainff)
         return delecx
+
+    def control_lateral_accel(self, vehicle, alcomx):
+        store = vehicle.store
+        gainl = store.get("gainl")
+        fspb3 = store.get("FSPB")[2]
+        phicomx = -DEG * gainl * atan(alcomx) * _sign(fspb3)
+        return phicomx
+
+    def control_heading(self, vehicle, psivlcomx):
+        store = vehicle.store
+        wrcl = store.get("wrcl")
+        zrcl = store.get("zrcl")
+        facthead = store.get("facthead")
+        grav = store.get("grav")
+        dvbe = store.get("dvbe")
+        psivlx = store.get("psivlx")
+        gainpsi = (dvbe / grav) * zrcl * wrcl * (1.0 - zrcl * zrcl) * (1.0 + facthead)
+        phicomx = gainpsi * (psivlcomx - psivlx)
+        store.set("gainpsi", gainpsi)
+        return phicomx
 
     def terminate(self, vehicle, ctx):
         pass

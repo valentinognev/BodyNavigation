@@ -1,4 +1,4 @@
-from math import acos, asin, cos, hypot, sin, sqrt, tan
+from math import acos, asin, cos, exp, hypot, sin, sqrt, tan
 
 import numpy as np
 
@@ -43,7 +43,14 @@ class Hyper5Guidance:
             Field("wp_alt", 0.0, "real", "data", "guidance"),
             Field("point_gain", 0.0, "real", "data", "guidance"),
             Field("pronav_gain", 0.0, "real", "data", "guidance"),
+            Field("line_gain", 0.0, "real", "data", "guidance"),
+            Field("nl_gain_fact", 1.0, "real", "data", "guidance"),
+            Field("decrement", 0.0, "real", "data", "guidance"),
+            Field("psifgx", 0.0, "real", "data", "guidance"),
+            Field("thtfgx", 0.0, "real", "data", "guidance"),
             Field("bias", 0.0, "real", "data", "guidance"),
+            Field("nl_gain", 0.0, "real", "diag", "guidance"),
+            Field("VBEF", (0.0, 0.0, 0.0), "vec", "diag", "guidance"),
             Field("wp_sltrange", 999999.0, "real", "diag", "guidance", plot),
             Field("VBEO", (0.0, 0.0, 0.0), "vec", "diag", "guidance"),
             Field("wp_grdrange", 999999.0, "real", "diag", "guidance", plot),
@@ -75,6 +82,24 @@ class Hyper5Guidance:
             apnb = self.guidance_pronav(vehicle)
             alcomx = apnb[1] / grav
             ancomx = -apnb[2] / grav
+        elif mguidance == 3:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            algv = self.guidance_line(vehicle)
+            alcomx = 0.0
+            ancomx = -algv[2] / grav
+        elif mguidance == 60:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            apnb = self.guidance_pronav(vehicle)
+            alcomx = apnb[1] / grav
+            ancomx = 0.0
+        elif mguidance == 6:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            apnb = self.guidance_pronav(vehicle)
+            alcomx = 0.0
+            ancomx = -apnb[2] / grav
         elif mguidance == 70:
             phicx = self.guidance_arc(vehicle)
         else:
@@ -93,6 +118,61 @@ class Hyper5Guidance:
         store.set("phicx", phicx)
         store.set("ancomx", ancomx)
         store.set("alcomx", alcomx)
+
+    def guidance_line(self, vehicle):
+        store = vehicle.store
+        line_gain = store.get("line_gain")
+        nl_gain_fact = store.get("nl_gain_fact")
+        decrement = store.get("decrement")
+        wp_lonx = store.get("wp_lonx")
+        wp_latx = store.get("wp_latx")
+        wp_alt = store.get("wp_alt")
+        psifgx = store.get("psifgx")
+        thtfgx = store.get("thtfgx")
+        time = store.get("time")
+        grav = store.get("grav")
+        tig = store.get("tig")
+        thtvgx = store.get("thtvgx")
+        vbeg = store.get("vbeg")
+        sbii = store.get("sbii")
+        philimx = store.get("philimx")
+
+        tfg = mat2tr(psifgx * RAD, thtfgx * RAD)
+        swii = cadine(wp_lonx * RAD, wp_latx * RAD, wp_alt, time)
+        swbg = tig.T @ (swii - sbii)
+        polar = polar_from_cart(swbg)
+        wp_sltrange = polar[0]
+        tog = mat2tr(float(polar[1]), float(polar[2]))
+        wp_grdrange = hypot(float(swbg[0]), float(swbg[1]))
+        vbeo = tog @ vbeg
+        vbef = tfg @ vbeg
+        nl_gain = nl_gain_fact * (1 - exp(-wp_sltrange / decrement))
+        algv = np.array(
+            [
+                grav * sin(thtvgx * RAD),
+                line_gain * (-vbeo[1] + nl_gain * vbef[1]),
+                line_gain * (-vbeo[2] + nl_gain * vbef[2])
+                - grav * cos(thtvgx * RAD),
+            ]
+        )
+        dvbe = sqrt(float(vbeg[0] ** 2 + vbeg[1] ** 2 + vbeg[2] ** 2))
+        rad_min = dvbe * dvbe / (grav * tan(philimx * RAD))
+        if wp_grdrange < 2 * rad_min:
+            sh = np.array([swbg[0], swbg[1], 0.0])
+            vh = np.array([vbeg[0], vbeg[1], 0.0])
+            wp_flag = _sign(float(vh @ sh))
+        else:
+            wp_flag = 0
+
+        store.set("wp_sltrange", wp_sltrange)
+        store.set("nl_gain", nl_gain)
+        store.set("VBEO", vbeo)
+        store.set("VBEF", vbef)
+        store.set("wp_grdrange", wp_grdrange)
+        store.set("SWBG", swbg)
+        store.set("rad_min", rad_min)
+        store.set("wp_flag", wp_flag)
+        return algv
 
     def guidance_point(self, vehicle):
         store = vehicle.store

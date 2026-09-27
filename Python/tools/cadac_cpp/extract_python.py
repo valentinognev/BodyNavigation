@@ -8,9 +8,11 @@ _REGISTER = re.compile(
     r'register_family_type\(\s*"([a-z0-9]+)",\s*"([A-Z][A-Z0-9]+)"'
 )
 _EQ = re.compile(r"\b(" + "|".join(MODE_FLAGS) + r")\s*==\s*(-?\d+)")
+_NE = re.compile(r"\b(" + "|".join(MODE_FLAGS) + r")\s*!=\s*(-?\d+)")
 _IN_TUPLE = re.compile(
     r"\b(" + "|".join(MODE_FLAGS) + r")\s+not\s+in\s+\(([^)]*)\)"
     r"|\b(" + "|".join(MODE_FLAGS) + r")\s+in\s+\(([^)]*)\)"
+    r"|\b(" + "|".join(MODE_FLAGS) + r")\s*!=\s*(-?\d+)"
 )
 _UNKNOWN = re.compile(r'unknown (' + "|".join(MODE_FLAGS) + r")")
 
@@ -39,11 +41,17 @@ def extract_python_modes(text: str) -> tuple[list[tuple[str, int]], list[str]]:
         stripped = line.lstrip()
         if stripped.startswith("#"):
             continue
-        for match in _EQ.finditer(line):
-            pair = (match.group(1), int(match.group(2)))
-            if pair not in implemented:
-                implemented.append(pair)
+        for matcher in (_EQ, _NE):
+            for match in matcher.finditer(line):
+                pair = (match.group(1), int(match.group(2)))
+                if pair not in implemented:
+                    implemented.append(pair)
         for match in _IN_TUPLE.finditer(line):
+            if match.group(5):
+                pair = (match.group(5), int(match.group(6)))
+                if pair not in implemented:
+                    implemented.append(pair)
+                continue
             flag = match.group(1) or match.group(3)
             inner = match.group(2) or match.group(4)
             for part in inner.split(","):

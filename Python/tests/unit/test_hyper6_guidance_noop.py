@@ -135,11 +135,9 @@ EXTERNALS = (
     "dvbe",
 )
 CONTROL_OWNED = ("alcomx", "ancomx", "phicomx")
-NO_HELPERS = (
+TERMINAL_HELPERS = (
     "guidance_ltg",
-    "guidance_line",
     "guidance_pronav",
-    "guidance_arc",
     "guidance_AGL",
     "guidance_glideslope",
 )
@@ -243,10 +241,10 @@ def test_terminate_exists_and_is_pass():
     np.testing.assert_array_equal(store.get("UTBC"), sentinel)
 
 
-def test_no_ltg_line_pronav_helpers():
+def test_terminal_guidance_helpers_exist():
     guid = Hyper6Guidance()
-    for name in NO_HELPERS:
-        assert not hasattr(guid, name)
+    for name in TERMINAL_HELPERS:
+        assert hasattr(guid, name)
 
 
 def test_execute_mguide_zero_does_not_raise():
@@ -290,18 +288,23 @@ def test_execute_mguide_zero_does_not_require_newton_or_control_names():
         assert name not in store.names()
 
 
-def test_execute_mguide_five_raises():
+def test_execute_mguide_five_advances_clock_without_ltg_call():
     vehicle, guid = _ready(mguide=5)
     store = vehicle.store
     for name in CONTROL_OWNED:
         store.define(Field(name, 7.0, "real", "data", "control"))
     store.set("wp_flag", 1)
+    store.set("ltg_step", 1.0)
     sentinel = np.array([9.0, 8.0, 7.0])
     store.set("UTBC", sentinel)
-    with pytest.raises(ValueError, match="unknown mguide"):
-        guid.execute(vehicle, _ctx())
+    guid.execute(vehicle, _ctx())
+    assert store.get("ltg_count") == 1
+    assert store.get("init_flag") == 0
+    assert store.get("time_ltg") == 0.0
     for name in CONTROL_OWNED:
-        assert store.get(name) == 7.0
+        assert store.get(name) == 0.0
+    assert store.get("aycomx") == 0.0
+    assert store.get("azcomx") == 0.0
     for name in EXTERNALS:
         if name not in CONTROL_OWNED:
             assert name not in store.names()
@@ -309,7 +312,7 @@ def test_execute_mguide_five_raises():
     np.testing.assert_array_equal(store.get("UTBC"), sentinel)
 
 
-@pytest.mark.parametrize("mguide", (30, 33, 3, 4, 6, 7, 8, -1, 99))
+@pytest.mark.parametrize("mguide", (-1, 99))
 def test_execute_unknown_mguide_raises(mguide):
     vehicle, guid = _ready(mguide=mguide)
     with pytest.raises(ValueError, match="unknown mguide"):

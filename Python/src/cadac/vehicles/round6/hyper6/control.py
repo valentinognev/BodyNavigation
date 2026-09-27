@@ -1,8 +1,9 @@
-from math import sqrt
+from math import cos, sqrt
 
 import numpy as np
 
-from cadac.constants import DEG, RAD
+from cadac.constants import AGRAV, DEG, RAD
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 
 SMALL = 1.0e-7
@@ -97,7 +98,14 @@ class Hyper6Control:
         maut = store.get("maut")
         if maut == 0:
             return
-        if maut not in (24,):
+        mauty = maut // 10
+        mautp = maut % 10
+        # Yaw 2 is the existing rate path only beside a ported pitch digit
+        # (3/4/5), which keeps maut 24 and rejects yaw-rate-only maut 20.
+        # Pitch 2 is not dispatched, so it never passes.
+        yaw_ok = mauty in (0, 3, 4) or (mauty == 2 and mautp in (3, 4, 5))
+        pitch_ok = mautp in (0, 3, 4, 5)
+        if not (yaw_ok and pitch_ok):
             raise ValueError(f"unknown maut {maut}")
 
         delacx = 0.0
@@ -114,13 +122,33 @@ class Hyper6Control:
         rcomx = store.get("rcomx")
         thtvdcomx = store.get("thtvdcomx")
 
-        mauty = maut // 10
-        mautp = maut % 10
-
         if mauty == 2:
             delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mauty == 3:
+            phicomx = self.control_lateral_accel(vehicle, store.get("alcomx"))
+            delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mautp == 3:
+            gmax = store.get("gmax")
+            gminx = store.get("gminx")
+            if ancomx > gmax:
+                ancomx = gmax
+            if ancomx < gminx:
+                ancomx = gminx
+            delecx = self.control_normal_accel(vehicle, ancomx, ctx.int_step)
         if mautp == 4:
             delecx = self.control_gamma(vehicle, thtvdcomx)
+        if mauty == 4:
+            phicomx = self.control_heading(vehicle, store.get("psivdcomx"))
+            delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mautp == 5:
+            ancomx = self.control_altitude(vehicle, store.get("altcom"))
+            gmax = store.get("gmax")
+            gminx = store.get("gminx")
+            if ancomx > gmax:
+                ancomx = gmax
+            if ancomx < gminx:
+                ancomx = gminx
+            delecx = self.control_normal_accel(vehicle, ancomx, ctx.int_step)
 
         if mroll == 0:
             if abs(phicomx) > philimx:
@@ -296,6 +324,81 @@ class Hyper6Control:
         store.set("GAINGAM", gaingam)
         store.set("gainff", gainff)
         return delecx
+
+    def control_normal_accel(self, vehicle, ancomx, int_step):
+        store = vehicle.store
+        waclp = store.get("waclp")
+        zaclp = store.get("zaclp")
+        paclp = store.get("paclp")
+        gainp = store.get("gainp")
+        dla = store.get("dla")
+        dma = store.get("dma")
+        dmq = store.get("dmq")
+        dmde = store.get("dmde")
+        dvbec = store.get("dvbec")
+        qqcx = store.get("qqcx")
+        fspcb = store.get("FSPCB")
+        zzd = store.get("zzd")
+        zz = store.get("zz")
+
+        gainfb3 = waclp * waclp * paclp / (dla * dmde)
+        gainfb2 = (2.0 * zaclp * waclp + paclp + dmq - dla / dvbec) / dmde
+        gainfb1 = (
+            waclp * waclp
+            + 2.0 * zaclp * waclp * paclp
+            + dma
+            + dmq * dla / dvbec
+            - gainfb2 * dmde * dla / dvbec
+        ) / (dla * dmde) - gainp
+
+        fspb3 = fspcb[2]
+        zzd_new = AGRAV * ancomx + fspb3
+        zz = integrate(zzd_new, zzd, zz, int_step)
+        zzd = zzd_new
+        dqc = -gainfb1 * (-fspb3) - gainfb2 * qqcx * RAD + gainfb3 * zz + gainp * zzd
+        delecx = dqc * DEG
+
+        store.set("zzd", zzd)
+        store.set("zz", zz)
+        store.set("GAINFP", (gainfb1, gainfb2, gainfb3))
+        return delecx
+
+    def control_lateral_accel(self, vehicle, alcomx):
+        store = vehicle.store
+        gainl = store.get("gainl")
+        fspcb = store.get("FSPCB")
+        fspb3 = fspcb[2]
+        phicomx = -DEG * gainl * alcomx * _sign(fspb3)
+        return phicomx
+
+    def control_heading(self, vehicle, psivdcomx):
+        store = vehicle.store
+        wrcl = store.get("wrcl")
+        zrcl = store.get("zrcl")
+        facthead = store.get("facthead")
+        grav = store.get("grav")
+        dvbec = store.get("dvbec")
+        psivdcx = store.get("psivdcx")
+        gainpsi = (dvbec / grav) * zrcl * wrcl * (1.0 - zrcl * zrcl) * (1.0 + facthead)
+        phicomx = gainpsi * (psivdcomx - psivdcx)
+        store.set("gainpsi", gainpsi)
+        return phicomx
+
+    def control_altitude(self, vehicle, altcom):
+        store = vehicle.store
+        gainalt = store.get("gainalt")
+        gainaltrate = store.get("gainaltrate")
+        grav = store.get("grav")
+        altc = store.get("altc")
+        vbecd = store.get("VBECD")
+        phibdcx = store.get("phibdcx")
+        altrate = -vbecd[2]
+        eh = gainalt * (altcom - altc)
+        if phibdcx == 0:
+            phibdcx = SMALL
+        ancomx = (1.0 / cos(phibdcx * RAD)) * (gainaltrate * (eh - altrate) + grav) / AGRAV
+        store.set("altrate", altrate)
+        return ancomx
 
     def terminate(self, vehicle, ctx):
         pass

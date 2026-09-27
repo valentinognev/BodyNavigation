@@ -9,6 +9,7 @@ from cadac.env.us76 import atmosphere76
 from cadac.kernel.integrate import integrate
 from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
+from cadac.math.earth import cadtei, cadtge
 from cadac.math.frames import (
     cadac_inverse,
     cadac_matmul,
@@ -19,9 +20,11 @@ from cadac.math.frames import (
     skew,
 )
 from cadac.math.wgs84 import (
+    GM,
     cad_geo84_in,
     cad_grav84,
     cad_in_geo84,
+    cad_kepler,
     cad_tdi84,
     cad_tgi84,
 )
@@ -29,6 +32,196 @@ from cadac.stoch import ROCKET6_MARKOV_COUNT, dryden_white, prepare_for_dryden
 
 FOOT = 3.280834
 NMILES = 5.399568e-4
+
+# US 1976 Standard Atmosphere, NASA Marshall 2002 extension (CADAC us76_nasa2002).
+_US76_ZS = (
+    0.0, 11.019, 20.063, 32.162, 47.35,
+    51.413, 71.802, 86.0, 91.0, 94.0,
+    97.0, 100.0, 103.0, 106.0, 108.0,
+    110.0, 112.0, 115.0, 120.0, 125.0,
+    130.0, 135.0, 140.0, 145.0, 150.0,
+    155.0, 160.0, 165.0, 170.0, 180.0,
+    190.0, 210.0, 230.0, 265.0, 300.0,
+    350.0, 400.0, 450.0, 500.0, 550.0,
+    600.0, 650.0, 700.0, 750.0, 800.0,
+    850.0, 900.0, 950.0, 1000.0,
+)
+_US76_TMS = (
+    288.15, 216.65, 216.65, 228.65, 270.65,
+    270.65, 214.65, 186.95, 186.87, 187.74,
+    190.40, 195.08, 202.23, 212.89, 223.29,
+    240.00, 264.00, 300.00, 360.00, 417.23,
+    469.27, 516.59, 559.63, 598.78, 634.39,
+    666.80, 696.29, 723.13, 747.57, 790.07,
+    825.31, 878.84, 915.78, 955.20, 976.01,
+    990.06, 995.83, 998.22, 999.24, 999.67,
+    999.85, 999.93, 999.97, 999.99, 999.99,
+    1000.0, 1000.0, 1000.0, 1000.0,
+)
+_US76_WMS = (
+    28.9644, 28.9644, 28.9644, 28.9644, 28.9644,
+    28.9644, 28.9644, 28.9522, 28.8890, 28.7830,
+    28.6200, 28.3950, 28.1040, 27.7650, 27.5210,
+    27.2680, 27.0200, 26.6800, 26.2050, 25.8030,
+    25.4360, 25.0870, 24.7490, 24.4220, 24.1030,
+    23.7920, 23.4880, 23.1920, 22.9020, 22.3420,
+    21.8090, 20.8250, 19.9520, 18.6880, 17.7260,
+    16.7350, 15.9840, 15.2470, 14.3300, 13.0920,
+    11.5050, 9.7180, 7.9980, 6.5790, 5.5430,
+    4.8490, 4.4040, 4.1220, 3.9400,
+)
+_US76_PS = (
+    1013.25, 226.32, 54.7487, 8.68014,
+    1.10905, 0.66938, 0.039564, 3.7338e-03,
+    1.5381e-03, 9.0560e-04, 5.3571e-04, 3.2011e-04,
+    1.9742e-04, 1.2454e-04, 9.3188e-05, 7.1042e-05,
+    5.5547e-05, 4.0096e-05, 2.5382e-05, 1.7354e-05,
+    1.2505e-05, 9.3568e-06, 7.2028e-06, 5.6691e-06,
+    4.5422e-06, 3.6930e-06, 3.0395e-06, 2.5278e-06,
+    2.1210e-06, 1.5271e-06, 1.1266e-06, 6.4756e-07,
+    3.9276e-07, 1.7874e-07, 8.7704e-08, 3.4498e-08,
+    1.4518e-08, 6.4468e-09, 3.0236e-09, 1.5137e-09,
+    8.2130e-10, 4.8865e-10, 3.1908e-10, 2.2599e-10,
+    1.7036e-10, 1.3415e-10, 1.0873e-10, 8.9816e-11,
+    7.5138e-11,
+)
+_US76_RO = 6356.766
+_US76_GO = 9.80665
+_US76_WMO = 28.9644
+_US76_RS = 8314.32
+
+
+def _us76_quad(z, z0, z1, z2, f0, f1, f2):
+    return (
+        f0 * (z - z1) * (z - z2) / ((z0 - z1) * (z0 - z2))
+        + f1 * (z - z0) * (z - z2) / ((z1 - z0) * (z1 - z2))
+        + f2 * (z - z0) * (z - z1) / ((z2 - z0) * (z2 - z1))
+    )
+
+
+def _us76_nasa2002(alt_km):
+    """CADAC ``us76_nasa2002``. Returns ``(check, rho, press, tempk, vsound)``."""
+    z = alt_km
+    if z < 0.0 or z > 1000.0:
+        return 1, 0.0, 0.0, 0.0, 0.0
+    upper = 48
+    i = 0
+    while upper - i > 1:
+        test = (i + upper) >> 1
+        if z > _US76_ZS[test]:
+            i = test
+        else:
+            upper = test
+    if i < 7:
+        zl = _US76_RO * _US76_ZS[i] / (_US76_RO + _US76_ZS[i])
+        zu = _US76_RO * _US76_ZS[i + 1] / (_US76_RO + _US76_ZS[i + 1])
+        wm = _US76_WMO
+        ht = (_US76_RO * z) / (_US76_RO + z)
+        g = (_US76_TMS[i + 1] - _US76_TMS[i]) / (zu - zl)
+        if g < 0.0 or g > 0.0:
+            press = (
+                _US76_PS[i]
+                * math.pow(
+                    _US76_TMS[i] / (_US76_TMS[i] + g * (ht - zl)),
+                    (_US76_GO * _US76_WMO) / (_US76_RS * g * 0.001),
+                )
+                * 100.0
+            )
+        else:
+            press = (
+                _US76_PS[i]
+                * math.exp(-(_US76_GO * _US76_WMO * (ht * 1000.0 - zl * 1000.0)) / (_US76_RS * _US76_TMS[i]))
+                * 100.0
+            )
+        tempk = _US76_TMS[i] + g * (ht - zl)
+    else:
+        if i == 7:
+            tempk = _US76_TMS[8]
+        if i >= 8 and i < 15:
+            tempk = 263.1905 - 76.3232 * math.sqrt(1.0 - math.pow((z - 91.0) / 19.9429, 2.0))
+        if i >= 15 and i < 18:
+            tempk = 240.0 + 12.0 * (z - 110.0)
+        if i >= 18:
+            xi = (z - 120.0) * (_US76_RO + 120.0) / (_US76_RO + z)
+            tempk = 1000.0 - 640.0 * math.exp(-0.01875 * xi)
+        j = i
+        if i == 47:
+            j = i - 1
+        z0 = _US76_ZS[j]
+        z1 = _US76_ZS[j + 1]
+        z2 = _US76_ZS[j + 2]
+        wma = _us76_quad(z, z0, z1, z2, _US76_WMS[j], _US76_WMS[j + 1], _US76_WMS[j + 2])
+        alpa = _us76_quad(
+            z, z0, z1, z2, math.log(_US76_PS[j]), math.log(_US76_PS[j + 1]), math.log(_US76_PS[j + 2])
+        )
+        alpb = alpa
+        wmb = wma
+        if i != 7 and i != 47:
+            j = j - 1
+            z0 = _US76_ZS[j]
+            z1 = _US76_ZS[j + 1]
+            z2 = _US76_ZS[j + 2]
+            alpb = _us76_quad(
+                z, z0, z1, z2, math.log(_US76_PS[j]), math.log(_US76_PS[j + 1]), math.log(_US76_PS[j + 2])
+            )
+            wmb = _us76_quad(z, z0, z1, z2, _US76_WMS[j], _US76_WMS[j + 1], _US76_WMS[j + 2])
+        press = 100.0 * math.exp((alpa + alpb) / 2.0)
+        wm = (wma + wmb) / 2.0
+    rho = (wm * press) / (_US76_RS * tempk)
+    vsound = math.sqrt(1.4 * press / rho)
+    return 0, rho, press, tempk, vsound
+
+
+def _cad_tip(incl, lon_anode, arg_peri):
+    clon_anode = math.cos(lon_anode)
+    slon_anode = math.sin(lon_anode)
+    carg_peri = math.cos(arg_peri)
+    sarg_peri = math.sin(arg_peri)
+    cincl = math.cos(incl)
+    sincl = math.sin(incl)
+    tip = np.zeros((3, 3))
+    tip[0, 0] = clon_anode * carg_peri - slon_anode * sarg_peri * cincl
+    tip[0, 1] = -clon_anode * sarg_peri - slon_anode * carg_peri * cincl
+    tip[0, 2] = slon_anode * sincl
+    tip[1, 0] = slon_anode * carg_peri + clon_anode * sarg_peri * cincl
+    tip[1, 1] = -slon_anode * sarg_peri + clon_anode * carg_peri * cincl
+    tip[1, 2] = -clon_anode * sincl
+    tip[2, 0] = sarg_peri * sincl
+    tip[2, 1] = carg_peri * sincl
+    tip[2, 2] = cincl
+    return tip
+
+
+def _cad_in_orb(semi, ecc, inclx, lon_anodex, arg_perix, true_anomx):
+    """CADAC ``cad_in_orb``. Angles in degrees. Returns ``(SBII, VBII, parabola_flag)``."""
+    pp = semi * (1.0 - ecc * ecc)
+    c_true_anom = math.cos(true_anomx * RAD)
+    s_true_anom = math.sin(true_anomx * RAD)
+    dbi = pp / (1.0 + ecc * c_true_anom)
+    sbip = np.array([dbi * c_true_anom, dbi * s_true_anom, 0.0])
+    vbip = np.zeros(3)
+    parabola_flag = 0
+    if pp == 0.0:
+        parabola_flag = 1
+    else:
+        dum = math.sqrt(GM / pp)
+        vbip = np.array([-dum * s_true_anom, dum * (ecc + c_true_anom), 0.0])
+    tip = _cad_tip(inclx * RAD, lon_anodex * RAD, arg_perix * RAD)
+    sbii = cadac_matmul(tip, sbip)
+    vbii = cadac_matmul(tip, vbip)
+    return sbii, vbii, parabola_flag
+
+
+def _cad_geo84vel_in(sbii, vbii, time):
+    """CADAC ``cad_geo84vel_in``. Returns ``(dvbe, psivdx, thtvdx)`` with angles in degrees."""
+    lon, lat, alt = cad_geo84_in(sbii, time)
+    tdi = cad_tdi84(lon, lat, alt, time)
+    weii = np.zeros((3, 3))
+    weii[0, 1] = -WEII3
+    weii[1, 0] = WEII3
+    vbed = cadac_matmul(tdi, vbii - cadac_matmul(weii, sbii))
+    polar = polar_from_cart(vbed)
+    return float(polar[0]), DEG * float(polar[1]), DEG * float(polar[2])
 
 
 class Round6Environment(ModuleBase):
@@ -130,7 +323,8 @@ class Round6Environment(ModuleBase):
         mwind = (mair - matmo * 100) % 10
         mair0 = matmo == 0 and mturb == 0 and mwind == 0
         mair12 = matmo == 0 and mturb == 1 and mwind == 2
-        if not mair0 and not mair12:
+        mair100 = matmo == 1 and mturb == 0 and mwind == 0
+        if not mair0 and not mair12 and not mair100:
             raise ValueError(f"unknown mair {mair}")
         if mair12 and self.weather_deck is None:
             raise ValueError("mair 12 requires a weather Datadeck")
@@ -147,11 +341,26 @@ class Round6Environment(ModuleBase):
         gravg = cad_grav84(sbii, time)
         grav = float(np.linalg.norm(gravg))
 
-        rho, press, tempk = atmosphere76(alt)
-        tempc = tempk - 273.16
-        vsound = math.sqrt(1.4 * R * tempk)
+        if matmo == 1:
+            check, rho, press, tempk, vsound = _us76_nasa2002(alt / 1000.0)
+            tempc = tempk - 273.16
+            if check:
+                # HYPER6 exits and does not touch warning_flag. ROCKET6 warns once
+                # and continues with the zeros us76_nasa2002 returned.
+                if getattr(vehicle, "family", None) == "rocket6":
+                    if warning_flag == 0:
+                        warning_flag = 1
+                else:
+                    raise ValueError("altitude is outside us76_nasa2002 atmosphere")
+        else:
+            rho, press, tempk = atmosphere76(alt)
+            tempc = tempk - 273.16
+            vsound = math.sqrt(1.4 * R * tempk)
 
-        vmach = abs(dvba / vsound)
+        if vsound == 0.0:
+            vmach = math.inf if dvba != 0.0 else math.nan
+        else:
+            vmach = abs(dvba / vsound)
         pdynmc = 0.5 * rho * dvba * dvba
 
         vaed = np.zeros(3)
@@ -180,7 +389,10 @@ class Round6Environment(ModuleBase):
 
         vbad = vbed - vaed
         dvba = float(np.linalg.norm(vbad))
-        vmach = abs(dvba / vsound)
+        if vsound == 0.0:
+            vmach = math.inf if dvba != 0.0 else math.nan
+        else:
+            vmach = abs(dvba / vsound)
         pdynmc = 0.5 * rho * dvba * dvba
 
         if "trcode" in store and "mguid" in store and store.get("mguid") == 6:
@@ -493,7 +705,7 @@ class Round6Newton(ModuleBase):
     def initialize(self, vehicle, ctx) -> None:
         store = vehicle.store
         minit = store.get("minit")
-        if minit != 0:
+        if minit not in (0, 1):
             raise ValueError(f"unknown minit {minit}")
         dvbe = store.get("dvbe")
         lonx = store.get("lonx")
@@ -509,6 +721,57 @@ class Round6Newton(ModuleBase):
         weii = np.zeros((3, 3))
         weii[0, 1] = -WEII3
         weii[1, 0] = WEII3
+
+        if minit == 1:
+            sat_semi = store.get("sat_semi")
+            sat_ecc = store.get("sat_ecc")
+            sat_inclx = store.get("sat_inclx")
+            sat_lon_anodex = store.get("sat_lon_anodex")
+            sat_arg_perix = store.get("sat_arg_perix")
+            sat_true_anomx = store.get("sat_true_anomx")
+            true_anomx = sat_true_anomx + store.get("ranglex_l_t")
+            soii, voii, _parabola = _cad_in_orb(
+                sat_semi, sat_ecc, sat_inclx, sat_lon_anodex, sat_arg_perix, true_anomx
+            )
+            lon, lat, _alt_unused = cad_geo84_in(soii, time)
+            lonx = lon * DEG
+            latx = lat * DEG
+            tei = cadtei(time)
+            tge = cadtge(lon, lat)
+            tig = cadac_matmul(tei.T.copy(), tge.T.copy())
+            voeg = cadac_matmul(tig.T.copy(), voii - cadac_matmul(weii, soii))
+            polar_ovh = polar_from_cart(voeg)
+            psibdx = float(polar_ovh[1]) * DEG
+            headon_flag = store.get("headon_flag")
+            if headon_flag:
+                psibdx = psibdx - 180.0
+            stii, vtii, _parabola = _cad_in_orb(
+                sat_semi,
+                sat_ecc,
+                sat_inclx,
+                sat_lon_anodex,
+                sat_arg_perix,
+                sat_true_anomx,
+            )
+            tgo_insertion = store.get("tgo_insertion")
+            spii, vpii, _kepler = cad_kepler(stii, vtii, tgo_insertion)
+            dvbi_pdct = float(np.linalg.norm(vpii))
+            dbi_desired = float(np.linalg.norm(spii)) + store.get("dbi_bias")
+            dvbi_desired = dvbi_pdct + store.get("dvbi_bias")
+            _dvbe_pdct, _psivdx_pdct, thtvdx_pdct = _cad_geo84vel_in(spii, vpii, time)
+            if headon_flag:
+                thtvdx_desired = 0.0
+            else:
+                thtvdx_desired = thtvdx_pdct + store.get("thtvdx_bias")
+            lonp, latp, _altp = cad_geo84_in(spii, tgo_insertion)
+            wp_lonx = lonp * DEG
+            wp_latx = latp * DEG + store.get("latx_bias")
+            store.set("dbi_desired", dbi_desired)
+            store.set("dvbi_desired", dvbi_desired)
+            store.set("thtvdx_desired", thtvdx_desired)
+            if "wp_lonx" in store:
+                store.set("wp_lonx", wp_lonx)
+                store.set("wp_latx", wp_latx)
 
         sbii = cad_in_geo84(lonx * RAD, latx * RAD, alt, time)
         dbi = float(np.linalg.norm(sbii))

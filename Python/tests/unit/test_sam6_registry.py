@@ -150,7 +150,9 @@ def test_sam6_types_are_family_only_not_global():
         ("MISSILE6", Sam6Missile),
         ("AIRCRAFT3", Sam6Aircraft),
         ("ROCKET5", Sam6Rocket),
-        ("RADAR0", Sam6Radar),
     ):
         assert type_name not in _VEHICLE_TYPES
         assert _VEHICLE_FAMILIES[("sam6", type_name)] is cls
+    # Global RADAR0 is HYPER6. Family sam6 still binds Sam6Radar (no fallthrough).
+    assert _VEHICLE_TYPES["RADAR0"] is not Sam6Radar
+    assert _VEHICLE_FAMILIES[("sam6", "RADAR0")] is Sam6Radar

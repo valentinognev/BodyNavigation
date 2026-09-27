@@ -52,6 +52,10 @@ class Plane5Guidance:
             algv = self.guidance_line(vehicle)
             alcomx = algv[1] / grav
             ancomx = 0.0
+        elif mguidance == 3:
+            algv = self.guidance_line(vehicle)
+            alcomx = 0.0
+            ancomx = -algv[2] / grav
         elif mguidance == 33:
             algv = self.guidance_line(vehicle)
             alcomx = algv[1] / grav

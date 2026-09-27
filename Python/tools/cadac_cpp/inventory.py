@@ -38,7 +38,6 @@ _E2E_NOTES = {}
 _E2E_STATUS = {"passed": "ported", "failed": "diverged", "skipped": "missing"}
 
 _NAME_EQ = re.compile(r'^[ \t]*name[ \t]*=[ \t]*["\']([^"\']+)["\']', re.MULTILINE)
-_SLICE_VEHICLES = {("HYPER6", "RADAR0"), ("HYPER6", "SAT3"), ("HYPER6", "Ground0")}
 
 
 def status_for_mode(cpp_pair, py_implemented, stub_flags) -> str:
@@ -150,11 +149,26 @@ def _python_vehicle_family(python: str | None) -> str | None:
 def apply_human_notes(rows: list[InventoryRow]) -> list[InventoryRow]:
     annotated: list[InventoryRow] = []
     for row in rows:
+        if (
+            row.kind == "vehicle"
+            and row.program == "HYPER6"
+            and row.name == "Ground0"
+            and row.status == "missing"
+        ):
+            annotated.append(
+                InventoryRow(
+                    program=row.program,
+                    kind="module",
+                    name=row.name,
+                    cpp=row.cpp,
+                    python="cadac.vehicles.round6.hyper6.radar",
+                    status="deferred",
+                    note="radar-owned; tracks live on RADAR0; not a registered vehicle",
+                )
+            )
+            continue
         note = row.note
-        if row.kind == "vehicle" and row.status in ("missing", "stubbed"):
-            if (row.program, row.name) in _SLICE_VEHICLES:
-                note = "slice limit"
-        elif row.kind == "mode" and row.status in ("missing", "stubbed"):
+        if row.kind == "mode" and row.status in ("missing", "stubbed"):
             flag = row.name.split("=", 1)[0]
             if flag in ("maut", "mauty"):
                 note = "slice limit"

@@ -40,6 +40,7 @@ class Plane5Control:
             Field("altcom", 0.0, "real", "data", "control", ("plot",)),
             Field("gain_thtvg", 0.0, "real", "data", "control"),
             Field("gain_psivg", 0.0, "real", "data", "control"),
+            Field("alphacx", 0.0, "real", "data", "control"),
             Field("psivlcx", 0.0, "real", "data", "control", ("plot",)),
             Field("thtvgcx", 0.0, "real", "data", "control", ("plot",)),
             Field("avx", 0.0, "real", "diag", "control", ("scrn", "plot")),
@@ -76,6 +77,21 @@ class Plane5Control:
             phimvx = self.control_bank(vehicle, phicx, dt)
             ancomx = store.get("ancomx")
             alphax = self.control_load(vehicle, ancomx, dt)
+        elif mcontrol == 1:
+            phicx = store.get("phicx")
+            phimvx = 0.0
+            ancomx = store.get("ancomx")
+            alphax = self.control_flightpath(vehicle, store.get("thtvgcx"), phimvx)
+        elif mcontrol == 10:
+            phicx = self.control_heading(vehicle, store.get("psivlcx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = store.get("ancomx")
+            alphax = store.get("alphacx")
+        elif mcontrol == 11:
+            phicx = self.control_heading(vehicle, store.get("psivlcx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = store.get("ancomx")
+            alphax = self.control_flightpath(vehicle, store.get("thtvgcx"), phimvx)
         else:
             raise ValueError(f"unknown mcontrol {mcontrol}")
         tbv = cadtbv(phimvx * RAD, alphax * RAD)

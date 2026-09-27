@@ -320,12 +320,41 @@ def test_initialize_does_not_write_fspb():
     np.testing.assert_array_equal(vehicle.store.get("FSPB"), np.zeros(3))
 
 
-def test_initialize_minit_nonzero_raises():
-    for minit in (1, 2, 99, -1):
+def test_initialize_unknown_minit_raises():
+    for minit in (2, 99, -1):
         vehicle, newton = _vehicle()
         _climb_ics(vehicle.store, minit=minit)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="unknown minit"):
             newton.initialize(vehicle, _ctx())
+
+
+def test_initialize_minit1_with_elements():
+    vehicle, newton = _vehicle()
+    store = vehicle.store
+    for name in (
+        "dbi_desired",
+        "dvbi_desired",
+        "thtvdx_desired",
+        "wp_lonx",
+        "wp_latx",
+    ):
+        store.define(Field(name, 0.0, "real", "data", "guidance"))
+    _climb_ics(store, minit=1)
+    semi = 7_000_000.0
+    store.set("sat_semi", semi)
+    store.set("sat_ecc", 0.0)
+    store.set("sat_inclx", 0.0)
+    store.set("sat_lon_anodex", 0.0)
+    store.set("sat_arg_perix", 0.0)
+    store.set("sat_true_anomx", 0.0)
+    store.set("ranglex_l_t", 0.0)
+    store.set("headon_flag", 0)
+    store.set("tgo_insertion", 0.0)
+    newton.initialize(vehicle, _ctx())
+    np.testing.assert_allclose(store.get("lonx"), 0.0, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(store.get("latx"), 0.0, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(store.get("psibdx"), 90.0, rtol=1e-12, atol=0.0)
+    np.testing.assert_allclose(store.get("dbi_desired"), semi, rtol=1e-12, atol=0.0)
 
 
 def test_initialize_nonzero_beta_and_heading_matches_cpp_replica():

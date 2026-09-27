@@ -219,7 +219,7 @@ class Sam6Ins:
     def initialize(self, vehicle, ctx):
         store = vehicle.store
         mins = store.get("mins")
-        if mins not in (0, 1):
+        if mins not in (0, 1, 2, 3):
             raise ValueError(f"unknown mins {mins}")
         frax = store.get("frax")
         sbel = np.asarray(store.get("SBEL"), dtype=float)
@@ -233,6 +233,24 @@ class Sam6Ins:
             store.set("EMISA", _gauss3_rtl(1.1e-4))
             store.set("ESCALA", _gauss3_rtl(5e-4))
             store.set("EBIASA", _gauss3_rtl(3.56e-3))
+        elif mins == 2:
+            store.set("EUNBG", np.zeros(3))
+            store.set("EMISG", _gauss3_rtl(10e-5))
+            store.set("ESCALG", _gauss3_rtl(1.5e-5))
+            store.set("EBIASG", _gauss3_rtl(1.5e-6))
+            store.set("EWALKA", _gauss3_rtl(4.1e-5))
+            store.set("EMISA", _gauss3_rtl(0.54e-4))
+            store.set("ESCALA", _gauss3_rtl(2e-6))
+            store.set("EBIASA", _gauss3_rtl(1.5e-3))
+        elif mins == 3:
+            store.set("EUNBG", _gauss3_rtl(4.83e-7))
+            store.set("EMISG", _gauss3_rtl(50e-6))
+            store.set("ESCALG", _gauss3_rtl(15e-5))
+            store.set("EBIASG", _gauss3_rtl(4.83e-6))
+            store.set("EWALKA", _gauss3_rtl(5.08e-5))
+            store.set("EMISA", _gauss3_rtl(4.85e-4))
+            store.set("ESCALA", _gauss3_rtl(3e-6))
+            store.set("EBIASA", _gauss3_rtl(9.81e-3))
         gauss_init = np.array([_gauss(0.0, 1.0) for _ in range(9)], dtype=float)
         xx_init = _cholesky(_PP0) @ gauss_init
         xx_init = xx_init * (1.0 + frax)
@@ -250,7 +268,7 @@ class Sam6Ins:
     def execute(self, vehicle, ctx):
         store = vehicle.store
         mins = store.get("mins")
-        if mins not in (0, 1):
+        if mins not in (0, 1, 2, 3):
             raise ValueError(f"unknown mins {mins}")
         int_step = ctx.int_step
         tbl = np.asarray(store.get("TBL"), dtype=float)

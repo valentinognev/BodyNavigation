@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from cadac.constants import DEG, RAD
+from cadac.constants import AGRAV, DEG, RAD
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
 from cadac.vehicles.round6.hyper6.control import Hyper6Control
@@ -111,6 +111,13 @@ def _externals(
     store.define(Field("rrcx", rrcx, "real", "out", "ins"))
     store.define(Field("thtbdcx", thtbdcx, "real", "out", "ins"))
     store.define(Field("thtvdcx", thtvdcx, "real", "out", "ins"))
+    store.define(Field("FSPCB", (0.0, 0.0, 1.0), "vec", "out", "ins"))
+    store.define(Field("grav", AGRAV, "real", "out", "environment"))
+    store.define(Field("gmax", 50.0, "real", "out", "aerodynamics"))
+    store.define(Field("gminx", -50.0, "real", "out", "aerodynamics"))
+    store.define(Field("psivdcx", 0.0, "real", "out", "ins"))
+    store.define(Field("altc", 0.0, "real", "out", "ins"))
+    store.define(Field("VBECD", (0.0, 0.0, 0.0), "vec", "out", "ins"))
 
 
 def _ready(**store_kw):
@@ -382,13 +389,21 @@ def test_gamma_case_omits_mroll_defaults_to_position():
 
 
 def test_unknown_maut_raises():
-    for maut in (1, 2, 3, 4, 5, 20, 23, 25, 34, 44, 45):
+    for maut in (1, 2, 20, 32, 42):
         vehicle, ctrl = _ready(maut=maut)
         with pytest.raises(ValueError, match="unknown maut"):
             ctrl.execute(vehicle, _ctx())
         assert vehicle.store.get("delacx") == 0.0
         assert vehicle.store.get("delecx") == 0.0
         assert vehicle.store.get("delrcx") == 0.0
+
+
+def test_ported_maut_codes_execute():
+    for maut in (3, 4, 5, 23, 25, 34, 44, 45):
+        vehicle, ctrl = _ready(maut=maut)
+        ctrl.execute(vehicle, _ctx())
+        for name in ("delacx", "delecx", "delrcx", "ancomx", "phicomx"):
+            assert np.isfinite(vehicle.store.get(name))
 
 
 def test_mroll_1_uses_roll_rate():

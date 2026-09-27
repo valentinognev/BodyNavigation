@@ -176,8 +176,8 @@ def test_execute_mguid_zero_does_not_require_newton_or_control_names():
         assert name not in store.names()
 
 
-@pytest.mark.parametrize("mguid", (30, 33))
-def test_execute_mguid_line_modes_raise(mguid):
+@pytest.mark.parametrize("mguid", (3, 40))
+def test_execute_unknown_mguid_raises(mguid):
     vehicle, guid = _ready(mguid=mguid)
     store = vehicle.store
     for name in CONTROL_OWNED:

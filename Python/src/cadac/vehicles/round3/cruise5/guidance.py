@@ -5,7 +5,7 @@ import numpy as np
 from cadac.constants import RAD
 from cadac.kernel.state import Field
 from cadac.math.earth import cadine
-from cadac.math.frames import mat2tr, polar_from_cart
+from cadac.math.frames import mat2tr, polar_from_cart, skew
 
 
 def _sign(variable):
@@ -60,6 +60,18 @@ class Cruise5Guidance:
         if mguidance == 30:
             algv = self.guidance_line(vehicle)
             alcomx = float(algv[1] / grav)
+        elif mguidance == 3:
+            algv = self.guidance_line(vehicle)
+            alcomx = 0.0
+            ancomx = float(-algv[2] / grav)
+        elif mguidance == 60:
+            apnb = self.guidance_pronav(vehicle)
+            alcomx = float(apnb[1] / grav)
+            ancomx = 0.0
+        elif mguidance == 6:
+            apnb = self.guidance_pronav(vehicle)
+            alcomx = 0.0
+            ancomx = float(-apnb[2] / grav)
         elif mguidance == 43:
             algv = self.guidance_line(vehicle)
             apgv = self.guidance_point(vehicle)
@@ -84,6 +96,17 @@ class Cruise5Guidance:
 
     def terminate(self, vehicle, ctx):
         pass
+
+    def guidance_pronav(self, vehicle):
+        store = vehicle.store
+        pronav_gain = store.get("pronav_gain")
+        grav = store.get("grav")
+        tbg = store.get("TBG")
+        woeb = store.get("WOEB")
+        closing_speed = store.get("closing_speed")
+        utbb = store.get("UTBB")
+        grav_g = np.array([0.0, 0.0, grav])
+        return skew(woeb) @ utbb * (pronav_gain * closing_speed) - tbg @ grav_g
 
     def guidance_line(self, vehicle):
         store = vehicle.store

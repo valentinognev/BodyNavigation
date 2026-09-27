@@ -296,7 +296,7 @@ def test_mcontrol_0_zeros_phimvx_and_alphax():
     )
 
 
-@pytest.mark.parametrize("mcontrol", [1, 10, 11, 46, 99])
+@pytest.mark.parametrize("mcontrol", [46, 99])
 def test_unknown_mcontrol_raises_valueerror(mcontrol):
     vehicle, control = _ready(mcontrol=mcontrol)
     with pytest.raises(ValueError):

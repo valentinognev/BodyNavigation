@@ -21,6 +21,8 @@ from cadac.vehicles.round3.cruise5.vehicle import Cruise5
 from cadac.vehicles.round3.hyper5.satellite import Satellite3
 from cadac.vehicles.round3.hyper5.target import Target3
 from cadac.vehicles.round3.hyper5.vehicle import Hyper5
+from cadac.vehicles.round6.hyper6.radar import Hyper6Radar
+from cadac.vehicles.round6.hyper6.satellite import Hyper6Satellite
 from cadac.vehicles.round6.hyper6.vehicle import Hyper6
 from cadac.vehicles.flat3.falcon5.vehicle import Plane5
 from cadac.vehicles.flat6.falcon6.vehicle import Plane6
@@ -43,7 +45,10 @@ _VEHICLE_TYPES = {
     "SATELLITE3": Satellite3,
     "AIM5": Aim5,
     "ROTOR": Rotor,
+    "SAT3": Hyper6Satellite,
+    "RADAR0": Hyper6Radar,
 }
+# SAM6 RADAR0 stays a family key and does not collide with this global.
 _VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
     ("aim5", "AIM5"): Aim5,
     ("aim5", "AIRCRAFT3"): Aim5Aircraft,
@@ -53,7 +58,7 @@ _VEHICLE_FAMILIES: dict[tuple[str, str], type] = {
     ("magsix", "ROTOR"): Rotor,
     ("rocket6", "HYPER6"): Rocket6,
 }
-_NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3", "ROTOR"})
+_NO_DECK_TYPES = frozenset({"TARGET3", "SATELLITE3", "ROTOR", "SAT3", "RADAR0"})
 _NO_DECK_FAMILY_TYPES = {
     ("aim5", "AIRCRAFT3"),
     ("sraam6", "TARGET3"),
@@ -86,6 +91,8 @@ register_family_type("agm6", "AIRCRAFT3", Agm6Aircraft)
 
 
 def _resolve_vehicle(family, vtype):
+    if vtype == "GROUND0":
+        raise ValueError("Ground0 is not a vehicle; its tracks are owned by RADAR0")
     if family:
         cls = _VEHICLE_FAMILIES.get((family, vtype))
         if cls is None:

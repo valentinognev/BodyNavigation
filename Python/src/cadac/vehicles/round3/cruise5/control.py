@@ -65,7 +65,7 @@ class Cruise5Control:
     def execute(self, vehicle, ctx):
         store = vehicle.store
         mcontrol = store.get("mcontrol")
-        if mcontrol not in (0, 44, 46):
+        if mcontrol not in (0, 1, 10, 11, 44, 46):
             raise ValueError(f"unknown mcontrol {mcontrol}")
         int_step = ctx.int_step
         ancomx = store.get("ancomx")
@@ -73,11 +73,25 @@ class Cruise5Control:
         altcom = store.get("altcom")
         phicx = store.get("phicx")
         tgv = store.get("tgv")
+        thtvgcx = store.get("thtvgcx")
+        psivgcx = store.get("psivgcx")
+        alphacx = store.get("alphacx")
         phimvx = 0.0
         alphax = 0.0
         if mcontrol == 0:
             phimvx = 0.0
             alphax = 0.0
+        if mcontrol == 1:
+            phimvx = 0.0
+            alphax = self.control_flightpath(vehicle, thtvgcx, phimvx)
+        if mcontrol == 10:
+            phicx = self.control_heading(vehicle, psivgcx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            alphax = alphacx
+        if mcontrol == 11:
+            phicx = self.control_heading(vehicle, psivgcx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            alphax = self.control_flightpath(vehicle, thtvgcx, phimvx)
         if mcontrol == 44:
             phicx = self.control_lateral(vehicle, alcomx)
             phimvx = self.control_bank(vehicle, phicx, int_step)
@@ -182,6 +196,45 @@ class Cruise5Control:
         store.set("qq", qq)
         store.set("tip", tip)
         return alpx
+
+    def control_heading(self, vehicle, psivgcx):
+        store = vehicle.store
+        gain_psivg = store.get("gain_psivg")
+        psivgx = store.get("psivgx")
+        if abs(psivgcx) <= 135:
+            psivgx_comp = psivgx
+        else:
+            if psivgx * psivgcx >= 0:
+                psivgx_comp = psivgx
+            else:
+                if psivgx >= 0:
+                    sign_psivgx = 1
+                else:
+                    sign_psivgx = -1
+                psivgx_comp = 360 - psivgx * sign_psivgx
+        return gain_psivg * (psivgcx - psivgx_comp)
+
+    def control_flightpath(self, vehicle, thtvgcx, phimvx):
+        store = vehicle.store
+        gain_thtvg = store.get("gain_thtvg")
+        alpposlimx = store.get("alpposlimx")
+        alpneglimx = store.get("alpneglimx")
+        pdynmc = store.get("pdynmc")
+        thtvg = store.get("thtvg")
+        grav = store.get("grav")
+        mass = store.get("mass")
+        area = store.get("area")
+        cla = store.get("cla")
+        avx = gain_thtvg * (thtvgcx * RAD - thtvg)
+        anx = avx / cos(phimvx * RAD)
+        alphax = (anx * mass * grav) / (pdynmc * area * cla)
+        if alphax > alpposlimx:
+            alphax = alpposlimx
+        if alphax < alpneglimx:
+            alphax = alpneglimx
+        store.set("anx", anx)
+        store.set("avx", avx)
+        return alphax
 
     def control_altitude(self, vehicle, altcom, phimvx):
         store = vehicle.store

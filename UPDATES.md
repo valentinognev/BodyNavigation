@@ -1,5 +1,14 @@
 # Updates
 
+## 0.175.0 - C++ parity gaps closed
+- HYPER6 `SAT3` and `RADAR0` are registered in `_VEHICLE_TYPES`. Ground0 is not a vehicle; its tracks live on the radar.
+- HYPER6 guidance: lateral line (`mguide` 30, `alcomx` only), pitch line (`mguide` 3, `ancomx` only, `alcomx` stays 0), both line commands (`mguide` 33), arc (`mguide` 4, `phicomx`); terminal 5–8 (linear-tangent, pro-nav, AGL, glideslope). Control: `mauty` 3 lateral accel, `mautp` 3 normal accel, `mauty` 4 heading, `mautp` 5 altitude.
+- FALCON6 line guidance (`mguid` 30, 33) and accel control (`mauty` 3, 4).
+- CRUISE5, HYPER5, and FALCON5 pitch-line (`mguidance` 3) and the ported `mcontrol` arms (1, 10, 11). CRUISE5 and HYPER5 also port `mguidance` 6 and 60. FALCON5 `mguidance` 6 and 60 still raise.
+- Round6 `mair=100` selects the NASA 2002 extended US76 atmosphere (HYPER6 and ROCKET6). HYPER6 `maero=2` uses transfer-vehicle `refa_st` and `cx=-caa`. `minit=1` sets satellite-relative launch and insertion in `Round6Newton.initialize`.
+- SAM6 `mins` 2 and 3 draw BSpec and GSpec INS errors. `mterm=-1` stores line-of-sight miss.
+- Mode extractor treats `!=` guards as implemented. Regenerated inventory has no missing vehicles and no missing or stubbed modes.
+
 ## 0.174.0 - vehicle packages grouped by kernel
 - Packages moved under round3/flat3/flat6/round6/planar; program names replace cruise3/plane5/plane6/rotor.
 - Type tokens and scenario JSON unchanged.

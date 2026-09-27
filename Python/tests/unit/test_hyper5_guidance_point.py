@@ -43,13 +43,6 @@ POINT_FIELDS = {
 }
 
 NOT_DEFINED = (
-    "line_gain",
-    "nl_gain_fact",
-    "decrement",
-    "psifgx",
-    "thtfgx",
-    "nl_gain",
-    "VBEF",
     "philimx",
     "write",
     "SWBL",

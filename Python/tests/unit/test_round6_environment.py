@@ -109,10 +109,14 @@ def test_mair0_us76_grav84_vmach_finite():
     np.testing.assert_allclose(s.get("VAED"), np.zeros(3), rtol=1e-12)
 
 
-def test_mair_100_raises():
-    vehicle, env = _vehicle_with_newton_state(mair=100)
-    with pytest.raises(ValueError):
-        env.execute(vehicle, None)
+def test_mair_100_nasa_at_10_km():
+    """mair=100 at 10 km is in range for us76_nasa2002 (not unknown mair)."""
+    vehicle, env = _vehicle_with_newton_state(mair=100, alt=10000.0)
+    env.execute(vehicle, SimpleNamespace(int_step=0.01))
+    store = vehicle.store
+    np.testing.assert_allclose(store.get("rho"), 0.41351069327108436, rtol=1e-12, atol=0.0)
+    np.testing.assert_allclose(store.get("press"), 26499.86774251078, rtol=1e-12, atol=0.0)
+    np.testing.assert_allclose(store.get("tempk"), 223.25169383345863, rtol=1e-12, atol=0.0)
 
 
 def test_other_nonzero_mair_raises():

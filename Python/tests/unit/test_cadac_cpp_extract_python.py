@@ -68,3 +68,19 @@ def test_python_modes_implemented_and_stubbed():
     assert ("maut", 24) in implemented
     assert ("mauty", 2) in implemented
     assert "maut" in stub_flags
+
+
+def test_python_modes_not_equal_guard_counts_as_implemented():
+    text = """
+        if mguide != 5:
+            raise ValueError(f"unknown mguide {mguide}")
+        if mterm != -1:
+            pass
+        if mins not in (0, 1):
+            raise ValueError(f"unknown mins {mins}")
+    """
+    implemented, _stub_flags = extract_python_modes(text)
+    assert ("mguide", 5) in implemented
+    assert ("mterm", -1) in implemented
+    assert ("mins", 0) in implemented
+    assert ("mins", 1) in implemented
