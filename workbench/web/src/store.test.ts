@@ -260,6 +260,20 @@ it("imported case disables Save/Run and does not POST", async () => {
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
+it("showStart returns to the entrance page and keeps the open case", () => {
+  const store = createStore();
+  store.setState({
+    view: "editor",
+    program: "hyper3",
+    stem: "climb",
+    scenario: scenarioFromJson(hyper3Like),
+  });
+  store.getState().showStart();
+  expect(store.getState().view).toBe("start");
+  expect(store.getState().program).toBe("hyper3");
+  expect(store.getState().scenario?.title).toBe("t");
+});
+
 it("openImportedFile fail stays on start with parseError", async () => {
   vi.stubGlobal(
     "fetch",

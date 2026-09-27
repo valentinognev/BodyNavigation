@@ -1,5 +1,33 @@
 # Updates
 
+## 0.171.0 - Editor Home returns to the entrance page
+- Editor header Home button sets the view back to the start screen (program list and Open file).
+- The open case stays in memory until another case is opened.
+- Tests: `workbench/web/src/store.test.ts` `showStart` case.
+
+## 0.170.28 - Results plots draw a grid
+- Chart grid lines run through the interior tick marks on both axes, behind the series.
+- Tests: `workbench/web/src/plot.test.ts` grid case.
+
+## 0.170.27 - Results plots show axes
+- Each selected column is its own chart vs `time`, with the CADAC unit and numeric ticks on both axes (`alt (m)`, `time (s)`, `FSPV1 (m/s²)`, …).
+- Ground track labels `latx (deg)` and `lonx (deg)` the same way. Unknown columns still get the name and tick values.
+- Tests: `workbench/web/src/plot.test.ts`.
+
+## 0.170.26 - start.sh bootstraps API venv
+- `workbench/start.sh` creates `api/.venv` and `pip install -e .` from `api/` when `cadac` is missing (same idea as npm install).
+- Waits for `GET /catalog` before claiming the API started; prints the log if the worker dies.
+- `CASES_ROOT` is the repo `Python/cases` via `cadac_web.paths` (not `cadac.io.catalog.repo_root`, which points into site-packages when cadac is a wheel).
+- Tests: `test_start_sh_bootstraps_api_venv`, `test_cases_root_ignores_cadac_install_location`.
+
+## 0.170.25 - root start/kill Unix LF
+- `start.sh` / `kill.sh` rewritten with Unix LF (CRLF shebang was `bash\r`).
+- Test: `test_root_scripts_are_unix_lf`.
+
+## 0.170.24 - root start.sh / kill.sh
+- Repo-root `./start.sh` / `./kill.sh` wrap `workbench/start.sh` / `kill.sh` (CADAC API :8001, Vite :5174; start still kills first).
+- Tests: `test_start_script.py` root wrappers delegate to workbench.
+
 ## 0.170.23 - AID web sibling (plan 4)
 - AID web lives in AircraftIntuitiveDesign (not this repo): FastAPI :8002 + Vite :5175, `./start-web.sh` / `./kill-web.sh`, PySide `./start.sh` unchanged.
 - Analyze DATCOM/Tornado/AVL/flow5; handshake POST `:8001/handshake/sessions/{id}/complete` `source: "aid"`; `?cadacSession=` auto-opens New.

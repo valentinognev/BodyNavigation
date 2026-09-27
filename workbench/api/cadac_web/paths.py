@@ -2,8 +2,6 @@ import os
 import re
 from pathlib import Path
 
-from cadac.io.catalog import repo_root
-
 _PROGRAM_RE = re.compile(r"^[a-z0-9_]+$")
 _STEM_RE = re.compile(r"^[A-Za-z0-9._ -]+$")
 
@@ -12,11 +10,16 @@ class CasePathError(ValueError):
     """Invalid program/stem (traversal or charset)."""
 
 
+def _repo_root() -> Path:
+    # cadac_web/paths.py → api → workbench → repo
+    return Path(__file__).resolve().parents[3]
+
+
 def CASES_ROOT() -> Path:
     override = os.environ.get("CADAC_CASES")
     if override:
         return Path(override)
-    return repo_root() / "Python" / "cases"
+    return _repo_root() / "Python" / "cases"
 
 
 def resolve_case(program: str, stem: str) -> Path:

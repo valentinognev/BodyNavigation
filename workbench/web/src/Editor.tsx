@@ -74,6 +74,13 @@ export function Editor() {
             </p>
           ) : null}
         </div>
+        <button
+          type="button"
+          className="rounded border border-slate-300 bg-white px-3 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          onClick={() => store.getState().showStart()}
+        >
+          Home
+        </button>
         <ThemeToggle />
         <button
           type="button"

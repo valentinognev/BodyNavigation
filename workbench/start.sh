@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # Start the CADAC workbench FastAPI backend and Vite frontend.
 #
-# Once (from this directory):
-#   (cd api && python -m venv .venv && .venv/bin/pip install -e .)
-#   (cd web && npm install)
-# Then: ./start.sh   # API http://127.0.0.1:8001  Vite UI http://127.0.0.1:5174
+# API http://127.0.0.1:8001  Vite UI http://127.0.0.1:5174
+# Creates api/.venv and pip install -e . if cadac is missing (npm install if node_modules missing).
 # Re-run ./start.sh to stop the previous instance and start again.
 # Stop only: ./kill.sh
 set -euo pipefail
@@ -21,6 +19,32 @@ mkdir -p "${RUN}"
 echo "Stopping any previous instance..."
 bash "${ROOT}/kill.sh"
 
+ensure_api_venv() {
+  local venv="${ROOT}/api/.venv"
+  if [[ ! -x "${venv}/bin/python" ]]; then
+    echo "Creating API venv..."
+    python3 -m venv "${venv}" || return 1
+  fi
+  if ! "${venv}/bin/python" -c "import cadac" 2>/dev/null; then
+    echo "Installing API dependencies..."
+    (cd "${ROOT}/api" && "${venv}/bin/python" -m pip install -e .) || return 1
+  fi
+  "${venv}/bin/python" -c "import cadac, uvicorn" || return 1
+}
+
+wait_for_catalog() {
+  local url="http://${API_HOST}:${API_PORT}/catalog"
+  local py="${ROOT}/api/.venv/bin/python"
+  local i
+  for i in $(seq 1 50); do
+    if "${py}" -c "import urllib.request; urllib.request.urlopen('${url}', timeout=0.4)" 2>/dev/null; then
+      return 0
+    fi
+    sleep 0.2
+  done
+  return 1
+}
+
 start_api() {
   local pidfile="${RUN}/api.pid"
   local logfile="${RUN}/api.log"
@@ -28,10 +52,8 @@ start_api() {
     echo "API not started: ${ROOT}/api/cadac_web/app.py missing."
     return 1
   fi
-  local py="python3"
-  if [[ -x "${ROOT}/api/.venv/bin/python" ]]; then
-    py="${ROOT}/api/.venv/bin/python"
-  fi
+  ensure_api_venv || return 1
+  local py="${ROOT}/api/.venv/bin/python"
   (
     cd "${ROOT}/api"
     export PYTHONPATH="${ROOT}/api${PYTHONPATH:+:${PYTHONPATH}}"
@@ -39,6 +61,11 @@ start_api() {
       --host "${API_HOST}" --port "${API_PORT}" --reload
   ) >"${logfile}" 2>&1 &
   echo $! >"${pidfile}"
+  if ! wait_for_catalog; then
+    echo "API failed to serve http://${API_HOST}:${API_PORT}/catalog (log ${logfile})"
+    tail -n 40 "${logfile}" || true
+    return 1
+  fi
   echo "API started pid $(cat "${pidfile}") → http://${API_HOST}:${API_PORT}/  (log ${logfile})"
 }
 

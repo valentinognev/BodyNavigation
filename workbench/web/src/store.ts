@@ -35,6 +35,7 @@ export type WorkbenchState = {
   setCatalogError: (catalogError: string | null) => void;
   setTheme: (theme: Theme) => void;
   setNav: (nav: NavId) => void;
+  showStart: () => void;
   setRunInFlight: (runInFlight: boolean) => void;
   setRunAbandoned: (runAbandoned: boolean) => void;
   setRunError: (runError: string | null) => void;
@@ -88,6 +89,7 @@ export function createStore() {
     setCatalogError: (catalogError) => set({ catalogError }),
     setTheme: (theme) => set({ theme }),
     setNav: (nav) => set({ nav }),
+    showStart: () => set({ view: "start" }),
     setRunInFlight: (runInFlight) => set({ runInFlight }),
     setRunAbandoned: (runAbandoned) => set({ runAbandoned }),
     setRunError: (runError) => set({ runError }),
