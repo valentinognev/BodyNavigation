@@ -12,29 +12,56 @@ export function Screen({ title, children }: { title: string; children: ReactNode
   );
 }
 
-export function Row({ label, children }: { label: string; children: ReactNode }) {
+export function FieldLabel({ label, hint }: { label: string; hint?: string }) {
+  return (
+    <span
+      title={hint}
+      className={
+        hint
+          ? "cursor-help underline decoration-dotted decoration-slate-400 underline-offset-2"
+          : undefined
+      }
+    >
+      {label}
+    </span>
+  );
+}
+
+export function Row({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <label className="grid grid-cols-[9rem_1fr] items-center gap-2 text-sm">
-      <span>{label}</span>
+      <FieldLabel label={label} hint={hint} />
       {children}
     </label>
   );
 }
 
-const inputClass =
-  "w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-800/60";
+const controlClass =
+  "rounded border border-slate-300 bg-white px-2 py-1 text-sm disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-800/60";
+
+const inputClass = `w-full ${controlClass}`;
 
 export function TextInput({
   label,
+  hint,
   value,
   onChange,
 }: {
   label: string;
+  hint?: string;
   value: string;
   onChange: (v: string) => void;
 }) {
   return (
-    <Row label={label}>
+    <Row label={label} hint={hint}>
       <input
         className={inputClass}
         type="text"
@@ -54,10 +81,12 @@ function enterBlurs(e: KeyboardEvent<HTMLInputElement>) {
 
 export function NumInput({
   label,
+  hint,
   value,
   onChange,
 }: {
   label: string;
+  hint?: string;
   value: number | null | undefined;
   onChange: (v: number | null) => void;
 }) {
@@ -65,7 +94,7 @@ export function NumInput({
   const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState(idle);
   return (
-    <Row label={label}>
+    <Row label={label} hint={hint}>
       <input
         className={inputClass}
         type="text"
@@ -91,17 +120,78 @@ export function NumInput({
   );
 }
 
+export function SelectInput({
+  label,
+  hint,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  const listed = options.some((option) => option.value === value)
+    ? options
+    : [{ value, label: value }, ...options];
+  return (
+    <Row label={label} hint={hint}>
+      <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
+        {listed.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </Row>
+  );
+}
+
+export function PathInput({
+  label,
+  hint,
+  value,
+  onChange,
+  onBrowse,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  onChange: (v: string) => void;
+  onBrowse: () => void;
+}) {
+  return (
+    <Row label={label} hint={hint}>
+      <span className="flex min-w-0 gap-2">
+        <input
+          className={`${controlClass} min-w-0 flex-1`}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <button type="button" className={`${controlClass} shrink-0`} onClick={onBrowse}>
+          Browse
+        </button>
+      </span>
+    </Row>
+  );
+}
+
 export function CheckInput({
   label,
+  hint,
   checked,
   onChange,
 }: {
   label: string;
+  hint?: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
-    <Row label={label}>
+    <Row label={label} hint={hint}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
     </Row>
   );

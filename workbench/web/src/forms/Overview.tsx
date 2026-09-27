@@ -1,7 +1,9 @@
 import { useStore } from "zustand";
 import { OPTION_KEYS, type Scenario } from "../scenario";
 import store from "../store";
-import { CheckInput, NumInput, Screen, TextInput } from "./fields";
+import { schemaDescription } from "./fieldHelp";
+import { FAMILIES } from "./fieldChoices";
+import { CheckInput, NumInput, Screen, SelectInput, TextInput } from "./fields";
 import { useScenario } from "./useScenario";
 
 export function OverviewForm({
@@ -23,16 +25,20 @@ export function OverviewForm({
       ) : null}
       <TextInput
         label="title"
+        hint={schemaDescription("title")}
         value={scenario.title}
         onChange={(title) => applyFormPatch({ title })}
       />
-      <TextInput
+      <SelectInput
         label="family"
+        hint={schemaDescription("scenario.family")}
         value={scenario.family ?? ""}
+        options={["", ...FAMILIES].map((value) => ({ value, label: value }))}
         onChange={(family) => applyFormPatch({ family: family.trim() === "" ? undefined : family })}
       />
       <NumInput
         label="iseed"
+        hint={schemaDescription("iseed")}
         value={scenario.iseed}
         onChange={(iseed) => applyFormPatch({ iseed: iseed ?? undefined })}
       />
@@ -40,6 +46,7 @@ export function OverviewForm({
         <CheckInput
           key={key}
           label={key}
+          hint={schemaDescription(key)}
           checked={options[key] === true}
           onChange={(value) => applyFormPatch({ options: { ...options, [key]: value } })}
         />

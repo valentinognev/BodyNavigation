@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Vehicle, VehicleEvent } from "../scenario";
-import { Screen, inputClass } from "./fields";
+import { schemaDescription } from "./fieldHelp";
+import { FieldLabel, Screen, inputClass } from "./fields";
 import { useScenario } from "./useScenario";
 
 function patchVehicle(vehicles: Vehicle[], index: number, next: Vehicle): Vehicle[] {
@@ -68,11 +69,13 @@ function EventCard({
     <div className="space-y-2 rounded border border-slate-200 p-2 dark:border-slate-700">
       <JsonObjectField
         label="when"
+        hint={schemaDescription("when")}
         value={event.when}
         onCommit={(when) => onChange({ ...event, when })}
       />
       <JsonObjectField
         label="set"
+        hint={schemaDescription("set")}
         value={event.set}
         onCommit={(set) => onChange({ ...event, set })}
       />
@@ -85,10 +88,12 @@ function EventCard({
 
 function JsonObjectField({
   label,
+  hint,
   value,
   onCommit,
 }: {
   label: string;
+  hint?: string;
   value: Record<string, unknown>;
   onCommit: (next: Record<string, unknown>) => void;
 }) {
@@ -97,7 +102,7 @@ function JsonObjectField({
   const [draft, setDraft] = useState(idle);
   return (
     <label className="block space-y-1 text-sm">
-      <span>{label}</span>
+      <FieldLabel label={label} hint={hint} />
       <textarea
         className={`${inputClass} min-h-[5rem] font-mono`}
         value={focused ? draft : idle}

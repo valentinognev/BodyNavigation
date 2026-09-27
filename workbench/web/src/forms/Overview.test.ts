@@ -26,6 +26,20 @@ it("overview shows the case description", () => {
   expect(html).toContain("<p");
 });
 
+it("overview labels explain the field", () => {
+  const html = renderToStaticMarkup(
+    createElement(OverviewForm, {
+      scenario,
+      description: "",
+      applyFormPatch: () => {},
+    }),
+  );
+  expect(html).toContain('title="Run title from the TITLE line."');
+  expect(html).toContain('title="Seed for stochastic draws."');
+  expect(html).toContain('title="Display vehicle data on the screen at scrn_step intervals."');
+  expect(html).toContain("decoration-dotted");
+});
+
 it("overview omits the description block when the file has none", () => {
   const html = renderToStaticMarkup(
     createElement(OverviewForm, {

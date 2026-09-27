@@ -14,7 +14,7 @@ from cadac.io import jsonc
 from cadac.io.scenario import load_scenario
 from cadac.io.translate import translate_scenario_asc
 
-from cadac_web import handshake
+from cadac_web import browse, handshake
 from cadac_web.paths import CASES_ROOT, CasePathError, resolve_case
 from cadac_web.runs import cancel_run, run_status, start_run
 
@@ -67,6 +67,11 @@ app.add_middleware(
 
 class ScenarioBody(BaseModel):
     scenario: dict
+
+
+class BrowseBody(BaseModel):
+    program: str | None = None
+    stem: str | None = None
 
 
 class RunBody(BaseModel):
@@ -129,6 +134,14 @@ def _bad_path() -> JSONResponse:
 
 def _load_error(exc: BaseException) -> JSONResponse:
     return JSONResponse(status_code=400, content={"ok": False, "error": str(exc)})
+
+
+@app.post("/browse")
+def post_browse(body: BrowseBody) -> dict:
+    path = browse.ask_open_path(browse.browse_start(body.program, body.stem))
+    if path is None:
+        return {"ok": False, "cancelled": True}
+    return {"ok": True, "path": path}
 
 
 @app.get("/catalog")

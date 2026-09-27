@@ -1,5 +1,9 @@
+import { useStore } from "zustand";
+import { browsePath } from "../api";
 import type { Vehicle } from "../scenario";
-import { Screen, TextInput } from "./fields";
+import store from "../store";
+import { schemaDescription } from "./fieldHelp";
+import { PathInput, Screen } from "./fields";
 import { useScenario } from "./useScenario";
 
 const DECK_KEYS = ["aero_deck", "prop_deck", "weather_deck", "sam_deck", "srmb_deck"] as const;
@@ -14,7 +18,8 @@ function setDeck(vehicle: Vehicle, key: DeckKey, value: string): Vehicle {
 }
 
 export function Decks() {
-  const { scenario, applyFormPatch } = useScenario();
+  const { scenario, applyFormPatch, program } = useScenario();
+  const stem = useStore(store, (s) => s.stem);
   if (scenario == null) return null;
   return (
     <Screen title="Decks">
@@ -24,15 +29,25 @@ export function Decks() {
             {vehicle.name || vehicle.type || `vehicle ${index + 1}`}
           </p>
           {DECK_KEYS.map((key) => (
-            <TextInput
+            <PathInput
               key={key}
               label={key}
+              hint={schemaDescription(key)}
               value={vehicle[key] ?? ""}
               onChange={(value) => {
                 const vehicles = scenario.vehicles.map((v, i) =>
                   i === index ? setDeck(v, key, value) : v,
                 );
                 applyFormPatch({ vehicles });
+              }}
+              onBrowse={() => {
+                void browsePath(program, stem).then((path) => {
+                  if (path == null) return;
+                  const vehicles = scenario.vehicles.map((v, i) =>
+                    i === index ? setDeck(v, key, path) : v,
+                  );
+                  applyFormPatch({ vehicles });
+                });
               }}
             />
           ))}

@@ -9,6 +9,7 @@ export default defineConfig({
       "/catalog": "http://127.0.0.1:8001",
       "/cases": "http://127.0.0.1:8001",
       "/run": "http://127.0.0.1:8001",
+      "/browse": "http://127.0.0.1:8001",
     },
   },
   test: {

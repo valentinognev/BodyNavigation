@@ -53,6 +53,24 @@ export async function validateScenario(scenario: Scenario): Promise<ValidateResu
   }
 }
 
+export async function browsePath(
+  program: string | null,
+  stem: string | null,
+): Promise<string | null> {
+  try {
+    const res = await fetch("/browse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ program, stem }),
+    });
+    const body = (await res.json()) as { ok?: boolean; path?: unknown };
+    if (body.ok === true && typeof body.path === "string" && body.path !== "") return body.path;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function importFile(file: File): Promise<ImportResult> {
   const body = new FormData();
   body.append("file", file);

@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { commitNumericRecord } from "../scenario";
-import { NumInput, Screen, inputClass } from "./fields";
+import { schemaDescription, timingDescription } from "./fieldHelp";
+import { FieldLabel, NumInput, Screen, inputClass } from "./fields";
 import { useScenario } from "./useScenario";
 
 export function Timing() {
-  const { scenario, applyFormPatch } = useScenario();
+  const { scenario, applyFormPatch, program } = useScenario();
   const [newKey, setNewKey] = useState("");
   if (scenario == null) return null;
   return (
     <Screen title="Timing">
       <NumInput
         label="end_time"
+        hint={schemaDescription("end_time")}
         value={scenario.end_time}
         onChange={(end_time) => {
           if (end_time != null) applyFormPatch({ end_time });
@@ -20,6 +22,7 @@ export function Timing() {
         <TimingRow
           key={key}
           name={key}
+          hint={timingDescription(program, key)}
           value={value}
           onCommit={(draft) => applyFormPatch({ timing: commitNumericRecord(scenario.timing, key, draft) })}
         />
@@ -51,10 +54,12 @@ export function Timing() {
 
 function TimingRow({
   name,
+  hint,
   value,
   onCommit,
 }: {
   name: string;
+  hint?: string;
   value: number;
   onCommit: (draft: string) => void;
 }) {
@@ -63,7 +68,7 @@ function TimingRow({
   const [draft, setDraft] = useState(idle);
   return (
     <label className="grid grid-cols-[9rem_1fr] items-center gap-2 text-sm">
-      <span>{name}</span>
+      <FieldLabel label={name} hint={hint} />
       <input
         className={inputClass}
         type="text"
