@@ -9,7 +9,21 @@ from cadac_web.paths import CASES_ROOT, CasePathError, resolve_case
 _MISSING = object()
 
 
-def browse_start(program: str | None, stem: str | None) -> Path:
+def browse_start(program: str | None, stem: str | None, current: str | None = None) -> Path:
+    base = _base_directory(program, stem)
+    if current is None or current.strip() == "":
+        return base
+    candidate = Path(current)
+    if not candidate.is_absolute():
+        candidate = base / current
+    if candidate.is_file() or candidate.is_dir():
+        return candidate
+    if candidate.parent.is_dir():
+        return candidate.parent
+    return base
+
+
+def _base_directory(program: str | None, stem: str | None) -> Path:
     if program and stem:
         try:
             path = resolve_case(program, stem)
@@ -33,8 +47,9 @@ def _zenity(directory: Path):
     if shutil.which("zenity") is None:
         return _MISSING
     try:
+        filename = str(directory) if directory.is_file() else f"{directory}/"
         proc = subprocess.run(
-            ["zenity", "--file-selection", f"--filename={directory}/"],
+            ["zenity", "--file-selection", f"--filename={filename}"],
             capture_output=True,
             text=True,
             check=False,
@@ -78,7 +93,13 @@ def _tkinter(directory: Path):
     root = tk.Tk()
     root.withdraw()
     try:
-        chosen = filedialog.askopenfilename(initialdir=str(directory))
+        if directory.is_file():
+            chosen = filedialog.askopenfilename(
+                initialdir=str(directory.parent),
+                initialfile=directory.name,
+            )
+        else:
+            chosen = filedialog.askopenfilename(initialdir=str(directory))
     except Exception:
         return _MISSING
     finally:

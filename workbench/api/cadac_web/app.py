@@ -72,6 +72,7 @@ class ScenarioBody(BaseModel):
 class BrowseBody(BaseModel):
     program: str | None = None
     stem: str | None = None
+    current: str | None = None
 
 
 class RunBody(BaseModel):
@@ -138,7 +139,7 @@ def _load_error(exc: BaseException) -> JSONResponse:
 
 @app.post("/browse")
 def post_browse(body: BrowseBody) -> dict:
-    path = browse.ask_open_path(browse.browse_start(body.program, body.stem))
+    path = browse.ask_open_path(browse.browse_start(body.program, body.stem, body.current))
     if path is None:
         return {"ok": False, "cancelled": True}
     return {"ok": True, "path": path}

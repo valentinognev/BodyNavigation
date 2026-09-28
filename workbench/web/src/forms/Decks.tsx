@@ -41,7 +41,7 @@ export function Decks() {
                 applyFormPatch({ vehicles });
               }}
               onBrowse={() => {
-                void browsePath(program, stem).then((path) => {
+                void browsePath(program, stem, vehicle[key] ?? "").then((path) => {
                   if (path == null) return;
                   const vehicles = scenario.vehicles.map((v, i) =>
                     i === index ? setDeck(v, key, path) : v,

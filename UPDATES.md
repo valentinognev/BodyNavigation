@@ -1,5 +1,10 @@
 # Updates
 
+## 0.180.0 - Browse starts at the current deck path
+- Deck Browse opens at the clicked field's path. An existing file is highlighted, an existing directory is the start folder, and a missing file starts in its parent when that parent exists.
+- A blank path still starts in the open case folder, or the cases root when no case is open. A path whose parent is missing falls back to that same base.
+- Tests: `test_browse_api.py`, `fieldControls.test.ts`.
+
 ## 0.179.1 - Deck path fields stay visible
 - A deck row gives the path the remaining width and keeps Browse sized to its label. The path is no longer a narrow box, and the row no longer runs into the Results column.
 - Test: `fieldControls.test.ts`.

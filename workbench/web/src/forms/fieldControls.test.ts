@@ -190,7 +190,11 @@ it("browse writes the dialog path into the deck field", async () => {
     "/browse",
     expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ program: "hyper3", stem: "input_climb" }),
+      body: JSON.stringify({
+        program: "hyper3",
+        stem: "input_climb",
+        current: "ghame3_aero_deck.jsonc",
+      }),
     }),
   );
   expect(fieldControl(host, "aero_deck")?.value).toBe("/tmp/aero.jsonc");
