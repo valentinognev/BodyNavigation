@@ -13,6 +13,7 @@ const UNITS: Record<string, string> = {
   psivgx: "deg",
   thtvgx: "deg",
   SBEG: "m",
+  SBEL: "m",
   VBEG: "m/s",
   throttle: "ND",
   mass: "kg",
@@ -22,7 +23,7 @@ const UNITS: Record<string, string> = {
   alphax: "deg",
 };
 
-const VECTOR_STEMS = ["FSPV", "SBEG", "VBEG"] as const;
+const VECTOR_STEMS = ["FSPV", "SBEG", "SBEL", "VBEG"] as const;
 
 const TICK_TARGET = 4;
 
@@ -55,8 +56,9 @@ export function axisLabel(name: string): string {
 function unitOf(name: string): string | undefined {
   const direct = UNITS[name];
   if (direct != null) return direct;
+  const stemName = name.startsWith("-") ? name.slice(1) : name;
   for (const stem of VECTOR_STEMS) {
-    if (name.startsWith(stem) && /^[123]$/.test(name.slice(stem.length))) return UNITS[stem];
+    if (stemName.startsWith(stem) && /^[123]$/.test(stemName.slice(stem.length))) return UNITS[stem];
   }
   return undefined;
 }

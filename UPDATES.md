@@ -1,5 +1,38 @@
 # Updates
 
+## 0.184.1 - Scene samples sit on padded ticks
+- `sceneOf` normalizes each sample with the nice `axisTicks` range, not the raw min/max, so the path lines up with tick marks when the axis pads (altitude 3000–20000 → 0–20000).
+- Test: `plot3d.test.ts`.
+
+## 0.184.0 - 3D path fills each axis
+- `sceneOf` maps each axis independently to `[0,1]` so geographic lon/lat vs altitude no longer collapses to a line; axis min/max/ticks stay in real units. Still, GIF, and orbit share that scene space.
+- Orbit Record no longer calls `MediaRecorder.stop()` on an inactive recorder after a finished take.
+- WebM clear color is the canvas CSS background (opaque), so the recording matches the on-screen theme; GIF stays white.
+- GIF end marker is a 5×5 square, same as the still and orbit view.
+- README local-level order is SBEL2 east, SBEL1 north, −SBEL3 up.
+- Tests: `plot3d.test.ts`.
+
+## 0.183.0 - Orbit view draws the scene in-canvas
+- The WebGL trajectory view takes a `TrajectoryScene` and paints the path, data-space axes with ticks and labels, start/end markers, and a screen-space legend so Record WebM matches the still.
+- Tests: `plot3d.test.ts`, `ResultsPane.test.ts`.
+
+## 0.182.1 - Orbit recording writes frames while the camera is still
+- Record keeps painting the WebGL view and requests a capture frame on each tick. A recording that does not orbit is a playable WebM; before this it was a 110-byte header with no video.
+- Test: `plot3d.test.ts`.
+
+## 0.182.0 - Trajectory plot and turntable recording
+- After a run, Results draws the path in 3D when `latx`, `lonx`, and `alt` exist (otherwise `SBEL2`, `SBEL1`, and `-SBEL3`). The still is an isometric SVG. Turntable GIF downloads one full turn of that view.
+- A WebGL view of the same path accepts drag to orbit and scroll to zoom. Record downloads a WebM of that canvas.
+- Tests: `plot3d.test.ts`, `plotTitles.test.ts`, `ResultsPane.test.ts`, `plot.test.ts`.
+
+## 0.181.1 - Vector plot columns use the stem sentence
+- A plot column such as `SBEL1` takes the CADAC sentence of `SBEL` and names the component. An exact sentence still wins over the stem.
+- Tests: `plotTitles.test.ts`.
+
+## 0.181.0 - Results plot titles
+- Checkbox tooltips and chart headings use the CADAC sentence. Axes keep the symbol and unit.
+- Tests: `plotTitles.test.ts`, `ResultsPane.test.ts`.
+
 ## 0.180.0 - Browse starts at the current deck path
 - Deck Browse opens at the clicked field's path. An existing file is highlighted, an existing directory is the start folder, and a missing file starts in its parent when that parent exists.
 - A blank path still starts in the open case folder, or the cases root when no case is open. A path whose parent is missing falls back to that same base.

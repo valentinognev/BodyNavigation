@@ -12,6 +12,11 @@ it("ground", () => {
   expect(hasGroundTrack(["alt"])).toBe(false);
 });
 
+it("labels a local-level component and its upward opposite", () => {
+  expect(axisLabel("SBEL1")).toBe("SBEL1 (m)");
+  expect(axisLabel("-SBEL3")).toBe("-SBEL3 (m)");
+});
+
 it("labels axes with CADAC units", () => {
   expect(axisLabel("time")).toBe("time (s)");
   expect(axisLabel("alt")).toBe("alt (m)");
