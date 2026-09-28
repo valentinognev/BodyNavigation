@@ -1,9 +1,5 @@
 # Updates
 
-## 0.190.0 - Client stores run progress
-- Workbench store keeps `runProgress` (`null` idle; `0` at run start; clamped poll fractions while running; cleared in `startRun` finally).
-- Tests: `run.test.ts` (poll store, ignore non-number, clamp >1).
-
 ## 0.189.2 - 3D slider keeps the plot
 - Scrubbing no longer rebuilds the WebGL context, and the camera stays framed on the full axis box, so a short path does not clip the view to a blank canvas.
 - Test: `plot3d.test.ts` (`viewFrame` far plane stays beyond the stored orbit distance).
