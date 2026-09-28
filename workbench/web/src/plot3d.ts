@@ -334,6 +334,13 @@ export function axisTickMarks(
   });
 }
 
+/** Camera frame for the orbit view. The axis box is the full run, so a short scrub does not pull the far plane inside the camera. */
+export function viewFrame(scene: TrajectoryScene): { center: Vec3; radius: number } {
+  if (scene.axes.length < 3) return centeredCloud([]);
+  const { center, radius } = centeredCloud(boxCorners());
+  return { center, radius };
+}
+
 export function centeredCloud(points: Vec3[]): { center: Vec3; radius: number; cloud: Vec3[] } {
   if (points.length === 0) return { center: { x: 0, y: 0, z: 0 }, radius: 1, cloud: [] };
   let cx = 0;

@@ -4,7 +4,6 @@ import { useStore } from "zustand";
 import { axisLabel } from "./plot";
 import {
   axisTickMarks,
-  centeredCloud,
   dataAxisLines,
   dragOrbit,
   labelClearance,
@@ -17,6 +16,7 @@ import {
   shouldResetOrbit,
   shouldStopRecorder,
   startFramePump,
+  viewFrame,
   wheelOrbit,
   type Orbit,
   type TrajectoryScene,
@@ -150,6 +150,11 @@ export function TrajectoryView({
   const orbitRef = useRef<Orbit>({ azimuth: 45, elevation: 25, distance: 1 });
   const keyRef = useRef("");
   const renderRef = useRef<(() => void) | null>(null);
+  const rebuildRef = useRef<(() => void) | null>(null);
+  const sceneRef = useRef(scene);
+  const resetKeyRef = useRef(resetKey);
+  sceneRef.current = scene;
+  resetKeyRef.current = resetKey;
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const stopPumpRef = useRef<(() => void) | null>(null);
@@ -161,9 +166,6 @@ export function TrajectoryView({
     if (canvas == null) return;
     const probe = document.createElement("canvas");
     if (probe.getContext("webgl2") == null && probe.getContext("webgl") == null) return;
-    const pathPoints = scene.series.flatMap((item) => item.points);
-    const { center, radius } = centeredCloud(pathPoints);
-    const size = markerSize(radius);
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -182,99 +184,18 @@ export function TrajectoryView({
     renderer.autoClear = false;
 
     const world = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, radius / 100, radius * 200);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
     camera.up.set(0, 0, 1);
-    const bin: { dispose(): void }[] = [];
-
-    for (const series of scene.series) {
-      const cloud = series.points.map((point) => offsetBy(point, center));
-      const positions = new Float32Array(cloud.length * 3);
-      cloud.forEach((point, index) => {
-        positions[index * 3] = point.x;
-        positions[index * 3 + 1] = point.y;
-        positions[index * 3 + 2] = point.z;
-      });
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      const material = new THREE.LineBasicMaterial({ color: series.color });
-      world.add(new THREE.Line(geometry, material));
-      bin.push(geometry, material);
-    }
-
-    for (const marker of scene.markers) {
-      if (marker.kind === "position") {
-        const geometry = new THREE.SphereGeometry(size * 0.9, 16, 16);
-        const material = new THREE.MeshBasicMaterial({ color: marker.color ?? "#0f766e" });
-        const dot = new THREE.Mesh(geometry, material);
-        const at = offsetBy(marker.point, center);
-        dot.position.set(at.x, at.y, at.z);
-        world.add(dot);
-        bin.push(geometry, material);
-        continue;
-      }
-      const texture = makeMarkerTexture(marker.kind);
-      const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
-      const sprite = new THREE.Sprite(material);
-      const at = offsetBy(marker.point, center);
-      sprite.position.set(at.x, at.y, at.z);
-      sprite.scale.set(size, size, 1);
-      world.add(sprite);
-      bin.push(texture, material);
-    }
-
     const css = typeof getComputedStyle === "function" ? getComputedStyle(canvas).backgroundColor : "";
     const ink = labelInk(css);
     const hud = new THREE.Scene();
     const hudCamera = new THREE.OrthographicCamera(0, width, height, 0, -10, 10);
+    const bin: { dispose(): void }[] = [];
     const placed: { sprite: THREE.Sprite; anchor: THREE.Vector3; tip: THREE.Vector3 }[] = [];
-    const trackLabel = (text: string, pixelHeight: number, anchor: Vec3, tip: Vec3) => {
-      const sprite = makeTextSprite(text, pixelHeight, ink, false);
-      hud.add(sprite);
-      placed.push({ sprite, anchor: vector3(anchor), tip: vector3(tip) });
-      const map = sprite.material.map;
-      if (map != null) bin.push(map);
-      bin.push(sprite.material);
-    };
-    dataAxisLines(scene.axes).forEach((line, index) => {
-      const from = offsetBy(line.from, center);
-      const to = offsetBy(line.to, center);
-      addLine(world, from, to, AXIS_COLOR, bin);
-      const axisIndex = index as 0 | 1 | 2;
-      const marks = axisTickMarks(scene.axes[axisIndex], from, to, axisIndex, radius);
-      for (const mark of marks) {
-        for (const cross of mark.crosses) addLine(world, cross.from, cross.to, AXIS_COLOR, bin);
-        const nudge = mark.crosses[0];
-        trackLabel(mark.label, TICK_TEXT_PX, mark.at, nudge.to);
-      }
-      trackLabel(axisLabel(line.name), AXIS_TEXT_PX, to, {
-        x: to.x + (to.x - from.x),
-        y: to.y + (to.y - from.y),
-        z: to.z + (to.z - from.z),
-      });
-    });
-    const hudRows = legendHudRows(scene.legend, width, height);
-    for (const row of hudRows) {
-      const chipGeom = new THREE.PlaneGeometry(row.chip.w, row.chip.h);
-      const chipMat = new THREE.MeshBasicMaterial({
-        color: row.color,
-        side: THREE.DoubleSide,
-      });
-      const chip = new THREE.Mesh(chipGeom, chipMat);
-      chip.position.set(row.chip.x + row.chip.w / 2, height - (row.chip.y + row.chip.h / 2), 0);
-      hud.add(chip);
-      bin.push(chipGeom, chipMat);
-      const text = makeTextSprite(row.label, LEGEND_TEXT_PX, ink, false);
-      text.position.set(row.text.x + text.scale.x / 2, height - row.text.y, 0);
-      hud.add(text);
-      const textMap = text.material.map;
-      if (textMap != null) bin.push(textMap);
-      bin.push(text.material);
-    }
 
-    if (shouldResetOrbit(keyRef.current, resetKey)) {
-      keyRef.current = resetKey;
-      orbitRef.current = { azimuth: 45, elevation: 25, distance: Math.max(radius * 3.5, 1) };
-    }
+    const clearGroup = (group: THREE.Scene) => {
+      while (group.children.length > 0) group.remove(group.children[0]);
+    };
 
     const anchorNdc = new THREE.Vector3();
     const tipNdc = new THREE.Vector3();
@@ -304,8 +225,110 @@ export function TrajectoryView({
       renderer.clearDepth();
       renderer.render(hud, hudCamera);
     };
+
+    const rebuild = () => {
+      const next = sceneRef.current;
+      for (const item of bin) item.dispose();
+      bin.length = 0;
+      placed.length = 0;
+      clearGroup(world);
+      clearGroup(hud);
+      const { center, radius } = viewFrame(next);
+      camera.near = radius / 100;
+      camera.far = radius * 200;
+      camera.updateProjectionMatrix();
+      const size = markerSize(radius);
+
+      for (const series of next.series) {
+        const cloud = series.points.map((point) => offsetBy(point, center));
+        const positions = new Float32Array(cloud.length * 3);
+        cloud.forEach((point, index) => {
+          positions[index * 3] = point.x;
+          positions[index * 3 + 1] = point.y;
+          positions[index * 3 + 2] = point.z;
+        });
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        const material = new THREE.LineBasicMaterial({ color: series.color });
+        world.add(new THREE.Line(geometry, material));
+        bin.push(geometry, material);
+      }
+
+      for (const marker of next.markers) {
+        if (marker.kind === "position") {
+          const geometry = new THREE.SphereGeometry(size * 0.9, 16, 16);
+          const material = new THREE.MeshBasicMaterial({ color: marker.color ?? "#0f766e" });
+          const dot = new THREE.Mesh(geometry, material);
+          const at = offsetBy(marker.point, center);
+          dot.position.set(at.x, at.y, at.z);
+          world.add(dot);
+          bin.push(geometry, material);
+          continue;
+        }
+        const texture = makeMarkerTexture(marker.kind);
+        const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+        const sprite = new THREE.Sprite(material);
+        const at = offsetBy(marker.point, center);
+        sprite.position.set(at.x, at.y, at.z);
+        sprite.scale.set(size, size, 1);
+        world.add(sprite);
+        bin.push(texture, material);
+      }
+
+      const trackLabel = (text: string, pixelHeight: number, anchor: Vec3, tip: Vec3) => {
+        const sprite = makeTextSprite(text, pixelHeight, ink, false);
+        hud.add(sprite);
+        placed.push({ sprite, anchor: vector3(anchor), tip: vector3(tip) });
+        const map = sprite.material.map;
+        if (map != null) bin.push(map);
+        bin.push(sprite.material);
+      };
+      dataAxisLines(next.axes).forEach((line, index) => {
+        const from = offsetBy(line.from, center);
+        const to = offsetBy(line.to, center);
+        addLine(world, from, to, AXIS_COLOR, bin);
+        const axisIndex = index as 0 | 1 | 2;
+        const marks = axisTickMarks(next.axes[axisIndex], from, to, axisIndex, radius);
+        for (const mark of marks) {
+          for (const cross of mark.crosses) addLine(world, cross.from, cross.to, AXIS_COLOR, bin);
+          const nudge = mark.crosses[0];
+          trackLabel(mark.label, TICK_TEXT_PX, mark.at, nudge.to);
+        }
+        trackLabel(axisLabel(line.name), AXIS_TEXT_PX, to, {
+          x: to.x + (to.x - from.x),
+          y: to.y + (to.y - from.y),
+          z: to.z + (to.z - from.z),
+        });
+      });
+      const hudRows = legendHudRows(next.legend, width, height);
+      for (const row of hudRows) {
+        const chipGeom = new THREE.PlaneGeometry(row.chip.w, row.chip.h);
+        const chipMat = new THREE.MeshBasicMaterial({
+          color: row.color,
+          side: THREE.DoubleSide,
+        });
+        const chip = new THREE.Mesh(chipGeom, chipMat);
+        chip.position.set(row.chip.x + row.chip.w / 2, height - (row.chip.y + row.chip.h / 2), 0);
+        hud.add(chip);
+        bin.push(chipGeom, chipMat);
+        const text = makeTextSprite(row.label, LEGEND_TEXT_PX, ink, false);
+        text.position.set(row.text.x + text.scale.x / 2, height - row.text.y, 0);
+        hud.add(text);
+        const textMap = text.material.map;
+        if (textMap != null) bin.push(textMap);
+        bin.push(text.material);
+      }
+
+      if (shouldResetOrbit(keyRef.current, resetKeyRef.current)) {
+        keyRef.current = resetKeyRef.current;
+        orbitRef.current = { azimuth: 45, elevation: 25, distance: Math.max(radius * 3.5, 1) };
+      }
+      draw();
+    };
+
+    rebuildRef.current = rebuild;
     renderRef.current = draw;
-    draw();
+    rebuild();
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
@@ -316,6 +339,7 @@ export function TrajectoryView({
 
     return () => {
       canvas.removeEventListener("wheel", onWheel);
+      rebuildRef.current = null;
       renderRef.current = null;
       for (const item of bin) item.dispose();
       renderer.dispose();
@@ -325,7 +349,11 @@ export function TrajectoryView({
       if (recorder != null && shouldStopRecorder(recorder.state)) recorder.stop();
       recorderRef.current = null;
     };
-  }, [scene, theme, resetKey]);
+  }, [theme]);
+
+  useEffect(() => {
+    rebuildRef.current?.();
+  }, [scene]);
 
   function onPointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
     dragRef.current = { x: event.clientX, y: event.clientY };

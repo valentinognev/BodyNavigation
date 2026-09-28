@@ -1,5 +1,9 @@
 # Updates
 
+## 0.189.2 - 3D slider keeps the plot
+- Scrubbing no longer rebuilds the WebGL context, and the camera stays framed on the full axis box, so a short path does not clip the view to a blank canvas.
+- Test: `plot3d.test.ts` (`viewFrame` far plane stays beyond the stored orbit distance).
+
 ## 0.189.1 - 3D slider time label
 - Slider caption formats near-integer times as integers and strips float residue (up to 6 decimals).
 - Tests cover multi-vehicle scrub scenes and that ResultsPane passes a truncated scene into TrajectoryView.

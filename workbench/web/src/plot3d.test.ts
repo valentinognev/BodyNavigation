@@ -26,6 +26,7 @@ import {
   trackPositionAt,
   trajectoryOf,
   truncateTrajectory,
+  viewFrame,
   wheelOrbit,
 } from "./plot3d";
 
@@ -702,6 +703,30 @@ it("formats slider times without float residue", () => {
   expect(formatSliderTime(90.00000000000914)).toBe("90");
   expect(formatSliderTime(0.5)).toBe("0.5");
   expect(formatSliderTime(1.23456789)).toBe("1.234568");
+});
+
+it("keeps the camera frame on the axis box when the path is still short", () => {
+  const trajectory = {
+    kind: "local" as const,
+    xName: "SBEL2",
+    yName: "SBEL1",
+    zName: "-SBEL3",
+    points: [
+      { x: 0, y: 0, z: 0 },
+      { x: 0.001, y: 0.001, z: 0.001 },
+      { x: 1000, y: 1000, z: 1000 },
+    ],
+    times: [0, 1, 2],
+  };
+  const tracks = [{ name: "vehicle", trajectory }];
+  const full = sceneOfTracks(tracks);
+  const scrub = sceneOfTracksUpTo(tracks, 1);
+  expect(full).not.toBeNull();
+  expect(scrub).not.toBeNull();
+  const distance = Math.max(viewFrame(full!).radius * 3.5, 1);
+  const scrubFrame = viewFrame(scrub!);
+  expect(scrubFrame.radius * 200).toBeGreaterThan(distance);
+  expect(scrubFrame.center).toEqual(viewFrame(full!).center);
 });
 
 it("resets the orbit only when the run key changes", () => {
