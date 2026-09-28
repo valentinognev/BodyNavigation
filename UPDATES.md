@@ -1,5 +1,8 @@
 # Updates
 
+## 0.190.0 - Run progress bar
+- The bar under the header fills with simulation time over end time while a run is in flight.
+
 ## 0.189.2 - 3D slider keeps the plot
 - Scrubbing no longer rebuilds the WebGL context, and the camera stays framed on the full axis box, so a short path does not clip the view to a blank canvas.
 - Test: `plot3d.test.ts` (`viewFrame` far plane stays beyond the stored orbit distance).

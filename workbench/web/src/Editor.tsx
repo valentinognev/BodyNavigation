@@ -41,6 +41,7 @@ export function Editor() {
   const parseError = useStore(store, (s) => s.parseError);
   const runError = useStore(store, (s) => s.runError);
   const runInFlight = useStore(store, (s) => s.runInFlight);
+  const runProgress = useStore(store, (s) => s.runProgress);
   const nav = useStore(store, (s) => s.nav);
   const caseName = stem ?? "";
 
@@ -110,6 +111,20 @@ export function Editor() {
           {runInFlight ? "Cancel" : "Run"}
         </button>
       </header>
+      {runInFlight ? (
+        <div
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round((runProgress ?? 0) * 100)}
+          className="h-1 w-full shrink-0 bg-slate-200 dark:bg-slate-800"
+        >
+          <div
+            className="h-full bg-slate-800 dark:bg-slate-100"
+            style={{ width: `${(runProgress ?? 0) * 100}%` }}
+          />
+        </div>
+      ) : null}
       <div className="flex min-h-0 flex-1">
         <nav className="w-48 shrink-0 overflow-y-auto border-r border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
           <ul className="space-y-1 text-sm">
