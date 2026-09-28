@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { FieldLabel } from "./forms/fields";
 import { hasGroundTrack, overlayChart, type ChartGeometry } from "./plot";
-import { sceneOfTracks, TRACK_COLORS, trajectoriesFromPlot } from "./plot3d";
+import { sceneOfTracks, sceneOfTracksUpTo, sliderTimes, formatSliderTime, TRACK_COLORS, trajectoriesFromPlot } from "./plot3d";
 import type { VehiclePlot } from "./store";
 import { groupCurves, mergedColumnModules, type CurveGroup } from "./plotGroups";
 import { groundTrackTitle, plotDescription, seriesTitle, trajectoryTitle } from "./plotTitles";
@@ -271,6 +271,21 @@ export function ResultsPane() {
     [lastPlot],
   );
   const scene = useMemo(() => sceneOfTracks(tracks), [tracks]);
+  const times = useMemo(() => sliderTimes(tracks), [tracks]);
+  const [timeIndex, setTimeIndex] = useState(times.length - 1);
+  useEffect(() => {
+    setTimeIndex(times.length - 1);
+  }, [lastPlot]);
+  const clamped = times.length === 0 ? 0 : Math.min(Math.max(timeIndex, 0), times.length - 1);
+  const moment = times[clamped];
+  const viewScene = useMemo(
+    () => (scene == null || times.length < 2 ? scene : sceneOfTracksUpTo(tracks, moment)),
+    [scene, tracks, times, moment],
+  );
+  const resetKey = useMemo(
+    () => tracks.map((t) => `${t.name}:${t.trajectory.points.length}`).join("|"),
+    [tracks],
+  );
   const trajectoryKind = tracks[0]?.trajectory.kind ?? null;
   const trajectoryLabel = trajectoryKind == null ? "" : trajectoryTitle(program, trajectoryKind);
 
@@ -308,8 +323,29 @@ export function ResultsPane() {
       {groundChart != null ? (
         <GroundTrack program={program} geometry={groundChart.geometry} lines={groundChart.lines} />
       ) : null}
-      {scene != null && trajectoryKind != null ? (
-        <TrajectoryView scene={scene} label={trajectoryLabel} />
+      {viewScene != null && trajectoryKind != null ? (
+        <>
+          <TrajectoryView scene={viewScene} label={trajectoryLabel} resetKey={resetKey} />
+          {times.length >= 2 ? (
+            <div className="mb-3">
+              <label className={CAPTION_CLASS} htmlFor="trajectory-time">
+                time {formatSliderTime(moment)} s
+              </label>
+              <input
+                id="trajectory-time"
+                type="range"
+                min={0}
+                max={times.length - 1}
+                value={clamped}
+                step={1}
+                aria-label="Trajectory time"
+                className="w-full"
+                onChange={(event) => setTimeIndex(Number(event.target.value))}
+                onInput={(event) => setTimeIndex(Number(event.currentTarget.value))}
+              />
+            </div>
+          ) : null}
+        </>
       ) : null}
       <fieldset className="space-y-1">
         <legend className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">columns vs time</legend>

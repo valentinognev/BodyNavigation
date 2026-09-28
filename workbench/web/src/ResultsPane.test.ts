@@ -3,9 +3,23 @@
  */
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
+import type { TrajectoryScene } from "./plot3d";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+const capturedScenes: TrajectoryScene[] = [];
+
+vi.mock("./TrajectoryView", async () => {
+  const actual = await vi.importActual<typeof import("./TrajectoryView")>("./TrajectoryView");
+  return {
+    TrajectoryView: (props: { scene: TrajectoryScene; label: string; resetKey: string }) => {
+      capturedScenes.push(props.scene);
+      return createElement(actual.TrajectoryView, props);
+    },
+  };
+});
+
 import { ResultsPane } from "./ResultsPane";
 import store from "./store";
 
@@ -34,6 +48,7 @@ afterEach(() => {
   root = null;
   document.body.replaceChildren();
   store.setState(initialState, true);
+  capturedScenes.length = 0;
 });
 
 it("shows CADAC headings, checkbox hints, and symbol axis labels", () => {
@@ -492,4 +507,128 @@ it("collapses everything again when a new run arrives", () => {
     ["false", "false"],
   );
   expect(host.querySelectorAll("label")).toHaveLength(0);
+});
+
+it("scrubs the 3D path with a time slider that defaults to the full run", () => {
+  store.setState({
+    program: "hyper3",
+    lastPlot: {
+      columns: ["time", "latx", "lonx", "alt"],
+      rows: [
+        { time: 0, latx: 28.43, lonx: -80.55, alt: 3000 },
+        { time: 1, latx: 28.44, lonx: -80.54, alt: 3200 },
+        { time: 2, latx: 28.45, lonx: -80.53, alt: 3400 },
+      ],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  const slider = host.querySelector('input[type="range"][aria-label="Trajectory time"]') as HTMLInputElement | null;
+  expect(slider).not.toBeNull();
+  expect(slider!.min).toBe("0");
+  expect(slider!.max).toBe("2");
+  expect(slider!.value).toBe("2");
+  expect(host.textContent).toContain("2 s");
+  act(() => {
+    slider!.value = "0";
+    slider!.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(host.textContent).toContain("0 s");
+});
+
+it("passes a scrubbed scene into TrajectoryView when the slider moves", () => {
+  store.setState({
+    program: "hyper3",
+    lastPlot: {
+      columns: ["time", "latx", "lonx", "alt"],
+      rows: [
+        { time: 0, latx: 28.43, lonx: -80.55, alt: 3000 },
+        { time: 1, latx: 28.44, lonx: -80.54, alt: 3200 },
+        { time: 2, latx: 28.45, lonx: -80.53, alt: 3400 },
+      ],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  const fullScene = capturedScenes[capturedScenes.length - 1];
+  expect(fullScene).toBeDefined();
+  const fullLength = fullScene.series[0].points.length;
+  const slider = host.querySelector('input[type="range"][aria-label="Trajectory time"]') as HTMLInputElement | null;
+  act(() => {
+    slider!.value = "0";
+    slider!.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  const scrubbed = capturedScenes[capturedScenes.length - 1];
+  expect(scrubbed.series[0].points.length).toBeLessThan(fullLength);
+  expect(scrubbed.markers.some((m) => m.kind === "position")).toBe(true);
+});
+
+it("hides the slider when the run has a single moment", () => {
+  store.setState({
+    program: "hyper3",
+    lastPlot: {
+      columns: ["time", "latx", "lonx", "alt"],
+      rows: [{ time: 0, latx: 28.43, lonx: -80.55, alt: 3000 }],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  expect(host.querySelector('input[type="range"][aria-label="Trajectory time"]')).toBeNull();
+});
+
+it("returns the slider to the end when a new run arrives", () => {
+  store.setState({
+    program: "hyper3",
+    lastPlot: {
+      columns: ["time", "latx", "lonx", "alt"],
+      rows: [
+        { time: 0, latx: 1, lonx: 2, alt: 3 },
+        { time: 5, latx: 1.1, lonx: 2.1, alt: 4 },
+      ],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  const slider = host.querySelector('input[type="range"][aria-label="Trajectory time"]') as HTMLInputElement | null;
+  act(() => {
+    slider!.value = "0";
+    slider!.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(host.textContent).toContain("0 s");
+  act(() => {
+    store.setState({
+      lastPlot: {
+        columns: ["time", "latx", "lonx", "alt"],
+        rows: [
+          { time: 0, latx: 1, lonx: 2, alt: 3 },
+          { time: 9, latx: 1.2, lonx: 2.2, alt: 5 },
+        ],
+      },
+    });
+  });
+  expect(host.textContent).toContain("9 s");
+});
+
+it("keeps the orbit canvas mounted while scrubbing", () => {
+  store.setState({
+    program: "hyper3",
+    lastPlot: {
+      columns: ["time", "latx", "lonx", "alt"],
+      rows: [
+        { time: 0, latx: 1, lonx: 2, alt: 3 },
+        { time: 1, latx: 1.1, lonx: 2.1, alt: 4 },
+      ],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  const before = host.querySelector("canvas");
+  expect(before).not.toBeNull();
+  const slider = host.querySelector('input[type="range"][aria-label="Trajectory time"]') as HTMLInputElement | null;
+  act(() => {
+    slider!.value = "0";
+    slider!.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(host.querySelector("canvas")).not.toBeNull();
+  expect(host.textContent).toContain("Drag to orbit. Scroll to zoom.");
 });

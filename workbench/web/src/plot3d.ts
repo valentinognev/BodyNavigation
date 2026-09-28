@@ -8,15 +8,23 @@ export type Trajectory = {
   yName: string;
   zName: string;
   points: Vec3[];
+  times: number[];
 };
 
 export type ScreenPoint = { sx: number; sy: number };
 
 export type Orbit = { azimuth: number; elevation: number; distance: number };
 
+export type TrajectoryMarker = {
+  kind: "start" | "end" | "position";
+  label: string;
+  point: Vec3;
+  color?: string;
+};
+
 export type TrajectoryScene = {
   series: { name: string; color: string; points: Vec3[] }[];
-  markers: { kind: "start" | "end"; label: string; point: Vec3 }[];
+  markers: TrajectoryMarker[];
   axes: { name: string; min: number; max: number; ticks: number[] }[];
   legend: { label: string; color: string; kind: "line" | "start" | "end" }[];
 };
@@ -49,23 +57,29 @@ export function trajectoryOf(
   if (!geographic && !missile && !aircraft) return null;
 
   const points: Vec3[] = [];
-  for (const row of rows) {
+  const times: number[] = [];
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
     const point = geographic
       ? { x: Number(row.lonx), y: Number(row.latx), z: Number(row.alt) }
       : missile
         ? { x: Number(row.SBEL2), y: Number(row.SBEL1), z: -Number(row.SBEL3) }
         : { x: Number(row.SAEL2), y: Number(row.SAEL1), z: -Number(row.SAEL3) };
-    if (finitePoint(point)) points.push(point);
+    if (finitePoint(point)) {
+      points.push(point);
+      const t = Number(row.time);
+      times.push(Number.isFinite(t) ? t : index);
+    }
   }
   if (points.length === 0) return null;
 
   if (geographic) {
-    return { kind: "geographic", xName: "lonx", yName: "latx", zName: "alt", points };
+    return { kind: "geographic", xName: "lonx", yName: "latx", zName: "alt", points, times };
   }
   if (missile) {
-    return { kind: "local", xName: "SBEL2", yName: "SBEL1", zName: "-SBEL3", points };
+    return { kind: "local", xName: "SBEL2", yName: "SBEL1", zName: "-SBEL3", points, times };
   }
-  return { kind: "local", xName: "SAEL2", yName: "SAEL1", zName: "-SAEL3", points };
+  return { kind: "local", xName: "SAEL2", yName: "SAEL1", zName: "-SAEL3", points, times };
 }
 
 export function trajectoriesFromPlot(plot: {
@@ -90,6 +104,19 @@ export function sceneOf(trajectory: Trajectory, seriesName = "vehicle"): Traject
   return sceneOfTracks([{ name: seriesName, trajectory }]);
 }
 
+function axesOf(
+  rawPoints: Vec3[],
+  kind: Trajectory["kind"],
+  trajectories: Trajectory[],
+): TrajectoryScene["axes"] {
+  const names = axisNames(trajectories, kind);
+  return [
+    { name: names.xName, ...axisOf(rawPoints.map((point) => point.x)) },
+    { name: names.yName, ...axisOf(rawPoints.map((point) => point.y)) },
+    { name: names.zName, ...axisOf(rawPoints.map((point) => point.z)) },
+  ];
+}
+
 export function sceneOfTracks(
   tracks: { name: string; trajectory: Trajectory }[],
 ): TrajectoryScene | null {
@@ -97,13 +124,9 @@ export function sceneOfTracks(
   if (present.length === 0) return null;
   const kind = present[0].trajectory.kind;
   const same = present.filter((track) => track.trajectory.kind === kind);
-  const names = axisNames(same.map((track) => track.trajectory), kind);
+  const trajectories = same.map((track) => track.trajectory);
   const raw = same.flatMap((track) => track.trajectory.points);
-  const axes = [
-    { name: names.xName, ...axisOf(raw.map((point) => point.x)) },
-    { name: names.yName, ...axisOf(raw.map((point) => point.y)) },
-    { name: names.zName, ...axisOf(raw.map((point) => point.z)) },
-  ];
+  const axes = axesOf(raw, kind, trajectories);
   const series = same.map((track, index) => ({
     name: track.name,
     color: TRACK_COLORS[index % TRACK_COLORS.length],
@@ -130,6 +153,95 @@ export function sceneOfTracks(
     legend.push({ label: "end", color: END_COLOR, kind: "end" });
   }
   return { series, markers, axes, legend };
+}
+
+export function sliderTimes(tracks: { name: string; trajectory: Trajectory }[]): number[] {
+  const seen = new Set<number>();
+  for (const track of tracks) {
+    for (const t of track.trajectory.times) {
+      if (Number.isFinite(t)) seen.add(t);
+    }
+  }
+  return [...seen].sort((a, b) => a - b);
+}
+
+export function trackPositionAt(trajectory: Trajectory, t: number): Vec3 | null {
+  const { points, times } = trajectory;
+  if (points.length === 0) return null;
+  if (t <= times[0]) return points[0];
+  for (let i = 1; i < points.length; i += 1) {
+    if (t <= times[i]) {
+      const span = times[i] - times[i - 1] || 1;
+      const f = (t - times[i - 1]) / span;
+      const a = points[i - 1];
+      const b = points[i];
+      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
+    }
+  }
+  return points[points.length - 1];
+}
+
+export function truncateTrajectory(
+  trajectory: Trajectory,
+  t: number,
+): { points: Vec3[]; position: Vec3 | null } {
+  const position = trackPositionAt(trajectory, t);
+  if (position == null) return { points: [], position: null };
+  const prefix = trajectory.points.filter((_, i) => trajectory.times[i] <= t);
+  const last = prefix[prefix.length - 1];
+  if (last == null || last.x !== position.x || last.y !== position.y || last.z !== position.z) {
+    prefix.push(position);
+  }
+  return { points: prefix, position };
+}
+
+export function sceneOfTracksUpTo(
+  tracks: { name: string; trajectory: Trajectory }[],
+  t: number,
+): TrajectoryScene | null {
+  const full = sceneOfTracks(tracks);
+  if (full == null) return null;
+  const byName = new Map(tracks.map((track) => [track.name, track.trajectory]));
+  const series: TrajectoryScene["series"] = [];
+  const markers: TrajectoryScene["markers"] = [];
+  for (const item of full.series) {
+    const trajectory = byName.get(item.name);
+    if (trajectory == null) continue;
+    const truncated = truncateTrajectory(trajectory, t);
+    if (truncated.points.length === 0) continue;
+    const points = truncated.points.map((point) => ({
+      x: tickFraction(point.x, full.axes[0].min, full.axes[0].max),
+      y: tickFraction(point.y, full.axes[1].min, full.axes[1].max),
+      z: tickFraction(point.z, full.axes[2].min, full.axes[2].max),
+    }));
+    series.push({ name: item.name, color: item.color, points });
+    markers.push({ kind: "start", label: "start", point: points[0] });
+    if (truncated.position != null) {
+      markers.push({
+        kind: "position",
+        label: item.name,
+        color: item.color,
+        point: {
+          x: tickFraction(truncated.position.x, full.axes[0].min, full.axes[0].max),
+          y: tickFraction(truncated.position.y, full.axes[1].min, full.axes[1].max),
+          z: tickFraction(truncated.position.z, full.axes[2].min, full.axes[2].max),
+        },
+      });
+    }
+  }
+  return { series, markers, axes: full.axes, legend: full.legend };
+}
+
+export function shouldResetOrbit(prevKey: string, nextKey: string): boolean {
+  return prevKey !== nextKey;
+}
+
+/** Slider caption: integers within float noise as ints; else up to 6 decimals, trailing zeros stripped. */
+export function formatSliderTime(t: number): string {
+  if (!Number.isFinite(t)) return String(t);
+  const nearest = Math.round(t);
+  if (Math.abs(t - nearest) < 1e-9) return String(nearest);
+  return String(Number(t.toFixed(6)));
 }
 
 function axisNames(
@@ -328,7 +440,7 @@ function frameFromProjected(
   scene: TrajectoryScene,
   points: ScreenPoint[],
 ): {
-  segments: { points: ScreenPoint[]; color: "line" | "start" | "end" }[];
+  segments: { points: ScreenPoint[]; color: "line" | "start" | "end" | "position" }[];
   axes: {
     name: string;
     label: string;
@@ -338,7 +450,7 @@ function frameFromProjected(
   }[];
   legend: TrajectoryScene["legend"];
 } {
-  const segments: { points: ScreenPoint[]; color: "line" | "start" | "end" }[] = [];
+  const segments: { points: ScreenPoint[]; color: "line" | "start" | "end" | "position" }[] = [];
   let offset = 0;
   for (const series of scene.series) {
     segments.push({ points: points.slice(offset, offset + series.points.length), color: "line" });

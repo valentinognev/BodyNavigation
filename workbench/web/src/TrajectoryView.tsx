@@ -14,6 +14,7 @@ import {
   markerSize,
   opaqueClearColor,
   orbitCamera,
+  shouldResetOrbit,
   shouldStopRecorder,
   startFramePump,
   wheelOrbit,
@@ -135,10 +136,19 @@ function addLine(
   bin.push(geometry, material);
 }
 
-export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label: string }) {
+export function TrajectoryView({
+  scene,
+  label,
+  resetKey,
+}: {
+  scene: TrajectoryScene;
+  label: string;
+  resetKey: string;
+}) {
   const theme = useStore(store, (s) => s.theme);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const orbitRef = useRef<Orbit>({ azimuth: 45, elevation: 25, distance: 1 });
+  const keyRef = useRef("");
   const renderRef = useRef<(() => void) | null>(null);
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -192,6 +202,16 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
     }
 
     for (const marker of scene.markers) {
+      if (marker.kind === "position") {
+        const geometry = new THREE.SphereGeometry(size * 0.9, 16, 16);
+        const material = new THREE.MeshBasicMaterial({ color: marker.color ?? "#0f766e" });
+        const dot = new THREE.Mesh(geometry, material);
+        const at = offsetBy(marker.point, center);
+        dot.position.set(at.x, at.y, at.z);
+        world.add(dot);
+        bin.push(geometry, material);
+        continue;
+      }
       const texture = makeMarkerTexture(marker.kind);
       const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
       const sprite = new THREE.Sprite(material);
@@ -251,7 +271,10 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
       bin.push(text.material);
     }
 
-    orbitRef.current = { azimuth: 45, elevation: 25, distance: Math.max(radius * 3.5, 1) };
+    if (shouldResetOrbit(keyRef.current, resetKey)) {
+      keyRef.current = resetKey;
+      orbitRef.current = { azimuth: 45, elevation: 25, distance: Math.max(radius * 3.5, 1) };
+    }
 
     const anchorNdc = new THREE.Vector3();
     const tipNdc = new THREE.Vector3();
@@ -302,7 +325,7 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
       if (recorder != null && shouldStopRecorder(recorder.state)) recorder.stop();
       recorderRef.current = null;
     };
-  }, [scene, theme]);
+  }, [scene, theme, resetKey]);
 
   function onPointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
     dragRef.current = { x: event.clientX, y: event.clientY };

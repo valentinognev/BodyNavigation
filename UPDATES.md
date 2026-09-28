@@ -1,5 +1,13 @@
 # Updates
 
+## 0.189.1 - 3D slider time label
+- Slider caption formats near-integer times as integers and strips float residue (up to 6 decimals).
+- Tests cover multi-vehicle scrub scenes and that ResultsPane passes a truncated scene into TrajectoryView.
+
+## 0.189.0 - 3D time slider
+- A time slider below the orbit view scrubs the run: partial path up to the selected moment plus one position dot per vehicle in its track color. Axes stay on the full-run scale; orbit/zoom survive scrubbing and reset on a new run.
+- Tests: `plot3d.test.ts`, `ResultsPane.test.ts`.
+
 ## 0.188.1 - Results drops the static 3D still
 - The isometric SVG above the orbit view is gone. The draggable WebGL path, with Record WebM, is the only 3D figure.
 - Tests: `ResultsPane.test.ts`.

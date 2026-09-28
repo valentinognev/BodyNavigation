@@ -16,10 +16,16 @@ import {
   sceneFrame,
   sceneOf,
   sceneOfTracks,
+  sceneOfTracksUpTo,
+  formatSliderTime,
+  shouldResetOrbit,
   shouldStopRecorder,
+  sliderTimes,
   startFramePump,
   tickFraction,
+  trackPositionAt,
   trajectoryOf,
+  truncateTrajectory,
   wheelOrbit,
 } from "./plot3d";
 
@@ -34,6 +40,7 @@ it("prefers longitude, latitude, and altitude over local level", () => {
     yName: "latx",
     zName: "alt",
     points: [{ x: 2, y: 1, z: 3 }],
+    times: [0],
   });
 });
 
@@ -45,6 +52,7 @@ it("maps local level to east, north, and up", () => {
     yName: "SBEL1",
     zName: "-SBEL3",
     points: [{ x: 20, y: 10, z: 5 }],
+    times: [0],
   });
 });
 
@@ -56,6 +64,7 @@ it("maps aircraft local level the same way as missile local level", () => {
     yName: "SAEL1",
     zName: "-SAEL3",
     points: [{ x: 20, y: 10, z: 5 }],
+    times: [0],
   });
 });
 
@@ -73,6 +82,7 @@ it("drops rows that are not finite", () => {
     ],
   );
   expect(path?.points).toEqual([{ x: 2, y: 1, z: 3 }]);
+  expect(path?.times).toEqual([1]);
 });
 
 it("returns null when every position row is non-finite", () => {
@@ -171,6 +181,7 @@ it("returns null for a trajectory with no points", () => {
       yName: "latx",
       zName: "alt",
       points: [],
+      times: [],
     }),
   ).toBeNull();
 });
@@ -182,6 +193,7 @@ it("keeps a single-point scene to one series and only a start marker", () => {
     yName: "SBEL1",
     zName: "-SBEL3",
     points: [{ x: 1, y: 2, z: 3 }],
+    times: [0],
   });
   expect(scene).not.toBeNull();
   expect(scene!.axes).toEqual([
@@ -207,6 +219,7 @@ it("covers a two-point geographic path with x/y/z ticks and a three-entry legend
       { x: 0, y: 10, z: 100 },
       { x: 20, y: 30, z: 500 },
     ],
+    times: [0, 1],
   });
   expect(scene).not.toBeNull();
   expect(scene!.series).toEqual([
@@ -275,6 +288,7 @@ it("puts a custom series name on the series and the line legend", () => {
         { x: 0, y: 0, z: 0 },
         { x: 1, y: 1, z: 1 },
       ],
+      times: [0, 1],
     },
     "slot 0",
   );
@@ -292,6 +306,7 @@ const GEO_SCENE = sceneOf({
     { x: 0, y: 10, z: 100 },
     { x: 20, y: 30, z: 500 },
   ],
+  times: [0, 1],
 })!;
 
 it("keeps comparable x and z pixel extent in sceneFrame after mixed-unit input", () => {
@@ -305,6 +320,7 @@ it("keeps comparable x and z pixel extent in sceneFrame after mixed-unit input",
       { x: 100, y: 0, z: 0 },
       { x: 0, y: 0, z: 10 },
     ],
+    times: [0, 1, 2],
   })!;
   const path = sceneFrame(scene, 0, 200, 200).segments.find((segment) => segment.color === "line")!.points;
   const xSpan = Math.abs(path[1].sx - path[0].sx);
@@ -358,6 +374,7 @@ it("shares one turntable scale so a pure z-step has the same pixel length at eve
       { x: 100, y: 0, z: 0 },
       { x: 100, y: 100, z: 1 },
     ],
+    times: [0, 1, 2],
   })!;
   const [face, diagonal] = projectSceneFrames(scene, [0, 45], 200, 200);
   const zSpan = (frame: (typeof face)!) => Math.abs(frame.axes[2].to.sy - frame.axes[2].from.sy);
@@ -545,6 +562,7 @@ it("normalizes a thin geographic scene so x/y extent matches z", () => {
       { x: -80.55, y: 28.43, z: 3000 },
       { x: -80.546, y: 28.434, z: 20000 },
     ],
+    times: [0, 1],
   });
   expect(scene).not.toBeNull();
   const xs = scene!.series[0].points.map((point) => point.x);
@@ -566,6 +584,7 @@ it("normalizes a local scene onto the padded tick range", () => {
       { x: 10, y: 20, z: 30 },
       { x: 50, y: 80, z: 90 },
     ],
+    times: [0, 1],
   });
   expect(scene!.axes[0]).toEqual({ name: "SBEL2", min: 10, max: 50, ticks: [10, 20, 30, 40, 50] });
   expect(scene!.axes[2]).toEqual({ name: "-SBEL3", min: 20, max: 100, ticks: [20, 40, 60, 80, 100] });
@@ -585,6 +604,7 @@ it("places samples on the padded nice axis, not the raw data min", () => {
       { x: 0, y: 0, z: 3000 },
       { x: 1, y: 1, z: 20000 },
     ],
+    times: [0, 1],
   });
   expect(scene).not.toBeNull();
   expect(scene!.axes[2]).toEqual({
@@ -598,4 +618,93 @@ it("places samples on the padded nice axis, not the raw data min", () => {
     { x: 1, y: 1, z: 1 },
   ]);
   expect(scene!.markers[0].point.z).toBe(0.15);
+});
+
+const TIMED = {
+  kind: "geographic" as const,
+  xName: "lonx",
+  yName: "latx",
+  zName: "alt",
+  points: [
+    { x: 0, y: 0, z: 0 },
+    { x: 10, y: 10, z: 100 },
+    { x: 20, y: 20, z: 200 },
+  ],
+  times: [0, 1, 2],
+};
+
+it("collects one sorted unique time domain across vehicles", () => {
+  const other = { ...TIMED, times: [1, 3] };
+  expect(
+    sliderTimes([
+      { name: "a", trajectory: TIMED },
+      { name: "b", trajectory: other },
+    ]),
+  ).toEqual([0, 1, 2, 3]);
+});
+
+it("interpolates the vehicle position at an exact moment", () => {
+  expect(trackPositionAt(TIMED, 0.5)).toEqual({ x: 5, y: 5, z: 50 });
+  expect(trackPositionAt(TIMED, -1)).toEqual({ x: 0, y: 0, z: 0 });
+  expect(trackPositionAt(TIMED, 9)).toEqual({ x: 20, y: 20, z: 200 });
+  expect(trackPositionAt({ ...TIMED, points: [], times: [] }, 1)).toBeNull();
+});
+
+it("truncates to the prefix plus the interpolated moment", () => {
+  const cut = truncateTrajectory(TIMED, 0.5);
+  expect(cut.points).toEqual([
+    { x: 0, y: 0, z: 0 },
+    { x: 5, y: 5, z: 50 },
+  ]);
+  expect(cut.position).toEqual({ x: 5, y: 5, z: 50 });
+});
+
+it("builds a scrubbed scene on full-run axes with one dot per vehicle", () => {
+  const scene = sceneOfTracksUpTo([{ name: "vehicle", trajectory: TIMED }], 1);
+  expect(scene).not.toBeNull();
+  expect(scene!.series[0].points).toHaveLength(2);
+  expect(scene!.axes).toEqual(sceneOfTracks([{ name: "vehicle", trajectory: TIMED }])!.axes);
+  expect(scene!.markers.filter((m) => m.kind === "position")).toHaveLength(1);
+  expect(scene!.markers.some((m) => m.kind === "end")).toBe(false);
+  expect(scene!.markers.find((m) => m.kind === "position")).toMatchObject({
+    label: "vehicle",
+    color: "#0f766e",
+  });
+});
+
+it("scrubs two vehicles that share a time domain with colored position dots", () => {
+  const other = {
+    ...TIMED,
+    points: [
+      { x: 0, y: 0, z: 0 },
+      { x: 5, y: 5, z: 50 },
+      { x: 10, y: 10, z: 100 },
+    ],
+  };
+  const tracks = [
+    { name: "Missile 1", trajectory: TIMED },
+    { name: "Target 1", trajectory: other },
+  ];
+  const scene = sceneOfTracksUpTo(tracks, 1);
+  expect(scene).not.toBeNull();
+  const positions = scene!.markers.filter((m) => m.kind === "position");
+  expect(positions).toHaveLength(2);
+  expect(positions.map((m) => m.color)).toEqual(["#0f766e", "#2563eb"]);
+  expect(scene!.axes).toEqual(sceneOfTracks(tracks)!.axes);
+  expect(scene!.markers.some((m) => m.kind === "end")).toBe(false);
+});
+
+it("formats slider times without float residue", () => {
+  expect(formatSliderTime(0)).toBe("0");
+  expect(formatSliderTime(2)).toBe("2");
+  expect(formatSliderTime(9)).toBe("9");
+  expect(formatSliderTime(44.999999999999616)).toBe("45");
+  expect(formatSliderTime(90.00000000000914)).toBe("90");
+  expect(formatSliderTime(0.5)).toBe("0.5");
+  expect(formatSliderTime(1.23456789)).toBe("1.234568");
+});
+
+it("resets the orbit only when the run key changes", () => {
+  expect(shouldResetOrbit("a", "a")).toBe(false);
+  expect(shouldResetOrbit("a", "b")).toBe(true);
 });
