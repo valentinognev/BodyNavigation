@@ -12,6 +12,7 @@ type PostRunBody = { ok?: boolean; runId?: string; error?: unknown };
 type GetRunBody = {
   status?: string;
   ok?: boolean;
+  progress?: unknown;
   columns?: string[];
   rows?: Record<string, number>[];
   vehicles?: PlotData["vehicles"];
@@ -35,7 +36,7 @@ export async function startRun(api: StoreApi<WorkbenchState>): Promise<void> {
   const flushed = api.getState();
   if (flushed.drawerDirty) return;
   if (flushed.parseError != null || flushed.scenario == null) return;
-  api.setState({ runInFlight: true, runAbandoned: false, runError: null });
+  api.setState({ runInFlight: true, runProgress: 0, runAbandoned: false, runError: null });
   try {
     const payload = {
       program,
@@ -67,6 +68,9 @@ export async function startRun(api: StoreApi<WorkbenchState>): Promise<void> {
       const getRes = await fetch(`/run/${runId}`);
       const st = (await getRes.json()) as GetRunBody;
       if (st.status === "running") {
+        if (typeof st.progress === "number" && Number.isFinite(st.progress)) {
+          api.setState({ runProgress: Math.min(1, Math.max(0, st.progress)) });
+        }
         await sleep(POLL_MS);
         continue;
       }
@@ -92,7 +96,7 @@ export async function startRun(api: StoreApi<WorkbenchState>): Promise<void> {
   } catch (err) {
     api.setState({ runError: err instanceof Error ? err.message : String(err) });
   } finally {
-    api.setState({ runInFlight: false, activeRunId: null });
+    api.setState({ runInFlight: false, activeRunId: null, runProgress: null });
   }
 }
 

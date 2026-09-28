@@ -235,6 +235,96 @@ it("cancel does not clear lastPlot", async () => {
   expect(fetchMock).toHaveBeenCalledWith("/run/r1/cancel", expect.objectContaining({ method: "POST" }));
 });
 
+it("stores polled runProgress then clears it", async () => {
+  let polls = 0;
+  const plot = {
+    columns: ["time", "alt"],
+    rows: [{ time: 0, alt: 1 }],
+  };
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url === "/run") return jsonResponse({ ok: true, runId: "r1" });
+    if (url === "/run/r1") {
+      if (polls++ === 0) return jsonResponse({ status: "running", progress: 0.25 });
+      return jsonResponse({ status: "done", ok: true, ...plot });
+    }
+    throw new Error(`unexpected ${url}`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  const store = createStore();
+  expect(store.getState().runProgress).toBeNull();
+  store.setState({
+    program: "hyper3",
+    stem: "input_climb",
+    scenario: scenarioFromJson(hyper3Like),
+  });
+  const seen: Array<number | null> = [];
+  const unsub = store.subscribe((s) => {
+    seen.push(s.runProgress);
+  });
+  await startRun(store);
+  unsub();
+  expect(seen).toContain(0);
+  expect(seen).toContain(0.25);
+  expect(store.getState().runProgress).toBeNull();
+  expect(store.getState().runInFlight).toBe(false);
+});
+
+it("ignores non-finite running progress", async () => {
+  let polls = 0;
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url === "/run") return jsonResponse({ ok: true, runId: "r1" });
+    if (url === "/run/r1") {
+      if (polls++ === 0) return jsonResponse({ status: "running", progress: "nope" });
+      return jsonResponse({ status: "done", ok: true, ...priorPlot });
+    }
+    throw new Error(`unexpected ${url}`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  const store = createStore();
+  store.setState({
+    program: "hyper3",
+    stem: "input_climb",
+    scenario: scenarioFromJson(hyper3Like),
+  });
+  const seen: Array<number | null> = [];
+  const unsub = store.subscribe((s) => {
+    seen.push(s.runProgress);
+  });
+  await startRun(store);
+  unsub();
+  expect(seen).toContain(0);
+  expect(seen.every((v) => v === null || v === 0)).toBe(true);
+  expect(store.getState().runProgress).toBeNull();
+});
+
+it("clamps running progress above 1 to 1", async () => {
+  let polls = 0;
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url === "/run") return jsonResponse({ ok: true, runId: "r1" });
+    if (url === "/run/r1") {
+      if (polls++ === 0) return jsonResponse({ status: "running", progress: 1.4 });
+      return jsonResponse({ status: "done", ok: true, ...priorPlot });
+    }
+    throw new Error(`unexpected ${url}`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  const store = createStore();
+  store.setState({
+    program: "hyper3",
+    stem: "input_climb",
+    scenario: scenarioFromJson(hyper3Like),
+  });
+  const seen: Array<number | null> = [];
+  const unsub = store.subscribe((s) => {
+    seen.push(s.runProgress);
+  });
+  await startRun(store);
+  unsub();
+  expect(seen).toContain(1);
+  expect(seen).not.toContain(1.4);
+  expect(store.getState().runProgress).toBeNull();
+});
+
 it("cancel during POST abandons and does not set lastPlot", async () => {
   let releasePost: () => void = () => {};
   const postHeld = new Promise<void>((resolve) => {

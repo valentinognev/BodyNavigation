@@ -35,6 +35,7 @@ export type WorkbenchState = {
   revision: number;
   parseError: ParseErrorInfo | null;
   runInFlight: boolean;
+  runProgress: number | null;
   runAbandoned: boolean;
   runError: string | null;
   activeRunId: string | null;
@@ -90,6 +91,7 @@ export function createStore() {
     revision: 0,
     parseError: null,
     runInFlight: false,
+    runProgress: null,
     runAbandoned: false,
     runError: null,
     activeRunId: null,
