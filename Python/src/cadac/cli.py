@@ -193,6 +193,29 @@ def series_columns(vehicle, columns_fn):
     return columns
 
 
+def make_run_progress(end_time, on_progress=None):
+    last_bucket = None
+
+    def consider(sim_time, *, final=False):
+        nonlocal last_bucket
+        if on_progress is None:
+            return
+        if end_time <= 0:
+            if last_bucket is not None:
+                return
+            last_bucket = 100
+            on_progress(1.0)
+            return
+        fraction = min(1.0, max(0.0, sim_time / end_time))
+        bucket = int(fraction * 100)
+        if not final and last_bucket is not None and bucket == last_bucket:
+            return
+        last_bucket = bucket
+        on_progress(fraction)
+
+    return consider
+
+
 def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None, tracks=None):
     if columns_fn is None:
         columns_fn = _plot_columns
@@ -260,7 +283,7 @@ def _build_vehicle(path, spec):
     )
 
 
-def run_scenario(path):
+def run_scenario(path, *, on_progress=None):
     path = Path(path)
     cfg = load_scenario(path)
     seed(cfg.iseed)
@@ -302,7 +325,16 @@ def run_scenario(path):
     nveh = len(vehicles)
     csv_columns = _plot_columns(vehicles[0]) if vehicles else list(PLOT_COLUMNS)
     track_rows = [[] for _ in vehicles]
-    on_step = make_plot_on_step(plot_rows, plot_step, nveh, tracks=track_rows)
+    plot_on_step = make_plot_on_step(plot_rows, plot_step, nveh, tracks=track_rows)
+    consider_progress = make_run_progress(cfg.end_time, on_progress)
+
+    def on_step(vehicle, ctx):
+        plot_on_step(vehicle, ctx)
+        if on_progress is None:
+            return
+        if nveh and ctx.vehicle_slot != nveh - 1:
+            return
+        consider_progress(ctx.sim_time, final=ctx.sim_time > cfg.end_time)
 
     run_loop(
         vehicles,

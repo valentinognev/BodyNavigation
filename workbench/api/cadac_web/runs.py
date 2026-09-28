@@ -46,6 +46,7 @@ def run_case(
     stem: str,
     end_time: float | None = None,
     scenario: dict | None = None,
+    on_progress=None,
 ) -> dict:
     try:
         src_path = resolve_case(program, stem)
@@ -67,7 +68,7 @@ def run_case(
                 shutil.copy2(src_path, temp_path)
             if end_time is not None:
                 _patch_end_time(temp_path, end_time)
-            result = run_scenario(temp_path)
+            result = run_scenario(temp_path, on_progress=on_progress)
         except ValueError as exc:
             return {"ok": False, "error": str(exc)}
         rows = result.plot_rows
@@ -116,8 +117,14 @@ def _worker(
     end_time: float | None,
     scenario: dict | None,
 ) -> None:
+    def on_progress(fraction: float) -> None:
+        with _lock:
+            entry = RunRegistry.get(run_id)
+            if entry is not None and entry["status"] == "running":
+                entry["progress"] = fraction
+
     try:
-        result = run_case(program, stem, end_time, scenario)
+        result = run_case(program, stem, end_time, scenario, on_progress=on_progress)
     except Exception as exc:
         result = {"ok": False, "error": str(exc)}
     with _lock:
@@ -134,6 +141,7 @@ def _worker(
             return
         if result.get("ok"):
             entry["status"] = "done"
+            entry["progress"] = 1.0
             entry["result"] = result
         else:
             entry["status"] = "error"
@@ -160,6 +168,7 @@ def start_run(
             "status": "running",
             "result": None,
             "timer": timer,
+            "progress": 0.0,
         }
     thread = threading.Thread(
         target=_worker,
@@ -178,11 +187,15 @@ def run_status(run_id: str) -> dict | None:
             return None
         status = entry["status"]
         result = entry["result"] or {}
+        progress = entry.get("progress", 0.0)
         if entry["event"].is_set() and status == "running":
             status = "cancelled"
+        if status == "done":
+            progress = 1.0
         payload: dict = {
             "status": status,
             "ok": bool(status == "done" and result.get("ok")),
+            "progress": progress,
         }
         if status == "done":
             payload["columns"] = result.get("columns", [])

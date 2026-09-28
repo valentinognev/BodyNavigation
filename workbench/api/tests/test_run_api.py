@@ -41,7 +41,7 @@ def test_run_hyper3_short():
 
 
 def test_run_status_includes_column_modules(monkeypatch):
-    def spy(path):
+    def spy(path, on_progress=None):
         return types.SimpleNamespace(
             plot_rows=[{"time": 0.0, "alt": 1.0}],
             tracks=[
@@ -64,7 +64,7 @@ def test_run_status_includes_column_modules(monkeypatch):
 
 
 def test_run_returns_every_vehicle_track(monkeypatch):
-    def spy(path):
+    def spy(path, on_progress=None):
         return types.SimpleNamespace(
             plot_rows=[{"time": 0.0, "SBEL1": 0.0}],
             tracks=[
@@ -100,7 +100,7 @@ def test_run_posted_scenario_is_written_to_temp(monkeypatch):
 
     captured: dict = {}
 
-    def spy(path):
+    def spy(path, on_progress=None):
         p = Path(path)
         captured["data"] = jsonc.loads(p.read_text(encoding="utf-8"))
         captured["siblings"] = sorted(x.name for x in p.parent.glob("*.jsonc"))
@@ -153,7 +153,7 @@ def test_run_does_not_mutate_library_cases():
 
 
 def test_run_value_error_http_200(monkeypatch):
-    def boom(path):
+    def boom(path, on_progress=None):
         raise ValueError("unknown vehicle type 'NO_SUCH_TYPE'")
 
     monkeypatch.setattr("cadac_web.runs.run_scenario", boom)
@@ -169,7 +169,7 @@ def test_run_value_error_http_200(monkeypatch):
 
 
 def test_cancel_marks_run(monkeypatch):
-    def slow(path):
+    def slow(path, on_progress=None):
         time.sleep(2.0)
         return types.SimpleNamespace(plot_rows=[{"time": 0.0, "alt": 0.0}])
 
@@ -189,7 +189,7 @@ def test_cancel_marks_run(monkeypatch):
 
 
 def test_run_worker_timeout(monkeypatch):
-    def slow(path):
+    def slow(path, on_progress=None):
         time.sleep(2.0)
         return types.SimpleNamespace(plot_rows=[{"time": 0.0, "alt": 0.0}])
 
@@ -208,10 +208,46 @@ def test_run_worker_timeout(monkeypatch):
     assert body["error"] == "timeout"
 
 
+def test_run_progress_while_running_and_done(monkeypatch):
+    def progress_then_sleep(path, on_progress=None):
+        if on_progress is not None:
+            on_progress(0.4)
+        time.sleep(0.3)
+        return types.SimpleNamespace(plot_rows=[{"time": 0.0, "alt": 0.0}])
+
+    monkeypatch.setattr("cadac_web.runs.run_scenario", progress_then_sleep)
+    client = TestClient(app)
+    started = client.post("/run", json={"program": "hyper3", "stem": "input_climb", "end_time": 0.05})
+    assert started.status_code == 200
+    run_id = started.json()["runId"]
+    deadline = time.monotonic() + 2.0
+    mid = None
+    while time.monotonic() < deadline:
+        mid = client.get(f"/run/{run_id}").json()
+        if mid["status"] == "running" and mid.get("progress") == 0.4:
+            break
+        time.sleep(0.02)
+    assert mid is not None
+    assert mid["status"] == "running"
+    assert mid["progress"] == 0.4
+    body = _wait_run(client, run_id)
+    assert body["status"] == "done"
+    assert body["progress"] == 1.0
+
+
+def test_run_done_progress_is_one():
+    client = TestClient(app)
+    started = client.post("/run", json={"program": "hyper3", "stem": "input_climb", "end_time": 0.05})
+    assert started.status_code == 200
+    body = _wait_run(client, started.json()["runId"])
+    assert body["status"] == "done"
+    assert body["progress"] == 1.0
+
+
 def test_late_cancel_does_not_overwrite_timeout(monkeypatch):
     finished = []
 
-    def slow(path):
+    def slow(path, on_progress=None):
         time.sleep(0.4)
         finished.append(True)
         return types.SimpleNamespace(plot_rows=[{"time": 0.0, "alt": 0.0}])
