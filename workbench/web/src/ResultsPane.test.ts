@@ -50,6 +50,11 @@ it("shows CADAC headings, checkbox hints, and symbol axis labels", () => {
   });
 
   const host = mount();
+  act(() => {
+    [...host.querySelectorAll("button")]
+      .find((button) => button.textContent === "Expand all")
+      ?.click();
+  });
   const captions = [...host.querySelectorAll("p")].map((el) => el.textContent);
   expect(captions).toContain("Vehicle altitude vs time");
   expect(captions).toContain("foo vs time");
@@ -74,7 +79,7 @@ it("shows CADAC headings, checkbox hints, and symbol axis labels", () => {
   expect(ground?.textContent).toContain("lonx (deg)");
 });
 
-it("shows a geographic trajectory still and an orbit view", () => {
+it("shows an orbit view and no static trajectory still", () => {
   store.setState({
     program: "hyper3",
     lastPlot: {
@@ -87,27 +92,11 @@ it("shows a geographic trajectory still and an orbit view", () => {
     selectedColumns: [],
   });
   const host = mount();
-  const still = host.querySelector(
-    '[aria-label="Vehicle altitude vs vehicle latitude vs vehicle longitude"]',
-  );
-  expect(still?.tagName).toBe("svg");
-  expect(still?.textContent).toContain("lonx (deg)");
-  expect(still?.textContent).toContain("latx (deg)");
-  expect(still?.textContent).toContain("alt (m)");
-  expect(still?.querySelector("polyline")?.getAttribute("points")?.length).toBeGreaterThan(0);
-  expect(still?.querySelector("circle")?.getAttribute("fill")).toBe("#15803d");
-  expect(still?.querySelector("circle")?.getAttribute("r")).toBe("2.5");
   expect(
-    [...(still?.querySelectorAll("rect") ?? [])].some(
-      (rect) => rect.getAttribute("fill") === "#b91c1c" && rect.getAttribute("width") === "5",
-    ),
-  ).toBe(true);
-  const labels = [...(still?.querySelectorAll("text") ?? [])].map((el) => el.textContent);
-  expect(labels).toContain("vehicle");
-  expect(labels).toContain("start");
-  expect(labels).toContain("end");
+    host.querySelector('[aria-label="Vehicle altitude vs vehicle latitude vs vehicle longitude"]'),
+  ).toBeNull();
   expect([...host.querySelectorAll("button")].some((button) => button.textContent === "Turntable GIF")).toBe(
-    true,
+    false,
   );
   expect(host.querySelector("canvas")?.getAttribute("aria-label")).toBe(
     "Vehicle altitude vs vehicle latitude vs vehicle longitude, drag to orbit",
@@ -129,10 +118,12 @@ it("uses the local-level sentence when the plot has SBEL only", () => {
     selectedColumns: [],
   });
   const host = mount();
-  const still = [...host.querySelectorAll("svg")].find((svg) => svg.textContent?.includes("-SBEL3 (m)"));
-  expect(still?.getAttribute("aria-label")).toBe("Missile pos. wrt point E in local level axes");
-  expect(still?.textContent).toContain("SBEL1 (m)");
-  expect(still?.textContent).toContain("SBEL2 (m)");
+  expect([...host.querySelectorAll("svg")].some((svg) => svg.textContent?.includes("-SBEL3 (m)"))).toBe(
+    false,
+  );
+  expect(host.querySelector("canvas")?.getAttribute("aria-label")).toBe(
+    "Missile pos. wrt point E in local level axes, drag to orbit",
+  );
 });
 
 it("draws every vehicle on a time chart and on the ground track", () => {
@@ -166,6 +157,11 @@ it("draws every vehicle on a time chart and on the ground track", () => {
     selectedColumns: ["alt"],
   });
   const host = mount();
+  act(() => {
+    [...host.querySelectorAll("button")]
+      .find((button) => button.textContent === "Expand all")
+      ?.click();
+  });
   const alt = [...host.querySelectorAll("svg")].find(
     (svg) => svg.getAttribute("aria-label") === "Vehicle altitude vs time",
   );
@@ -228,13 +224,12 @@ it("draws one curve for each missile and target", () => {
     selectedColumns: [],
   });
   const host = mount();
-  const still = [...host.querySelectorAll("svg")].find((svg) => svg.textContent?.includes("Missile 1"));
-  expect(still?.querySelectorAll("polyline")).toHaveLength(4);
-  expect(still?.textContent).toContain("Missile 2");
-  expect(still?.textContent).toContain("Target 1");
-  expect(still?.textContent).toContain("Target 2");
-  const strokes = [...(still?.querySelectorAll("polyline") ?? [])].map((line) => line.getAttribute("stroke"));
-  expect(new Set(strokes).size).toBe(4);
+  expect([...host.querySelectorAll("svg")].some((svg) => svg.textContent?.includes("Missile 1"))).toBe(
+    false,
+  );
+  expect(host.querySelector("canvas")?.getAttribute("aria-label")).toBe(
+    "Missile pos. wrt point E in local level axes, drag to orbit",
+  );
 });
 
 it("omits the trajectory when the plot has no position triple", () => {
@@ -284,14 +279,19 @@ it("groups curve checkboxes by physics then module", () => {
     selectedColumns: ["alt"],
   });
   const host = mount();
-  expect([...host.querySelectorAll("h3")].map((el) => el.textContent)).toEqual([
-    "Position",
-    "Velocity",
-    "Other",
+  act(() => {
+    [...host.querySelectorAll("button")]
+      .find((button) => button.textContent === "Expand all")
+      ?.click();
+  });
+  expect([...host.querySelectorAll("h3 button")].map((el) => el.textContent)).toEqual([
+    expect.stringContaining("Position"),
+    expect.stringContaining("Velocity"),
+    expect.stringContaining("Other"),
   ]);
-  expect([...host.querySelectorAll("h4")].map((el) => el.textContent)).toEqual([
-    "newton",
-    "environment",
+  expect([...host.querySelectorAll("h4 button")].map((el) => el.textContent)).toEqual([
+    expect.stringContaining("newton"),
+    expect.stringContaining("environment"),
   ]);
   expect([...host.querySelectorAll("label")].map((el) => el.textContent)).toEqual([
     "alt",
@@ -327,9 +327,14 @@ it("uses the first vehicle module when vehicles disagree", () => {
     selectedColumns: [],
   });
   const host = mount();
-  expect([...host.querySelectorAll("h4")].map((el) => el.textContent)).toEqual([
-    "newton",
-    "environment",
+  act(() => {
+    [...host.querySelectorAll("button")]
+      .find((button) => button.textContent === "Expand all")
+      ?.click();
+  });
+  expect([...host.querySelectorAll("h4 button")].map((el) => el.textContent)).toEqual([
+    expect.stringContaining("newton"),
+    expect.stringContaining("environment"),
   ]);
 });
 
@@ -343,7 +348,148 @@ it("shows physics headings when the plot has no module map", () => {
     selectedColumns: [],
   });
   const host = mount();
-  expect([...host.querySelectorAll("h3")].map((el) => el.textContent)).toEqual(["Position", "Other"]);
+  act(() => {
+    [...host.querySelectorAll("button")]
+      .find((button) => button.textContent === "Expand all")
+      ?.click();
+  });
+  expect([...host.querySelectorAll("h3 button")].map((el) => el.textContent)).toEqual([
+    expect.stringContaining("Position"),
+    expect.stringContaining("Other"),
+  ]);
   expect(host.querySelectorAll("h4")).toHaveLength(0);
   expect([...host.querySelectorAll("label")].map((el) => el.textContent)).toEqual(["alt", "foo"]);
+});
+
+function physicsToggle(host: HTMLElement, name: string): HTMLButtonElement {
+  const found = [...host.querySelectorAll("h3 button")].find((el) =>
+    el.textContent?.includes(name),
+  );
+  if (found == null) throw new Error(`no physics toggle for ${name}`);
+  return found as HTMLButtonElement;
+}
+
+function moduleToggle(host: HTMLElement, name: string): HTMLButtonElement {
+  const found = [...host.querySelectorAll("h4 button")].find((el) =>
+    el.textContent?.includes(name),
+  );
+  if (found == null) throw new Error(`no module toggle for ${name}`);
+  return found as HTMLButtonElement;
+}
+
+function checklistButton(host: HTMLElement, name: string): HTMLButtonElement {
+  const found = [...host.querySelectorAll("button")].find((el) => el.textContent === name);
+  if (found == null) throw new Error(`no button named ${name}`);
+  return found as HTMLButtonElement;
+}
+
+const collapsePlot = {
+  columns: ["time", "alt", "mach", "foo", "SBEL1"],
+  rows: [{ time: 0, alt: 1, mach: 0.5, foo: 1, SBEL1: 0 }],
+  modules: { alt: "newton", mach: "environment", SBEL1: "newton" },
+};
+
+it("renders curve groups collapsed by default", () => {
+  store.setState({ program: "aim5", lastPlot: collapsePlot, selectedColumns: ["alt"] });
+  const host = mount();
+  const toggles = [...host.querySelectorAll("h3 button")];
+  expect(toggles).toHaveLength(3);
+  expect(toggles.map((el) => el.getAttribute("aria-expanded"))).toEqual([
+    "false",
+    "false",
+    "false",
+  ]);
+  expect(toggles[0]?.textContent).toContain("▸");
+  expect(toggles[0]?.textContent).toContain("Position");
+  expect(host.querySelectorAll("label")).toHaveLength(0);
+  expect(checklistButton(host, "Expand all").textContent).toBe("Expand all");
+  expect(checklistButton(host, "Collapse all").textContent).toBe("Collapse all");
+});
+
+it("expands a physics group when its toggle is clicked", () => {
+  store.setState({
+    program: "aim5",
+    lastPlot: {
+      columns: ["time", "alt", "foo"],
+      rows: [{ time: 0, alt: 1, foo: 2 }],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  expect(host.querySelectorAll("label")).toHaveLength(0);
+  const toggle = physicsToggle(host, "Position");
+  act(() => {
+    toggle.click();
+  });
+  expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  expect(toggle.textContent).toContain("▾");
+  expect([...host.querySelectorAll("label")].map((el) => el.textContent)).toEqual(["alt"]);
+});
+
+it("expands a module subgroup when its toggle is clicked", () => {
+  store.setState({ program: "aim5", lastPlot: collapsePlot, selectedColumns: [] });
+  const host = mount();
+  act(() => {
+    physicsToggle(host, "Position").click();
+  });
+  expect(host.querySelectorAll("label")).toHaveLength(0);
+  const mod = moduleToggle(host, "newton");
+  expect(mod.getAttribute("aria-expanded")).toBe("false");
+  act(() => {
+    mod.click();
+  });
+  expect(mod.getAttribute("aria-expanded")).toBe("true");
+  expect([...host.querySelectorAll("label")].map((el) => el.textContent)).toEqual([
+    "alt",
+    "SBEL1",
+  ]);
+});
+
+it("expands and collapses every group with Expand all and Collapse all", () => {
+  store.setState({ program: "aim5", lastPlot: collapsePlot, selectedColumns: [] });
+  const host = mount();
+  act(() => {
+    checklistButton(host, "Expand all").click();
+  });
+  expect([...host.querySelectorAll("label")].map((el) => el.textContent)).toEqual([
+    "alt",
+    "SBEL1",
+    "mach",
+    "foo",
+  ]);
+  act(() => {
+    checklistButton(host, "Collapse all").click();
+  });
+  expect(host.querySelectorAll("label")).toHaveLength(0);
+});
+
+it("keeps charting a selected column while its group is collapsed", () => {
+  store.setState({ program: "aim5", lastPlot: collapsePlot, selectedColumns: ["alt"] });
+  const host = mount();
+  expect(host.querySelectorAll("label")).toHaveLength(0);
+  const chart = [...host.querySelectorAll("svg")].find(
+    (svg) => svg.getAttribute("aria-label") === "Vehicle altitude vs time",
+  );
+  expect(chart).not.toBeUndefined();
+});
+
+it("collapses everything again when a new run arrives", () => {
+  store.setState({ program: "aim5", lastPlot: collapsePlot, selectedColumns: [] });
+  const host = mount();
+  act(() => {
+    checklistButton(host, "Expand all").click();
+  });
+  expect(host.querySelectorAll("label")).toHaveLength(4);
+  act(() => {
+    store.setState({
+      lastPlot: {
+        columns: ["time", "alt", "foo"],
+        rows: [{ time: 0, alt: 2, foo: 3 }],
+      },
+    });
+  });
+  expect([...host.querySelectorAll("h3 button")].map((el) => el.getAttribute("aria-expanded"))).toEqual(
+    ["false", "false"],
+  );
+  expect(host.querySelectorAll("label")).toHaveLength(0);
 });

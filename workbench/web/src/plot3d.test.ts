@@ -4,7 +4,6 @@ import {
   centeredCloud,
   dataAxisLines,
   dragOrbit,
-  encodeTurntableGif,
   legendHudRows,
   markerSize,
   labelClearance,
@@ -13,10 +12,7 @@ import {
   opaqueClearColor,
   orbitCamera,
   projectTurntable,
-  rasterizeSegments,
-  rasterizeScene,
   projectSceneFrames,
-  renderSceneGif,
   sceneFrame,
   sceneOf,
   sceneOfTracks,
@@ -125,27 +121,6 @@ it("uses one scale for the whole turn so an edge-on frame does not enlarge the p
   );
   const zFitted = Math.abs(fitted[1].sy - fitted[0].sy);
   expect(zEdge).toBeLessThan(zFitted * 0.5);
-});
-
-it("paints the stroke on a rasterized segment and leaves the opposite corner blank", () => {
-  const rgba = rasterizeSegments([[{ sx: 0, sy: 1 }, { sx: 7, sy: 1 }]], 8, 8);
-  const pixel = (x: number, y: number) => {
-    const index = (y * 8 + x) * 4;
-    return [rgba[index], rgba[index + 1], rgba[index + 2], rgba[index + 3]];
-  };
-  expect(pixel(3, 1)).toEqual([15, 118, 110, 255]);
-  expect(pixel(0, 0)).toEqual([255, 255, 255, 255]);
-});
-
-it("writes one GIF frame per azimuth", () => {
-  const points = [
-    { x: 0, y: 0, z: 0 },
-    { x: 5, y: 1, z: 2 },
-  ];
-  const one = encodeTurntableGif(points, [0], 16, 16);
-  const two = encodeTurntableGif(points, [0, 180], 16, 16);
-  expect(String.fromCharCode(...one.subarray(0, 6))).toBe("GIF89a");
-  expect(two.length).toBeGreaterThan(one.length);
 });
 
 it("places the camera on the axes of a sphere", () => {
@@ -370,13 +345,6 @@ it("places sceneFrame markers on the path endpoints", () => {
   const end = frame.segments.find((segment) => segment.color === "end")!.points[0];
   expect(start).toEqual(path[0]);
   expect(end).toEqual(path[path.length - 1]);
-});
-
-it("writes one scene GIF frame per azimuth", () => {
-  const one = renderSceneGif(GEO_SCENE, [0], 16, 16);
-  const two = renderSceneGif(GEO_SCENE, [0, 180], 16, 16);
-  expect(String.fromCharCode(...one.subarray(0, 6))).toBe("GIF89a");
-  expect(two.length).toBeGreaterThan(one.length);
 });
 
 it("shares one turntable scale so a pure z-step has the same pixel length at every azimuth", () => {
@@ -630,21 +598,4 @@ it("places samples on the padded nice axis, not the raw data min", () => {
     { x: 1, y: 1, z: 1 },
   ]);
   expect(scene!.markers[0].point.z).toBe(0.15);
-});
-
-it("draws the GIF end marker as a 5x5 square", () => {
-  const frame = {
-    segments: [{ points: [{ sx: 20, sy: 20 }], color: "end" as const }],
-    axes: [] as ReturnType<typeof sceneFrame>["axes"],
-    legend: [] as typeof GEO_SCENE.legend,
-  };
-  const rgba = rasterizeScene(frame, GEO_SCENE, 40, 40);
-  const pixel = (x: number, y: number) => {
-    const index = (y * 40 + x) * 4;
-    return [rgba[index], rgba[index + 1], rgba[index + 2], rgba[index + 3]];
-  };
-  expect(pixel(20, 20)).toEqual([185, 28, 28, 255]);
-  expect(pixel(18, 18)).toEqual([185, 28, 28, 255]);
-  expect(pixel(22, 22)).toEqual([185, 28, 28, 255]);
-  expect(pixel(17, 20)).toEqual([255, 255, 255, 255]);
 });

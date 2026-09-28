@@ -1,5 +1,18 @@
 # Updates
 
+## 0.188.1 - Results drops the static 3D still
+- The isometric SVG above the orbit view is gone. The draggable WebGL path, with Record WebM, is the only 3D figure.
+- Tests: `ResultsPane.test.ts`.
+
+## 0.188.0 - Results no longer offers a turntable GIF
+- The Results still stays an isometric SVG. The Turntable GIF download and the GIF encoder are gone. Drag-to-orbit and Record WebM stay.
+- Tests: `ResultsPane.test.ts`, `plot3d.test.ts`.
+
+## 0.187.1 - Collapsible Results curve groups
+- Physics group headings and module subheadings in the Results checklist are toggle buttons (chevron, name, count, `aria-expanded`); everything starts collapsed and re-collapses on each new run.
+- Collapsing is display-only: selected columns keep charting while hidden. Small `Expand all` / `Collapse all` buttons sit above the checklist.
+- Tests: `ResultsPane.test.ts` (collapsed-by-default, physics/module toggles, expand/collapse all, chart-while-collapsed, re-collapse on new run).
+
 ## 0.187.0 - Results curves grouped by physics and module
 - The Results checklist groups each plotted name under Position, Velocity, Attitude, Load, Rate, Aero, Propulsion, Guidance, or Other, then under the CADAC module that defined it.
 - The run payload includes `modules` on the slot-0 plot and on each vehicle track. A component uses the vector stem's module. The first vehicle that has the column supplies the module. A name with no module sits under its physics heading.
