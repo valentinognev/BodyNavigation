@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import * as THREE from "three";
+import { useStore } from "zustand";
 import { axisLabel } from "./plot";
 import {
   axisTickMarks,
   centeredCloud,
   dataAxisLines,
   dragOrbit,
+  labelClearance,
+  labelInk,
+  labelOffsetDistance,
   legendHudRows,
   markerSize,
   opaqueClearColor,
@@ -17,6 +21,7 @@ import {
   type TrajectoryScene,
   type Vec3,
 } from "./plot3d";
+import store from "./store";
 
 const buttonClass =
   "w-auto rounded bg-slate-800 px-3 py-1 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900";
@@ -24,9 +29,11 @@ const buttonClass =
 const AXIS_COLOR = "#64748b";
 const START_COLOR = "#15803d";
 const END_COLOR = "#b91c1c";
-const LABEL_FILL = "#1e293b";
 const VIEW_W = 360;
 const VIEW_H = 280;
+const LEGEND_TEXT_PX = 16;
+const TICK_TEXT_PX = 13;
+const AXIS_TEXT_PX = 15;
 
 function openCaptureStream(canvas: HTMLCanvasElement): {
   stream: MediaStream;
@@ -69,37 +76,49 @@ function makeMarkerTexture(kind: "start" | "end"): THREE.CanvasTexture {
   return texture;
 }
 
-function makeTextSprite(text: string, worldHeight: number, sizeAttenuation = true): THREE.Sprite {
+function makeTextSprite(
+  text: string,
+  worldHeight: number,
+  ink: { fill: string; stroke: string },
+  sizeAttenuation = true,
+): THREE.Sprite {
   const canvas = document.createElement("canvas");
   const probe = canvas.getContext("2d");
-  const font = "24px sans-serif";
-  let width = 64;
-  let height = 36;
+  const font = "32px sans-serif";
+  const pad = 16;
+  let cssWidth = 64;
+  const cssHeight = 48;
   if (probe != null) {
     probe.font = font;
-    width = Math.max(8, Math.ceil(probe.measureText(text).width) + 12);
+    cssWidth = Math.max(8, Math.ceil(probe.measureText(text).width) + pad);
   }
-  canvas.width = width;
-  canvas.height = height;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.ceil(cssWidth * ratio);
+  canvas.height = Math.ceil(cssHeight * ratio);
   const ctx = canvas.getContext("2d");
   if (ctx != null) {
+    ctx.scale(ratio, ratio);
     ctx.font = font;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
     ctx.miterLimit = 2;
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = "#ffffff";
-    ctx.strokeText(text, width / 2, height / 2);
-    ctx.fillStyle = LABEL_FILL;
-    ctx.fillText(text, width / 2, height / 2);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = ink.stroke;
+    ctx.strokeText(text, cssWidth / 2, cssHeight / 2);
+    ctx.fillStyle = ink.fill;
+    ctx.fillText(text, cssWidth / 2, cssHeight / 2);
   }
   const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
   const sprite = new THREE.Sprite(
     new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, sizeAttenuation }),
   );
-  sprite.scale.set(worldHeight * (width / height), worldHeight, 1);
+  sprite.scale.set(worldHeight * (cssWidth / cssHeight), worldHeight, 1);
   return sprite;
 }
 
@@ -117,6 +136,7 @@ function addLine(
 }
 
 export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label: string }) {
+  const theme = useStore(store, (s) => s.theme);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const orbitRef = useRef<Orbit>({ azimuth: 45, elevation: 25, distance: 1 });
   const renderRef = useRef<(() => void) | null>(null);
@@ -182,8 +202,19 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
       bin.push(texture, material);
     }
 
-    const axisHeight = radius * 0.1;
-    const tickHeight = radius * 0.07;
+    const css = typeof getComputedStyle === "function" ? getComputedStyle(canvas).backgroundColor : "";
+    const ink = labelInk(css);
+    const hud = new THREE.Scene();
+    const hudCamera = new THREE.OrthographicCamera(0, width, height, 0, -10, 10);
+    const placed: { sprite: THREE.Sprite; anchor: THREE.Vector3; tip: THREE.Vector3 }[] = [];
+    const trackLabel = (text: string, pixelHeight: number, anchor: Vec3, tip: Vec3) => {
+      const sprite = makeTextSprite(text, pixelHeight, ink, false);
+      hud.add(sprite);
+      placed.push({ sprite, anchor: vector3(anchor), tip: vector3(tip) });
+      const map = sprite.material.map;
+      if (map != null) bin.push(map);
+      bin.push(sprite.material);
+    };
     dataAxisLines(scene.axes).forEach((line, index) => {
       const from = offsetBy(line.from, center);
       const to = offsetBy(line.to, center);
@@ -192,36 +223,15 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
       const marks = axisTickMarks(scene.axes[axisIndex], from, to, axisIndex, radius);
       for (const mark of marks) {
         for (const cross of mark.crosses) addLine(world, cross.from, cross.to, AXIS_COLOR, bin);
-        const tickSprite = makeTextSprite(mark.label, tickHeight);
         const nudge = mark.crosses[0];
-        tickSprite.position.set(
-          mark.at.x + (nudge.to.x - mark.at.x) * 3,
-          mark.at.y + (nudge.to.y - mark.at.y) * 3,
-          mark.at.z + (nudge.to.z - mark.at.z) * 3,
-        );
-        world.add(tickSprite);
-        const tickMap = tickSprite.material.map;
-        if (tickMap != null) bin.push(tickMap);
-        bin.push(tickSprite.material);
+        trackLabel(mark.label, TICK_TEXT_PX, mark.at, nudge.to);
       }
-      const dx = to.x - from.x;
-      const dy = to.y - from.y;
-      const dz = to.z - from.z;
-      const length = Math.hypot(dx, dy, dz) || 1;
-      const axisSprite = makeTextSprite(axisLabel(line.name), axisHeight);
-      axisSprite.position.set(
-        to.x + (dx / length) * radius * 0.08,
-        to.y + (dy / length) * radius * 0.08,
-        to.z + (dz / length) * radius * 0.08,
-      );
-      world.add(axisSprite);
-      const axisMap = axisSprite.material.map;
-      if (axisMap != null) bin.push(axisMap);
-      bin.push(axisSprite.material);
+      trackLabel(axisLabel(line.name), AXIS_TEXT_PX, to, {
+        x: to.x + (to.x - from.x),
+        y: to.y + (to.y - from.y),
+        z: to.z + (to.z - from.z),
+      });
     });
-
-    const hud = new THREE.Scene();
-    const hudCamera = new THREE.OrthographicCamera(0, width, height, 0, -10, 10);
     const hudRows = legendHudRows(scene.legend, width, height);
     for (const row of hudRows) {
       const chipGeom = new THREE.PlaneGeometry(row.chip.w, row.chip.h);
@@ -233,7 +243,7 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
       chip.position.set(row.chip.x + row.chip.w / 2, height - (row.chip.y + row.chip.h / 2), 0);
       hud.add(chip);
       bin.push(chipGeom, chipMat);
-      const text = makeTextSprite(row.label, 14, false);
+      const text = makeTextSprite(row.label, LEGEND_TEXT_PX, ink, false);
       text.position.set(row.text.x + text.scale.x / 2, height - row.text.y, 0);
       hud.add(text);
       const textMap = text.material.map;
@@ -243,12 +253,28 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
 
     orbitRef.current = { azimuth: 45, elevation: 25, distance: Math.max(radius * 3.5, 1) };
 
+    const anchorNdc = new THREE.Vector3();
+    const tipNdc = new THREE.Vector3();
     const draw = () => {
       const orbit = orbitRef.current;
       const cameraPoint = orbitCamera(orbit.azimuth, orbit.elevation, orbit.distance);
       camera.position.set(cameraPoint.x, cameraPoint.y, cameraPoint.z);
       camera.lookAt(0, 0, 0);
-      const css = typeof getComputedStyle === "function" ? getComputedStyle(canvas).backgroundColor : "";
+      camera.updateMatrixWorld();
+      for (const label of placed) {
+        anchorNdc.copy(label.anchor).project(camera);
+        tipNdc.copy(label.tip).project(camera);
+        const behind = anchorNdc.z < -1 || anchorNdc.z > 1;
+        label.sprite.visible = !behind;
+        if (behind) continue;
+        const ax = (anchorNdc.x * 0.5 + 0.5) * width;
+        const ay = (anchorNdc.y * 0.5 + 0.5) * height;
+        const tx = (tipNdc.x * 0.5 + 0.5) * width;
+        const ty = (tipNdc.y * 0.5 + 0.5) * height;
+        const distance = labelOffsetDistance(tx - ax, ty - ay, label.sprite.scale.x, label.sprite.scale.y, 4);
+        const centerPoint = labelClearance({ x: ax, y: ay }, { x: tx, y: ty }, distance);
+        label.sprite.position.set(centerPoint.x, centerPoint.y, 0);
+      }
       renderer.setClearColor(opaqueClearColor(css), 1);
       renderer.clear();
       renderer.render(world, camera);
@@ -276,7 +302,7 @@ export function TrajectoryView({ scene, label }: { scene: TrajectoryScene; label
       if (recorder != null && shouldStopRecorder(recorder.state)) recorder.stop();
       recorderRef.current = null;
     };
-  }, [scene]);
+  }, [scene, theme]);
 
   function onPointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
     dragRef.current = { x: event.clientX, y: event.clientY };

@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { axisLabel, chartGeometry, defaultColumns, hasGroundTrack } from "./plot";
+import { axisLabel, chartGeometry, defaultColumns, hasGroundTrack, overlayChart } from "./plot";
 
 it("prefers alt mach", () => {
   expect(defaultColumns(["time", "FSPV1", "alt", "mach", "lonx"])).toEqual(["alt", "mach"]);
@@ -47,6 +47,26 @@ it("chart geometry includes tick values on both axes", () => {
   const firstY = Number(parts[0].split(",")[1]);
   const lastY = Number(parts[2].split(",")[1]);
   expect(lastY).toBeLessThan(firstY);
+});
+
+it("puts every vehicle on one shared scale", () => {
+  const chart = overlayChart(
+    [
+      { name: "Missile 1", xs: [0, 1], ys: [0, 10] },
+      { name: "Target 1", xs: [0, 1], ys: [0, 100] },
+    ],
+    "time",
+    "alt",
+    360,
+    220,
+  );
+  expect(chart).not.toBeNull();
+  expect(chart!.series.map((item) => item.name)).toEqual(["Missile 1", "Target 1"]);
+  const span = (polyline: string) => {
+    const ys = polyline.split(" ").map((point) => Number(point.split(",")[1]));
+    return Math.abs(ys[1] - ys[0]);
+  };
+  expect(span(chart!.series[1].polyline) / span(chart!.series[0].polyline)).toBeGreaterThan(5);
 });
 
 it("constant series still gets numeric ticks", () => {

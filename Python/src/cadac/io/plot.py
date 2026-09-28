@@ -39,6 +39,34 @@ _VEC_COMPONENT = {
 }
 
 
+def column_stem(store, column):
+    spec = _VEC_COMPONENT.get(column)
+    if spec is not None:
+        name = spec[0]
+        if name in store:
+            return name
+        return None
+    if column and column[-1] in "123":
+        name = column[:-1]
+        if name in store and store.field(name).type == "vec":
+            return name
+    if column in store:
+        return column
+    return None
+
+
+def column_modules(store, columns):
+    modules = {}
+    for column in columns:
+        if column == "time":
+            continue
+        stem = column_stem(store, column)
+        if stem is None:
+            continue
+        modules[column] = store.field(stem).module
+    return modules
+
+
 def flagged_plot_columns(store):
     columns = []
     names = store.names()

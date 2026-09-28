@@ -135,6 +135,108 @@ it("uses the local-level sentence when the plot has SBEL only", () => {
   expect(still?.textContent).toContain("SBEL2 (m)");
 });
 
+it("draws every vehicle on a time chart and on the ground track", () => {
+  store.setState({
+    program: "aim5",
+    lastPlot: {
+      columns: ["time", "alt", "latx", "lonx"],
+      rows: [
+        { time: 0, alt: 1000, latx: 10, lonx: 20 },
+        { time: 1, alt: 1100, latx: 11, lonx: 21 },
+      ],
+      vehicles: [
+        {
+          name: "Aim",
+          columns: ["time", "alt", "latx", "lonx"],
+          rows: [
+            { time: 0, alt: 1000, latx: 10, lonx: 20 },
+            { time: 1, alt: 1100, latx: 11, lonx: 21 },
+          ],
+        },
+        {
+          name: "Aircraft",
+          columns: ["time", "alt", "latx", "lonx", "mach"],
+          rows: [
+            { time: 0, alt: 8000, latx: 12, lonx: 30, mach: 0.8 },
+            { time: 1, alt: 8100, latx: 12.2, lonx: 30.4, mach: 0.9 },
+          ],
+        },
+      ],
+    },
+    selectedColumns: ["alt"],
+  });
+  const host = mount();
+  const alt = [...host.querySelectorAll("svg")].find(
+    (svg) => svg.getAttribute("aria-label") === "Vehicle altitude vs time",
+  );
+  expect(alt?.querySelectorAll("polyline")).toHaveLength(2);
+  expect(alt?.textContent).toContain("Aim");
+  expect(alt?.textContent).toContain("Aircraft");
+  const ground = [...host.querySelectorAll("svg")].find(
+    (svg) => svg.getAttribute("aria-label") === "Vehicle latitude vs vehicle longitude",
+  );
+  expect(ground?.querySelectorAll("polyline")).toHaveLength(2);
+  expect(ground?.textContent).toContain("Aim");
+  expect(ground?.textContent).toContain("Aircraft");
+  expect([...host.querySelectorAll("label")].some((label) => label.textContent === "mach")).toBe(true);
+});
+
+it("draws one curve for each missile and target", () => {
+  store.setState({
+    program: "sraam6",
+    lastPlot: {
+      columns: ["time", "SBEL1", "SBEL2", "SBEL3"],
+      rows: [
+        { time: 0, SBEL1: 0, SBEL2: 0, SBEL3: 0 },
+        { time: 1, SBEL1: 0, SBEL2: 100, SBEL3: 0 },
+      ],
+      vehicles: [
+        {
+          name: "Missile 1",
+          columns: ["SBEL1", "SBEL2", "SBEL3"],
+          rows: [
+            { SBEL1: 0, SBEL2: 0, SBEL3: 0 },
+            { SBEL1: 0, SBEL2: 100, SBEL3: 0 },
+          ],
+        },
+        {
+          name: "Missile 2",
+          columns: ["SBEL1", "SBEL2", "SBEL3"],
+          rows: [
+            { SBEL1: 10, SBEL2: 0, SBEL3: 0 },
+            { SBEL1: 10, SBEL2: 80, SBEL3: 0 },
+          ],
+        },
+        {
+          name: "Target 1",
+          columns: ["SAEL1", "SAEL2", "SAEL3"],
+          rows: [
+            { SAEL1: 0, SAEL2: 40, SAEL3: -1000 },
+            { SAEL1: 20, SAEL2: 40, SAEL3: -1000 },
+          ],
+        },
+        {
+          name: "Target 2",
+          columns: ["SAEL1", "SAEL2", "SAEL3"],
+          rows: [
+            { SAEL1: 0, SAEL2: 60, SAEL3: -1000 },
+            { SAEL1: 30, SAEL2: 60, SAEL3: -1000 },
+          ],
+        },
+      ],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  const still = [...host.querySelectorAll("svg")].find((svg) => svg.textContent?.includes("Missile 1"));
+  expect(still?.querySelectorAll("polyline")).toHaveLength(4);
+  expect(still?.textContent).toContain("Missile 2");
+  expect(still?.textContent).toContain("Target 1");
+  expect(still?.textContent).toContain("Target 2");
+  const strokes = [...(still?.querySelectorAll("polyline") ?? [])].map((line) => line.getAttribute("stroke"));
+  expect(new Set(strokes).size).toBe(4);
+});
+
 it("omits the trajectory when the plot has no position triple", () => {
   store.setState({
     program: "hyper3",
@@ -169,4 +271,79 @@ it("reports that recording is unavailable when the canvas cannot capture", () =>
     record?.click();
   });
   expect(host.textContent).toContain("Recording is unavailable");
+});
+
+it("groups curve checkboxes by physics then module", () => {
+  store.setState({
+    program: "aim5",
+    lastPlot: {
+      columns: ["time", "alt", "mach", "foo", "SBEL1"],
+      rows: [{ time: 0, alt: 1, mach: 0.5, foo: 1, SBEL1: 0 }],
+      modules: { alt: "newton", mach: "environment", SBEL1: "newton" },
+    },
+    selectedColumns: ["alt"],
+  });
+  const host = mount();
+  expect([...host.querySelectorAll("h3")].map((el) => el.textContent)).toEqual([
+    "Position",
+    "Velocity",
+    "Other",
+  ]);
+  expect([...host.querySelectorAll("h4")].map((el) => el.textContent)).toEqual([
+    "newton",
+    "environment",
+  ]);
+  expect([...host.querySelectorAll("label")].map((el) => el.textContent)).toEqual([
+    "alt",
+    "SBEL1",
+    "mach",
+    "foo",
+  ]);
+  const alt = [...host.querySelectorAll("label")].find((el) => el.textContent === "alt");
+  expect(alt?.querySelector("input")?.checked).toBe(true);
+});
+
+it("uses the first vehicle module when vehicles disagree", () => {
+  store.setState({
+    program: "aim5",
+    lastPlot: {
+      columns: ["time", "alt"],
+      rows: [{ time: 0, alt: 1 }],
+      vehicles: [
+        {
+          name: "Aim",
+          columns: ["time", "alt"],
+          rows: [{ time: 0, alt: 1 }],
+          modules: { alt: "newton" },
+        },
+        {
+          name: "Aircraft",
+          columns: ["time", "alt", "mach"],
+          rows: [{ time: 0, alt: 2, mach: 0.8 }],
+          modules: { alt: "kinematics", mach: "environment" },
+        },
+      ],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  expect([...host.querySelectorAll("h4")].map((el) => el.textContent)).toEqual([
+    "newton",
+    "environment",
+  ]);
+});
+
+it("shows physics headings when the plot has no module map", () => {
+  store.setState({
+    program: "aim5",
+    lastPlot: {
+      columns: ["time", "alt", "foo"],
+      rows: [{ time: 0, alt: 1, foo: 2 }],
+    },
+    selectedColumns: [],
+  });
+  const host = mount();
+  expect([...host.querySelectorAll("h3")].map((el) => el.textContent)).toEqual(["Position", "Other"]);
+  expect(host.querySelectorAll("h4")).toHaveLength(0);
+  expect([...host.querySelectorAll("label")].map((el) => el.textContent)).toEqual(["alt", "foo"]);
 });

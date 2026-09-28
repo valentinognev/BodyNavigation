@@ -7,9 +7,18 @@ import { currentTheme, type Theme } from "./theme";
 
 export type View = "start" | "editor";
 
+export type VehiclePlot = {
+  name: string;
+  columns: string[];
+  rows: Record<string, number>[];
+  modules?: Record<string, string>;
+};
+
 export type PlotData = {
   columns: string[];
   rows: Record<string, number>[];
+  vehicles?: VehiclePlot[];
+  modules?: Record<string, string>;
 };
 
 export type WorkbenchState = {

@@ -23,6 +23,7 @@ export type TrajectoryScene = {
 };
 
 const SERIES_COLOR = "#0f766e";
+export const TRACK_COLORS = ["#0f766e", "#2563eb", "#d97706", "#7c3aed", "#db2777", "#0891b2"];
 const START_COLOR = "#15803d";
 const END_COLOR = "#b91c1c";
 
@@ -45,15 +46,19 @@ export function trajectoryOf(
   rows: Record<string, number>[],
 ): Trajectory | null {
   const geographic = hasColumn(columns, "latx") && hasColumn(columns, "lonx") && hasColumn(columns, "alt");
-  const local =
+  const missile =
     hasColumn(columns, "SBEL1") && hasColumn(columns, "SBEL2") && hasColumn(columns, "SBEL3");
-  if (!geographic && !local) return null;
+  const aircraft =
+    hasColumn(columns, "SAEL1") && hasColumn(columns, "SAEL2") && hasColumn(columns, "SAEL3");
+  if (!geographic && !missile && !aircraft) return null;
 
   const points: Vec3[] = [];
   for (const row of rows) {
     const point = geographic
       ? { x: Number(row.lonx), y: Number(row.latx), z: Number(row.alt) }
-      : { x: Number(row.SBEL2), y: Number(row.SBEL1), z: -Number(row.SBEL3) };
+      : missile
+        ? { x: Number(row.SBEL2), y: Number(row.SBEL1), z: -Number(row.SBEL3) }
+        : { x: Number(row.SAEL2), y: Number(row.SAEL1), z: -Number(row.SAEL3) };
     if (finitePoint(point)) points.push(point);
   }
   if (points.length === 0) return null;
@@ -61,41 +66,88 @@ export function trajectoryOf(
   if (geographic) {
     return { kind: "geographic", xName: "lonx", yName: "latx", zName: "alt", points };
   }
-  return { kind: "local", xName: "SBEL2", yName: "SBEL1", zName: "-SBEL3", points };
+  if (missile) {
+    return { kind: "local", xName: "SBEL2", yName: "SBEL1", zName: "-SBEL3", points };
+  }
+  return { kind: "local", xName: "SAEL2", yName: "SAEL1", zName: "-SAEL3", points };
+}
+
+export function trajectoriesFromPlot(plot: {
+  columns: string[];
+  rows: Record<string, number>[];
+  vehicles?: { name: string; columns: string[]; rows: Record<string, number>[] }[];
+}): { name: string; trajectory: Trajectory }[] {
+  const vehicles = plot.vehicles ?? [];
+  if (vehicles.length > 0) {
+    const tracks: { name: string; trajectory: Trajectory }[] = [];
+    for (const vehicle of vehicles) {
+      const trajectory = trajectoryOf(vehicle.columns, vehicle.rows);
+      if (trajectory != null) tracks.push({ name: vehicle.name, trajectory });
+    }
+    return tracks;
+  }
+  const trajectory = trajectoryOf(plot.columns, plot.rows);
+  return trajectory == null ? [] : [{ name: "vehicle", trajectory }];
 }
 
 export function sceneOf(trajectory: Trajectory, seriesName = "vehicle"): TrajectoryScene | null {
-  if (trajectory.points.length === 0) return null;
-  const color = SERIES_COLOR;
-  const xs = trajectory.points.map((point) => point.x);
-  const ys = trajectory.points.map((point) => point.y);
-  const zs = trajectory.points.map((point) => point.z);
+  return sceneOfTracks([{ name: seriesName, trajectory }]);
+}
+
+export function sceneOfTracks(
+  tracks: { name: string; trajectory: Trajectory }[],
+): TrajectoryScene | null {
+  const present = tracks.filter((track) => track.trajectory.points.length > 0);
+  if (present.length === 0) return null;
+  const kind = present[0].trajectory.kind;
+  const same = present.filter((track) => track.trajectory.kind === kind);
+  const names = axisNames(same.map((track) => track.trajectory), kind);
+  const raw = same.flatMap((track) => track.trajectory.points);
   const axes = [
-    { name: trajectory.xName, ...axisOf(xs) },
-    { name: trajectory.yName, ...axisOf(ys) },
-    { name: trajectory.zName, ...axisOf(zs) },
+    { name: names.xName, ...axisOf(raw.map((point) => point.x)) },
+    { name: names.yName, ...axisOf(raw.map((point) => point.y)) },
+    { name: names.zName, ...axisOf(raw.map((point) => point.z)) },
   ];
-  const points = trajectory.points.map((point) => ({
-    x: tickFraction(point.x, axes[0].min, axes[0].max),
-    y: tickFraction(point.y, axes[1].min, axes[1].max),
-    z: tickFraction(point.z, axes[2].min, axes[2].max),
+  const series = same.map((track, index) => ({
+    name: track.name,
+    color: TRACK_COLORS[index % TRACK_COLORS.length],
+    points: track.trajectory.points.map((point) => ({
+      x: tickFraction(point.x, axes[0].min, axes[0].max),
+      y: tickFraction(point.y, axes[1].min, axes[1].max),
+      z: tickFraction(point.z, axes[2].min, axes[2].max),
+    })),
   }));
-  const first = points[0];
-  const last = points[points.length - 1];
-  const markers: TrajectoryScene["markers"] = [{ kind: "start", label: "start", point: first }];
-  if (points.length > 1) {
-    markers.push({ kind: "end", label: "end", point: last });
+  const markers: TrajectoryScene["markers"] = [];
+  for (const item of series) {
+    markers.push({ kind: "start", label: "start", point: item.points[0] });
+    if (item.points.length > 1) {
+      markers.push({ kind: "end", label: "end", point: item.points[item.points.length - 1] });
+    }
   }
-  return {
-    series: [{ name: seriesName, color, points }],
-    markers,
-    axes,
-    legend: [
-      { label: seriesName, color, kind: "line" },
-      { label: "start", color: START_COLOR, kind: "start" },
-      { label: "end", color: END_COLOR, kind: "end" },
-    ],
-  };
+  const legend: TrajectoryScene["legend"] = series.map((item) => ({
+    label: item.name,
+    color: item.color,
+    kind: "line",
+  }));
+  legend.push({ label: "start", color: START_COLOR, kind: "start" });
+  if (markers.some((marker) => marker.kind === "end")) {
+    legend.push({ label: "end", color: END_COLOR, kind: "end" });
+  }
+  return { series, markers, axes, legend };
+}
+
+function axisNames(
+  trajectories: Trajectory[],
+  kind: Trajectory["kind"],
+): { xName: string; yName: string; zName: string } {
+  const first = trajectories[0];
+  const shared =
+    trajectories.every((trajectory) => trajectory.xName === first.xName) &&
+    trajectories.every((trajectory) => trajectory.yName === first.yName) &&
+    trajectories.every((trajectory) => trajectory.zName === first.zName);
+  if (shared) return { xName: first.xName, yName: first.yName, zName: first.zName };
+  if (kind === "local") return { xName: "east", yName: "north", zName: "up" };
+  return { xName: first.xName, yName: first.yName, zName: first.zName };
 }
 
 function axisOf(values: number[]): { min: number; max: number; ticks: number[] } {
@@ -693,6 +745,56 @@ export function opaqueClearColor(cssBackground: string | null | undefined): stri
   const rgba = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)$/i.exec(value);
   if (rgba != null && rgba[4] != null && Number(rgba[4]) === 0) return "#ffffff";
   return value;
+}
+
+function cssRgb(color: string): [number, number, number] | null {
+  const hex = /^#([\da-f]{6})$/i.exec(color.trim());
+  if (hex != null) {
+    const packed = Number.parseInt(hex[1], 16);
+    return [(packed >> 16) & 255, (packed >> 8) & 255, packed & 255];
+  }
+  const rgb = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(color.trim());
+  if (rgb == null) return null;
+  return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+}
+
+function relativeLuminance(rgb: [number, number, number]): number {
+  const linear = rgb.map((channel) => {
+    const s = channel / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+}
+
+/** Distance from an anchor to a label center so an axis-aligned box clears the anchor. */
+export function labelOffsetDistance(
+  dirX: number,
+  dirY: number,
+  boxWidth: number,
+  boxHeight: number,
+  gap: number,
+): number {
+  const len = Math.hypot(dirX, dirY) || 1;
+  return (Math.abs(dirX) / len) * (boxWidth / 2) + (Math.abs(dirY) / len) * (boxHeight / 2) + gap;
+}
+
+/** Move `anchor` toward `tip` by `distance`. */
+export function labelClearance(
+  anchor: { x: number; y: number },
+  tip: { x: number; y: number },
+  distance: number,
+): { x: number; y: number } {
+  const dx = tip.x - anchor.x;
+  const dy = tip.y - anchor.y;
+  const len = Math.hypot(dx, dy) || 1;
+  return { x: anchor.x + (dx / len) * distance, y: anchor.y + (dy / len) * distance };
+}
+
+/** Fill and halo for axis, tick, and legend sprites. Dark canvases get light glyphs. */
+export function labelInk(cssBackground: string | null | undefined): { fill: string; stroke: string } {
+  const rgb = cssRgb(opaqueClearColor(cssBackground));
+  if (rgb != null && relativeLuminance(rgb) < 0.4) return { fill: "#f8fafc", stroke: "#020617" };
+  return { fill: "#1e293b", stroke: "#ffffff" };
 }
 
 export function downloadBytes(bytes: Uint8Array, filename: string, mime: string): void {

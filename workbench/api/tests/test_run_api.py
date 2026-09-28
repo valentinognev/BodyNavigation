@@ -36,6 +36,58 @@ def test_run_hyper3_short():
     assert "alt" in body["columns"]
     assert len(body["rows"]) >= 1
     assert body["rows"][0]["time"] == 0 or body["rows"][0]["time"] >= 0
+    assert body["modules"]["alt"] == "newton"
+    assert body["vehicles"][0]["modules"]["alt"] == "newton"
+
+
+def test_run_status_includes_column_modules(monkeypatch):
+    def spy(path):
+        return types.SimpleNamespace(
+            plot_rows=[{"time": 0.0, "alt": 1.0}],
+            tracks=[
+                {
+                    "name": "Missile",
+                    "columns": ["time", "alt", "mach"],
+                    "rows": [{"time": 0.0, "alt": 1.0, "mach": 0.8}],
+                    "modules": {"alt": "newton", "mach": "environment"},
+                }
+            ],
+            column_modules={"alt": "newton"},
+        )
+
+    monkeypatch.setattr("cadac_web.runs.run_scenario", spy)
+    client = TestClient(app)
+    started = client.post("/run", json={"program": "hyper3", "stem": "input_climb", "end_time": 0.05})
+    body = _wait_run(client, started.json()["runId"])
+    assert body["modules"]["alt"] == "newton"
+    assert body["vehicles"][0]["modules"]["mach"] == "environment"
+
+
+def test_run_returns_every_vehicle_track(monkeypatch):
+    def spy(path):
+        return types.SimpleNamespace(
+            plot_rows=[{"time": 0.0, "SBEL1": 0.0}],
+            tracks=[
+                {
+                    "name": "Missile 1",
+                    "columns": ["SBEL1", "SBEL2", "SBEL3"],
+                    "rows": [{"SBEL1": 0.0, "SBEL2": 1.0, "SBEL3": -2.0}],
+                },
+                {
+                    "name": "Target 1",
+                    "columns": ["SAEL1", "SAEL2", "SAEL3"],
+                    "rows": [{"SAEL1": 3.0, "SAEL2": 4.0, "SAEL3": -5.0}],
+                },
+            ],
+        )
+
+    monkeypatch.setattr("cadac_web.runs.run_scenario", spy)
+    client = TestClient(app)
+    started = client.post("/run", json={"program": "sraam6", "stem": "input_2v2", "end_time": 0.05})
+    body = _wait_run(client, started.json()["runId"])
+    assert body["status"] == "done"
+    assert [item["name"] for item in body["vehicles"]] == ["Missile 1", "Target 1"]
+    assert body["vehicles"][1]["columns"] == ["SAEL1", "SAEL2", "SAEL3"]
 
 
 def test_run_unknown_stem():

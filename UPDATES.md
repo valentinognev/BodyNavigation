@@ -1,5 +1,27 @@
 # Updates
 
+## 0.187.0 - Results curves grouped by physics and module
+- The Results checklist groups each plotted name under Position, Velocity, Attitude, Load, Rate, Aero, Propulsion, Guidance, or Other, then under the CADAC module that defined it.
+- The run payload includes `modules` on the slot-0 plot and on each vehicle track. A component uses the vector stem's module. The first vehicle that has the column supplies the module. A name with no module sits under its physics heading.
+- `plot.csv` is unchanged.
+- Tests: `test_column_modules.py`, `test_run_api.py`, `plotGroups.test.ts`, `run.test.ts`, `ResultsPane.test.ts`.
+
+## 0.186.1 - Orbit labels follow the canvas theme
+- Axis, tick, and legend sprites use light ink on a dark canvas and dark ink on a light one, so dark-theme text is no longer slate-on-slate.
+- Axis and tick labels sit in screen space at a fixed size, clear of the tick, so the glyphs stay large enough to read.
+- Tests: `plot3d.test.ts`.
+
+## 0.186.0 - Time charts and ground track draw every vehicle
+- Each vehicle track keeps its plot columns plus position (`SBEL` or `SAEL` when those are not already plotted) and `time`.
+- A column-vs-time chart and the latitude/longitude track draw every vehicle that has those columns, on one scale, colored like the 3D path. A column that exists on only some vehicles is still listed.
+- `plot.csv` stays vehicle slot 0.
+- Tests: `test_plot_slot0.py`, `plot.test.ts`, `ResultsPane.test.ts`.
+
+## 0.185.0 - 3D path draws every vehicle
+- A run keeps slot-0 rows for the time charts and `plot.csv`, and also records a position track per vehicle: `latx`/`lonx`/`alt`, else `SBEL`, else `SAEL` (targets and aircraft).
+- The still, turntable, and orbit view draw those tracks on one scale, each with its own color. Repeated names become `Missile 1`, `Missile 2`.
+- Tests: `test_plot_slot0.py`, `test_run_api.py`, `plot3d.test.ts`, `ResultsPane.test.ts`, `run.test.ts`.
+
 ## 0.184.1 - Scene samples sit on padded ticks
 - `sceneOf` normalizes each sample with the nice `axisTicks` range, not the raw min/max, so the path lines up with tick marks when the axis pads (altitude 3000–20000 → 0–20000).
 - Test: `plot3d.test.ts`.

@@ -1,15 +1,19 @@
 import { Fragment, useMemo } from "react";
 import { useStore } from "zustand";
 import { FieldLabel } from "./forms/fields";
-import { chartGeometry, hasGroundTrack, type ChartGeometry } from "./plot";
+import { hasGroundTrack, overlayChart, type ChartGeometry } from "./plot";
 import {
   downloadBytes,
   renderSceneGif,
   sceneFrame,
-  sceneOf,
-  trajectoryOf,
+  sceneOfTracks,
+  TRACK_COLORS,
+  trajectoriesFromPlot,
   turntableAzimuths,
+  type TrajectoryScene,
 } from "./plot3d";
+import type { VehiclePlot } from "./store";
+import { groupCurves, mergedColumnModules } from "./plotGroups";
 import { groundTrackTitle, plotDescription, seriesTitle, trajectoryTitle } from "./plotTitles";
 import store from "./store";
 import { TrajectoryView } from "./TrajectoryView";
@@ -34,24 +38,14 @@ function columnHint(program: string | null | undefined, name: string): string | 
 function TrajectoryStill({
   program,
   kind,
-  xName,
-  yName,
-  zName,
-  points,
+  scene,
 }: {
   program: string | null;
   kind: "geographic" | "local";
-  xName: string;
-  yName: string;
-  zName: string;
-  points: { x: number; y: number; z: number }[];
+  scene: TrajectoryScene;
 }) {
   const title = trajectoryTitle(program, kind);
-  const scene = sceneOf({ kind, xName, yName, zName, points });
-  if (scene == null) return null;
   const frame = sceneFrame(scene, STILL_AZIMUTH, PLOT_W, PLOT_H, 28);
-  const start = frame.segments.find((segment) => segment.color === "start")?.points[0];
-  const end = frame.segments.find((segment) => segment.color === "end")?.points[0];
   return (
     <>
       <p className={CAPTION_CLASS}>{title}</p>
@@ -121,10 +115,29 @@ function TrajectoryStill({
               points={segment.points.map((point) => `${point.sx},${point.sy}`).join(" ")}
             />
           ))}
-        {start != null ? <circle cx={start.sx} cy={start.sy} r={2.5} fill="#15803d" /> : null}
-        {end != null ? (
-          <rect x={end.sx - 2.5} y={end.sy - 2.5} width={5} height={5} fill="#b91c1c" />
-        ) : null}
+        {frame.segments
+          .filter((segment) => segment.color === "start" && segment.points[0] != null)
+          .map((segment, index) => (
+            <circle
+              key={`start-${index}`}
+              cx={segment.points[0].sx}
+              cy={segment.points[0].sy}
+              r={2.5}
+              fill="#15803d"
+            />
+          ))}
+        {frame.segments
+          .filter((segment) => segment.color === "end" && segment.points[0] != null)
+          .map((segment, index) => (
+            <rect
+              key={`end-${index}`}
+              x={segment.points[0].sx - 2.5}
+              y={segment.points[0].sy - 2.5}
+              width={5}
+              height={5}
+              fill="#b91c1c"
+            />
+          ))}
         <g>
           {frame.legend.map((item, index) => {
             const y = 12 + index * 14;
@@ -162,29 +175,70 @@ function TrajectoryStill({
   );
 }
 
+type ChartLine = { name: string; color: string; points: string };
+
+function chartLines(
+  sources: VehiclePlot[],
+  xColumn: string,
+  yColumn: string,
+  multi: boolean,
+  fallbackColor: string,
+): { geometry: ChartGeometry; lines: ChartLine[] } | null {
+  const present = sources.flatMap((vehicle, index) => {
+    if (!vehicle.columns.includes(xColumn) || !vehicle.columns.includes(yColumn)) return [];
+    return [
+      {
+        name: vehicle.name,
+        color: multi ? TRACK_COLORS[index % TRACK_COLORS.length] : fallbackColor,
+        xs: numbers(vehicle.rows, xColumn),
+        ys: numbers(vehicle.rows, yColumn),
+      },
+    ];
+  });
+  const chart = overlayChart(
+    present.map((item) => ({ name: item.name, xs: item.xs, ys: item.ys })),
+    xColumn,
+    yColumn,
+    PLOT_W,
+    PLOT_H,
+  );
+  if (chart == null) return null;
+  const colorOf = new Map(present.map((item) => [item.name, item.color]));
+  return {
+    geometry: chart.geometry,
+    lines: chart.series.map((item) => ({
+      name: item.name,
+      color: colorOf.get(item.name) ?? fallbackColor,
+      points: item.polyline,
+    })),
+  };
+}
+
 function GroundTrack({
   program,
   geometry,
+  lines,
 }: {
   program: string | null;
   geometry: ChartGeometry;
+  lines: ChartLine[];
 }) {
   const title = groundTrackTitle(program);
   return (
     <>
       <p className={CAPTION_CLASS}>{title}</p>
-      <AxisChart geometry={geometry} color="#0f766e" label={title} />
+      <AxisChart geometry={geometry} lines={lines} label={title} />
     </>
   );
 }
 
 function AxisChart({
   geometry,
-  color,
+  lines,
   label,
 }: {
   geometry: ChartGeometry;
-  color: string;
+  lines: ChartLine[];
   label: string;
 }) {
   return (
@@ -272,7 +326,36 @@ function AxisChart({
       >
         {geometry.xLabel}
       </text>
-      <polyline fill="none" stroke={color} strokeWidth="1.5" points={geometry.polyline} />
+      {lines.map((line) => (
+        <polyline key={line.name} fill="none" stroke={line.color} strokeWidth="1.5" points={line.points} />
+      ))}
+      {lines.length > 1 ? (
+        <g>
+          {lines.map((line, index) => {
+            const y = 14 + index * 12;
+            return (
+              <g key={`legend-${line.name}`}>
+                <line
+                  x1={PLOT_W - 92}
+                  y1={y}
+                  x2={PLOT_W - 80}
+                  y2={y}
+                  stroke={line.color}
+                  strokeWidth={2}
+                />
+                <text
+                  className="fill-slate-700 font-sans dark:fill-slate-200"
+                  fontSize="10"
+                  x={PLOT_W - 76}
+                  y={y + 3}
+                >
+                  {line.name}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      ) : null}
     </svg>
   );
 }
@@ -283,33 +366,52 @@ export function ResultsPane() {
   const selected = useStore(store, (s) => s.selectedColumns);
   const toggleSelectedColumn = useStore(store, (s) => s.toggleSelectedColumn);
 
-  const pickable = lastPlot?.columns.filter((name) => name !== "time") ?? [];
-  const times = useMemo(() => (lastPlot == null ? [] : numbers(lastPlot.rows, "time")), [lastPlot]);
-  const ground = lastPlot != null && hasGroundTrack(lastPlot.columns);
-  const series = useMemo(() => {
+  const sources = useMemo(() => {
     if (lastPlot == null) return [];
-    return selected.map((name) => ({
+    if (lastPlot.vehicles != null && lastPlot.vehicles.length > 0) return lastPlot.vehicles;
+    return [{ name: "vehicle", columns: lastPlot.columns, rows: lastPlot.rows }];
+  }, [lastPlot]);
+  const pickable = useMemo(() => {
+    const names: string[] = [];
+    const seen = new Set<string>();
+    for (const source of sources) {
+      for (const name of source.columns) {
+        if (name === "time" || seen.has(name)) continue;
+        seen.add(name);
+        names.push(name);
+      }
+    }
+    return names;
+  }, [sources]);
+  const columnModules = useMemo(() => {
+    if (lastPlot == null) return {};
+    if (lastPlot.vehicles != null && lastPlot.vehicles.length > 0) {
+      return mergedColumnModules(lastPlot.vehicles);
+    }
+    return mergedColumnModules([{ columns: lastPlot.columns, modules: lastPlot.modules }]);
+  }, [lastPlot]);
+  const groups = useMemo(
+    () => groupCurves(pickable, columnModules),
+    [columnModules, pickable],
+  );
+  const multi = sources.length > 1;
+  const series = useMemo(() => {
+    return selected.map((name, index) => ({
       name,
-      geometry: chartGeometry(times, numbers(lastPlot.rows, name), "time", name, PLOT_W, PLOT_H),
+      chart: chartLines(sources, "time", name, multi, SERIES_COLORS[index % SERIES_COLORS.length]),
     }));
-  }, [lastPlot, selected, times]);
-  const groundGeometry = useMemo(() => {
-    if (lastPlot == null || !ground) return null;
-    return chartGeometry(
-      numbers(lastPlot.rows, "lonx"),
-      numbers(lastPlot.rows, "latx"),
-      "lonx",
-      "latx",
-      PLOT_W,
-      PLOT_H,
-    );
-  }, [ground, lastPlot]);
-  const trajectory = useMemo(
-    () => (lastPlot == null ? null : trajectoryOf(lastPlot.columns, lastPlot.rows)),
+  }, [multi, selected, sources]);
+  const groundChart = useMemo(() => {
+    if (!sources.some((source) => hasGroundTrack(source.columns))) return null;
+    return chartLines(sources, "lonx", "latx", multi, "#0f766e");
+  }, [multi, sources]);
+  const tracks = useMemo(
+    () => (lastPlot == null ? [] : trajectoriesFromPlot(lastPlot)),
     [lastPlot],
   );
-  const scene = useMemo(() => (trajectory == null ? null : sceneOf(trajectory)), [trajectory]);
-  const trajectoryLabel = trajectory == null ? "" : trajectoryTitle(program, trajectory.kind);
+  const scene = useMemo(() => sceneOfTracks(tracks), [tracks]);
+  const trajectoryKind = tracks[0]?.trajectory.kind ?? null;
+  const trajectoryLabel = trajectoryKind == null ? "" : trajectoryTitle(program, trajectoryKind);
 
   if (lastPlot == null) {
     return (
@@ -323,47 +425,60 @@ export function ResultsPane() {
   return (
     <div className="text-sm text-slate-700 dark:text-slate-200">
       <h2 className="mb-3 text-base font-semibold text-slate-800 dark:text-slate-100">Results</h2>
-      {series.map((item, i) => {
-        if (item.geometry == null) return null;
+      {series.map((item) => {
+        if (item.chart == null) return null;
         const title = seriesTitle(program, item.name);
         return (
           <Fragment key={item.name}>
             <p className={CAPTION_CLASS}>{title}</p>
-            <AxisChart
-              geometry={item.geometry}
-              color={SERIES_COLORS[i % SERIES_COLORS.length]}
-              label={title}
-            />
+            <AxisChart geometry={item.chart.geometry} lines={item.chart.lines} label={title} />
           </Fragment>
         );
       })}
-      {groundGeometry != null ? (
-        <GroundTrack program={program} geometry={groundGeometry} />
+      {groundChart != null ? (
+        <GroundTrack program={program} geometry={groundChart.geometry} lines={groundChart.lines} />
       ) : null}
-      {trajectory != null ? (
+      {scene != null && trajectoryKind != null ? (
         <>
-          <TrajectoryStill
-            program={program}
-            kind={trajectory.kind}
-            xName={trajectory.xName}
-            yName={trajectory.yName}
-            zName={trajectory.zName}
-            points={trajectory.points}
-          />
-          {scene != null ? <TrajectoryView scene={scene} label={trajectoryLabel} /> : null}
+          <TrajectoryStill program={program} kind={trajectoryKind} scene={scene} />
+          <TrajectoryView scene={scene} label={trajectoryLabel} />
         </>
       ) : null}
       <fieldset className="space-y-1">
         <legend className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">columns vs time</legend>
-        {pickable.map((name) => (
-          <label key={name} className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={selected.includes(name)}
-              onChange={() => toggleSelectedColumn(name)}
-            />
-            <FieldLabel label={name} hint={columnHint(program, name)} />
-          </label>
+        {groups.map((group) => (
+          <div key={group.physics}>
+            <h3 className="mb-1 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+              {group.physics}
+            </h3>
+            {group.loose.map((name) => (
+              <label key={name} className="flex items-center gap-2 pl-2">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(name)}
+                  onChange={() => toggleSelectedColumn(name)}
+                />
+                <FieldLabel label={name} hint={columnHint(program, name)} />
+              </label>
+            ))}
+            {group.modules.map((mod) => (
+              <div key={mod.module}>
+                <h4 className="mb-1 mt-1 pl-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {mod.module}
+                </h4>
+                {mod.names.map((name) => (
+                  <label key={name} className="flex items-center gap-2 pl-4">
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(name)}
+                      onChange={() => toggleSelectedColumn(name)}
+                    />
+                    <FieldLabel label={name} hint={columnHint(program, name)} />
+                  </label>
+                ))}
+              </div>
+            ))}
+          </div>
         ))}
       </fieldset>
     </div>

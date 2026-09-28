@@ -7,6 +7,9 @@ import {
   encodeTurntableGif,
   legendHudRows,
   markerSize,
+  labelClearance,
+  labelInk,
+  labelOffsetDistance,
   opaqueClearColor,
   orbitCamera,
   projectTurntable,
@@ -16,6 +19,7 @@ import {
   renderSceneGif,
   sceneFrame,
   sceneOf,
+  sceneOfTracks,
   shouldStopRecorder,
   startFramePump,
   tickFraction,
@@ -44,6 +48,17 @@ it("maps local level to east, north, and up", () => {
     xName: "SBEL2",
     yName: "SBEL1",
     zName: "-SBEL3",
+    points: [{ x: 20, y: 10, z: 5 }],
+  });
+});
+
+it("maps aircraft local level the same way as missile local level", () => {
+  const path = trajectoryOf(["SAEL1", "SAEL2", "SAEL3"], [{ SAEL1: 10, SAEL2: 20, SAEL3: -5 }]);
+  expect(path).toEqual({
+    kind: "local",
+    xName: "SAEL2",
+    yName: "SAEL1",
+    zName: "-SAEL3",
     points: [{ x: 20, y: 10, z: 5 }],
   });
 });
@@ -243,6 +258,35 @@ it("covers a two-point geographic path with x/y/z ticks and a three-entry legend
     { label: "start", color: "#15803d", kind: "start" },
     { label: "end", color: "#b91c1c", kind: "end" },
   ]);
+});
+
+it("draws every vehicle on one shared scale", () => {
+  const missile = trajectoryOf(
+    ["SBEL1", "SBEL2", "SBEL3"],
+    [
+      { SBEL1: 0, SBEL2: 0, SBEL3: 0 },
+      { SBEL1: 0, SBEL2: 100, SBEL3: 0 },
+    ],
+  );
+  const target = trajectoryOf(
+    ["SAEL1", "SAEL2", "SAEL3"],
+    [
+      { SAEL1: 0, SAEL2: 0, SAEL3: 0 },
+      { SAEL1: 0, SAEL2: 10, SAEL3: 0 },
+    ],
+  );
+  const scene = sceneOfTracks([
+    { name: "Missile 1", trajectory: missile! },
+    { name: "Target 1", trajectory: target! },
+  ]);
+  expect(scene).not.toBeNull();
+  expect(scene!.series.map((item) => item.name)).toEqual(["Missile 1", "Target 1"]);
+  expect(scene!.series[0].color).not.toBe(scene!.series[1].color);
+  expect(scene!.series[0].points[1].x).toBeCloseTo(1);
+  expect(scene!.series[1].points[1].x).toBeCloseTo(0.1);
+  expect(scene!.legend.map((item) => item.label)).toEqual(["Missile 1", "Target 1", "start", "end"]);
+  expect(scene!.markers.filter((marker) => marker.kind === "start")).toHaveLength(2);
+  expect(scene!.markers.filter((marker) => marker.kind === "end")).toHaveLength(2);
 });
 
 it("puts a custom series name on the series and the line legend", () => {
@@ -498,6 +542,20 @@ it("does not stop an inactive recorder", () => {
   expect(shouldStopRecorder("inactive")).toBe(false);
   expect(shouldStopRecorder("recording")).toBe(true);
   expect(shouldStopRecorder("paused")).toBe(true);
+});
+
+it("offsets a label so its box clears the anchor", () => {
+  expect(labelOffsetDistance(1, 0, 40, 16, 6)).toBe(26);
+  expect(labelOffsetDistance(0, -2, 40, 16, 6)).toBe(14);
+  expect(labelClearance({ x: 10, y: 20 }, { x: 10, y: 0 }, 14)).toEqual({ x: 10, y: 6 });
+});
+
+it("paints plot labels light on a dark canvas and dark on a light canvas", () => {
+  expect(labelInk("rgb(15, 23, 42)")).toEqual({ fill: "#f8fafc", stroke: "#020617" });
+  expect(labelInk("rgb(255, 255, 255)")).toEqual({ fill: "#1e293b", stroke: "#ffffff" });
+  expect(labelInk("#0f172a")).toEqual({ fill: "#f8fafc", stroke: "#020617" });
+  expect(labelInk("transparent")).toEqual({ fill: "#1e293b", stroke: "#ffffff" });
+  expect(labelInk(undefined)).toEqual({ fill: "#1e293b", stroke: "#ffffff" });
 });
 
 it("uses the canvas CSS background as an opaque clear color, or white when transparent", () => {

@@ -14,6 +14,10 @@ const UNITS: Record<string, string> = {
   thtvgx: "deg",
   SBEG: "m",
   SBEL: "m",
+  SAEL: "m",
+  east: "m",
+  north: "m",
+  up: "m",
   VBEG: "m/s",
   throttle: "ND",
   mass: "kg",
@@ -23,7 +27,7 @@ const UNITS: Record<string, string> = {
   alphax: "deg",
 };
 
-const VECTOR_STEMS = ["FSPV", "SBEG", "SBEL", "VBEG"] as const;
+const VECTOR_STEMS = ["FSPV", "SBEG", "SBEL", "SAEL", "VBEG"] as const;
 
 const TICK_TARGET = 4;
 
@@ -196,6 +200,39 @@ export function chartGeometry(
     frame,
     xTitle: { x: frame.x + frame.w / 2, y: height - 6 },
     yTitle: { x: frame.x, y: 12 },
+  };
+}
+
+export function overlayChart(
+  series: { name: string; xs: number[]; ys: number[] }[],
+  xName: string,
+  yName: string,
+  width: number,
+  height: number,
+): { geometry: ChartGeometry; series: { name: string; polyline: string }[] } | null {
+  const groups = series
+    .map((item) => ({ name: item.name, pairs: finitePairs(item.xs, item.ys) }))
+    .filter((item) => item.pairs.length > 0);
+  if (groups.length === 0) return null;
+  const xs = groups.flatMap((item) => item.pairs.map((pair) => pair.x));
+  const ys = groups.flatMap((item) => item.pairs.map((pair) => pair.y));
+  const geometry = chartGeometry(xs, ys, xName, yName, width, height);
+  if (geometry == null) return null;
+  const xmin = geometry.xTicks[0].value;
+  const xmax = geometry.xTicks[geometry.xTicks.length - 1].value;
+  const ymin = geometry.yTicks[0].value;
+  const ymax = geometry.yTicks[geometry.yTicks.length - 1].value;
+  const xSpan = xmax - xmin || 1;
+  const ySpan = ymax - ymin || 1;
+  const xPix = (value: number) => geometry.frame.x + ((value - xmin) / xSpan) * geometry.frame.w;
+  const yPix = (value: number) =>
+    geometry.frame.y + geometry.frame.h - ((value - ymin) / ySpan) * geometry.frame.h;
+  return {
+    geometry,
+    series: groups.map((item) => ({
+      name: item.name,
+      polyline: item.pairs.map((pair) => `${xPix(pair.x)},${yPix(pair.y)}`).join(" "),
+    })),
   };
 }
 

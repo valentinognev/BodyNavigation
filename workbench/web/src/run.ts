@@ -14,6 +14,8 @@ type GetRunBody = {
   ok?: boolean;
   columns?: string[];
   rows?: Record<string, number>[];
+  vehicles?: PlotData["vehicles"];
+  modules?: Record<string, string>;
   error?: unknown;
 };
 
@@ -75,7 +77,12 @@ export async function startRun(api: StoreApi<WorkbenchState>): Promise<void> {
         Array.isArray(st.columns) &&
         Array.isArray(st.rows)
       ) {
-        const plot: PlotData = { columns: st.columns, rows: st.rows };
+        const plot: PlotData = {
+          columns: st.columns,
+          rows: st.rows,
+          ...(Array.isArray(st.vehicles) ? { vehicles: st.vehicles } : {}),
+          ...(st.modules != null && typeof st.modules === "object" ? { modules: st.modules } : {}),
+        };
         api.getState().setLastPlot(plot);
       } else if (!api.getState().runAbandoned && st.status !== "cancelled") {
         api.setState({ runError: String(st.error ?? "run failed") });

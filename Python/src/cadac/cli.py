@@ -1,11 +1,11 @@
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from cadac.constants import EPS
 from cadac.io.deck import load_deck
 from cadac.stoch import seed
-from cadac.io.plot import PLOT_COLUMNS, flagged_plot_columns, plot_row, write_plot_csv
+from cadac.io.plot import PLOT_COLUMNS, column_modules, flagged_plot_columns, plot_row, write_plot_csv
 from cadac.io.scenario import load_scenario
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
@@ -107,6 +107,8 @@ def _resolve_vehicle(family, vtype):
 @dataclass
 class RunResult:
     plot_rows: list[dict]
+    tracks: list[dict] = field(default_factory=list)
+    column_modules: dict = field(default_factory=dict)
 
 
 def _deck(path):
@@ -143,7 +145,55 @@ def _build_sam6_vehicle(path, spec, cls):
     )
 
 
-def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
+def track_names(names):
+    counts = {}
+    for name in names:
+        counts[name] = counts.get(name, 0) + 1
+    seen = {}
+    labels = []
+    for name in names:
+        seen[name] = seen.get(name, 0) + 1
+        if counts[name] == 1:
+            labels.append(name)
+        else:
+            labels.append(f"{name} {seen[name]}")
+    return labels
+
+
+def track_columns(store):
+    if store is None:
+        return None
+    if all(name in store for name in ("latx", "lonx", "alt")):
+        return ["latx", "lonx", "alt"]
+    for stem in ("SBEL", "SAEL"):
+        field = store.field(stem) if stem in store else None
+        if field is not None and field.type == "vec":
+            return [f"{stem}1", f"{stem}2", f"{stem}3"]
+    return None
+
+
+def series_columns(vehicle, columns_fn):
+    store = getattr(vehicle, "store", None)
+    if store is None:
+        return None
+    columns = []
+    seen = set()
+
+    def add(name):
+        if name not in seen:
+            seen.add(name)
+            columns.append(name)
+
+    for name in columns_fn(vehicle):
+        add(name)
+    for name in track_columns(store) or []:
+        add(name)
+    if not columns:
+        return None
+    return columns
+
+
+def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None, tracks=None):
     if columns_fn is None:
         columns_fn = _plot_columns
     plot_time = 0.0
@@ -153,6 +203,13 @@ def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None):
         if abs(plot_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
             if ctx.vehicle_slot == 0:
                 plot_rows.append(plot_row(vehicle.store, columns=columns_fn(vehicle)))
+            if tracks is not None:
+                columns = series_columns(vehicle, columns_fn)
+                if columns is not None:
+                    row = plot_row(vehicle.store, columns=columns)
+                    if "time" not in row:
+                        row = {"time": ctx.sim_time, **row}
+                    tracks[ctx.vehicle_slot].append(row)
             if ctx.vehicle_slot == nveh - 1:
                 plot_time += plot_step * (1.0 + ctx.out_fact)
 
@@ -244,7 +301,8 @@ def run_scenario(path):
     plot_rows = []
     nveh = len(vehicles)
     csv_columns = _plot_columns(vehicles[0]) if vehicles else list(PLOT_COLUMNS)
-    on_step = make_plot_on_step(plot_rows, plot_step, nveh)
+    track_rows = [[] for _ in vehicles]
+    on_step = make_plot_on_step(plot_rows, plot_step, nveh, tracks=track_rows)
 
     run_loop(
         vehicles,
@@ -257,6 +315,9 @@ def run_scenario(path):
     if vehicles and type(vehicles[0]) is Rotor:
         # MAGSIX Rotor::plot_data ignores merge, so the C++ post-loop dump is a real row.
         plot_rows.append(plot_row(vehicles[0].store, columns=csv_columns))
+        rotor_columns = series_columns(vehicles[0], _plot_columns)
+        if rotor_columns is not None:
+            track_rows[0].append(plot_row(vehicles[0].store, columns=rotor_columns))
     if cfg.options["plot"] and cfg.options["csv"]:
         write_plot_csv(
             path.parent / "plot.csv",
@@ -264,7 +325,30 @@ def run_scenario(path):
             csv_columns,
             [[row[column] for column in csv_columns] for row in plot_rows],
         )
-    return RunResult(plot_rows=plot_rows)
+    labels = track_names(
+        [
+            getattr(vehicle, "name", "") or getattr(vehicle, "type", "") or f"vehicle {slot + 1}"
+            for slot, vehicle in enumerate(vehicles)
+        ]
+    )
+    tracks = []
+    for slot, _vehicle in enumerate(vehicles):
+        if not track_rows[slot]:
+            continue
+        columns = list(track_rows[slot][0].keys())
+        tracks.append(
+            {
+                "name": labels[slot],
+                "columns": columns,
+                "rows": track_rows[slot],
+                "modules": column_modules(vehicles[slot].store, columns),
+            }
+        )
+    return RunResult(
+        plot_rows=plot_rows,
+        tracks=tracks,
+        column_modules=column_modules(vehicles[0].store, csv_columns) if vehicles else {},
+    )
 
 
 def _plot_columns(vehicle):

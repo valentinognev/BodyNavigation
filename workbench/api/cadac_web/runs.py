@@ -72,7 +72,13 @@ def run_case(
             return {"ok": False, "error": str(exc)}
         rows = result.plot_rows
         columns = list(rows[0].keys()) if rows else []
-        return {"ok": True, "columns": columns, "rows": rows}
+        return {
+            "ok": True,
+            "columns": columns,
+            "rows": rows,
+            "vehicles": list(getattr(result, "tracks", None) or []),
+            "modules": dict(getattr(result, "column_modules", None) or {}),
+        }
 
 
 def _cannot_start(program: str, stem: str) -> dict | None:
@@ -181,6 +187,8 @@ def run_status(run_id: str) -> dict | None:
         if status == "done":
             payload["columns"] = result.get("columns", [])
             payload["rows"] = result.get("rows", [])
+            payload["vehicles"] = result.get("vehicles", [])
+            payload["modules"] = result.get("modules", {})
         if status == "error":
             payload["error"] = result.get("error", "error")
         return payload

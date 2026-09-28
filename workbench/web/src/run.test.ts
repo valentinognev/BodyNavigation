@@ -67,6 +67,47 @@ it("done ok sets lastPlot", async () => {
   expect(store.getState().runInFlight).toBe(false);
 });
 
+it("done ok keeps a track for every vehicle", async () => {
+  const vehicles = [
+    {
+      name: "Missile 1",
+      columns: ["SBEL1", "SBEL2", "SBEL3"],
+      rows: [{ SBEL1: 0, SBEL2: 1, SBEL3: -2 }],
+      modules: { SBEL1: "newton", SBEL2: "newton", SBEL3: "newton" },
+    },
+    {
+      name: "Target 1",
+      columns: ["SAEL1", "SAEL2", "SAEL3"],
+      rows: [{ SAEL1: 3, SAEL2: 4, SAEL3: -5 }],
+    },
+  ];
+  const fetchMock = vi.fn(async (url: string) => {
+    if (url === "/run") return jsonResponse({ ok: true, runId: "r1" });
+    if (url === "/run/r1") {
+      return jsonResponse({
+        status: "done",
+        ok: true,
+        columns: ["time", "alt"],
+        rows: [{ time: 0, alt: 1 }],
+        vehicles,
+        modules: { alt: "newton" },
+      });
+    }
+    throw new Error(`unexpected ${url}`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  const store = createStore();
+  store.setState({
+    program: "sraam6",
+    stem: "input_2v2",
+    scenario: scenarioFromJson(hyper3Like),
+  });
+  await startRun(store);
+  expect(store.getState().lastPlot?.vehicles).toEqual(vehicles);
+  expect(store.getState().lastPlot?.modules).toEqual({ alt: "newton" });
+  expect(store.getState().lastPlot?.vehicles?.[0].modules?.SBEL1).toBe("newton");
+});
+
 it("error does not clear lastPlot", async () => {
   const fetchMock = vi.fn(async (url: string) => {
     if (url === "/run") return jsonResponse({ ok: true, runId: "r1" });
