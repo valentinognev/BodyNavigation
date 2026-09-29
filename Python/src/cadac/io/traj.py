@@ -20,6 +20,17 @@ def _is_vector_name(name: str) -> bool:
     return bool(name) and name[0].isupper()
 
 
+def _is_vector_entry(name: str, value) -> bool:
+    if _is_vector_name(name):
+        return True
+    if isinstance(value, (str, bytes, bytearray)):
+        return False
+    try:
+        return len(value) == 3
+    except TypeError:
+        return False
+
+
 def _packet_names(packet: Packet) -> list[str]:
     return list(packet.vars.keys())
 
@@ -36,7 +47,9 @@ def nvariables(combus: list[Packet]) -> int:
     total = 0
     for packet in packets:
         names = _packet_names(packet)
-        nvec = sum(1 for name in names if _is_vector_name(name))
+        nvec = sum(
+            1 for name in names if _is_vector_entry(name, packet.vars[name])
+        )
         total += len(names) + 2 * nvec
     return total - (len(packets) - 1)
 
@@ -91,7 +104,7 @@ def write_traj_banner(
                     m = 1
                 continue
             buff = _truncate_label(name)
-            if _is_vector_name(name):
+            if _is_vector_entry(name, packet.vars[name]):
                 for n in range(1, 4):
                     stream.write(f"{buff}{n}_")
                     pad = 14 - len(buff)
@@ -118,7 +131,7 @@ def _flatten_packet_values(packet: Packet, *, skip_time: bool) -> list[float]:
     for name, value in packet.vars.items():
         if skip_time and name == "time":
             continue
-        if _is_vector_name(name):
+        if _is_vector_entry(name, value):
             values.extend(float(value[i]) for i in range(3))
         elif isinstance(value, int) and not isinstance(value, bool):
             values.append(float(value))

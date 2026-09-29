@@ -1,5 +1,9 @@
 # Updates
 
+## 0.191.1 - Traj/comscrn flatten length-3 packet vectors
+- `traj` and `comscrn` treat length-3 packet values (e.g. lowercase `sbii`) as vectors and emit three float columns; cruise one-step traj smoke no longer TypeErrors.
+- Tests: `test_traj_flatten_vector.py`, `test_comscrn_flatten_vector.py`; regression `test_cruise5_one_step.py`.
+
 ## 0.191.0 - CADAC unported abilities wave
 - Feature-scale port of previously missing CADAC abilities across vehicle families (SRAAM5/6, CRUISE5, HYPER3/6, ROCKET3/6, FALCON5/6, AIM5, SAM6, AGM6, …) plus kernel I/O (comscrn, doc, merge, scrn, stat, tabout, traj) and related scenario/translate/executive hooks.
 - CRUISE5 vehicle, target, and satellite now construct `Cruise5Environment` so `mair=1` is cruise constant wind (branch fix in this wave).

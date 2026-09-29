@@ -1,6 +1,6 @@
 # Traj Flatten Non-Scalar Packet Values Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Make CADAC traj (and sibling comscrn) writers emit length-3 packet vectors such as lowercase `sbii` as three float columns without TypeError, matching the existing uppercase-vector column shape.
 
@@ -44,7 +44,7 @@
   - `_flatten_packet_values(packet, *, skip_time: bool) -> list[float]` — for vector entries, `extend(float(value[i]) for i in range(3))`; scalars unchanged (ints→float).
   - `nvariables(combus)` / `write_traj_banner` count and label using `_is_vector_entry` so banner columns match data columns.
 
-- [ ] **Step 1: Write the failing unit test**
+- [x] **Step 1: Write the failing unit test**
 
 Create `Python/tests/unit/test_traj_flatten_vector.py`:
 
@@ -110,7 +110,7 @@ def test_write_traj_data_emits_sbii_components_without_typeerror():
     assert "1000" in text
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -120,7 +120,7 @@ cd Python && PYTHONPATH=src:tools python -m pytest tests/unit/test_traj_flatten_
 
 Expected: FAIL — `TypeError: only 0-dimensional arrays can be converted to Python scalars` (or AssertionError on nvariables/banner if flatten were patched alone). At least `test_flatten_expands_lowercase_sbii_to_three_floats` and `test_write_traj_data_emits_sbii_components_without_typeerror` must fail.
 
-- [ ] **Step 3: Minimal implementation in traj.py**
+- [x] **Step 3: Minimal implementation in traj.py**
 
 Replace name-only vector checks used for counting/flattening with a value-aware helper. Keep `_is_vector_name` for the uppercase CADAC rule.
 
@@ -174,7 +174,7 @@ def _flatten_packet_values(packet: Packet, *, skip_time: bool) -> list[float]:
 
 Do not change field widths, merge `-1.0` endblock, or `packets_from_vehicles`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -184,7 +184,7 @@ cd Python && PYTHONPATH=src:tools python -m pytest tests/unit/test_traj_flatten_
 
 Expected: PASS (all new traj flatten tests + existing `test_y_traj_writes_traj_asc`).
 
-- [ ] **Step 5: Commit (only if the user asks)**
+- [x] **Step 5: Commit (only if the user asks)**
 
 ```bash
 git add Python/tests/unit/test_traj_flatten_vector.py Python/src/cadac/io/traj.py
@@ -209,7 +209,7 @@ Skip this step unless the user explicitly requested a commit.
 - Consumes: same `Packet` shape as Task 1; `_is_vector_name` remains.
 - Produces: `_is_vector_entry` identical semantics to Task 1; `_flatten_values(packet) -> list[float]` expands length-3 entries; banner labels write `stem1`/`stem2`/`stem3` for those entries.
 
-- [ ] **Step 1: Write the failing unit test**
+- [x] **Step 1: Write the failing unit test**
 
 Create `Python/tests/unit/test_comscrn_flatten_vector.py`:
 
@@ -256,7 +256,7 @@ def test_write_comscrn_data_emits_sbii_components_without_typeerror():
     assert "1.0" in text and "2.0" in text and "3.0" in text
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -266,7 +266,7 @@ cd Python && PYTHONPATH=src:tools python -m pytest tests/unit/test_comscrn_flatt
 
 Expected: FAIL with TypeError on `float(value)` for `sbii` (same as traj).
 
-- [ ] **Step 3: Minimal implementation in comscrn.py**
+- [x] **Step 3: Minimal implementation in comscrn.py**
 
 Add the same `_is_vector_entry` as Task 1 (duplicate locally; do not invent a shared util unless both files already share one — YAGNI).
 
@@ -286,7 +286,7 @@ In `write_comscrn_data` label loop, replace `_is_vector_name(name)` with `_is_ve
 
 In `_flatten_values`, replace `_is_vector_name(name)` with `_is_vector_entry(name, value)` and keep the three-component `extend`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -296,7 +296,7 @@ cd Python && PYTHONPATH=src:tools python -m pytest tests/unit/test_comscrn_flatt
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit (only if the user asks)**
+- [x] **Step 5: Commit (only if the user asks)**
 
 ```bash
 git add Python/tests/unit/test_comscrn_flatten_vector.py Python/src/cadac/io/comscrn.py
@@ -321,7 +321,7 @@ Skip unless the user explicitly requested a commit.
 - Consumes: Task 1 traj fix (input_1.jsonc has `"traj": true`, so `run_scenario` hits `write_traj_banner` / `write_traj_data`).
 - Produces: green cruise one-step suite; `UPDATES.md` `0.191.1` note.
 
-- [ ] **Step 1: Run the previously failing smoke + related cruise units**
+- [x] **Step 1: Run the previously failing smoke + related cruise units**
 
 Run:
 
@@ -333,7 +333,7 @@ Expected: PASS, including `test_smoke_one_step_alt_finite_and_health` (previousl
 
 If smoke still fails for a non-traj reason, stop and report — do not reopen Environment/weather packing.
 
-- [ ] **Step 2: Update UPDATES.md**
+- [x] **Step 2: Update UPDATES.md**
 
 Add on top (adjust version if `0.191.1` already exists):
 
@@ -345,7 +345,7 @@ Add on top (adjust version if `0.191.1` already exists):
 
 Do not edit `README.md` (architecture unchanged).
 
-- [ ] **Step 3: Commit (only if the user asks)**
+- [x] **Step 3: Commit (only if the user asks)**
 
 ```bash
 git add UPDATES.md Python/tests/unit/test_traj_flatten_vector.py Python/tests/unit/test_comscrn_flatten_vector.py Python/src/cadac/io/traj.py Python/src/cadac/io/comscrn.py

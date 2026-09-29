@@ -18,6 +18,17 @@ def _is_vector_name(name: str) -> bool:
     return bool(name) and name[0].isupper()
 
 
+def _is_vector_entry(name: str, value) -> bool:
+    if _is_vector_name(name):
+        return True
+    if isinstance(value, (str, bytes, bytearray)):
+        return False
+    try:
+        return len(value) == 3
+    except TypeError:
+        return False
+
+
 def _packet_names(packet: Packet) -> list[str]:
     return list(packet.vars.keys())
 
@@ -51,7 +62,7 @@ def _flatten_values(packet: Packet) -> list[float]:
     for name, value in packet.vars.items():
         if name == "time":
             continue
-        if _is_vector_name(name):
+        if _is_vector_entry(name, value):
             values.extend(float(value[i]) for i in range(3))
         elif isinstance(value, int) and not isinstance(value, bool):
             values.append(float(value))
@@ -80,7 +91,7 @@ def write_comscrn_data(
             if name == "time":
                 continue
             buff = _truncate_label(name)
-            if _is_vector_name(name):
+            if _is_vector_entry(name, first.vars[name]):
                 for n in range(1, 4):
                     pad = max(1, _FIELD_WIDTH - len(buff))
                     stream.write(f"{buff}{n:<{pad}}")
