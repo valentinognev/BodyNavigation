@@ -192,9 +192,27 @@ def track_columns(store):
         return None
     if all(name in store for name in ("latx", "lonx", "alt")):
         return ["latx", "lonx", "alt"]
-    for stem in ("SBEL", "SAEL"):
-        field = store.field(stem) if stem in store else None
-        if field is not None and field.type == "vec":
+
+    def vec_stem(stem):
+        if stem not in store:
+            return None
+        field = store.field(stem)
+        if field.type != "vec":
+            return None
+        return field
+
+    sbel = vec_stem("SBEL")
+    sael = vec_stem("SAEL")
+    newton = [
+        stem
+        for stem, field in (("SBEL", sbel), ("SAEL", sael))
+        if field is not None and field.module == "newton"
+    ]
+    if len(newton) == 1:
+        stem = newton[0]
+        return [f"{stem}1", f"{stem}2", f"{stem}3"]
+    for stem, field in (("SBEL", sbel), ("SAEL", sael)):
+        if field is not None:
             return [f"{stem}1", f"{stem}2", f"{stem}3"]
     return None
 

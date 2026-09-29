@@ -1,5 +1,8 @@
 # Updates
 
+## 0.191.3 - Target tracks use aircraft position
+- Recorded position prefers the `newton` vector when both `SBEL` and `SAEL` exist, so a target's auxiliary `SBEL` no longer hides `SAEL`.
+
 ## 0.191.2 - Suite red follow-ups after unported abilities
 - Quality: exempt rising `look_up`; allow `for name in store.names()` while banning membership.
 - Cruise5 tests expect `Cruise5Environment`; HYPER6 maut 32/42 assert pitch-rate; seeker plants STBIK/VTBIK on execute.
