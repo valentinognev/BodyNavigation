@@ -41,6 +41,9 @@ class Hyper5Intercept:
         time = store.get("time")
         alt = store.get("alt")
         sbeg = store.get("sbeg")
+        mguidance = store.get("mguidance")
+        wp_alt = store.get("wp_alt")
+        swbg = store.get("SWBG")
         mseeker = store.get("mseeker")
         range_go = store.get("range_go")
         stbg = store.get("STBG")
@@ -57,6 +60,14 @@ class Hyper5Intercept:
             write = 0
             vehicle.health = 0
             ctx.combus[ctx.vehicle_slot].status = 0
+        if mguidance == 33 or mguidance == 43:
+            if (alt <= wp_alt) and write:
+                write = 0
+                miss = sqrt(
+                    float(swbg[0] ** 2 + swbg[1] ** 2 + swbg[2] ** 2)
+                )
+                vehicle.health = 0
+                ctx.combus[ctx.vehicle_slot].status = 0
         if mseeker == 3:
             if range_go < 1000:
                 steg = ctx.combus[targ_com_slot].vars["sbeg"]

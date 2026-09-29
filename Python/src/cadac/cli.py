@@ -7,6 +7,27 @@ from cadac.io.deck import load_deck
 from cadac.stoch import seed
 from cadac.io.plot import PLOT_COLUMNS, column_modules, flagged_plot_columns, plot_row, write_plot_csv
 from cadac.io.scenario import load_scenario
+from cadac.io.doc import document_input, open_doc_stream, write_vehicle_doc
+from cadac.io.stat import merge_stat_files, open_stat_streams, write_stat_data
+from cadac.io.merge import merge_plot_files, open_plot_streams, write_plot_data
+from cadac.io.tabout import (
+    open_tabout_stream,
+    scrn_stems,
+    write_tabout_banner,
+    write_tabout_data,
+)
+from cadac.io.scrn import (
+    default_scrn_stream,
+    write_scrn_banner,
+    write_scrn_data,
+)
+from cadac.io.comscrn import open_comscrn_stream, write_comscrn_data
+from cadac.io.traj import (
+    open_traj_stream,
+    packets_from_vehicles,
+    write_traj_banner,
+    write_traj_data,
+)
 from cadac.kernel.executive import SimContext, run_loop
 from cadac.tables.lookup import Datadeck
 from cadac.vehicles.flat6.agm6.aircraft import Agm6Aircraft
@@ -32,8 +53,10 @@ from cadac.vehicles.flat6.sam6.aircraft import Sam6Aircraft
 from cadac.vehicles.flat6.sam6.radar import Sam6Radar
 from cadac.vehicles.flat6.sam6.rocket import Sam6Rocket
 from cadac.vehicles.flat6.sam6.vehicle import Sam6Missile
+from cadac.vehicles.flat5.sraam5.vehicle import Sraam5
 from cadac.vehicles.flat6.sraam6.target import Sraam6Target
 from cadac.vehicles.flat6.sraam6.vehicle import Sraam6Missile
+from cadac.vehicles.round3.rocket3.vehicle import Rocket3
 
 _VEHICLE_TYPES = {
     "CRUISE3": Cruise3,
@@ -64,6 +87,8 @@ _NO_DECK_FAMILY_TYPES = {
     ("sraam6", "TARGET3"),
     ("agm6", "TARGET3"),
     ("agm6", "AIRCRAFT3"),
+    ("sraam5", "SRAAM5"),
+    ("rocket3", "ROCKET3"),
 }
 
 
@@ -88,6 +113,8 @@ register_family_type("sraam6", "TARGET3", Sraam6Target)
 register_family_type("agm6", "MISSILE6", Agm6Missile)
 register_family_type("agm6", "TARGET3", Agm6Target)
 register_family_type("agm6", "AIRCRAFT3", Agm6Aircraft)
+register_family_type("sraam5", "SRAAM5", Sraam5)
+register_family_type("rocket3", "ROCKET3", Rocket3)
 
 
 def _resolve_vehicle(family, vtype):
@@ -216,7 +243,9 @@ def make_run_progress(end_time, on_progress=None):
     return consider
 
 
-def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None, tracks=None):
+def make_plot_on_step(
+    plot_rows, plot_step, nveh, columns_fn=None, tracks=None, ploti_streams=None
+):
     if columns_fn is None:
         columns_fn = _plot_columns
     plot_time = 0.0
@@ -233,6 +262,13 @@ def make_plot_on_step(plot_rows, plot_step, nveh, columns_fn=None, tracks=None):
                     if "time" not in row:
                         row = {"time": ctx.sim_time, **row}
                     tracks[ctx.vehicle_slot].append(row)
+            if ploti_streams is not None:
+                slot = ctx.vehicle_slot
+                stream = ploti_streams[slot] if slot < len(ploti_streams) else None
+                if stream is not None:
+                    # Rotor::plot_data ignores merge; timed rows always use real time
+                    write_plot_data(stream, vehicle.store, merge=False)
+                    stream.flush()
             if ctx.vehicle_slot == nveh - 1:
                 plot_time += plot_step * (1.0 + ctx.out_fact)
 
@@ -283,10 +319,41 @@ def _build_vehicle(path, spec):
     )
 
 
-def run_scenario(path, *, on_progress=None):
-    path = Path(path)
-    cfg = load_scenario(path)
-    seed(cfg.iseed)
+def _wrap_event_epoch(vehicle):
+    """Mirror C++ event(): set vehicle.event_epoch from EventEngine.evaluate result."""
+    engine = getattr(vehicle, "events", None)
+    if engine is None:
+        vehicle.event_epoch = False
+        return
+    orig = engine.evaluate
+
+    def evaluate(store, _orig=orig, _vehicle=vehicle):
+        fired = _orig(store)
+        _vehicle.event_epoch = bool(fired)
+        return fired
+
+    engine.evaluate = evaluate
+    vehicle.event_epoch = False
+
+
+def _has_scrn_outputs(vehicle) -> bool:
+    store = getattr(vehicle, "store", None)
+    return store is not None and bool(scrn_stems(store))
+
+
+def _run_scenario_once(
+    path,
+    cfg,
+    *,
+    on_progress=None,
+    nmc=0,
+    stat_state=None,
+    plot_state=None,
+    tabout_state=None,
+    traj_state=None,
+    comscrn_state=None,
+):
+    """One Monte Carlo / deterministic iteration (vehicles rebuilt each pass)."""
     try:
         int_step = float(cfg.timing["int_step"])
     except KeyError as exc:
@@ -294,6 +361,9 @@ def run_scenario(path, *, on_progress=None):
     if int_step <= 0:
         raise ValueError(f"{path}: int_step {int_step}")
     plot_step = float(cfg.timing.get("plot_step", int_step))
+    scrn_step = float(cfg.timing.get("scrn_step", int_step))
+    traj_step = float(cfg.timing.get("traj_step", int_step))
+    com_step = float(cfg.timing.get("com_step", int_step))
     phases = {module.name: module.phases for module in cfg.modules}
     module_order = [module.name for module in cfg.modules if "exec" in module.phases]
 
@@ -321,15 +391,187 @@ def run_scenario(path, *, on_progress=None):
         vehicles.append(vehicle)
         modules_by_vehicle[vehicle] = vehicle.modules
 
+    # C++ y_doc: Vehicle::document → doc.asc once per type; document_input once at nmc==0
+    if bool(cfg.options.get("doc")) and nmc == 0:
+        _, doc_stream = open_doc_stream(path.parent)
+        documented_types: set[str] = set()
+        all_entries = []
+        try:
+            for vehicle in vehicles:
+                vtype = getattr(vehicle, "type", "")
+                if not vtype or vtype in documented_types:
+                    continue
+                documented_types.add(vtype)
+                all_entries.extend(
+                    write_vehicle_doc(doc_stream, vtype, cfg.title, vehicle.store)
+                )
+            document_input(path.parent, all_entries)
+        finally:
+            doc_stream.close()
+
+    want_stat = bool(cfg.options.get("stat"))
+    stati_write_term = [True] * len(vehicles)
+    if want_stat:
+        for vehicle in vehicles:
+            _wrap_event_epoch(vehicle)
+        if stat_state is not None and stat_state.get("streams") is None:
+            paths, streams = open_stat_streams(path.parent, cfg.title, vehicles)
+            stat_state["paths"] = paths
+            stat_state["streams"] = streams
+
+    want_plot_asc = bool(cfg.options.get("plot"))
+    if want_plot_asc and plot_state is not None and plot_state.get("streams") is None:
+        paths, streams = open_plot_streams(path.parent, cfg.title, vehicles)
+        plot_state["paths"] = paths
+        plot_state["streams"] = streams
+
+    want_scrn = bool(cfg.options.get("scrn"))
+    scrn_stream = default_scrn_stream() if want_scrn else None
+    want_tabout = bool(cfg.options.get("tabout"))
+    tabout_stream = None
+    scrn_time = 0.0
+    if want_scrn and scrn_stream is not None:
+        # C++: one_screen_banner once, then scrn_data for each vehicle with outputs
+        banner_written = False
+        for vehicle in vehicles:
+            if not _has_scrn_outputs(vehicle):
+                continue
+            if not banner_written:
+                write_scrn_banner(
+                    scrn_stream,
+                    getattr(vehicle, "type", ""),
+                    vehicle.store,
+                )
+                banner_written = True
+            write_scrn_data(
+                scrn_stream, getattr(vehicle, "name", ""), vehicle.store
+            )
+        scrn_stream.flush()
+    if want_tabout and tabout_state is not None:
+        if tabout_state.get("stream") is None:
+            _tabout_path, stream = open_tabout_stream(path.parent)
+            tabout_state["path"] = _tabout_path
+            tabout_state["stream"] = stream
+        tabout_stream = tabout_state["stream"]
+        banner_written = False
+        nmonte = int(getattr(cfg, "nmonte", 0))
+        for vehicle in vehicles:
+            if not _has_scrn_outputs(vehicle):
+                continue
+            if not banner_written:
+                write_tabout_banner(
+                    tabout_stream,
+                    cfg.title,
+                    getattr(vehicle, "type", ""),
+                    vehicle.store,
+                    nmonte=nmonte,
+                    nmc=nmc,
+                )
+                banner_written = True
+            write_tabout_data(
+                tabout_stream, getattr(vehicle, "name", ""), vehicle.store
+            )
+        tabout_stream.flush()
+
+    want_traj = bool(cfg.options.get("traj"))
+    traj_stream = None
+    traj_time = 0.0
+    if want_traj and traj_state is not None:
+        if traj_state.get("stream") is None:
+            _traj_path, stream = open_traj_stream(path.parent)
+            traj_state["path"] = _traj_path
+            traj_state["stream"] = stream
+        traj_stream = traj_state["stream"]
+        init_packets = packets_from_vehicles(vehicles)
+        if traj_state.get("banner_written") is not True:
+            write_traj_banner(traj_stream, cfg.title, init_packets)
+            traj_state["banner_written"] = True
+        write_traj_data(traj_stream, init_packets, merge=False)
+        traj_stream.flush()
+
+    want_comscrn = bool(cfg.options.get("comscrn"))
+    comscrn_stream = None
+    com_time = 0.0
+    if want_comscrn and comscrn_state is not None:
+        if comscrn_state.get("stream") is None:
+            _comscrn_path, stream = open_comscrn_stream(path.parent)
+            comscrn_state["path"] = _comscrn_path
+            comscrn_state["stream"] = stream
+        comscrn_stream = comscrn_state["stream"]
+        # C++ writes combus to screen at time=0 after module initialization
+        write_comscrn_data(comscrn_stream, packets_from_vehicles(vehicles), 0.0)
+        comscrn_stream.flush()
+
     plot_rows = []
     nveh = len(vehicles)
     csv_columns = _plot_columns(vehicles[0]) if vehicles else list(PLOT_COLUMNS)
     track_rows = [[] for _ in vehicles]
-    plot_on_step = make_plot_on_step(plot_rows, plot_step, nveh, tracks=track_rows)
+    ploti_streams = (
+        (plot_state.get("streams") or [])
+        if want_plot_asc and plot_state is not None
+        else None
+    )
+    plot_on_step = make_plot_on_step(
+        plot_rows, plot_step, nveh, tracks=track_rows, ploti_streams=ploti_streams
+    )
     consider_progress = make_run_progress(cfg.end_time, on_progress)
 
     def on_step(vehicle, ctx):
+        nonlocal scrn_time, traj_time, com_time
         plot_on_step(vehicle, ctx)
+        if want_scrn or want_tabout:
+            # C++: fabs(scrn_time-sim_time)<(int_step/2+EPS); shared clock for
+            # y_scrn / y_tabout; advance on last vehicle index even when that
+            # slot is an empty stub (AIM5 AIRCRAFT3 last).
+            if abs(scrn_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
+                if _has_scrn_outputs(vehicle):
+                    if want_scrn and scrn_stream is not None:
+                        write_scrn_data(
+                            scrn_stream,
+                            getattr(vehicle, "name", ""),
+                            vehicle.store,
+                        )
+                        scrn_stream.flush()
+                    if want_tabout and tabout_stream is not None:
+                        write_tabout_data(
+                            tabout_stream,
+                            getattr(vehicle, "name", ""),
+                            vehicle.store,
+                        )
+                        tabout_stream.flush()
+                if ctx.vehicle_slot == nveh - 1:
+                    scrn_time += scrn_step * (1.0 + ctx.out_fact)
+        if want_traj and traj_stream is not None and ctx.combus is not None:
+            # C++ writes traj after the full vehicle loop for this sim_time.
+            if ctx.vehicle_slot == nveh - 1:
+                if abs(traj_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
+                    write_traj_data(traj_stream, list(ctx.combus), merge=False)
+                    traj_stream.flush()
+                    traj_time += traj_step * (1.0 + ctx.out_fact)
+        if want_comscrn and comscrn_stream is not None and ctx.combus is not None:
+            # C++ writes comscrn after the full vehicle loop for this sim_time.
+            if ctx.vehicle_slot == nveh - 1:
+                if abs(com_time - ctx.sim_time) < (ctx.int_step / 2 + EPS):
+                    write_comscrn_data(
+                        comscrn_stream, list(ctx.combus), ctx.sim_time
+                    )
+                    comscrn_stream.flush()
+                    com_time += com_step * (1.0 + ctx.out_fact)
+        if want_stat and stat_state is not None:
+            slot = ctx.vehicle_slot
+            streams = stat_state.get("streams") or []
+            stream = streams[slot] if slot < len(streams) else None
+            if stream is not None:
+                # C++: write on event_epoch, and once when status drops to 0
+                status = 1
+                if ctx.combus is not None and slot < len(ctx.combus):
+                    status = ctx.combus[slot].status
+                if getattr(vehicle, "event_epoch", False):
+                    write_stat_data(stream, vehicle.store, nmc, slot)
+                if status == 0 and stati_write_term[slot]:
+                    stati_write_term[slot] = False
+                    write_stat_data(stream, vehicle.store, nmc, slot)
+                stream.flush()
         if on_progress is None:
             return
         if nveh and ctx.vehicle_slot != nveh - 1:
@@ -343,7 +585,22 @@ def run_scenario(path, *, on_progress=None):
         cfg.end_time,
         int_step,
         on_step=on_step,
+        nmonte=int(getattr(cfg, "nmonte", 0)),
     )
+    if want_traj and traj_stream is not None:
+        # C++ post-loop: traj_merge=true writes time=-1.0 endblock
+        final_packets = packets_from_vehicles(vehicles)
+        write_traj_data(traj_stream, final_packets, merge=True)
+        traj_stream.flush()
+    if want_plot_asc and ploti_streams is not None:
+        # C++ post-loop: plot_merge=true; Rotor::plot_data ignores merge
+        for slot, vehicle in enumerate(vehicles):
+            stream = ploti_streams[slot] if slot < len(ploti_streams) else None
+            if stream is None:
+                continue
+            honor_merge = type(vehicle) is not Rotor
+            write_plot_data(stream, vehicle.store, merge=honor_merge)
+            stream.flush()
     if vehicles and type(vehicles[0]) is Rotor:
         # MAGSIX Rotor::plot_data ignores merge, so the C++ post-loop dump is a real row.
         plot_rows.append(plot_row(vehicles[0].store, columns=csv_columns))
@@ -381,6 +638,84 @@ def run_scenario(path, *, on_progress=None):
         tracks=tracks,
         column_modules=column_modules(vehicles[0].store, csv_columns) if vehicles else {},
     )
+
+
+def run_scenario(path, *, on_progress=None):
+    # C++ execution.cpp Monte Carlo loop:
+    #   do { if(!nmc) srand(iseed); ... execute ...; nmc++; } while(nmc < nmonte);
+    # nmonte==0 → one pass (means); iseed is not bumped between MC runs.
+    path = Path(path)
+    cfg = load_scenario(path)
+    nmonte = int(getattr(cfg, "nmonte", 0))
+    nmc = 0
+    result = None
+    # C++ opens stati.asc / ploti.asc / tabout.asc / traj.asc once (nmc==0) and appends across MC.
+    # comscrn.asc is the Python text artifact for C++ cout comscrn_data dumps.
+    stat_state = {"paths": None, "streams": None} if cfg.options.get("stat") else None
+    plot_state = (
+        {"paths": None, "streams": None} if cfg.options.get("plot") else None
+    )
+    tabout_state = (
+        {"path": None, "stream": None} if cfg.options.get("tabout") else None
+    )
+    traj_state = (
+        {"path": None, "stream": None, "banner_written": False}
+        if cfg.options.get("traj")
+        else None
+    )
+    comscrn_state = (
+        {"path": None, "stream": None} if cfg.options.get("comscrn") else None
+    )
+    try:
+        while True:
+            if nmc == 0:
+                seed(cfg.iseed)
+            result = _run_scenario_once(
+                path,
+                cfg,
+                on_progress=on_progress,
+                nmc=nmc,
+                stat_state=stat_state,
+                plot_state=plot_state,
+                tabout_state=tabout_state,
+                traj_state=traj_state,
+                comscrn_state=comscrn_state,
+            )
+            nmc += 1
+            if not (nmc < nmonte):
+                break
+        if (
+            plot_state is not None
+            and cfg.options.get("merge")
+            and plot_state.get("paths")
+        ):
+            plot_paths = [p for p in plot_state["paths"] if p is not None]
+            if plot_paths:
+                merge_plot_files(plot_paths, path.parent / "plot.asc", cfg.title)
+        if (
+            stat_state is not None
+            and cfg.options.get("merge")
+            and stat_state.get("paths")
+        ):
+            missile_paths = [p for p in stat_state["paths"] if p is not None]
+            if missile_paths:
+                merge_stat_files(missile_paths, path.parent / "stat.asc", cfg.title)
+    finally:
+        if plot_state is not None and plot_state.get("streams"):
+            for stream in plot_state["streams"]:
+                if stream is not None:
+                    stream.close()
+        if stat_state is not None and stat_state.get("streams"):
+            for stream in stat_state["streams"]:
+                if stream is not None:
+                    stream.close()
+        if tabout_state is not None and tabout_state.get("stream") is not None:
+            tabout_state["stream"].close()
+        if traj_state is not None and traj_state.get("stream") is not None:
+            traj_state["stream"].close()
+        if comscrn_state is not None and comscrn_state.get("stream") is not None:
+            comscrn_state["stream"].close()
+    return result
 
 
 def _plot_columns(vehicle):

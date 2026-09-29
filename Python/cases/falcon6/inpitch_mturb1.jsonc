@@ -1,0 +1,92 @@
+/* Derived from Simulations_FTN/FALCON6/inpitch.asc for Task 80.
+   Legacy ASC does not set MAIR/MTURB. Adds Fortran packing
+   mair=|MTURB|MWIND|MATMO|=100 (Dryden only) plus HEAD fields
+   TURBL/TURBSIG as turb_length/turb_sigma (CADAC defaults 100 m / 0.5 m/s).
+   Short end_time for python-golden load check. */
+{
+  "title": "inpitch_mturb1 derived FALCON6 Dryden MTURB=1",
+  "options": {
+    "scrn": false,
+    "doc": false,
+    "plot": true,
+    "csv": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "kinematics",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "propulsion",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "forces",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "euler",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "newton",
+      "phases": ["def", "init", "exec"]
+    }
+  ],
+  "timing": {
+    "scrn_step": 0.5,
+    "plot_step": 0.1,
+    "int_step": 0.01
+  },
+  "end_time": 0.2,
+  "vehicles": [
+    {
+      "type": "PLANE6",
+      "name": "F16",
+      "aero_deck": "f16_aero_deck.jsonc",
+      "prop_deck": "f16_prop_deck.jsonc",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -1524,
+        "dvbe": 183,
+        "psivlx": 0,
+        "thtvlx": 0,
+        "alphax": 1.0,
+        "betax": 0.0,
+        "psiblx": 0.0,
+        "thtblx": 0.0,
+        "phiblx": 0.0,
+        "xcgr": 0.35,
+        "xcg": 0.3,
+        "thrtl": 0.3,
+        "pow": 9.644,
+        "mair": 100,
+        "turb_length": 100,
+        "turb_sigma": 0.5
+      },
+      "events": [
+        {
+          "when": { "time": { ">": 1.0 } },
+          "set": { "delex": -1.0 }
+        },
+        {
+          "when": { "time": { ">": 3.0 } },
+          "set": { "delex": 1.0 }
+        },
+        {
+          "when": { "time": { ">": 5.0 } },
+          "set": { "delex": 0.0 }
+        }
+      ]
+    }
+  ]
+}

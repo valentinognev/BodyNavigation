@@ -2,6 +2,7 @@
 
 import ctypes
 import math
+from dataclasses import dataclass
 
 from cadac.constants import PI
 
@@ -35,15 +36,29 @@ _iset = 0
 _gset = 0.0
 _seeded = False
 _ins_burned = False
+# Set by markov_noise; prepare_for_dryden skips stand-in burn+zero when True.
+_markov_noise_drew = False
+
+
+@dataclass
+class MarkovEntry:
+    """One C++ Markov list slot (sigma/bcor from MARKOV card; saved across steps)."""
+
+    name: str
+    sigma: float
+    bcor: float
+    saved: float = 0.0
+    status: bool = True
 
 
 def seed(iseed=DEFAULT_ISEED):
-    global _iset, _gset, _seeded, _ins_burned
+    global _iset, _gset, _seeded, _ins_burned, _markov_noise_drew
     _libc.srand(int(iseed))
     _iset = 0
     _gset = 0.0
     _seeded = True
     _ins_burned = False
+    _markov_noise_drew = False
 
 
 def unituni():
@@ -84,6 +99,48 @@ def dryden_white(int_step):
     )
 
 
+def markov(sigma, bcor, time, int_step, value_saved):
+    """CADAC utility markov(); returns (value, updated value_saved)."""
+    value = gauss(0.0, sigma)
+    if time == 0.0:
+        value_saved = value
+    elif bcor != 0.0:
+        dum = math.exp(-bcor * int_step)
+        dumsqrd = dum * dum
+        value = value * math.sqrt(1.0 - dumsqrd) + value_saved * dum
+        value_saved = value
+    return value, value_saved
+
+
+def markov_noise(store, markov_list, time, int_step, nmonte):
+    """Refresh MARKOV deck variables (C++ vehicle::markov_noise before modules).
+
+    Always draws via markov(); when nmonte==0, store is forced to 0 after the draw
+    (saved still advances). Matches AGM6/HYPER6/ROCKET6/SRAAM6/SAM6 execution.cpp.
+    """
+    global _markov_noise_drew
+    if not markov_list:
+        return
+    for entry in markov_list:
+        if not getattr(entry, "status", True):
+            continue
+        value, saved = markov(
+            entry.sigma, entry.bcor, time, int_step, entry.saved
+        )
+        store.set(entry.name, value)
+        # C++ set_markov_saved(module_variable.real()) after gets(markov(...))
+        entry.saved = float(store.get(entry.name))
+        if not nmonte:
+            store.set(entry.name, 0.0)
+    _markov_noise_drew = True
+
+
+def clear_markov_noise_drew():
+    """Clear stand-in skip flag after a vehicle step (no Dryden path)."""
+    global _markov_noise_drew
+    _markov_noise_drew = False
+
+
 def mark_ins_stream_consumed():
     global _ins_burned
     _ins_burned = True
@@ -107,13 +164,17 @@ def draw_ins_init_unit():
 
 
 def prepare_for_dryden(store=None, markov_count=_AGM6_MARKOV_COUNT):
-    global _ins_burned
+    global _ins_burned, _markov_noise_drew
     if not _seeded:
         seed(DEFAULT_ISEED)
     if not _ins_burned:
         for _ in range(_INS_GAUSS_DRAWS):
             gauss(0.0, 1.0)
         _ins_burned = True
+    if _markov_noise_drew:
+        # Live markov_noise already advanced gauss and set/zeroed MARKOV stores.
+        _markov_noise_drew = False
+        return
     for _ in range(markov_count):
         gauss(0.0, 1.0)
     if store is not None:

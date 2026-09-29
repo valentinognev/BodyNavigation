@@ -70,7 +70,24 @@ class Hyper5Guidance:
         ancomx = 0.0
         if mguidance == 0:
             return
-        if mguidance == 44:
+        if mguidance == 30:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            algv = self.guidance_line(vehicle)
+            alcomx = algv[1] / grav
+        elif mguidance == 43:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            algv = self.guidance_line(vehicle)
+            apgv = self.guidance_point(vehicle)
+            alcomx = apgv[1] / grav
+            ancomx = -algv[2] / grav
+        elif mguidance == 40:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            apgv = self.guidance_point(vehicle)
+            alcomx = apgv[1] / grav
+        elif mguidance == 44:
             grav = store.get("grav")
             phicx = store.get("phicx")
             apgv = self.guidance_point(vehicle)
@@ -87,6 +104,12 @@ class Hyper5Guidance:
             phicx = store.get("phicx")
             algv = self.guidance_line(vehicle)
             alcomx = 0.0
+            ancomx = -algv[2] / grav
+        elif mguidance == 33:
+            grav = store.get("grav")
+            phicx = store.get("phicx")
+            algv = self.guidance_line(vehicle)
+            alcomx = algv[1] / grav
             ancomx = -algv[2] / grav
         elif mguidance == 60:
             grav = store.get("grav")

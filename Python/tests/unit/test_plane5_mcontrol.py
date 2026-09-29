@@ -192,7 +192,7 @@ def test_mcontrol_46_turning_to_ip_produces_finite_ancomx_and_phimvx():
     assert phimvx != 0.0
 
 
-@pytest.mark.parametrize("mcontrol", [0, 3, 6, 16, 99])
+@pytest.mark.parametrize("mcontrol", [99])
 def test_unknown_mcontrol_raises_valueerror(mcontrol):
     vehicle, control = _ready(mcontrol=mcontrol)
     with pytest.raises(ValueError):

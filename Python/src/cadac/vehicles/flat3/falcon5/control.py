@@ -67,21 +67,31 @@ class Plane5Control:
         store = vehicle.store
         mcontrol = store.get("mcontrol")
         dt = ctx.int_step
-        if mcontrol == 46:
-            phicx = self.control_lateral(vehicle, store.get("alcomx"))
-            phimvx = self.control_bank(vehicle, phicx, dt)
-            ancomx = self.control_altitude(vehicle, store.get("altcom"), phimvx)
-            alphax = self.control_load(vehicle, ancomx, dt)
-        elif mcontrol == 44:
-            phicx = self.control_lateral(vehicle, store.get("alcomx"))
-            phimvx = self.control_bank(vehicle, phicx, dt)
+        if mcontrol == 0:
+            phicx = store.get("phicx")
+            phimvx = 0.0
             ancomx = store.get("ancomx")
-            alphax = self.control_load(vehicle, ancomx, dt)
+            alphax = 0.0
         elif mcontrol == 1:
             phicx = store.get("phicx")
             phimvx = 0.0
             ancomx = store.get("ancomx")
             alphax = self.control_flightpath(vehicle, store.get("thtvgcx"), phimvx)
+        elif mcontrol == 3:
+            phicx = store.get("phicx")
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = store.get("ancomx")
+            alphax = store.get("alphacx")
+        elif mcontrol == 4:
+            phicx = store.get("phicx")
+            phimvx = 0.0
+            ancomx = store.get("ancomx")
+            alphax = self.control_load(vehicle, ancomx, dt)
+        elif mcontrol == 6:
+            phicx = store.get("phicx")
+            phimvx = 0.0
+            ancomx = self.control_altitude(vehicle, store.get("altcom"), phimvx)
+            alphax = self.control_load(vehicle, ancomx, dt)
         elif mcontrol == 10:
             phicx = self.control_heading(vehicle, store.get("psivlcx"))
             phimvx = self.control_bank(vehicle, phicx, dt)
@@ -92,6 +102,31 @@ class Plane5Control:
             phimvx = self.control_bank(vehicle, phicx, dt)
             ancomx = store.get("ancomx")
             alphax = self.control_flightpath(vehicle, store.get("thtvgcx"), phimvx)
+        elif mcontrol == 16:
+            phicx = self.control_heading(vehicle, store.get("psivlcx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = self.control_altitude(vehicle, store.get("altcom"), phimvx)
+            alphax = self.control_load(vehicle, ancomx, dt)
+        elif mcontrol == 36:
+            phicx = store.get("phicx")
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = self.control_altitude(vehicle, store.get("altcom"), phimvx)
+            alphax = self.control_load(vehicle, ancomx, dt)
+        elif mcontrol == 40:
+            phicx = self.control_lateral(vehicle, store.get("alcomx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = store.get("ancomx")
+            alphax = 0.0
+        elif mcontrol == 44:
+            phicx = self.control_lateral(vehicle, store.get("alcomx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = store.get("ancomx")
+            alphax = self.control_load(vehicle, ancomx, dt)
+        elif mcontrol == 46:
+            phicx = self.control_lateral(vehicle, store.get("alcomx"))
+            phimvx = self.control_bank(vehicle, phicx, dt)
+            ancomx = self.control_altitude(vehicle, store.get("altcom"), phimvx)
+            alphax = self.control_load(vehicle, ancomx, dt)
         else:
             raise ValueError(f"unknown mcontrol {mcontrol}")
         tbv = cadtbv(phimvx * RAD, alphax * RAD)

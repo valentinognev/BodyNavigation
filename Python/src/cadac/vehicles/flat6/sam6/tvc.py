@@ -1,6 +1,14 @@
-import numpy as np
+from math import cos, exp, sin
 
+from cadac.constants import DEG, RAD
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
+
+
+def _sign(variable):
+    if variable < 0:
+        return -1
+    return 1
 
 
 class Sam6Tvc:
@@ -43,10 +51,116 @@ class Sam6Tvc:
     def execute(self, vehicle, ctx):
         store = vehicle.store
         mtvc = store.get("mtvc")
-        if mtvc != 0:
-            raise ValueError(f"mtvc={mtvc!r} not supported in this slice")
-        store.set("FPB", np.zeros(3))
-        store.set("FMPB", np.zeros(3))
+        if mtvc not in (0, 1, 2, 3):
+            raise ValueError(f"unknown mtvc {mtvc}")
+        mprop = store.get("mprop") if "mprop" in store else 0
+        if not (mtvc > 0 and mprop > 0):
+            store.set("FPB", (0.0, 0.0, 0.0))
+            store.set("FMPB", (0.0, 0.0, 0.0))
+            store.set("gtvc", 0.0)
+            store.set("etax", 0.0)
+            store.set("zetx", 0.0)
+            store.set("etacx", 0.0)
+            store.set("zetcx", 0.0)
+            return
+
+        gtvc = 0.0
+        if mtvc == 2:
+            gtvc = store.get("gtvc0")
+        if mtvc == 3:
+            gtvc = store.get("gtvc0") * exp(
+                -store.get("pdynmc") / store.get("pdynmc_gtvc36")
+            )
+
+        dqcx = store.get("dqcx")
+        drcx = store.get("drcx")
+        if store.get("maut") == 4:
+            dqcx = store.get("dqcx_rcs")
+            drcx = store.get("drcx_rcs")
+        etac = gtvc * dqcx * RAD
+        zetc = gtvc * drcx * RAD
+
+        if mtvc == 1:
+            eta = etac
+            zet = zetc
+        else:
+            eta, zet = self._tvc_scnd(vehicle, etac, zetc, ctx.int_step)
+
+        thrust = store.get("thrust")
+        fpb0 = cos(eta) * cos(zet) * thrust
+        fpb1 = cos(eta) * sin(zet) * thrust
+        fpb2 = -sin(eta) * thrust
+        arm = store.get("parm") - store.get("xcg")
+        store.set("FPB", (fpb0, fpb1, fpb2))
+        store.set("FMPB", (0.0, arm * fpb2, -arm * fpb1))
+        store.set("gtvc", gtvc)
+        store.set("etax", eta * DEG)
+        store.set("zetx", zet * DEG)
+        store.set("etacx", etac * DEG)
+        store.set("zetcx", zetc * DEG)
+
+    def _tvc_scnd(self, vehicle, etac, zetc, int_step):
+        store = vehicle.store
+        tvclimx = store.get("tvclimx")
+        dtvclimx = store.get("dtvclimx")
+        wntvc = store.get("wntvc")
+        zettvc = store.get("zettvc")
+        etasd = store.get("etasd")
+        zetad = store.get("zetad")
+        etas = store.get("etas")
+        zeta = store.get("zeta")
+        detasd = store.get("detasd")
+        dzetad = store.get("dzetad")
+        detas = store.get("detas")
+        dzeta = store.get("dzeta")
+
+        if abs(etas) > tvclimx * RAD:
+            etas = tvclimx * RAD * _sign(etas)
+            if etas * detas > 0.0:
+                detas = 0.0
+        iflag = 0
+        if abs(detas) > dtvclimx * RAD:
+            iflag = 1
+            detas = dtvclimx * RAD * _sign(detas)
+        etasd_new = detas
+        etas = integrate(etasd_new, etasd, etas, int_step)
+        etasd = etasd_new
+        eetas = etac - etas
+        detasd_new = wntvc * wntvc * eetas - 2.0 * zettvc * wntvc * etasd
+        detas = integrate(detasd_new, detasd, detas, int_step)
+        detasd = detasd_new
+        if iflag and detas * detasd > 0.0:
+            detasd = 0.0
+        eta = etas
+
+        if abs(zeta) > tvclimx * RAD:
+            zeta = tvclimx * RAD * _sign(zeta)
+            if zeta * dzeta > 0.0:
+                dzeta = 0.0
+        iflag = 0
+        if abs(dzeta) > dtvclimx * RAD:
+            iflag = 1
+            dzeta = dtvclimx * RAD * _sign(dzeta)
+        zetad_new = dzeta
+        zeta = integrate(zetad_new, zetad, zeta, int_step)
+        zetad = zetad_new
+        ezeta = zetc - zeta
+        dzetad_new = wntvc * wntvc * ezeta - 2.0 * zettvc * wntvc * zetad
+        dzeta = integrate(dzetad_new, dzetad, dzeta, int_step)
+        dzetad = dzetad_new
+        if iflag and dzeta * dzetad > 0.0:
+            dzetad = 0.0
+        zet = zeta
+
+        store.set("etasd", etasd)
+        store.set("zetad", zetad)
+        store.set("etas", etas)
+        store.set("zeta", zeta)
+        store.set("detasd", detasd)
+        store.set("dzetad", dzetad)
+        store.set("detas", detas)
+        store.set("dzeta", dzeta)
+        return eta, zet
 
     def terminate(self, vehicle, ctx):
         pass

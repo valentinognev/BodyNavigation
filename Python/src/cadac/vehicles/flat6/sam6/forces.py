@@ -18,8 +18,6 @@ class Sam6Forces:
     def execute(self, vehicle, ctx):
         store = vehicle.store
         mtvc = store.get("mtvc") if "mtvc" in store else 0
-        if mtvc != 0:
-            raise ValueError(f"mtvc={mtvc!r} not supported in this slice")
         pdynmc = store.get("pdynmc")
         thrust = store.get("thrust")
         refl = store.get("refl")
@@ -32,14 +30,24 @@ class Sam6Forces:
         cln = store.get("cln")
         farcs = store.get("FARCS") if "FARCS" in store else np.zeros(3)
         fmrcs = store.get("FMRCS") if "FMRCS" in store else np.zeros(3)
+        fpb = store.get("FPB") if "FPB" in store else np.zeros(3)
+        fmpb = store.get("FMPB") if "FMPB" in store else np.zeros(3)
+
         fapb = np.array(
             [
-                -pdynmc * refa * ca + thrust,
+                -pdynmc * refa * ca,
                 pdynmc * refa * cy,
                 -pdynmc * refa * cn,
             ],
             dtype=float,
         )
+        if mtvc == 0:
+            fapb[0] = fapb[0] + thrust
+        else:
+            fapb = fapb + fpb
+
+        fapb = fapb + farcs
+
         fmb = np.array(
             [
                 pdynmc * refa * refl * cll,
@@ -48,8 +56,12 @@ class Sam6Forces:
             ],
             dtype=float,
         )
-        store.set("FAPB", fapb + farcs)
-        store.set("FMB", fmb + fmrcs)
+        if mtvc != 0:
+            fmb = fmb + fmpb
+        fmb = fmb + fmrcs
+
+        store.set("FAPB", fapb)
+        store.set("FMB", fmb)
 
     def terminate(self, vehicle, ctx):
         pass

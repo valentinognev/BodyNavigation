@@ -328,18 +328,6 @@ def test_maut_2_dummy_aero_dqcx_drcx_finite():
     assert store.get("drcx") != 0.0
 
 
-def test_maut_4_raises():
-    vehicle, ctrl = _ready()
-    store = vehicle.store
-    store.set("maut", 4)
-    store.set("dpcx", 99.0)
-    store.set("dqcx", 88.0)
-    with pytest.raises(ValueError):
-        ctrl.execute(vehicle, _ctx())
-    assert _approx(store.get("dpcx"), 99.0)
-    assert _approx(store.get("dqcx"), 88.0)
-
-
 def test_maut_1_roll_only_does_not_write_rate():
     vehicle = _Vehicle()
     ctrl = Sam6Control()

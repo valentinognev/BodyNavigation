@@ -7,6 +7,7 @@ from cadac.eom.round6 import (
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import StateStore
 from cadac.vehicles.round6.rocket6.aero import Rocket6Aero
+from cadac.vehicles.round6.rocket6.actuator import Rocket6Actuator
 from cadac.vehicles.round6.rocket6.control import Rocket6Control
 from cadac.vehicles.round6.rocket6.forces import Rocket6Forces
 from cadac.vehicles.round6.rocket6.gps import Rocket6Gps
@@ -41,6 +42,7 @@ class Rocket6:
             Rocket6Guidance(),
             Rocket6Control(),
             Rocket6Rcs(),
+            Rocket6Actuator(),
             Rocket6Tvc(),
             Rocket6Forces(),
             Round6Newton(),

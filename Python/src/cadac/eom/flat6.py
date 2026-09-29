@@ -17,14 +17,22 @@ from cadac.math.frames import (
     quat_to_dcm,
     skew,
 )
+from cadac.stoch import dryden_white
 
 
 class Flat6Environment(ModuleBase):
-    """Zipfel 6-DOF flat Earth atmosphere and gravity (CADAC ``flat6_environment``)."""
+    """Zipfel 6-DOF flat Earth atmosphere and gravity (CADAC ``flat6_environment``).
+
+    C++ FALCON6 uses ``mwind`` 0/1/2. Fortran FALCON6 packs
+    ``mair=|MTURB|MWIND|MATMO|``; ``mair!=0`` selects that decode. Dryden
+    (``MTURB=1``) follows MODULE.FOR ``G2TURB`` (not AGM6's body shortcut).
+    Tabular ``MATMO=3`` / ``MWIND=3`` use a WEATHER Datadeck (MODULE.FOR G2).
+    """
 
     name = "environment"
     fields = (
         Field("mwind", 0, "int", "data", "environment"),
+        Field("mair", 0, "int", "data", "environment"),
         Field("press", 0.0, "real", "out", "environment"),
         Field("rho", 0.0, "real", "out", "environment"),
         Field("vsound", 0.0, "real", "diag", "environment"),
@@ -32,25 +40,196 @@ class Flat6Environment(ModuleBase):
         Field("vmach", 0.0, "real", "out", "environment", ("scrn", "plot", "com")),
         Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
         Field("tempk", 0.0, "real", "out", "environment"),
+        Field("mfreeze_environ", 0, "int", "save", "environment"),
+        Field("pdynmcf", 0.0, "real", "save", "environment"),
+        Field("vmachf", 0.0, "real", "save", "environment"),
+        Field("dvae", 0.0, "real", "data", "environment"),
+        Field("dvael", 0.0, "real", "data", "environment"),
+        Field("waltl", 0.0, "real", "data", "environment"),
+        Field("dvaeh", 0.0, "real", "data", "environment"),
+        Field("walth", 0.0, "real", "data", "environment"),
+        Field("vaed3", 0.0, "real", "data", "environment"),
+        Field("psiwdx", 0.0, "real", "data", "environment"),
+        Field("twind", 0.1, "real", "data", "environment"),
+        Field("VAELS", (0.0, 0.0, 0.0), "vec", "state", "environment"),
+        Field("VAELSD", (0.0, 0.0, 0.0), "vec", "state", "environment"),
         Field("VAEL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
         Field("dvba", 0.0, "real", "out", "environment", ("plot",)),
         Field("VBAL", (0.0, 0.0, 0.0), "vec", "out", "environment"),
+        # Fortran G2 / G2TURB (HEAD TURBL/TURBSIG → turb_length/turb_sigma)
+        Field("turb_length", 0.0, "real", "data", "environment"),
+        Field("turb_sigma", 0.0, "real", "data", "environment"),
+        Field("taux1", 0.0, "real", "state", "environment"),
+        Field("taux1d", 0.0, "real", "state", "environment"),
+        Field("taux2", 0.0, "real", "state", "environment"),
+        Field("taux2d", 0.0, "real", "state", "environment"),
+        Field("tau", 0.0, "real", "diag", "environment"),
+        Field("gauss_value", 0.0, "real", "diag", "environment"),
+        Field("VTAG", (0.0, 0.0, 0.0), "vec", "diag", "environment"),
     )
+
+    def __init__(self, weather_deck=None) -> None:
+        self.weather_deck = weather_deck
+
+    def _g2turb(self, store, dvba, int_step):
+        """FALCON6 Fortran G2TURB — Dryden filter + aeroballistic TAB → geographic VTAG."""
+        turb_length = store.get("turb_length")
+        turb_sigma = store.get("turb_sigma")
+        tbl = np.asarray(store.get("TBL"), dtype=float)
+        alpp = store.get("alpp")
+        phip = store.get("phip")
+        taux1 = store.get("taux1")
+        taux1d = store.get("taux1d")
+        taux2 = store.get("taux2")
+        taux2d = store.get("taux2d")
+
+        gauss_value = dryden_white(int_step)
+        # Integrate filter states (CADAC module form of G2TURB ODEs).
+        taux1d_new = taux2
+        taux1 = integrate(taux1d_new, taux1d, taux1, int_step)
+        taux1d = taux1d_new
+        vl = dvba / turb_length
+        taux2d_new = -vl * vl * taux1 - 2.0 * vl * taux2 + vl * vl * gauss_value
+        taux2 = integrate(taux2d_new, taux2d, taux2, int_step)
+        taux2d = taux2d_new
+        # Fortran: DUM1=SQRT(1/(PI*VL)); DUM2=(1/VL)*SQRT(3/(PI*VL))
+        dum1 = math.sqrt(1.0 / (PI * vl))
+        dum2 = (1.0 / vl) * math.sqrt(3.0 / (PI * vl))
+        tau = turb_sigma * (dum1 * taux1 + dum2 * taux2)
+
+        # VTAA=[0,0,TAU]; TAB from ALPP/PHIP (rad); TAG=TAB*TBL; VTAG=TGA*VTAA
+        cosa, sina = math.cos(alpp), math.sin(alpp)
+        cosp, sinp = math.cos(phip), math.sin(phip)
+        tab = np.array(
+            [
+                [cosa, sina * sinp, sina * cosp],
+                [0.0, cosp, -sinp],
+                [-sina, cosa * sinp, cosa * cosp],
+            ],
+            dtype=float,
+        )
+        vtaa = np.array([0.0, 0.0, tau], dtype=float)
+        tag = tab @ tbl
+        vtag = tag.T @ vtaa
+
+        store.set("taux1", taux1)
+        store.set("taux1d", taux1d)
+        store.set("taux2", taux2)
+        store.set("taux2d", taux2d)
+        store.set("tau", tau)
+        store.set("gauss_value", gauss_value)
+        store.set("VTAG", vtag)
+        return vtag
 
     def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
-        mwind = store.get("mwind")
-        if mwind != 0:
-            raise ValueError(f"unknown mwind {mwind}")
+        # Fortran G2: MAIR=|MTURB|MWIND|MATMO|. mair==0 → C++ mwind field path.
+        mair = store.get("mair")
+        mturb = 0
+        matmo = 0
+        if mair != 0:
+            mturb = int(mair / 100)
+            mwind = int((mair - mturb * 100) / 10)
+            matmo = mair - mturb * 100 - mwind * 10
+            if matmo not in (0, 3) or mturb not in (0, 1) or mwind not in (0, 1, 2, 3):
+                raise ValueError(f"unknown mair {mair}")
+            if (matmo == 3 or mwind == 3) and self.weather_deck is None:
+                raise ValueError("mair tabular MATMO/MWIND=3 requires a weather Datadeck")
+        else:
+            mwind = store.get("mwind")
+            if mwind not in (0, 1, 2):
+                raise ValueError(f"unknown mwind {mwind}")
+
         hbe = store.get("hbe")
         vbel = store.get("VBEL")
-        rho, press, tempk = atmosphere76(hbe)
-        vsound = math.sqrt(1.4 * R * tempk)
+        if matmo == 3:
+            # Fortran G2 MATMO=3: WEATHER RHX/CTMP/WPRES vs WALT.
+            rho = self.weather_deck.look_up("density", hbe)
+            press = self.weather_deck.look_up("pressure", hbe)
+            tempc = self.weather_deck.look_up("temperature", hbe)
+            tempk = tempc + 273.16
+            vsound = math.sqrt(1.4 * R * tempk)
+        else:
+            rho, press, tempk = atmosphere76(hbe)
+            vsound = math.sqrt(1.4 * R * tempk)
+        vaels = np.array(store.get("VAELS"), dtype=float, copy=True)
+        vaelsd = np.array(store.get("VAELSD"), dtype=float, copy=True)
         vael = np.zeros(3)
+        if mwind > 0:
+            if mwind == 1:
+                dvw = store.get("dvae")
+                psiwdx = store.get("psiwdx")
+            elif mwind == 3:
+                # Fortran G2 MWIND=3: WEATHER WVEL/WDIR vs WALT.
+                dvw = self.weather_deck.look_up("speed", hbe)
+                psiwdx = self.weather_deck.look_up("direction", hbe)
+            else:
+                # mwind==2 shear (C++ / Fortran)
+                dvael = store.get("dvael")
+                waltl = store.get("waltl")
+                dvaeh = store.get("dvaeh")
+                walth = store.get("walth")
+                dvw = dvael + (dvaeh - dvael) * (hbe - waltl) / (walth - waltl)
+                if hbe < waltl:
+                    dvw = 0.0
+                if hbe > walth:
+                    dvw = 0.0
+                psiwdx = store.get("psiwdx")
+            vael_raw = np.array(
+                [
+                    -dvw * math.cos(psiwdx * RAD),
+                    -dvw * math.sin(psiwdx * RAD),
+                    store.get("vaed3"),
+                ],
+                dtype=float,
+            )
+            twind = store.get("twind")
+            vaelsd_new = (vael_raw - vaels) * (1.0 / twind)
+            vaels = integrate(vaelsd_new, vaelsd, vaels, ctx.int_step)
+            vaelsd = vaelsd_new
+            vael = np.array(vaels, dtype=float, copy=True)
+            store.set("VAELS", vaels)
+            store.set("VAELSD", vaelsd)
+
+        # Fortran G2: MTURB=1 → G2TURB(VTAG, previous DVBA); VAEL = VTAG + VAELS
+        if mturb == 1:
+            dvba_prev = store.get("dvba")
+            vtag = self._g2turb(store, dvba_prev, ctx.int_step)
+            vael = vtag + vaels
+
         vbal = vbel - vael
         dvba = hypot3(vbal)
         vmach = abs(dvba / vsound)
         pdynmc = 0.5 * rho * dvba**2
+
+        # FALCON6 termination: mguid==6 → low Mach / dyn. press. (plane trcode)
+        if "trcode" in store and "mguid" in store and store.get("mguid") == 6:
+            trcode = store.get("trcode")
+            if vmach <= store.get("trmach"):
+                trcode = 2.0
+            if pdynmc <= store.get("trdynm"):
+                trcode = 3.0
+            store.set("trcode", trcode)
+
+        # FALCON6 autopilot freeze: latch vmach/pdynmc when plane mfreeze present
+        if "mfreeze" in store:
+            mfreeze = store.get("mfreeze")
+            mfreeze_environ = store.get("mfreeze_environ")
+            pdynmcf = store.get("pdynmcf")
+            vmachf = store.get("vmachf")
+            if mfreeze == 0:
+                mfreeze_environ = 0
+            else:
+                if mfreeze != mfreeze_environ:
+                    mfreeze_environ = mfreeze
+                    vmachf = vmach
+                    pdynmcf = pdynmc
+                vmach = vmachf
+                pdynmc = pdynmcf
+            store.set("mfreeze_environ", mfreeze_environ)
+            store.set("pdynmcf", pdynmcf)
+            store.set("vmachf", vmachf)
+
         store.set("grav", gravity(hbe))
         store.set("rho", rho)
         store.set("press", press)

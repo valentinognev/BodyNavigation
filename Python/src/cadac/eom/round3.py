@@ -1,19 +1,33 @@
 """Zipfel 3-DOF round-Earth equations of motion (CADAC Round3)."""
 
+import math
+
 import numpy as np
 
-from cadac.constants import DEG, RAD, REARTH, WEII3
+from cadac.constants import DEG, R, RAD, REARTH, WEII3
 from cadac.env.gravity import gravity
 from cadac.env.iso62 import iso62
 from cadac.kernel.integrate import integrate
 from cadac.kernel.module import ModuleBase
 from cadac.kernel.state import Field
 from cadac.math.earth import cadsph, cadtei, cadtge
-from cadac.math.frames import mat2tr, polar_from_cart
+from cadac.math.frames import hypot3, mat2tr, polar_from_cart
+
+# CRUISE5 Fortran G2 wind smoother time constant (s).
+_CRUISE5_TWIND = 1.0
 
 
 class Round3Environment(ModuleBase):
-    """Zipfel 3-DOF round Earth atmosphere (CADAC ``round3_environment``)."""
+    """Zipfel 3-DOF round Earth atmosphere (CADAC ``round3_environment``).
+
+    ``mair_pack`` selects digit meaning of ``mair``:
+
+    * ``\"ghame3\"`` (default, HYPER3): MAIR=0 ISO-62; MAIR=1 weather deck
+      atmosphere only (density / pressure / temperature °C).
+    * ``\"cruise5\"`` (CRUISE5 G2): MAIR=|MATM|MWIND| with
+      MATM=INT(MAIR/10), MWIND=MAIR-MATM*10 — MATM 0 ISO / 1 tabular;
+      MWIND 0 none / 1 constant wind from ``dvael``/``psiwlx``.
+    """
 
     name = "environment"
     fields = (
@@ -21,6 +35,7 @@ class Round3Environment(ModuleBase):
         Field("event_time", 0.0, "real", "exec", "environment", ("scrn",)),
         Field("int_step_new", 0.0, "real", "data", "environment"),
         Field("out_step_fact", 0.0, "real", "data", "environment"),
+        Field("mair", 0, "int", "data", "environment"),
         Field("grav", 0.0, "real", "out", "environment"),
         Field("rho", 0.0, "real", "out", "environment"),
         Field("pdynmc", 0.0, "real", "out", "environment", ("scrn", "plot")),
@@ -29,9 +44,27 @@ class Round3Environment(ModuleBase):
         Field("press", 0.0, "real", "diag", "environment"),
     )
 
+    def __init__(self, weather_deck=None, mair_pack: str = "ghame3") -> None:
+        self.weather_deck = weather_deck
+        if mair_pack not in ("ghame3", "cruise5"):
+            raise ValueError(f"unknown mair_pack {mair_pack}")
+        self.mair_pack = mair_pack
+
     def initialize(self, vehicle, ctx) -> None:
         vehicle.store.set("time", ctx.sim_time)
         vehicle.store.set("int_step_new", ctx.int_step)
+
+    def _tabular_atmosphere(self, alt, dvba):
+        if self.weather_deck is None:
+            raise ValueError("mair tabular atmosphere requires a weather Datadeck")
+        rho = self.weather_deck.look_up("density", alt)
+        tempc = self.weather_deck.look_up("temperature", alt)
+        press = self.weather_deck.look_up("pressure", alt)
+        tempk = tempc + 273.16
+        vsound = math.sqrt(1.4 * R * tempk)
+        mach = abs(dvba / vsound) if vsound > 1.0e-10 else 0.0
+        pdynmc = 0.5 * rho * dvba**2
+        return rho, press, vsound, mach, pdynmc
 
     def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
@@ -39,15 +72,78 @@ class Round3Environment(ModuleBase):
         ctx.out_fact = store.get("out_step_fact")
         alt = store.get("alt")
         dvbe = store.get("dvbe")
-        atm = iso62(alt, dvbe)
+        mair = store.get("mair")
+
+        if self.mair_pack == "cruise5":
+            matm = int(mair // 10)
+            mwind = int(mair - matm * 10)
+            if matm not in (0, 1) or mwind not in (0, 1):
+                raise ValueError(f"unknown mair {mair}")
+
+            vael = np.zeros(3)
+            if mwind != 0:
+                dvael = store.get("dvael")
+                psiwlx = store.get("psiwlx")
+                dvae3 = store.get("dvae3")
+                dvw = dvael  # MWIND=1 constant
+                vael_raw = np.array(
+                    [
+                        -dvw * math.cos(psiwlx * RAD),
+                        -dvw * math.sin(psiwlx * RAD),
+                        dvae3,
+                    ],
+                    dtype=float,
+                )
+                vael_s = np.array(store.get("VAEL"), dtype=float, copy=True)
+                vaeld = np.array(store.get("VAELD"), dtype=float, copy=True)
+                vaeld_new = (vael_raw - vael_s) * (1.0 / _CRUISE5_TWIND)
+                vael_s = integrate(vaeld_new, vaeld, vael_s, ctx.int_step)
+                store.set("VAEL", vael_s)
+                store.set("VAELD", vaeld_new)
+                store.set("dvw", float(dvw))
+                vael = vael_s
+            else:
+                store.set("VAEL", vael)
+                store.set("VAELD", np.zeros(3))
+                store.set("dvw", 0.0)
+
+            vbeg = np.asarray(store.get("vbeg"), dtype=float)
+            dvba = float(hypot3(vbeg - vael))
+            store.set("dvba", dvba)
+
+            if matm == 0:
+                atm = iso62(alt, dvba)
+                rho = atm["rho"]
+                press = atm["press"]
+                vsound = atm["vsound"]
+                mach = atm["mach"]
+                pdynmc = atm["pdynmc"]
+            else:
+                rho, press, vsound, mach, pdynmc = self._tabular_atmosphere(alt, dvba)
+        else:
+            # GHAME3 / default: MAIR=0 ISO, MAIR=1 weather deck (no wind).
+            if mair == 0:
+                atm = iso62(alt, dvbe)
+                rho = atm["rho"]
+                press = atm["press"]
+                vsound = atm["vsound"]
+                mach = atm["mach"]
+                pdynmc = atm["pdynmc"]
+            elif mair == 1:
+                if self.weather_deck is None:
+                    raise ValueError("mair 1 requires a weather Datadeck")
+                rho, press, vsound, mach, pdynmc = self._tabular_atmosphere(alt, dvbe)
+            else:
+                raise ValueError(f"unknown mair {mair}")
+
         store.set("time", ctx.sim_time)
         store.set("event_time", ctx.event_time)
         store.set("grav", gravity(alt))
-        store.set("rho", atm["rho"])
-        store.set("pdynmc", atm["pdynmc"])
-        store.set("mach", atm["mach"])
-        store.set("vsound", atm["vsound"])
-        store.set("press", atm["press"])
+        store.set("rho", rho)
+        store.set("pdynmc", pdynmc)
+        store.set("mach", mach)
+        store.set("vsound", vsound)
+        store.set("press", press)
 
 
 class Round3Newton(ModuleBase):

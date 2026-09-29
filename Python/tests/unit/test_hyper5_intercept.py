@@ -95,6 +95,9 @@ def _plant(
     time=TIME,
     alt=2400.0,
     sbeg=None,
+    mguidance=0,
+    wp_alt=0.0,
+    swbg=None,
     mseeker=0,
     range_go=5000.0,
     stbg=None,
@@ -105,9 +108,14 @@ def _plant(
         sbeg = SBEG
     if stbg is None:
         stbg = STBG
+    if swbg is None:
+        swbg = np.zeros(3)
     store.define(Field("time", time, "real", "exec", "environment"))
     store.define(Field("alt", alt, "real", "init/out", "newton"))
     store.define(Field("sbeg", sbeg, "vec", "state", "newton"))
+    store.define(Field("mguidance", mguidance, "int", "data", "guidance"))
+    store.define(Field("wp_alt", wp_alt, "real", "data", "guidance"))
+    store.define(Field("SWBG", swbg, "vec", "out", "guidance"))
     store.define(Field("mseeker", mseeker, "int", "data/save", "seeker"))
     store.define(Field("range_go", range_go, "real", "out", "seeker"))
     store.define(Field("STBG", stbg, "vec", "out", "seeker"))
@@ -124,6 +132,9 @@ def _ready(
     stmeg=None,
     sbmeg=None,
     alt=2400.0,
+    mguidance=0,
+    wp_alt=0.0,
+    swbg=None,
     mseeker=0,
     range_go=5000.0,
     closing_speed=100.0,
@@ -149,6 +160,9 @@ def _ready(
     _plant(
         store,
         alt=alt,
+        mguidance=mguidance,
+        wp_alt=wp_alt,
+        swbg=swbg,
         mseeker=mseeker,
         range_go=range_go,
         closing_speed=closing_speed,
@@ -270,6 +284,24 @@ def test_ground_alt_le_0_write_0_does_not_kill():
     assert vehicle.health == 1
     assert ctx.combus[ctx.vehicle_slot].status == 1
     assert vehicle.store.get("write") == 0
+
+
+def test_hyper5_intercept_wp_alt_terminates_33():
+    """C++ hyper_modules.cpp ~2225: mguidance 33/43, alt<=wp_alt clears health/combus."""
+    swbg = np.array([3.0, 4.0, 0.0])
+    vehicle, intercept, ctx = _ready(
+        halt=0,
+        write=1,
+        alt=50.0,
+        mguidance=33,
+        wp_alt=100.0,
+        swbg=swbg,
+    )
+    intercept.execute(vehicle, ctx)
+    assert vehicle.health == 0
+    assert ctx.combus[ctx.vehicle_slot].status == 0
+    assert vehicle.store.get("write") == 0
+    assert vehicle.store.get("miss") == pytest.approx(5.0, rel=RTOL, abs=ATOL)
 
 
 def test_mseeker_3_range_go_under_1000_closing_negative_interpolates_and_kills():

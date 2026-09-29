@@ -62,10 +62,8 @@ def test_environment_does_not_define_newton_or_plane_fields():
     np.testing.assert_allclose(s.get("VBAL"), np.zeros(3))
 
 
-def test_mwind_nonzero_raises():
-    vehicle, env = _vehicle_with_newton_state(mwind=1)
-    with pytest.raises(ValueError):
-        env.execute(vehicle, None)
-    vehicle.store.set("mwind", 2)
-    with pytest.raises(ValueError):
+def test_unknown_mwind_raises():
+    """mwind 1/2 are supported; other nonzero values still raise."""
+    vehicle, env = _vehicle_with_newton_state(mwind=3)
+    with pytest.raises(ValueError, match="mwind"):
         env.execute(vehicle, None)

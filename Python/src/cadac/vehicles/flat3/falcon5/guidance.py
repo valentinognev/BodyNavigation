@@ -64,6 +64,11 @@ class Plane5Guidance:
             apgv = self.guidance_point(vehicle)
             alcomx = apgv[1] / grav
             ancomx = 0.0
+        elif mguidance == 43:
+            algv = self.guidance_line(vehicle)
+            apgv = self.guidance_point(vehicle)
+            alcomx = apgv[1] / grav
+            ancomx = -algv[2] / grav
         else:
             raise ValueError(f"unknown mguidance {mguidance}")
         if ancomx > anposlimx:

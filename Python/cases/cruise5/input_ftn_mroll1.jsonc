@@ -1,0 +1,137 @@
+/* Derived from Task 72 input_ftn.jsonc for Task 78:
+   MGUID=132 → MROLL=1 inverted attitude, MGUIDL=3, MGUIDP=2 look-fwd.
+   GGP/BGP/ALDEAD/PHILIM from INPUT.ASC bank-to-turn roll block. */
+{
+  "title": "CRUISE5 derived MROLL=1 inverted guidance (MGUID=132)",
+  "family": "cruise5",
+  "iseed": 12531,
+  "options": {
+    "scrn": false,
+    "comscrn": false,
+    "events": false,
+    "tabout": false,
+    "plot": true,
+    "traj": false,
+    "merge": false,
+    "doc": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "propulsion",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "forces",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "newton",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "targeting",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "seeker",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "guidance",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "control",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "intercept",
+      "phases": ["def", "exec"]
+    }
+  ],
+  "timing": {
+    "scrn_step": 50.0,
+    "plot_step": 0.05,
+    "traj_step": 0.5,
+    "int_step": 0.05,
+    "com_step": 40.0
+  },
+  "end_time": 0.2,
+  "vehicles": [
+    {
+      "type": "CRUISE3",
+      "name": "UAV",
+      "family": "cruise5",
+      "aero_deck": "cruise3_aero_deck.jsonc",
+      "prop_deck": "cruise3_prop_deck.jsonc",
+      "params": {
+        "lonx": 14.7,
+        "latx": 35.4,
+        "alt": 150.0,
+        "psivgx": -60.0,
+        "thtvgx": 0.0,
+        "dvbe": 272.0,
+        "alphax": 0.0,
+        "phimvx": 0.0,
+        "mprop": 4,
+        "mach_com": 0.8,
+        "mass_init": 833.0,
+        "fuel_init": 7.0,
+        "gfthm": 893620.0,
+        "tfth": 1.0,
+        "mseeker": 0,
+        "acq_range": 1200.0,
+        "racq": 1200.0,
+        "mguidance": 132,
+        "line_gain": 2.0,
+        "nl_gain_fact": 0.6,
+        "decrement": 2000.0,
+        "wp_lonx": 14.7,
+        "wp_latx": 35.4,
+        "wp_alt": 0.0,
+        "psifgx": -60.0,
+        "thtfgx": 0.0,
+        "mcontrol": 0,
+        "maut": 0,
+        "mturn": 1,
+        "ggp": 3.0,
+        "bgp": 1.0,
+        "aldead": 0.01740,
+        "philim": 1.22,
+        "anposlimx": 4.0,
+        "anneglimx": -4.0,
+        "allimx": 4.0,
+        "gacp": 30.0,
+        "ta": 1.0,
+        "alpposlimx": 15.0,
+        "alpneglimx": -10.0,
+        "philimx": 70.0,
+        "tphi": 0.4,
+        "dcell": 100.0,
+        "rahead": 3000.0,
+        "dhtrc": 10.0,
+        "slope": 0.05,
+        "occden": 0.0005,
+        "sigobs": 10.0,
+        "iseed2": 12345,
+        "tlead": 3.0,
+        "gelev": 0.07,
+        "hgmean": 100.0,
+        "hgbias": 0.0,
+        "facth": 0.444,
+        "rcor": 609.6,
+        "sigmah": 30.48,
+        "iseed": 12345
+      },
+      "events": []
+    }
+  ]
+}

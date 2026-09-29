@@ -40,6 +40,11 @@ WP_LATX_46 = 33.4
 WP_ALT_46 = 1200.0
 POINT_GAIN = 0.04
 PHILIMX_46 = 70.0
+LINE_GAIN = 1.0
+NL_GAIN_FACT = 0.6
+DECREMENT = 1000.0
+PSIFGX = 0.0
+THTFGX = 0.0
 
 # Demo 5.12 arc midcourse
 ARC_LONX = -120.6
@@ -288,6 +293,7 @@ def _ready_point(
     phicx=12.0,
     ancomx=1.5,
     alcomx=0.5,
+    with_line=False,
 ):
     vehicle = _Vehicle()
     guidance = Hyper5Guidance()
@@ -313,6 +319,12 @@ def _ready_point(
     store.set("wp_latx", WP_LATX_46)
     store.set("wp_alt", WP_ALT_46)
     store.set("point_gain", POINT_GAIN)
+    if with_line:
+        store.set("line_gain", LINE_GAIN)
+        store.set("nl_gain_fact", NL_GAIN_FACT)
+        store.set("decrement", DECREMENT)
+        store.set("psifgx", PSIFGX)
+        store.set("thtfgx", THTFGX)
     if plant_control:
         _plant_control(
             store,
@@ -428,7 +440,7 @@ def test_mguidance_0_no_raise_without_writing():
     assert store.get("mguidance") == 0
 
 
-@pytest.mark.parametrize("mguidance", [30, 33, 99, 40, 43])
+@pytest.mark.parametrize("mguidance", [99])
 def test_unused_mguidance_raises_valueerror(mguidance):
     vehicle = _Vehicle()
     guidance = Hyper5Guidance()
@@ -436,6 +448,65 @@ def test_unused_mguidance_raises_valueerror(mguidance):
     vehicle.store.set("mguidance", mguidance)
     with pytest.raises(ValueError):
         guidance.execute(vehicle, _ctx())
+
+
+def test_hyper5_mguidance_30():
+    vehicle, guidance = _ready_point(mguidance=30, with_line=True)
+    store = vehicle.store
+    store.set("alcomx", 7.0)
+    store.set("ancomx", 7.0)
+    algv = guidance.guidance_line(vehicle)
+    want_al, want_an = _clip_commands(
+        float(algv[1] / GRAV), 0.0, ALLIMX, ANPOSLIMX, ANNEGLIMX
+    )
+    guidance.execute(vehicle, _ctx())
+    assert _approx(store.get("alcomx"), want_al)
+    assert _approx(store.get("ancomx"), want_an)
+    assert want_an == 0.0
+    assert store.get("phicx") == 12.0
+
+
+def test_hyper5_mguidance_33():
+    vehicle, guidance = _ready_point(mguidance=33, with_line=True)
+    store = vehicle.store
+    algv = guidance.guidance_line(vehicle)
+    want_al, want_an = _clip_commands(
+        float(algv[1] / GRAV), float(-algv[2] / GRAV), ALLIMX, ANPOSLIMX, ANNEGLIMX
+    )
+    guidance.execute(vehicle, _ctx())
+    assert _approx(store.get("alcomx"), want_al)
+    assert _approx(store.get("ancomx"), want_an)
+    assert store.get("phicx") == 12.0
+
+
+def test_hyper5_mguidance_40():
+    vehicle, guidance = _ready_point(mguidance=40)
+    store = vehicle.store
+    store.set("alcomx", 7.0)
+    store.set("ancomx", 7.0)
+    apgv = guidance.guidance_point(vehicle)
+    want_al, want_an = _clip_commands(
+        float(apgv[1] / GRAV), 0.0, ALLIMX, ANPOSLIMX, ANNEGLIMX
+    )
+    guidance.execute(vehicle, _ctx())
+    assert _approx(store.get("alcomx"), want_al)
+    assert _approx(store.get("ancomx"), want_an)
+    assert want_an == 0.0
+    assert store.get("phicx") == 12.0
+
+
+def test_hyper5_mguidance_43():
+    vehicle, guidance = _ready_point(mguidance=43, with_line=True)
+    store = vehicle.store
+    algv = guidance.guidance_line(vehicle)
+    apgv = guidance.guidance_point(vehicle)
+    want_al, want_an = _clip_commands(
+        float(apgv[1] / GRAV), float(-algv[2] / GRAV), ALLIMX, ANPOSLIMX, ANNEGLIMX
+    )
+    guidance.execute(vehicle, _ctx())
+    assert _approx(store.get("alcomx"), want_al)
+    assert _approx(store.get("ancomx"), want_an)
+    assert store.get("phicx") == 12.0
 
 
 def test_mguidance_44_writes_alcomx_ancomx_from_point():

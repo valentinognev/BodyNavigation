@@ -1,5 +1,14 @@
 # Updates
 
+## 0.191.0 - CADAC unported abilities wave
+- Feature-scale port of previously missing CADAC abilities across vehicle families (SRAAM5/6, CRUISE5, HYPER3/6, ROCKET3/6, FALCON5/6, AIM5, SAM6, AGM6, …) plus kernel I/O (comscrn, doc, merge, scrn, stat, tabout, traj) and related scenario/translate/executive hooks.
+- CRUISE5 vehicle, target, and satellite now construct `Cruise5Environment` so `mair=1` is cruise constant wind (branch fix in this wave).
+- Accepted deferrals: CLI does not inject `weather_deck`; Python `str` column widths; doc definitions blank and locations dense; `markov_list` is planted on the vehicle; `maut` 25 stays rejected; many Fortran-less goldens deferred; no commit yet.
+
+## 0.190.1 - CRUISE5 guidance modes 33, 40, and 66
+- `Cruise5Guidance` now dispatches line-both (33), point-lateral (40), and pro-nav both (66), matching C++. Mode 40 was the `unknown mguidance 40` crash on `input_1_3`.
+- Tests: `test_cruise5_mguidance.py`. Arc guidance (70) is still unimplemented.
+
 ## 0.190.0 - Run progress bar
 - The bar under the header fills with simulation time over end time while a run is in flight.
 

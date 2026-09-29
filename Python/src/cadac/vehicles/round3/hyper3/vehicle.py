@@ -9,14 +9,14 @@ from cadac.vehicles.round3.hyper3.propulsion import Cruise3Propulsion
 class Cruise3:
     type = "CRUISE3"
 
-    def __init__(self, name, aero_deck, prop_deck, events=None):
+    def __init__(self, name, aero_deck, prop_deck, events=None, weather_deck=None):
         self.name = name
         self.store = StateStore()
         self.event_time = 0.0
         self.events = EventEngine(events or [])
         self.com_names = []
         self.modules = [
-            Round3Environment(),
+            Round3Environment(weather_deck),
             Cruise3Aero(aero_deck),
             Cruise3Propulsion(prop_deck),
             Cruise3Forces(),

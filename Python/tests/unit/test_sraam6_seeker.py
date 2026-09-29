@@ -96,7 +96,27 @@ SEEKER_FIELDS = (
     "phihlx",
     "SBTL",
 )
-DEFINED = COM_FIELDS + SEEKER_FIELDS
+# S2 AI radar fields registered via Sraam6Seeker.define → Sraam6AiRadar.define
+AI_RADAR_FIELDS = (
+    "ntag",
+    "dtimtu",
+    "dtimup",
+    "biastd",
+    "randtd",
+    "biasta",
+    "randta",
+    "biaste",
+    "randte",
+    "EVT1EL",
+    "ST1CEL",
+    "VT1CEL",
+    "ai_iset1",
+    "ai_iset2",
+    "epchtai",
+    "epchup",
+    "mnav",
+)
+DEFINED = COM_FIELDS + SEEKER_FIELDS + AI_RADAR_FIELDS
 INT_COM = ("tgt_num", "tgt_com_slot", "sht_num")
 INT_SEEKER = ("mseek", "ms1dyn", "isets1", "ibreak")
 VEC_COM = ("STEL", "VTEL", "SSEL", "STSL")

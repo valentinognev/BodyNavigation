@@ -205,6 +205,30 @@ def _control_yaw_rate(store, rcomx):
     return delrcx, zrate, grate, wnlagr
 
 
+def _control_pitch_rate(store, qcomx):
+    zetlagr = store.get("zetlagr")
+    dla = store.get("dla")
+    dlde = store.get("dlde")
+    dma = store.get("dma")
+    dmq = store.get("dmq")
+    dmde = store.get("dmde")
+    qqcx = store.get("qqcx")
+    dvbec = store.get("dvbec")
+    zrate = dla / dvbec - dma * dlde / (dvbec * dmde)
+    aa = dla / dvbec - dmq
+    bb = -dma - dmq * dla / dvbec
+    dum1 = aa - 2.0 * zetlagr * zetlagr * zrate
+    dum2 = aa * aa - 4.0 * zetlagr * zetlagr * bb
+    radix = dum1 * dum1 - dum2
+    if radix < 0.0:
+        radix = 0.0
+    if abs(dmde) < 1.0e-7:
+        dmde = 1.0e-7 * _sign(dmde)
+    grate = (-dum1 + sqrt(radix)) / (-dmde)
+    delecx = grate * (qqcx - qcomx)
+    return delecx
+
+
 def _control_gamma(store, thtvdcomx):
     pgam = store.get("pgam")
     wgam = store.get("wgam")
@@ -285,16 +309,19 @@ def _dispatch(store):
     ancomx = store.get("ancomx")
     phicomx = store.get("phicomx")
     pcomx = store.get("pcomx")
+    qcomx = store.get("qcomx")
     rcomx = store.get("rcomx")
     thtvdcomx = store.get("thtvdcomx")
     if maut == 0:
         return None
-    if maut not in (24,):
+    if maut not in (1, 2, 22, 24):
         raise ValueError(f"unknown maut {maut}")
     mauty = maut // 10
     mautp = maut % 10
     if mauty == 2:
         delrcx = _control_yaw_rate(store, rcomx)[0]
+    if mautp == 2:
+        delecx = _control_pitch_rate(store, qcomx)
     if mautp == 4:
         delecx = _control_gamma(store, thtvdcomx)[0]
     if mroll == 0:
@@ -333,6 +360,82 @@ def test_maut_24_runs_without_error_and_matches_cadac():
         store.get("GAINGAM"), _control_gamma(store, THTVDCOMX)[1], rtol=RTOL, atol=ATOL
     )
     assert _approx(store.get("gainff"), _control_gamma(store, THTVDCOMX)[2])
+    _, zrate, grate, wnlagr = _control_yaw_rate(store, RCOMX)
+    assert _approx(store.get("zrate"), zrate)
+    assert _approx(store.get("grate"), grate)
+    assert _approx(store.get("wnlagr"), wnlagr)
+    _, gkp, gkphi = _control_roll(store, PHICOMX)
+    assert _approx(store.get("gkp"), gkp)
+    assert _approx(store.get("gkphi"), gkphi)
+
+
+def test_hyper6_maut_1_roll_only():
+    vehicle, ctrl = _ready(maut=1)
+    store = vehicle.store
+    want = _dispatch(store)
+    ctrl.execute(vehicle, _ctx())
+    delacx, delecx, delrcx, ancomx, phicomx = want
+    assert _approx(store.get("delacx"), delacx)
+    assert store.get("delecx") == 0.0
+    assert store.get("delrcx") == 0.0
+    assert _approx(store.get("delecx"), delecx)
+    assert _approx(store.get("delrcx"), delrcx)
+    assert _approx(store.get("ancomx"), ancomx)
+    assert _approx(store.get("phicomx"), phicomx)
+    assert store.get("delacx") != 0.0
+    np.testing.assert_array_equal(store.get("GAINGAM"), np.zeros(3))
+    assert store.get("gainff") == 0.0
+    assert store.get("zrate") == 0.0
+    assert store.get("grate") == 0.0
+    assert store.get("wnlagr") == 0.0
+    _, gkp, gkphi = _control_roll(store, PHICOMX)
+    assert _approx(store.get("gkp"), gkp)
+    assert _approx(store.get("gkphi"), gkphi)
+
+
+def test_hyper6_maut_2_pitch_rate():
+    vehicle, ctrl = _ready(maut=2)
+    store = vehicle.store
+    want = _dispatch(store)
+    ctrl.execute(vehicle, _ctx())
+    delacx, delecx, delrcx, ancomx, phicomx = want
+    assert _approx(store.get("delacx"), delacx)
+    assert _approx(store.get("delecx"), delecx)
+    assert store.get("delrcx") == 0.0
+    assert _approx(store.get("delrcx"), delrcx)
+    assert _approx(store.get("delecx"), _control_pitch_rate(store, store.get("qcomx")))
+    assert store.get("delecx") != 0.0
+    assert store.get("delacx") != 0.0
+    assert _approx(store.get("ancomx"), ancomx)
+    assert _approx(store.get("phicomx"), phicomx)
+    np.testing.assert_array_equal(store.get("GAINGAM"), np.zeros(3))
+    assert store.get("gainff") == 0.0
+    assert store.get("zrate") == 0.0
+    assert store.get("grate") == 0.0
+    assert store.get("wnlagr") == 0.0
+    _, gkp, gkphi = _control_roll(store, PHICOMX)
+    assert _approx(store.get("gkp"), gkp)
+    assert _approx(store.get("gkphi"), gkphi)
+
+
+def test_hyper6_maut_22_pitch_rate():
+    vehicle, ctrl = _ready(maut=22)
+    store = vehicle.store
+    want = _dispatch(store)
+    ctrl.execute(vehicle, _ctx())
+    delacx, delecx, delrcx, ancomx, phicomx = want
+    assert _approx(store.get("delacx"), delacx)
+    assert _approx(store.get("delecx"), delecx)
+    assert _approx(store.get("delrcx"), delrcx)
+    assert _approx(store.get("delecx"), _control_pitch_rate(store, store.get("qcomx")))
+    assert _approx(store.get("delrcx"), _control_yaw_rate(store, RCOMX)[0])
+    assert store.get("delecx") != 0.0
+    assert store.get("delrcx") != 0.0
+    assert store.get("delacx") != 0.0
+    assert _approx(store.get("ancomx"), ancomx)
+    assert _approx(store.get("phicomx"), phicomx)
+    np.testing.assert_array_equal(store.get("GAINGAM"), np.zeros(3))
+    assert store.get("gainff") == 0.0
     _, zrate, grate, wnlagr = _control_yaw_rate(store, RCOMX)
     assert _approx(store.get("zrate"), zrate)
     assert _approx(store.get("grate"), grate)
@@ -389,7 +492,7 @@ def test_gamma_case_omits_mroll_defaults_to_position():
 
 
 def test_unknown_maut_raises():
-    for maut in (1, 2, 20, 32, 42):
+    for maut in (20,):
         vehicle, ctrl = _ready(maut=maut)
         with pytest.raises(ValueError, match="unknown maut"):
             ctrl.execute(vehicle, _ctx())

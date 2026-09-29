@@ -18,6 +18,7 @@ AIM5_ASC = ROOT / "CADAC_Simulations/AIM5_250114/AIM5"
 CASES = Path(__file__).resolve().parents[2] / "cases" / "aim5"
 
 MODULE_ORDER = [
+    "target",
     "environment",
     "kinematics",
     "aerodynamics",
@@ -37,7 +38,7 @@ AIRCRAFT_MODULE_ORDER = [
     "forces",
     "newton",
 ]
-INIT_NAMES = {"kinematics", "control", "newton"}
+INIT_NAMES = {"target", "kinematics", "control", "newton"}
 
 
 def _aero_deck():

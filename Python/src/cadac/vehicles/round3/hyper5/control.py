@@ -5,7 +5,7 @@ from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 from cadac.math.frames import cadtbv
 
-_ALLOWED_MCONTROL = (0, 1, 3, 4, 6, 10, 11, 16, 36, 40, 44)
+_ALLOWED_MCONTROL = (0, 1, 3, 4, 6, 10, 11, 16, 36, 40, 44, 46)
 _ZEROS33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
 
@@ -103,6 +103,11 @@ class Hyper5Control:
         if mcontrol == 44:
             phicx = self.control_lateral(vehicle, alcomx)
             phimvx = self.control_bank(vehicle, phicx, int_step)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 46:
+            phicx = self.control_lateral(vehicle, alcomx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
             alphax = self.control_load(vehicle, ancomx, int_step)
         if mcontrol == 6:
             ancomx = self.control_altitude(vehicle, altcom, phimvx)

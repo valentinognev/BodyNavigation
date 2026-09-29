@@ -101,10 +101,10 @@ class Hyper6Control:
         mauty = maut // 10
         mautp = maut % 10
         # Yaw 2 is the existing rate path only beside a ported pitch digit
-        # (3/4/5), which keeps maut 24 and rejects yaw-rate-only maut 20.
-        # Pitch 2 is not dispatched, so it never passes.
-        yaw_ok = mauty in (0, 3, 4) or (mauty == 2 and mautp in (3, 4, 5))
-        pitch_ok = mautp in (0, 3, 4, 5)
+        # (2/3/4/5), which keeps maut 22/24 and rejects yaw-rate-only maut 20.
+        # Pitch 1 is roll-only (no pitch path); pitch 2 is pitch-rate SAS.
+        yaw_ok = mauty in (0, 3, 4) or (mauty == 2 and mautp in (2, 3, 4, 5))
+        pitch_ok = mautp in (0, 1, 2, 3, 4, 5)
         if not (yaw_ok and pitch_ok):
             raise ValueError(f"unknown maut {maut}")
 
@@ -119,11 +119,14 @@ class Hyper6Control:
         ancomx = store.get("ancomx")
         phicomx = store.get("phicomx")
         pcomx = store.get("pcomx")
+        qcomx = store.get("qcomx")
         rcomx = store.get("rcomx")
         thtvdcomx = store.get("thtvdcomx")
 
         if mauty == 2:
             delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mautp == 2:
+            delecx = self.control_pitch_rate(vehicle, qcomx)
         if mauty == 3:
             phicomx = self.control_lateral_accel(vehicle, store.get("alcomx"))
             delrcx = self.control_yaw_rate(vehicle, rcomx)

@@ -1,0 +1,199 @@
+/* Derived from SRAAM5 inlar1.asc with mseek=5 (blind / intercept-plane DTCT/DBTC).
+   Does not overwrite inlar1.jsonc. */
+{
+  "title": "INLAR1_MSEEK5 derived: SRAAM5 DTCT/DBTC (MSEEK=5) from inlar1.asc",
+  "options": {},
+  "modules": [
+    {
+      "name": "target",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "seeker",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "ai_radar",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "rotations",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "plot_step": 0.05,
+    "scrn_step": 0.2,
+    "int_step": 0.0123
+  },
+  "end_time": 0.0,
+  "vehicles": [
+    {
+      "type": "SRAAM5",
+      "name": "sraam5",
+      "params": {
+        "optmet": 1.0,
+        "mtarg": 21,
+        "an1c": 1.0,
+        "dvt1e": 240.0,
+        "ht1e": 5000.0,
+        "tauhx": 10,
+        "dvt2e": 240,
+        "an2c": 1.0,
+        "sighx": 20.0,
+        "wloadt2": 3247.0,
+        "clat2": 0.0523,
+        "ht2e": 5000.0,
+        "rhl": 6000.0,
+        "mstop": 1,
+        "mseek": 5,
+        "ms1dyn": 1,
+        "dblind": 3.0,
+        "racq": 99999.0,
+        "dtimac": 0.25,
+        "gk": 10.0,
+        "zetak": 0.9,
+        "wnk": 60.0,
+        "fovyaw": 0.0314,
+        "fovpp": 0.0314,
+        "trphid": 14.0,
+        "trthtd": 10.0,
+        "trate": 1.0,
+        "biast": 0.0,
+        "biasp": 0.0,
+        "biaseh": 0.0,
+        "mins": 1,
+        "mguid": 6,
+        "gnav": 3.75,
+        "maut": 44,
+        "anplim": 50.0,
+        "annlim": -50.0,
+        "allim": 50.0,
+        "betlim": 0.8,
+        "alpplim": 0.8,
+        "alplim": 0.8,
+        "alnlim": 0.8,
+        "factgacp": 0.5,
+        "facttr": 0.0,
+        "ta": 2.2,
+        "amass": 91.7,
+        "area": 0.01824,
+        "mterm": 1
+      },
+      "events": [
+        {
+          "when": {
+            "dbt1": {
+              "<": 1851.97
+            }
+          },
+          "set": {
+            "phit1lcx": 83.66,
+            "an1c": 9.055
+          }
+        },
+        {
+          "when": {
+            "dbt1": {
+              "<": 50.0
+            }
+          },
+          "set": {
+            "mseek": 5
+          }
+        }
+      ],
+      "family": "sraam5"
+    }
+  ],
+  "iseed": 12345,
+  "family": "sraam5"
+}

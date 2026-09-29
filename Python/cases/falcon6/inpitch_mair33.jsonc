@@ -1,0 +1,93 @@
+/* Derived from Simulations_FTN/FALCON6/inpitch.asc for Task 81.
+   Legacy ASC does not ship WEATHER+MAIR=33. Adds Fortran packing
+   mair=|MTURB|MWIND|MATMO|=033 (tabular atmosphere + tabular wind)
+   plus minimal weather_deck beside this case (MODULE.FOR WEATHER columns).
+   Short end_time for python-golden; CLI does not inject weather_deck into
+   Flat6Environment (vehicle.py/cli untouched). */
+{
+  "title": "inpitch_mair33 derived FALCON6 tabular weather MATMO=3 MWIND=3",
+  "options": {
+    "scrn": false,
+    "doc": false,
+    "plot": true,
+    "csv": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "kinematics",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "propulsion",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "forces",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "euler",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "newton",
+      "phases": ["def", "init", "exec"]
+    }
+  ],
+  "timing": {
+    "scrn_step": 0.5,
+    "plot_step": 0.1,
+    "int_step": 0.01
+  },
+  "end_time": 0.2,
+  "vehicles": [
+    {
+      "type": "PLANE6",
+      "name": "F16",
+      "aero_deck": "f16_aero_deck.jsonc",
+      "prop_deck": "f16_prop_deck.jsonc",
+      "weather_deck": "weather_deck.jsonc",
+      "params": {
+        "sbel1": 0,
+        "sbel2": 0,
+        "sbel3": -1524,
+        "dvbe": 183,
+        "psivlx": 0,
+        "thtvlx": 0,
+        "alphax": 1.0,
+        "betax": 0.0,
+        "psiblx": 0.0,
+        "thtblx": 0.0,
+        "phiblx": 0.0,
+        "xcgr": 0.35,
+        "xcg": 0.3,
+        "thrtl": 0.3,
+        "pow": 9.644,
+        "mair": 33,
+        "twind": 0.1
+      },
+      "events": [
+        {
+          "when": { "time": { ">": 1.0 } },
+          "set": { "delex": -1.0 }
+        },
+        {
+          "when": { "time": { ">": 3.0 } },
+          "set": { "delex": 1.0 }
+        },
+        {
+          "when": { "time": { ">": 5.0 } },
+          "set": { "delex": 0.0 }
+        }
+      ]
+    }
+  ]
+}

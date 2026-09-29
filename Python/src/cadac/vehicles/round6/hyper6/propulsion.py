@@ -83,7 +83,7 @@ class Hyper6Propulsion:
         store = vehicle.store
         dt = ctx.int_step
         mprop = store.get("mprop")
-        if mprop not in (0, 1, 2):
+        if mprop not in (0, 1, 2, 3, 4):
             raise ValueError(f"unknown mprop {mprop}")
 
         throttle = store.get("throttle")
@@ -94,6 +94,11 @@ class Hyper6Propulsion:
         thrtl_idle = store.get("thrtl_idle")
         acowl = store.get("acowl")
         thrtl_max = store.get("thrtl_max")
+        fuel_flow_rate = store.get("fuel_flow_rate")
+        moi_roll_exo_0 = store.get("moi_roll_exo_0")
+        moi_roll_exo_1 = store.get("moi_roll_exo_1")
+        moi_trans_exo_0 = store.get("moi_trans_exo_0")
+        moi_trans_exo_1 = store.get("moi_trans_exo_1")
         ibbb = np.array(store.get("IBBB"), dtype=float)
         ibbb0 = np.array(store.get("IBBB0"), dtype=float)
         ibbb1 = np.array(store.get("IBBB1"), dtype=float)
@@ -112,6 +117,8 @@ class Hyper6Propulsion:
         refa = store.get("refa")
         cd = store.get("cd")
         alphax = store.get("alphax")
+        isp_fuel = store.get("isp_fuel") if "isp_fuel" in store else 0.0
+        burntime = store.get("burntime") if "burntime" in store else 0.0
 
         spi = 0.0
         ca = 0.0
@@ -138,6 +145,21 @@ class Hyper6Propulsion:
                     throttle = thrtl_max
                 spi = self.deck.look_up("spi_vs_throttle_mach", throttle, vmach)
                 thrust = spi * 0.029 * throttle * AGRAV * rho * dvba * ca * acowl
+            if mprop == 3 or mprop == 4:
+                spi = isp_fuel
+                if mprop == 3:
+                    fuel_flow_rate = fmass0 / burntime
+                    thrust = spi * fuel_flow_rate * AGRAV
+                elif mprop == 4:
+                    thrust = spi * fuel_flow_rate * AGRAV
+                ibbb0 = np.zeros((3, 3))
+                ibbb0[0, 0] = moi_roll_exo_0
+                ibbb0[1, 1] = moi_trans_exo_0
+                ibbb0[2, 2] = moi_trans_exo_0
+                ibbb1 = np.zeros((3, 3))
+                ibbb1[0, 0] = moi_roll_exo_1
+                ibbb1[1, 1] = moi_trans_exo_1
+                ibbb1[2, 2] = moi_trans_exo_1
             if spi != 0:
                 fmassd_next = thrust / (spi * AGRAV)
                 fmasse = integrate(fmassd_next, fmassd, fmasse, dt)

@@ -1,0 +1,91 @@
+/* Derived from GHAME3 INPUT.ASC / hyper3 input.jsonc for Task 82:
+   MAIR=1 weather-deck atmosphere (GHAME3 G2). No shipped ASC sets MAIR=1.
+   Weather tables reuse ROCKET6 Wallops shape (density/pressure/temperature =
+   RHX/WPRES/CTMP vs WALT). Short end_time for python-golden. */
+{
+  "title": "GHAME3 derived MAIR=1 tabular atmosphere",
+  "options": {
+    "scrn": false,
+    "events": false,
+    "plot": true,
+    "doc": false,
+    "csv": true
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 10.0,
+    "plot_step": 0.05,
+    "traj_step": 0.5,
+    "int_step": 0.01,
+    "com_step": 1.0
+  },
+  "end_time": 0.2,
+  "vehicles": [
+    {
+      "type": "CRUISE3",
+      "name": "HYPER3",
+      "aero_deck": "ghame3_aero_deck.jsonc",
+      "prop_deck": "ghame3_prop_deck.jsonc",
+      "weather_deck": "../rocket6/weather_deck_Wallops.jsonc",
+      "params": {
+        "mair": 1,
+        "lonx": -80.55,
+        "latx": 28.43,
+        "alt": 3000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 250,
+        "alphax": 7,
+        "phimvx": 0,
+        "area": 557.42,
+        "mprop": 1,
+        "mass0": 136077,
+        "fmass0": 81646,
+        "acowl": 27.87,
+        "throttle": 0.2,
+        "thrtl_idle": 0.05,
+        "thrtl_max": 2
+      },
+      "events": []
+    }
+  ]
+}

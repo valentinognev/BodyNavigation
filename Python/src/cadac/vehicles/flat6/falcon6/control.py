@@ -1,8 +1,9 @@
-from math import atan, sqrt
+from math import atan, cos, sqrt
 
 import numpy as np
 
-from cadac.constants import DEG, RAD
+from cadac.constants import AGRAV, DEG, RAD
+from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 
 SMALL = 1.0e-7
@@ -97,7 +98,14 @@ class Plane6Control:
         maut = store.get("maut")
         if maut == 0:
             return
-        if maut not in (1, 24, 30, 40):
+
+        mauty = maut // 10
+        mautp = maut % 10
+        # Ported yaw: 0/2/3/4; ported pitch: 0/1 (roll-only)/2/3/4/5.
+        # Yaw digit 2 only beside ported pitch 2/3/4 (keeps maut 25 rejected).
+        yaw_ok = mauty in (0, 3, 4) or (mauty == 2 and mautp in (2, 3, 4))
+        pitch_ok = mautp in (0, 1, 2, 3, 4, 5)
+        if not (yaw_ok and pitch_ok):
             raise ValueError(f"unknown maut {maut}")
 
         delacx = 0.0
@@ -111,21 +119,44 @@ class Plane6Control:
         ancomx = store.get("ancomx")
         phicomx = store.get("phicomx")
         pcomx = store.get("pcomx")
+        qcomx = store.get("qcomx")
         rcomx = store.get("rcomx")
         thtvlcomx = store.get("thtvlcomx")
 
-        mauty = maut // 10
-        mautp = maut % 10
-
         if mauty == 2:
             delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mautp == 2:
+            delecx = self.control_pitch_rate(vehicle, qcomx)
         if mauty == 3:
             phicomx = self.control_lateral_accel(vehicle, store.get("alcomx"))
+        if mautp == 3:
+            gmax = store.get("gmax")
+            gminx = store.get("gminx")
+            if ancomx > gmax:
+                ancomx = gmax
+            if ancomx < gminx:
+                ancomx = gminx
+            delecx = self.control_normal_accel(vehicle, ancomx, ctx.int_step)
         if mautp == 4:
             delecx = self.control_gamma(vehicle, thtvlcomx)
         if mauty == 4:
             phicomx = self.control_heading(vehicle, store.get("psivlcomx"))
             delrcx = self.control_yaw_rate(vehicle, rcomx)
+        if mautp == 5:
+            ancomx = self.control_altitude(vehicle, store.get("altcom"))
+            anlimpx = store.get("anlimpx")
+            anlimnx = store.get("anlimnx")
+            if ancomx > anlimpx:
+                ancomx = anlimpx
+            if ancomx < -anlimnx:
+                ancomx = -anlimnx
+            gmax = store.get("gmax")
+            gminx = store.get("gminx")
+            if ancomx > gmax:
+                ancomx = gmax
+            if ancomx < gminx:
+                ancomx = gminx
+            delecx = self.control_normal_accel(vehicle, ancomx, ctx.int_step)
 
         if mroll == 0:
             if abs(phicomx) > philimx:
@@ -298,6 +329,47 @@ class Plane6Control:
         store.set("gainff", gainff)
         return delecx
 
+    def control_normal_accel(self, vehicle, ancomx, int_step):
+        store = vehicle.store
+        gainp = store.get("gainp")
+        pdynmc = store.get("pdynmc")
+        dla = store.get("dla")
+        dma = store.get("dma")
+        dmq = store.get("dmq")
+        dmde = store.get("dmde")
+        qqx = store.get("qqx")
+        fspb = store.get("FSPB")
+        dvbe = store.get("dvbe")
+        zzd = store.get("zzd")
+        zz = store.get("zz")
+
+        # FALCON6 schedules closed-loop poles from dynamic pressure
+        waclp = 2 + 0.0001226 * (pdynmc - 5500)
+        zaclp = 0.7 - 0.0000245 * (pdynmc - 5500)
+        paclp = 5 + 0.0003067 * (pdynmc - 5500)
+
+        gainfb3 = waclp * waclp * paclp / (dla * dmde)
+        gainfb2 = (2.0 * zaclp * waclp + paclp + dmq - dla / dvbe) / dmde
+        gainfb1 = (
+            waclp * waclp
+            + 2.0 * zaclp * waclp * paclp
+            + dma
+            + dmq * dla / dvbe
+            - gainfb2 * dmde * dla / dvbe
+        ) / (dla * dmde) - gainp
+
+        fspb3 = fspb[2]
+        zzd_new = AGRAV * ancomx + fspb3
+        zz = integrate(zzd_new, zzd, zz, int_step)
+        zzd = zzd_new
+        dqc = -gainfb1 * (-fspb3) - gainfb2 * qqx * RAD + gainfb3 * zz + gainp * zzd
+        delecx = dqc * DEG
+
+        store.set("zzd", zzd)
+        store.set("zz", zz)
+        store.set("GAINFP", (gainfb1, gainfb2, gainfb3))
+        return delecx
+
     def control_lateral_accel(self, vehicle, alcomx):
         store = vehicle.store
         gainl = store.get("gainl")
@@ -317,6 +389,22 @@ class Plane6Control:
         phicomx = gainpsi * (psivlcomx - psivlx)
         store.set("gainpsi", gainpsi)
         return phicomx
+
+    def control_altitude(self, vehicle, altcom):
+        store = vehicle.store
+        gainalt = store.get("gainalt")
+        gainaltrate = store.get("gainaltrate")
+        grav = store.get("grav")
+        phiblx = store.get("phiblx")
+        vbel = store.get("VBEL")
+        hbe = store.get("hbe")
+        altrate = -vbel[2]
+        eh = gainalt * (altcom - hbe)
+        if phiblx == 0:
+            phiblx = SMALL
+        ancomx = (1.0 / cos(phiblx * RAD)) * (gainaltrate * (eh - altrate) + grav) / AGRAV
+        store.set("altrate", altrate)
+        return ancomx
 
     def terminate(self, vehicle, ctx):
         pass

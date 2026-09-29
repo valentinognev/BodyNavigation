@@ -71,12 +71,13 @@ class Sam6Control:
         maut = store.get("maut")
         if maut == 0:
             return
-        if maut == 4:
-            raise ValueError(f"unknown maut {maut}")
         self.control_roll(vehicle)
         if maut == 2:
             self.control_rate(vehicle)
         if maut == 3:
+            self.control_accel(vehicle, ctx.int_step)
+        if maut == 4:
+            self.control_rate(vehicle)
             self.control_accel(vehicle, ctx.int_step)
 
     def control_roll(self, vehicle):

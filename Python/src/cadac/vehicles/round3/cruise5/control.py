@@ -1,4 +1,6 @@
-from math import cos
+from math import cos, sin
+
+import numpy as np
 
 from cadac.constants import DEG, RAD
 from cadac.kernel.integrate import integrate
@@ -6,6 +8,22 @@ from cadac.kernel.state import Field
 from cadac.math.frames import cadtbv
 
 _ZEROS33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+
+
+def _a3tra_stt(alpha: float, beta: float) -> np.ndarray:
+    """Fortran A3TRA yaw-to-turn TBV from ALPHA/BETA (MTURN=0)."""
+    calp = cos(alpha)
+    salp = sin(alpha)
+    cbet = cos(beta)
+    sbet = sin(beta)
+    return np.array(
+        [
+            [calp * cbet, -calp * sbet, -salp],
+            [sbet, cbet, 0.0],
+            [salp * cbet, -salp * sbet, calp],
+        ],
+        dtype=float,
+    )
 
 
 class Cruise5Control:
@@ -55,6 +73,40 @@ class Cruise5Control:
             Field("gv", 0.0, "real", "data", "control"),
             Field("altd", 0.0, "real", "diag", "control", ("plot",)),
             Field("altcom", 0.0, "real", "data", "control", ("plot",)),
+            # Fortran C2 MAUT / APTVC (MODULE.FOR) — dual path with mcontrol
+            Field("maut", 0, "int", "data", "control", ("scrn",)),
+            Field("mturn", 1, "int", "data", "control"),
+            Field("alphac", 0.0, "real", "data", "control"),
+            Field("betac", 0.0, "real", "data", "control"),
+            Field("wqc", 0.0, "real", "data", "control"),
+            Field("wpc", 0.0, "real", "data", "control"),
+            Field("aptvc", 0.0, "real", "data", "control"),
+            Field("ga", 0.0, "real", "data", "control"),
+            Field("gp", 0.0, "real", "data", "control"),
+            Field("aiz", 0.0, "real", "data", "control"),
+            Field("cmdel", 0.0, "real", "data", "control"),
+            Field("rleng", 0.0, "real", "data", "control"),
+            Field("parm", 0.0, "real", "data", "control"),
+            Field("flplim", 0.0, "real", "data", "control"),
+            Field("tvclim", 0.0, "real", "data", "control"),
+            Field("alplim", 0.0, "real", "data", "control"),
+            Field("cnalp", 0.0, "real", "data", "control"),
+            Field("tr", 0.0, "real", "data", "control"),
+            Field("philim", 0.0, "real", "data", "control"),
+            Field("ratep", 0.0, "real", "state", "control"),
+            Field("ratepd", 0.0, "real", "state", "control"),
+            Field("ph", 0.0, "real", "state", "control"),
+            Field("phd", 0.0, "real", "state", "control"),
+            Field("xphi", 0.0, "real", "state", "control"),
+            Field("xphid", 0.0, "real", "state", "control"),
+            Field("delq", 0.0, "real", "diag", "control", ("plot",)),
+            Field("eta", 0.0, "real", "diag", "control", ("plot",)),
+            Field("polea", 0.0, "real", "diag", "control"),
+            Field("polep", 0.0, "real", "diag", "control"),
+            Field("trcalc", 0.0, "real", "diag", "control"),
+            Field("aermp", 0.0, "real", "diag", "control"),
+            Field("tvcmp", 0.0, "real", "diag", "control"),
+            Field("betax", 0.0, "real", "out", "control", plot),
         ):
             if field.name not in store:
                 store.define(field)
@@ -64,8 +116,11 @@ class Cruise5Control:
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
+        if store.get("maut") != 0:
+            self._execute_maut(vehicle, ctx)
+            return
         mcontrol = store.get("mcontrol")
-        if mcontrol not in (0, 1, 10, 11, 44, 46):
+        if mcontrol not in (0, 1, 3, 4, 6, 10, 11, 16, 36, 40, 44, 46):
             raise ValueError(f"unknown mcontrol {mcontrol}")
         int_step = ctx.int_step
         ancomx = store.get("ancomx")
@@ -92,12 +147,32 @@ class Cruise5Control:
             phicx = self.control_heading(vehicle, psivgcx)
             phimvx = self.control_bank(vehicle, phicx, int_step)
             alphax = self.control_flightpath(vehicle, thtvgcx, phimvx)
+        if mcontrol == 3:
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            alphax = alphacx
+        if mcontrol == 4:
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 40:
+            phicx = self.control_lateral(vehicle, alcomx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
         if mcontrol == 44:
             phicx = self.control_lateral(vehicle, alcomx)
             phimvx = self.control_bank(vehicle, phicx, int_step)
             alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 6:
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 16:
+            phicx = self.control_heading(vehicle, psivgcx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
+            alphax = self.control_load(vehicle, ancomx, int_step)
         if mcontrol == 46:
             phicx = self.control_lateral(vehicle, alcomx)
+            phimvx = self.control_bank(vehicle, phicx, int_step)
+            ancomx = self.control_altitude(vehicle, altcom, phimvx)
+            alphax = self.control_load(vehicle, ancomx, int_step)
+        if mcontrol == 36:
             phimvx = self.control_bank(vehicle, phicx, int_step)
             ancomx = self.control_altitude(vehicle, altcom, phimvx)
             alphax = self.control_load(vehicle, ancomx, int_step)
@@ -112,6 +187,171 @@ class Cruise5Control:
 
     def terminate(self, vehicle, ctx):
         pass
+
+    def _execute_maut(self, vehicle, ctx):
+        """Fortran C2 MAUT=|MAUTL|MAUTP| (digits 1,6 live; others later)."""
+        store = vehicle.store
+        maut = store.get("maut")
+        mautl = int(maut / 10)
+        mautp = maut - mautl * 10
+        mturn = store.get("mturn")
+        int_step = ctx.int_step
+        tgv = store.get("tgv")
+        alpha = 0.0
+        beta = 0.0
+        phibv = 0.0
+
+        if mautp == 1:
+            # Fortran: ALPHA=ALPHAC
+            alpha = store.get("alphac")
+        elif mautp == 6:
+            alpha = self.c2_pitch(vehicle, store.get("wqc"), int_step)
+        elif mautp not in (0,):
+            raise ValueError(f"unknown mautp {mautp}")
+
+        if mturn == 0:
+            phibv = 0.0
+            if mautl == 1:
+                # Fortran: BETA=BETAC (sideslip angle hold)
+                beta = store.get("betac")
+            elif mautl == 6:
+                # Live Fortran comments out STT yaw-rate; BTT path only.
+                raise ValueError("mautl=6 requires mturn=1 (BTT)")
+            elif mautl not in (0,):
+                raise ValueError(f"unknown mautl {mautl} (mturn=0)")
+        else:
+            beta = 0.0
+            if mautl == 6:
+                # Fortran: PHIC=WPC; CALL C2PHI; XPHID=PHI; PHIBV=XPHI
+                phi, _phid = self.c2_phi(vehicle, store.get("wpc"), int_step)
+                xphi = store.get("xphi")
+                xphid_old = store.get("xphid")
+                phibv = xphi
+                xphi = integrate(phi, xphid_old, xphi, int_step)
+                store.set("xphid", phi)
+                store.set("xphi", xphi)
+            elif mautl not in (0,):
+                raise ValueError(f"unknown mautl {mautl} (mturn=1)")
+
+        alphax = alpha * DEG
+        betax = beta * DEG
+        phimvx = phibv * DEG
+        if mturn == 0:
+            tbv = _a3tra_stt(alpha, beta)
+        else:
+            tbv = cadtbv(phimvx * RAD, alphax * RAD)
+        tbg = tbv @ tgv.T
+        store.set("TBV", tbv)
+        store.set("TBG", tbg)
+        store.set("alphax", alphax)
+        store.set("betax", betax)
+        store.set("phimvx", phimvx)
+
+    def c2_pitch(self, vehicle, pitch, int_step):
+        """Fortran C2PITCH — aero/TVC rate loop (TR=0 detailed; TR>0 lag)."""
+        store = vehicle.store
+        aptvc = store.get("aptvc")
+        ga = store.get("ga")
+        gp = store.get("gp")
+        aiz = store.get("aiz")
+        cmdel = store.get("cmdel")
+        rleng = store.get("rleng")
+        parm = store.get("parm")
+        flplim = store.get("flplim")
+        tvclim = store.get("tvclim")
+        alplim = store.get("alplim")
+        cnalp = store.get("cnalp")
+        tr = store.get("tr")
+        pdynmc = store.get("pdynmc")
+        area = store.get("area")
+        fthalt = store.get("thrust")
+        amass = store.get("mass")
+        dvba = store.get("dvbe")
+        ratep = store.get("ratep")
+        ratepd = store.get("ratepd")
+        alp = store.get("alp")
+        alpd = store.get("alpd")
+
+        ratepc = pitch
+        polea = 0.0
+        polep = 0.0
+        delq = 0.0
+        eta = 0.0
+        aermp = 0.0
+        tvcmp = 0.0
+        trcalc = store.get("trcalc")
+
+        if tr > 0.0:
+            ratepd_new = (ratepc - ratep) / tr
+        else:
+            cmom = pdynmc * area * rleng * cmdel
+            polea = (1.0 - aptvc) * ga * cmom / aiz
+            polep = aptvc * gp * fthalt * parm / aiz
+            pole = polea + polep
+            if pole != 0.0:
+                trcalc = 1.0 / pole
+            eratep = ratepc - ratep
+            delq = -eratep * (1.0 - aptvc) * ga
+            if delq > flplim:
+                delq = flplim
+            if delq < -flplim:
+                delq = -flplim
+            aermp = -delq * cmom
+            if fthalt > 0:
+                eta = -eratep * aptvc * gp
+            else:
+                eta = 0.0
+            if eta > tvclim:
+                eta = tvclim
+            if eta < -tvclim:
+                eta = -tvclim
+            tvcmp = -eta * fthalt * parm
+            amp = aermp + tvcmp
+            ratepd_new = amp / aiz
+
+        tip = dvba * amass / (pdynmc * area * cnalp + fthalt)
+        alpd_new = (tip * ratep - alp) / tip
+        alpha = alp
+        if alpha > alplim:
+            alpha = alplim
+        if alpha < -alplim:
+            alpha = -alplim
+
+        ratep = integrate(ratepd_new, ratepd, ratep, int_step)
+        alp = integrate(alpd_new, alpd, alp, int_step)
+
+        store.set("ratep", ratep)
+        store.set("ratepd", ratepd_new)
+        store.set("alp", alp)
+        store.set("alpd", alpd_new)
+        store.set("delq", delq)
+        store.set("eta", eta)
+        store.set("polea", polea)
+        store.set("polep", polep)
+        store.set("trcalc", trcalc)
+        store.set("aermp", aermp)
+        store.set("tvcmp", tvcmp)
+        store.set("tip", tip)
+        return alpha
+
+    def c2_phi(self, vehicle, phic, int_step):
+        """Fortran C2PHI — first-order roll lag (radians). Returns PHI=PH pre-integrate."""
+        store = vehicle.store
+        philim = store.get("philim")
+        tphi = store.get("tphi")
+        ph = store.get("ph")
+        phd = store.get("phd")
+        # MROLL gating is Task 78; default MROLL=0 always limits.
+        if phic > philim:
+            phic = philim
+        if phic < -philim:
+            phic = -philim
+        phd_new = (phic - ph) / tphi
+        phi_out = ph
+        ph = integrate(phd_new, phd, ph, int_step)
+        store.set("ph", ph)
+        store.set("phd", phd_new)
+        return phi_out, phd_new
 
     def control_bank(self, vehicle, phicx, int_step):
         store = vehicle.store

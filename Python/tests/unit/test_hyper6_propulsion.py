@@ -454,16 +454,7 @@ def test_mprop_2_matches_cadac_formulas():
             assert _approx(store.get(name), value), name
 
 
-def test_mprop_4_raises():
-    vehicle = _Vehicle()
-    prop = Hyper6Propulsion(None)
-    prop.define(vehicle)
-    vehicle.store.set("mprop", 4)
-    with pytest.raises(ValueError):
-        prop.execute(vehicle, _ctx())
-
-
-@pytest.mark.parametrize("mprop", [-1, 3, 99])
+@pytest.mark.parametrize("mprop", [-1, 99])
 def test_other_mprop_raises(mprop):
     vehicle = _Vehicle()
     prop = Hyper6Propulsion(None)

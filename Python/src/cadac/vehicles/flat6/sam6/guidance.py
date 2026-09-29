@@ -5,7 +5,7 @@ import numpy as np
 from cadac.constants import AGRAV, DEG, RAD
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
-from cadac.math.frames import mat2tr, polar_from_cart
+from cadac.math.frames import mat2tr, polar_from_cart, skew
 
 SMALL = 1e-7
 
@@ -66,8 +66,6 @@ class Sam6Guidance:
         gmax = store.get("gmax")
         guid_mid = mguide // 10
         guid_term = mguide % 10
-        if guid_mid == 3:
-            raise ValueError(f"unknown guid_mid {guid_mid}")
 
         acbx = np.zeros(3)
         siblc = np.zeros(3)
@@ -85,6 +83,8 @@ class Sam6Guidance:
                 polar = polar_from_cart(sibl0)
                 psiflx = float(polar[1]) * DEG
                 acbx = self.guidance_line(vehicle, siblc, psiflx, thtflx)
+            if guid_mid == 3:
+                acbx = self.guidance_mid_pronav(vehicle, siblc)
         if guid_term == 6:
             acbx = self.guidance_term_comp(vehicle, ctx.int_step)
         if guid_term == 7:
@@ -147,6 +147,33 @@ class Sam6Guidance:
         store.set("VBEO", vbeo)
         store.set("VBEF", vbef)
         return acbx
+
+    def guidance_mid_pronav(self, vehicle, siblc):
+        store = vehicle.store
+        gnav = store.get("gnav")
+        tblc = np.asarray(store.get("TBLC"), dtype=float)
+        vbelc = np.asarray(store.get("VBELC"), dtype=float)
+        siblc = np.asarray(siblc, dtype=float)
+
+        dtbc = float(np.linalg.norm(siblc))
+        utblc = siblc * (1.0 / dtbc)
+        utbbc = tblc @ utblc
+        polar = polar_from_cart(utbbc)
+        psiobcx = float(polar[1]) * DEG
+        thtobcx = float(polar[2]) * DEG
+        dvtbc = fabs(float(utblc @ vbelc))
+        tgoc = dtbc / dvtbc
+        woelc = skew(utblc) @ vbelc * (1.0 / dtbc)
+        acbx = tblc @ (skew(woelc) @ utblc) * gnav * dvtbc * (1.0 / AGRAV)
+
+        store.set("WOELC", woelc)
+        store.set("UTBLC", utblc)
+        store.set("tgoc", tgoc)
+        store.set("dtbc", dtbc)
+        store.set("dvtbc", dvtbc)
+        store.set("psiobcx", psiobcx)
+        store.set("thtobcx", thtobcx)
+        return np.asarray(acbx, dtype=float).reshape(3)
 
     def guidance_term_comp(self, vehicle, int_step):
         store = vehicle.store

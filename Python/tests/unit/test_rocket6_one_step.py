@@ -27,6 +27,7 @@ MODULE_ORDER = [
     "guidance",
     "control",
     "rcs",
+    "actuator",
     "tvc",
     "forces",
     "newton",

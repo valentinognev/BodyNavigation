@@ -52,7 +52,8 @@ def test_mwind0_us76_at_hbe_1000():
     np.testing.assert_allclose(s.get("VBAL"), np.array([16.6, 0.0, 0.0]), rtol=1e-12)
 
 
-def test_mwind_1_raises():
-    vehicle, env = _vehicle(mwind=1)
+def test_unknown_mwind_raises():
+    """mwind 1/2 are supported; other nonzero values still raise."""
+    vehicle, env = _vehicle(mwind=3)
     with pytest.raises(ValueError, match="mwind"):
         env.execute(vehicle, None)

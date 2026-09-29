@@ -327,17 +327,7 @@ def test_execute_skips_absent_factwacl_twcl():
     assert store.get("dqcx") != 0.0
 
 
-def test_maut_4_still_raises_unknown_still_rolls():
-    vehicle, ctrl = _ready()
-    store = vehicle.store
-    store.set("maut", 4)
-    store.set("dpcx", 99.0)
-    store.set("dqcx", 88.0)
-    with pytest.raises(ValueError):
-        ctrl.execute(vehicle, _ctx())
-    assert _approx(store.get("dpcx"), 99.0)
-    assert _approx(store.get("dqcx"), 88.0)
-
+def test_unknown_maut_still_rolls():
     vehicle_u, ctrl_u = _ready()
     store_u = vehicle_u.store
     store_u.set("maut", 5)

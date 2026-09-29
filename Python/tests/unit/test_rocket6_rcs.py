@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 
-from cadac.constants import DEG
+from cadac.constants import AGRAV, DEG
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
-from cadac.vehicles.round6.rocket6.rcs import Rocket6Rcs, rcs_schmitt
+from cadac.vehicles.round6.rocket6.rcs import Rocket6Rcs, rcs_prop, rcs_schmitt
 
 RTOL = 1e-12
 ATOL = 1e-14
@@ -20,6 +20,14 @@ YAW_MOM_MAX = 200000.0
 THTBDCOMX = 80.0
 PSIBCOMX = -83.0
 DT = 0.001
+
+# proportional / side-force fixtures (C++ rcs_type==1, mrcs_force 1|2)
+RCS_ZETA = 0.7
+RCS_FREQ = 10.0
+ACC_GAIN = 5.0
+SIDE_FORCE_MAX = 50.0
+IBBB_DIAG = (2.0, 40.0, 45.0)
+IBBB = np.diag(IBBB_DIAG)
 
 # C++ Hyper::rcs_schmitt with CADAC sign(x<0 → -1 else +1).
 # Columns: input_new, input, dead_zone, hysteresis, output
@@ -243,6 +251,14 @@ def _plant_externals(
     thtbdcx=0.0,
     psibdcx=0.0,
     utbc=(0.0, 0.0, 0.0),
+    alphacx=0.0,
+    betacx=0.0,
+    alphacomx=0.0,
+    betacomx=0.0,
+    ibbb=None,
+    fspcb=(0.0, 0.0, 0.0),
+    aycomx=0.0,
+    azcomx=0.0,
 ):
     store.define(Field("ppcx", ppcx, "real", "out", "ins"))
     store.define(Field("qqcx", qqcx, "real", "out", "ins"))
@@ -251,6 +267,16 @@ def _plant_externals(
     store.define(Field("thtbdcx", thtbdcx, "real", "out", "ins"))
     store.define(Field("psibdcx", psibdcx, "real", "out", "ins"))
     store.define(Field("UTBC", utbc, "vec", "out", "guidance"))
+    store.define(Field("alphacx", alphacx, "real", "out", "ins"))
+    store.define(Field("betacx", betacx, "real", "out", "ins"))
+    store.define(Field("alphacomx", alphacomx, "real", "out", "guidance"))
+    store.define(Field("betacomx", betacomx, "real", "out", "guidance"))
+    if ibbb is None:
+        ibbb = IBBB
+    store.define(Field("IBBB", ibbb, "mat", "out", "propulsion"))
+    store.define(Field("FSPCB", fspcb, "vec", "out", "ins"))
+    store.define(Field("aycomx", aycomx, "real", "out", "guidance"))
+    store.define(Field("azcomx", azcomx, "real", "out", "guidance"))
 
 
 def _ready(
@@ -263,6 +289,10 @@ def _ready(
     roll_mom_max=ROLL_MOM_MAX,
     pitch_mom_max=PITCH_MOM_MAX,
     yaw_mom_max=YAW_MOM_MAX,
+    rcs_zeta=RCS_ZETA,
+    rcs_freq=RCS_FREQ,
+    acc_gain=ACC_GAIN,
+    side_force_max=SIDE_FORCE_MAX,
     phibdcomx=0.0,
     thtbdcomx=THTBDCOMX,
     psibdcomx=PSIBCOMX,
@@ -273,6 +303,14 @@ def _ready(
     thtbdcx=0.0,
     psibdcx=0.0,
     utbc=(0.0, 0.0, 0.0),
+    alphacx=0.0,
+    betacx=0.0,
+    alphacomx=0.0,
+    betacomx=0.0,
+    ibbb=None,
+    fspcb=(0.0, 0.0, 0.0),
+    aycomx=0.0,
+    azcomx=0.0,
     **states,
 ):
     vehicle = _Vehicle()
@@ -287,6 +325,14 @@ def _ready(
         thtbdcx=thtbdcx,
         psibdcx=psibdcx,
         utbc=utbc,
+        alphacx=alphacx,
+        betacx=betacx,
+        alphacomx=alphacomx,
+        betacomx=betacomx,
+        ibbb=ibbb,
+        fspcb=fspcb,
+        aycomx=aycomx,
+        azcomx=azcomx,
     )
     store = vehicle.store
     store.set("mrcs_moment", mrcs_moment)
@@ -297,6 +343,10 @@ def _ready(
     store.set("roll_mom_max", roll_mom_max)
     store.set("pitch_mom_max", pitch_mom_max)
     store.set("yaw_mom_max", yaw_mom_max)
+    store.set("rcs_zeta", rcs_zeta)
+    store.set("rcs_freq", rcs_freq)
+    store.set("acc_gain", acc_gain)
+    store.set("side_force_max", side_force_max)
     store.set("phibdcomx", phibdcomx)
     store.set("thtbdcomx", thtbdcomx)
     store.set("psibdcomx", psibdcomx)
@@ -400,29 +450,250 @@ def test_mrcs_moment_21_finite_fmrcs():
     assert vehicle.store.get("o_yaw") == -1
 
 
-def test_mrcs_moment_11_raises():
-    vehicle, rcs = _ready(mrcs_moment=11)
-    with pytest.raises(ValueError):
-        rcs.execute(vehicle, _ctx())
+def test_rcs_prop_limits():
+    assert _approx(rcs_prop(50.0, 100.0), 50.0)
+    assert _approx(rcs_prop(150.0, 100.0), 100.0)
+    assert _approx(rcs_prop(-150.0, 100.0), -100.0)
 
 
-def test_mrcs_force_1_raises():
-    vehicle, rcs = _ready(mrcs_moment=21, mrcs_force=1)
-    with pytest.raises(ValueError):
-        rcs.execute(vehicle, _ctx())
+def test_mrcs_moment_11_prop_euler_writes_fmrcs():
+    # C++ rcs_type==1 / rcs_mode==1: gain from IBBB diag; FMRCS = rcs_prop(e, mom_max).
+    phibdcomx = 5.0
+    thtbdcomx = 8.0
+    psibdcomx = -6.0
+    phibdcx = 0.0
+    thtbdcx = 0.0
+    psibdcx = 0.0
+    ppcx = qqcx = rrcx = 0.0
+    vehicle, rcs = _ready(
+        mrcs_moment=11,
+        mrcs_force=0,
+        phibdcomx=phibdcomx,
+        thtbdcomx=thtbdcomx,
+        psibdcomx=psibdcomx,
+        phibdcx=phibdcx,
+        thtbdcx=thtbdcx,
+        psibdcx=psibdcx,
+        ppcx=ppcx,
+        qqcx=qqcx,
+        rrcx=rrcx,
+        roll_mom_max=ROLL_MOM_MAX,
+        pitch_mom_max=200.0,
+        yaw_mom_max=150.0,
+    )
+    rcs.execute(vehicle, _ctx())
+    store = vehicle.store
+    rgain_roll = 2.0 * RCS_ZETA * RCS_FREQ * IBBB_DIAG[0]
+    rgain_pitch = 2.0 * RCS_ZETA * RCS_FREQ * IBBB_DIAG[1]
+    rgain_yaw = 2.0 * RCS_ZETA * RCS_FREQ * IBBB_DIAG[2]
+    pgain = RCS_FREQ / (2.0 * RCS_ZETA)
+    e_roll = rgain_roll * (pgain * (phibdcomx - phibdcx) - ppcx)
+    e_pitch = rgain_pitch * (pgain * (thtbdcomx - thtbdcx) - qqcx)
+    e_yaw = rgain_yaw * (pgain * (psibdcomx - psibdcx) - rrcx)
+    want = np.array(
+        [
+            rcs_prop(e_roll, ROLL_MOM_MAX),
+            rcs_prop(e_pitch, 200.0),
+            rcs_prop(e_yaw, 150.0),
+        ]
+    )
+    fmrcs = store.get("FMRCS")
+    assert np.all(np.isfinite(fmrcs))
+    np.testing.assert_allclose(fmrcs, want, rtol=RTOL, atol=ATOL)
+    assert not np.allclose(fmrcs, 0.0)
+    np.testing.assert_allclose(store.get("FARCS"), np.zeros(3), rtol=RTOL, atol=ATOL)
+    assert _approx(store.get("e_roll"), e_roll)
+    assert _approx(store.get("e_pitch"), e_pitch)
+    assert _approx(store.get("e_yaw"), e_yaw)
 
 
-def test_mrcs_force_2_raises():
-    vehicle, rcs = _ready(mrcs_moment=0, mrcs_force=2)
-    with pytest.raises(ValueError):
-        rcs.execute(vehicle, _ctx())
+def test_mrcs_moment_12_prop_utbc_writes_fmrcs():
+    # C++ rcs_mode==2: e_pitch/yaw from UTBC*DEG with prop gains.
+    utbc = (0.0, 0.1, -0.2)
+    qqcx = 1.0
+    rrcx = -0.5
+    vehicle, rcs = _ready(
+        mrcs_moment=12,
+        mrcs_force=0,
+        utbc=utbc,
+        qqcx=qqcx,
+        rrcx=rrcx,
+        thtbdcomx=THTBDCOMX,
+        psibdcomx=PSIBCOMX,
+        pitch_mom_max=200.0,
+        yaw_mom_max=150.0,
+    )
+    rcs.execute(vehicle, _ctx())
+    store = vehicle.store
+    rgain_pitch = 2.0 * RCS_ZETA * RCS_FREQ * IBBB_DIAG[1]
+    rgain_yaw = 2.0 * RCS_ZETA * RCS_FREQ * IBBB_DIAG[2]
+    pgain = RCS_FREQ / (2.0 * RCS_ZETA)
+    e_pitch = rgain_pitch * (pgain * (-utbc[2]) * DEG - qqcx)
+    e_yaw = rgain_yaw * (pgain * (utbc[1]) * DEG - rrcx)
+    assert _approx(store.get("e_pitch"), e_pitch)
+    assert _approx(store.get("e_yaw"), e_yaw)
+    assert store.get("e_pitch") != pytest.approx(THTBDCOMX, rel=RTOL, abs=ATOL)
+    fmrcs = store.get("FMRCS")
+    assert _approx(fmrcs[1], rcs_prop(e_pitch, 200.0))
+    assert _approx(fmrcs[2], rcs_prop(e_yaw, 150.0))
+
+
+def test_mrcs_moment_10_prop_roll_only():
+    # Mode 0: pitch/yaw errors stay 0; roll still proportional.
+    vehicle, rcs = _ready(
+        mrcs_moment=10,
+        phibdcomx=5.0,
+        phibdcx=0.0,
+        ppcx=0.0,
+        thtbdcomx=THTBDCOMX,
+        psibdcomx=PSIBCOMX,
+        pitch_mom_max=200.0,
+        yaw_mom_max=150.0,
+    )
+    rcs.execute(vehicle, _ctx())
+    store = vehicle.store
+    rgain_roll = 2.0 * RCS_ZETA * RCS_FREQ * IBBB_DIAG[0]
+    pgain = RCS_FREQ / (2.0 * RCS_ZETA)
+    e_roll = rgain_roll * (pgain * 5.0 - 0.0)
+    assert _approx(store.get("e_roll"), e_roll)
+    assert store.get("e_pitch") == 0.0
+    assert store.get("e_yaw") == 0.0
+    fmrcs = store.get("FMRCS")
+    assert _approx(fmrcs[0], rcs_prop(e_roll, ROLL_MOM_MAX))
+    assert _approx(fmrcs[1], 0.0)
+    assert _approx(fmrcs[2], 0.0)
+
+
+def test_mrcs_moment_13_prop_roll_only_no_incidence_branch():
+    # Type 1 has no mode-3 incidence path in C++; pitch/yaw stay 0.
+    vehicle, rcs = _ready(
+        mrcs_moment=13,
+        phibdcomx=4.0,
+        alphacomx=10.0,
+        betacomx=3.0,
+        pitch_mom_max=200.0,
+        yaw_mom_max=150.0,
+    )
+    rcs.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert store.get("e_pitch") == 0.0
+    assert store.get("e_yaw") == 0.0
+    assert store.get("FMRCS")[0] != 0.0
+    assert _approx(store.get("FMRCS")[1], 0.0)
+    assert _approx(store.get("FMRCS")[2], 0.0)
+
+
+def test_mrcs_force_1_prop_writes_farcs():
+    # C++ mrcs_force==1: e_right/down = acc_gain*(a*com*AGRAV - fsp); FARCS = rcs_prop.
+    aycomx = 2.0
+    azcomx = 1.5
+    fspcb = (0.0, 1.0, -2.0)
+    vehicle, rcs = _ready(
+        mrcs_moment=0,
+        mrcs_force=1,
+        aycomx=aycomx,
+        azcomx=azcomx,
+        fspcb=fspcb,
+    )
+    rcs.execute(vehicle, _ctx())
+    store = vehicle.store
+    e_right = ACC_GAIN * (aycomx * AGRAV - fspcb[1])
+    e_down = ACC_GAIN * (azcomx * AGRAV - fspcb[2])
+    want = np.array(
+        [0.0, rcs_prop(e_right, SIDE_FORCE_MAX), rcs_prop(e_down, SIDE_FORCE_MAX)]
+    )
+    farcs = store.get("FARCS")
+    np.testing.assert_allclose(farcs, want, rtol=RTOL, atol=ATOL)
+    assert not np.allclose(farcs[1:], 0.0)
+    assert _approx(store.get("e_right"), e_right)
+    assert _approx(store.get("e_down"), e_down)
+    np.testing.assert_allclose(store.get("FMRCS"), np.zeros(3), rtol=RTOL, atol=ATOL)
+
+
+def test_mrcs_force_2_schmitt_writes_farcs():
+    # C++ mrcs_force==2: Schmitt on accel errors; FARCS = o * side_force_max (no parasitic FMRCS).
+    aycomx = 3.0
+    azcomx = -2.0
+    fspcb = (0.0, 0.0, 0.0)
+    e_right = ACC_GAIN * (aycomx * AGRAV - 0.0)
+    e_down = ACC_GAIN * (azcomx * AGRAV - 0.0)
+    vehicle, rcs = _ready(
+        mrcs_moment=0,
+        mrcs_force=2,
+        aycomx=aycomx,
+        azcomx=azcomx,
+        fspcb=fspcb,
+        right_save=e_right,
+        down_save=e_down,
+        o_right=0,
+        o_down=0,
+        right_count=0,
+        down_count=0,
+    )
+    rcs.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert store.get("o_right") == 1
+    assert store.get("o_down") == -1
+    farcs = store.get("FARCS")
+    assert _approx(farcs[0], 0.0)
+    assert _approx(farcs[1], SIDE_FORCE_MAX)
+    assert _approx(farcs[2], -SIDE_FORCE_MAX)
+    assert store.get("right_count") == 1
+    assert store.get("down_count") == 1
+    assert _approx(store.get("right_save"), e_right)
+    assert _approx(store.get("down_save"), e_down)
+    np.testing.assert_allclose(store.get("FMRCS"), np.zeros(3), rtol=RTOL, atol=ATOL)
 
 
 def test_other_mrcs_moment_raises():
-    for moment in (1, 2, 10, 12, 13, 23, 30, -1):
+    for moment in (1, 2, 30, -1):
         vehicle, rcs = _ready(mrcs_moment=moment)
         with pytest.raises(ValueError):
             rcs.execute(vehicle, _ctx())
+
+
+def test_other_mrcs_force_raises():
+    for force in (3, -1):
+        vehicle, rcs = _ready(mrcs_moment=0, mrcs_force=force)
+        with pytest.raises(ValueError):
+            rcs.execute(vehicle, _ctx())
+
+
+def test_rocket6_mrcs_moment_23_schmitt():
+    # C++ rcs_mode==3: e_pitch=alphacomx-(rcs_tau*qqcx+alphacx);
+    # e_yaw=-betacomx-(rcs_tau*rrcx-betacx). Ballistic-case alphacomx=10.
+    alphacomx = 10.0
+    betacomx = 0.0
+    alphacx = 0.0
+    betacx = 0.0
+    qqcx = 0.0
+    rrcx = 0.0
+    e_pitch = alphacomx - (RCS_TAU * qqcx + alphacx)
+    e_yaw = -betacomx - (RCS_TAU * rrcx - betacx)
+    vehicle, rcs = _ready(
+        mrcs_moment=23,
+        alphacomx=alphacomx,
+        betacomx=betacomx,
+        alphacx=alphacx,
+        betacx=betacx,
+        qqcx=qqcx,
+        rrcx=rrcx,
+        thtbdcomx=THTBDCOMX,
+        psibdcomx=PSIBCOMX,
+        pitch_save=e_pitch,
+        yaw_save=e_yaw,
+    )
+    rcs.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert _approx(store.get("e_pitch"), e_pitch)
+    assert _approx(store.get("e_yaw"), e_yaw)
+    assert store.get("e_pitch") != pytest.approx(THTBDCOMX, rel=RTOL, abs=ATOL)
+    fmrcs = store.get("FMRCS")
+    assert np.all(np.isfinite(fmrcs))
+    assert _approx(fmrcs[1], PITCH_MOM_MAX * store.get("o_pitch"))
+    assert _approx(fmrcs[2], YAW_MOM_MAX * store.get("o_yaw"))
+    assert store.get("o_pitch") == 1
+    assert store.get("o_yaw") == 0
 
 
 def test_mrcs_moment_20_roll_only_ignores_euler_commands():

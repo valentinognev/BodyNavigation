@@ -8,6 +8,7 @@ from cadac.vehicles.flat3.aim5.guidance import Aim5Guidance
 from cadac.vehicles.flat3.aim5.intercept import Aim5Intercept
 from cadac.vehicles.flat3.aim5.propulsion import Aim5Propulsion
 from cadac.vehicles.flat3.aim5.seeker import Aim5Seeker
+from cadac.vehicles.flat3.aim5.target import Aim5Target
 
 _COM_EXTRA = ("SBEL", "VBEL", "psivlx", "thtvlx")
 
@@ -79,6 +80,7 @@ class Aim5:
         self.events = EventEngine(events or [])
         self.com_names = []
         self.modules = [
+            Aim5Target(),
             Flat3Environment(),
             Flat3Kinematics(),
             Aim5Aero(aero_deck),

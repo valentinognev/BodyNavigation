@@ -1,0 +1,121 @@
+/* Derived from Fortran CRUISE5 INPUT.ASC autopilot block for Task 77:
+   MAUT=66 (MAUTL=6 roll-rate + MAUTP=6 pitch-rate), APTVC in (0,1), TR=0
+   detailed aero/TVC rate loop. No shipped ASC sets MAUT=66. */
+{
+  "title": "CRUISE5 derived MAUT=66 body-rate + APTVC mix",
+  "family": "cruise5",
+  "options": {
+    "scrn": false,
+    "comscrn": false,
+    "events": false,
+    "tabout": false,
+    "plot": true,
+    "traj": false,
+    "merge": false,
+    "doc": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "propulsion",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "forces",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "newton",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "targeting",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "seeker",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "guidance",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "control",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "intercept",
+      "phases": ["def", "exec"]
+    }
+  ],
+  "timing": {
+    "scrn_step": 50.0,
+    "plot_step": 0.05,
+    "traj_step": 0.5,
+    "int_step": 0.05,
+    "com_step": 40.0
+  },
+  "end_time": 0.2,
+  "vehicles": [
+    {
+      "type": "CRUISE3",
+      "name": "UAV",
+      "family": "cruise5",
+      "aero_deck": "cruise3_aero_deck.jsonc",
+      "prop_deck": "cruise3_prop_deck.jsonc",
+      "params": {
+        "lonx": 14.7,
+        "latx": 35.4,
+        "alt": 7000,
+        "psivgx": 90,
+        "thtvgx": 0,
+        "dvbe": 200,
+        "alphax": 0,
+        "phimvx": 0.0,
+        "mprop": 4,
+        "mach_com": 0.7,
+        "mass_init": 1000,
+        "fuel_init": 150,
+        "gfthm": 893620,
+        "tfth": 1,
+        "mseeker": 0,
+        "acq_range": 10000,
+        "mguidance": 0,
+        "mcontrol": 0,
+        "maut": 66,
+        "mturn": 1,
+        "aptvc": 0.5,
+        "tr": 0.0,
+        "ga": 0.4,
+        "gp": 0.3,
+        "aiz": 1200.0,
+        "cmdel": -0.8,
+        "rleng": 0.5,
+        "parm": 1.2,
+        "flplim": 0.4,
+        "tvclim": 0.25,
+        "alplim": 0.2,
+        "cnalp": 8.5,
+        "wqc": 0.15,
+        "wpc": 0.0,
+        "philim": 1.22,
+        "tphi": 0.4,
+        "anposlimx": 3,
+        "anneglimx": -1,
+        "gacp": 10,
+        "ta": 0.8,
+        "alpposlimx": 15,
+        "alpneglimx": -10
+      },
+      "events": []
+    }
+  ]
+}

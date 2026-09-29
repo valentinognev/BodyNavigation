@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from cadac.kernel.combus import Packet, packet_from_store
+from cadac.stoch import clear_markov_noise_drew, markov_noise
 
 
 @dataclass
@@ -22,6 +23,7 @@ def run_loop(
     end_time: float,
     int_step: float,
     on_step: Callable[..., Any] | None = None,
+    nmonte: int = 0,
 ) -> list[float]:
     sim_time = 0.0
     times = []
@@ -65,8 +67,13 @@ def run_loop(
             ctx.int_step = int_step
             ctx.event_time = event_time
             if combus[slot].status == 1:
+                # C++ execution: markov_noise(sim_time, int_step, nmonte) then modules
+                markov_list = getattr(vehicle, "markov_list", None)
+                if markov_list and store is not None:
+                    markov_noise(store, markov_list, sim_time, int_step, nmonte)
                 for module in chains[slot]:
                     module.execute(vehicle, ctx)
+                clear_markov_noise_drew()
                 int_step = ctx.int_step
                 _publish(combus, slot, vehicle)
             if on_step is not None:

@@ -467,7 +467,7 @@ def test_mguid40_uses_stel_minus_sbelc():
     np.testing.assert_allclose(store.get("STBLC"), stblc_true, rtol=RTOL, atol=ATOL)
 
 
-@pytest.mark.parametrize("mguid", [20, 5, 2])
+@pytest.mark.parametrize("mguid", [2])
 def test_unsupported_mguid_raises(mguid):
     vehicle, guid = _ready(mguid=mguid, mnav=0)
     with pytest.raises(ValueError):

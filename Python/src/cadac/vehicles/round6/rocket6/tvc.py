@@ -52,16 +52,26 @@ class Rocket6Tvc:
         mtvc = store.get("mtvc")
         if mtvc == 0:
             return
-        if mtvc != 2:
+        if mtvc not in (1, 2, 3):
             raise ValueError(f"unknown mtvc {mtvc}")
         dt = ctx.int_step
         gtvc = store.get("gtvc")
         parm = store.get("parm")
         xcg = store.get("xcg")
         thrust = store.get("thrust")
+        if mtvc == 3:
+            pdynmc = store.get("pdynmc")
+            if pdynmc > 1e5:
+                gtvc = 0.0
+            else:
+                gtvc = (-5.0e-6 * pdynmc + 0.5) * (store.get("factgtvc") + 1)
         etac = gtvc * store.get("delecx") * RAD
         zetc = gtvc * store.get("delrcx") * RAD
-        eta, zet = self._tvc_scnd(vehicle, etac, zetc, dt)
+        if mtvc == 1:
+            eta = etac
+            zet = zetc
+        else:
+            eta, zet = self._tvc_scnd(vehicle, etac, zetc, dt)
         fpb0 = cos(eta) * cos(zet) * thrust
         fpb1 = cos(eta) * sin(zet) * thrust
         fpb2 = -sin(eta) * thrust

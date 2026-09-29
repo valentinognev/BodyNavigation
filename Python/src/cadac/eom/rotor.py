@@ -47,13 +47,44 @@ class RotorEnvironment(ModuleBase):
     def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         mwind = store.get("mwind")
-        if mwind != 0:
+        if mwind not in (0, 1, 2):
             raise ValueError(f"unknown mwind {mwind}")
         hbe = store.get("hbe")
         vbel = store.get("VBEL")
         rho, press, tempk = atmosphere76(hbe)
         vsound = math.sqrt(1.4 * R * tempk)
+        vaels = np.array(store.get("VAELS"), dtype=float, copy=True)
+        vaelsd = np.array(store.get("VAELSD"), dtype=float, copy=True)
         vael = np.zeros(3)
+        if mwind > 0:
+            if mwind == 1:
+                dvw = store.get("dvae")
+            else:
+                dvael = store.get("dvael")
+                waltl = store.get("waltl")
+                dvaeh = store.get("dvaeh")
+                walth = store.get("walth")
+                dvw = dvael + (dvaeh - dvael) * (hbe - waltl) / (walth - waltl)
+                if hbe < waltl:
+                    dvw = 0.0
+                if hbe > walth:
+                    dvw = 0.0
+            psiwdx = store.get("psiwdx")
+            vael_raw = np.array(
+                [
+                    -dvw * math.cos(psiwdx * RAD),
+                    -dvw * math.sin(psiwdx * RAD),
+                    store.get("vaed3"),
+                ],
+                dtype=float,
+            )
+            twind = store.get("twind")
+            vaelsd_new = (vael_raw - vaels) * (1.0 / twind)
+            vaels = integrate(vaelsd_new, vaelsd, vaels, ctx.int_step)
+            vaelsd = vaelsd_new
+            vael = np.array(vaels, dtype=float, copy=True)
+            store.set("VAELS", vaels)
+            store.set("VAELSD", vaelsd)
         vbal = vbel - vael
         dvba = float(np.linalg.norm(vbal))
         vmach = abs(dvba / vsound)

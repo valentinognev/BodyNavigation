@@ -35,6 +35,17 @@ DEFINED = (
     "psiptx",
     "thtptx",
     "critmax",
+    "yss",
+    "zss",
+    "dyrb",
+    "dzrb",
+    "aspazx",
+    "aspelx",
+    "azintx",
+    "elintx",
+    "dtct",
+    "dbtc",
+    "EXX",
 )
 
 

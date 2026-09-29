@@ -235,6 +235,7 @@ class Hyper6Guidance:
             self._store_terminal(store, float(accomx[1]), float(accomx[2]), utbbc)
             return
         elif mguide == 7:
+            self._ensure_stbik_from_kinematics(vehicle)
             accomx, utbbc = self.guidance_AGL(vehicle)
             self._store_terminal(store, float(accomx[1]), float(accomx[2]), utbbc)
             return
@@ -257,6 +258,30 @@ class Hyper6Guidance:
         store.set("aycomx", aycomx)
         store.set("azcomx", azcomx)
         store.set("UTBC", utbc)
+
+    def _ensure_stbik_from_kinematics(self, vehicle):
+        """Supply STBIK/VTBIK when seeker has not defined them (C++ seeker_kin)."""
+        store = vehicle.store
+        if "STBIK" in store and "VTBIK" in store:
+            return
+        zeros3 = (0.0, 0.0, 0.0)
+        if "STCII" in store:
+            stbik = _vec(store, "STCII") - _vec(store, "SBIIC")
+            vtbik = _vec(store, "VTCII") - _vec(store, "VBIIC")
+        elif "STII" in store:
+            sb = _vec(store, "SBII") if "SBII" in store else _vec(store, "SBIIC")
+            vb = _vec(store, "VBII") if "VBII" in store else _vec(store, "VBIIC")
+            stbik = _vec(store, "STII") - sb
+            vtbik = _vec(store, "VTII") - vb
+        else:
+            stbik = np.zeros(3)
+            vtbik = np.zeros(3)
+        if "STBIK" not in store:
+            store.define(Field("STBIK", zeros3, "vec", "out", "seeker"))
+        if "VTBIK" not in store:
+            store.define(Field("VTBIK", zeros3, "vec", "out", "seeker"))
+        store.set("STBIK", stbik)
+        store.set("VTBIK", vtbik)
 
     def _execute_ltg(self, vehicle, ctx):
         store = vehicle.store

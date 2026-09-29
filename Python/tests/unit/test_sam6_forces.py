@@ -162,15 +162,28 @@ def test_fapb0_mtvc_zero_adds_thrust():
     )
 
 
-def test_mtvc_nonzero_raises():
+def test_mtvc_nonzero_adds_fpb_fmpb_not_raw_thrust():
     vehicle, forces = _ready(mtvc=1)
     store = vehicle.store
-    store.define(Field("FPB", (9.0, 8.0, 7.0), "vec", "out", "tvc"))
-    store.define(Field("FMPB", (6.0, 5.0, 4.0), "vec", "out", "tvc"))
-    with pytest.raises(ValueError):
-        forces.execute(vehicle, _ctx())
-    np.testing.assert_array_equal(store.get("FAPB"), np.zeros(3))
-    np.testing.assert_array_equal(store.get("FMB"), np.zeros(3))
+    fpb = np.array([9.0, 8.0, 7.0])
+    fmpb = np.array([6.0, 5.0, 4.0])
+    store.define(Field("FPB", fpb, "vec", "out", "tvc"))
+    store.define(Field("FMPB", fmpb, "vec", "out", "tvc"))
+    forces.execute(vehicle, _ctx())
+    want_fapb = np.array(
+        [
+            -PDYNMC * REFA * CA + fpb[0],
+            PDYNMC * REFA * 0.0 + fpb[1],
+            -PDYNMC * REFA * 0.0 + fpb[2],
+        ],
+        dtype=float,
+    )
+    want_fmb = np.array(fmpb, dtype=float)
+    np.testing.assert_allclose(store.get("FAPB"), want_fapb, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(store.get("FMB"), want_fmb, rtol=RTOL, atol=ATOL)
+    assert store.get("FAPB")[0] != pytest.approx(
+        -PDYNMC * REFA * CA + THRUST, rel=RTOL, abs=ATOL
+    )
 
 
 def test_aero_sums_match_cpp_when_coeffs_nonzero():

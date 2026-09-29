@@ -120,7 +120,9 @@ def test_mair_100_nasa_at_10_km():
 
 
 def test_other_nonzero_mair_raises():
-    for mair in (1, 10, 11, 101):
+    # mair=1/101 (wind digit 1), mair=2 (shear), and Task 83 tabular 3/30/33/300
+    # are legal; leave turb-alone / turb+const (10/11) raising.
+    for mair in (10, 11):
         vehicle, env = _vehicle_with_newton_state(mair=mair)
         with pytest.raises(ValueError):
             env.execute(vehicle, None)

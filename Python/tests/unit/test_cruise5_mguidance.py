@@ -113,10 +113,85 @@ def test_mguidance_0_does_not_write_commands():
     assert store.get("ancomx") == 7.0
 
 
-def test_mguidance_66_and_negative_raise():
+def test_mguidance_40_alcomx_from_point_ancomx_stays_0():
+    vehicle, guidance = _ready(mguidance=40)
+    store = vehicle.store
+    store.set("alcomx", 7.0)
+    store.set("ancomx", 7.0)
+    apgv = guidance.guidance_point(vehicle)
+    grav = store.get("grav")
+    want_al, want_an = _clip(
+        float(apgv[1] / grav),
+        0.0,
+        store.get("anposlimx"),
+        store.get("anneglimx"),
+        store.get("allimx"),
+    )
+    guidance.execute(vehicle, SimContext(0.0, 0.05, 0.0, 0.0, None, 0))
+    assert store.get("alcomx") == pytest.approx(want_al, rel=RTOL, abs=ATOL)
+    assert store.get("ancomx") == pytest.approx(want_an, rel=RTOL, abs=ATOL)
+    assert want_an == 0.0
+
+
+def test_mguidance_33_alcomx_and_ancomx_from_line():
+    vehicle, guidance = _ready(mguidance=33)
+    store = vehicle.store
+    algv = guidance.guidance_line(vehicle)
+    grav = store.get("grav")
+    want_al, want_an = _clip(
+        float(algv[1] / grav),
+        float(-algv[2] / grav),
+        store.get("anposlimx"),
+        store.get("anneglimx"),
+        store.get("allimx"),
+    )
+    guidance.execute(vehicle, SimContext(0.0, 0.05, 0.0, 0.0, None, 0))
+    assert store.get("alcomx") == pytest.approx(want_al, rel=RTOL, abs=ATOL)
+    assert store.get("ancomx") == pytest.approx(want_an, rel=RTOL, abs=ATOL)
+
+
+def test_mguidance_66_alcomx_and_ancomx_from_pronav():
     vehicle, guidance = _ready(mguidance=66)
-    with pytest.raises(ValueError, match="mguidance"):
-        guidance.execute(vehicle, SimContext(0.0, 0.05, 0.0, 0.0, None, 0))
-    vehicle.store.set("mguidance", -1)
-    with pytest.raises(ValueError, match="mguidance"):
+    store = vehicle.store
+    store.define(Field("TBG", np.eye(3), "mat", "out", "control"))
+    store.define(Field("WOEB", np.array([0.0, 0.01, 0.02]), "vec", "out", "seeker"))
+    store.define(Field("closing_speed", 250.0, "real", "out", "seeker"))
+    store.define(Field("UTBB", np.array([1.0, 0.0, 0.0]), "vec", "out", "seeker"))
+    store.set("pronav_gain", 3.0)
+    apnb = guidance.guidance_pronav(vehicle)
+    grav = store.get("grav")
+    want_al, want_an = _clip(
+        float(apnb[1] / grav),
+        float(-apnb[2] / grav),
+        store.get("anposlimx"),
+        store.get("anneglimx"),
+        store.get("allimx"),
+    )
+    guidance.execute(vehicle, SimContext(0.0, 0.05, 0.0, 0.0, None, 0))
+    assert store.get("alcomx") == pytest.approx(want_al, rel=RTOL, abs=ATOL)
+    assert store.get("ancomx") == pytest.approx(want_an, rel=RTOL, abs=ATOL)
+    assert want_al != 0.0 or want_an != 0.0
+
+
+def test_mguidance_70_arc_lateral_bank():
+    vehicle, guidance = _ready(mguidance=70)
+    store = vehicle.store
+    store.define(Field("FSPV", np.array([2.0, 1.0, -12.0]), "vec", "out", "forces"))
+    store.define(Field("dvbe", 200.0, "real", "init/out", "newton"))
+    store.define(Field("alphax", 0.0, "real", "out", "aerodynamics"))
+    store.define(Field("phimvx", 0.0, "real", "out", "control"))
+    store.set("alcomx", 7.0)
+    store.set("ancomx", 7.0)
+    store.set("phicx", 12.0)
+    want_phicx = guidance.guidance_arc(vehicle)
+    guidance.execute(vehicle, SimContext(0.0, 0.05, 0.0, 0.0, None, 0))
+    assert store.get("phicx") == pytest.approx(want_phicx, rel=RTOL, abs=ATOL)
+    assert store.get("alcomx") == pytest.approx(0.0, rel=RTOL, abs=ATOL)
+    assert store.get("ancomx") == pytest.approx(0.0, rel=RTOL, abs=ATOL)
+    assert want_phicx != 12.0
+
+
+def test_unknown_mguidance_raises():
+    vehicle, guidance = _ready(mguidance=-1)
+    with pytest.raises(ValueError, match="unknown mguidance"):
         guidance.execute(vehicle, SimContext(0.0, 0.05, 0.0, 0.0, None, 0))

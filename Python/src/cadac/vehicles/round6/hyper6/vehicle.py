@@ -9,10 +9,16 @@ from cadac.kernel.state import StateStore
 from cadac.vehicles.round6.hyper6.actuator import Hyper6Actuator
 from cadac.vehicles.round6.hyper6.aero import Hyper6Aero
 from cadac.vehicles.round6.hyper6.control import Hyper6Control
+from cadac.vehicles.round6.hyper6.datalink import Hyper6Datalink
 from cadac.vehicles.round6.hyper6.forces import Hyper6Forces
+from cadac.vehicles.round6.hyper6.gps import Hyper6Gps
 from cadac.vehicles.round6.hyper6.guidance import Hyper6Guidance
 from cadac.vehicles.round6.hyper6.ins import Hyper6Ins
+from cadac.vehicles.round6.hyper6.intercept import Hyper6Intercept
 from cadac.vehicles.round6.hyper6.propulsion import Hyper6Propulsion
+from cadac.vehicles.round6.hyper6.rcs import Hyper6Rcs
+from cadac.vehicles.round6.hyper6.seeker import Hyper6Seeker
+from cadac.vehicles.round6.hyper6.startrack import Hyper6Startrack
 
 
 class Hyper6:
@@ -30,13 +36,19 @@ class Hyper6:
             Round6Environment(),
             Hyper6Aero(aero_deck),
             Hyper6Propulsion(prop_deck),
+            Hyper6Gps(),
+            Hyper6Startrack(),
             Hyper6Ins(),
+            Hyper6Datalink(),
+            Hyper6Seeker(),
             Hyper6Guidance(),
             Hyper6Control(),
             Hyper6Actuator(),
+            Hyper6Rcs(),
             Hyper6Forces(),
             Round6Newton(),
             Round6Euler(),
+            Hyper6Intercept(),
         ]
 
     def define(self):

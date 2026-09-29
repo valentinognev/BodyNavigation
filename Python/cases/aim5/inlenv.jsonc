@@ -1,0 +1,97 @@
+/* AIM5 INLENV.ASC launch envelope — MTARG=1 polar target init.
+   Fortran SWEEP over DHTB/AZTLX collapsed to one point (dhtb=5000, aztlx=10)
+   for loadability; translator does not emit SWEEP decks. */
+{
+  "title": "INLENV.ASC: AIM5 LAUNCH ENVELOPE",
+  "options": {},
+  "modules": [
+    {
+      "name": "target",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "environment",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "kinematics",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "seeker",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "guidance",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "control",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "propulsion",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "forces",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "newton",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "intercept",
+      "phases": ["def", "exec"]
+    }
+  ],
+  "timing": {
+    "scrn_step": 1.0,
+    "com_step": 1.0,
+    "plot_step": 1.0,
+    "traj_step": 1.0,
+    "int_step": 0.01
+  },
+  "end_time": 0.0,
+  "vehicles": [
+    {
+      "type": "AIM5",
+      "name": "Missile",
+      "aero_deck": "aim5_aero_deck.jsonc",
+      "prop_deck": "aim5_prop_deck.jsonc",
+      "params": {
+        "optmet": 1,
+        "mtarg": 1,
+        "hte": 9000,
+        "dhtb": 5000,
+        "aztlx": 10,
+        "VT1EL": [0, 269, 0],
+        "SBEL": [0, 0, -10000],
+        "sael1": 0,
+        "sael2": 0,
+        "sael3": -10000,
+        "dvbe": 269,
+        "psivlx": 45,
+        "thtvlx": 0,
+        "mseek": 1,
+        "mguid": 6,
+        "gnav": 4,
+        "maut": 44,
+        "tr": 0.1,
+        "ta": 2,
+        "gacp": 40,
+        "aexit": 0.00948,
+        "mass": 63.8,
+        "area": 0.01767
+      },
+      "events": [],
+      "family": "aim5"
+    }
+  ],
+  "family": "aim5"
+}

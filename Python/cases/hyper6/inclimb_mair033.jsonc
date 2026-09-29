@@ -1,0 +1,133 @@
+/* Derived from GHAME6 Simulations_FTN/GHAME6/inclimb.asc for Task 83.
+   Legacy ASC has no MAIR=x33; this adds GHAME6 Fortran packing
+   MAIR=|MTURB|MWIND|MATMO|=033 (tabular atmosphere + tabular wind).
+   Round6 ROCKET6 digit order for the same switches is mair=303; execute()
+   accepts both (see test_hyper6_matmo3_mwind3). Weather tables reuse the
+   ROCKET6 Wallops deck (density/pressure/temperature/speed/direction).
+   Short end_time for python-golden; CLI does not yet wire weather_deck into
+   Hyper6 (vehicle.py/cli untouched). */
+{
+  "title": "inclimb_mair033 derived GHAME6 tabular weather",
+  "options": {
+    "scrn": false,
+    "doc": false,
+    "plot": true,
+    "csv": true
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "environment",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "propulsion",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "ins",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "guidance",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "control",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "actuator",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "forces",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "newton",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "euler",
+      "phases": ["def", "init", "exec"]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "plot_step": 0.1,
+    "int_step": 0.01
+  },
+  "end_time": 0.2,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "Hypersonic",
+      "aero_deck": "ghame6_aero_deck.jsonc",
+      "prop_deck": "ghame6_prop_deck.jsonc",
+      "weather_deck": "../rocket6/weather_deck_Wallops.jsonc",
+      "params": {
+        "lonx": -80.57,
+        "latx": 28.43,
+        "alt": 3000,
+        "dvbe": 250,
+        "alpha0x": 3.0,
+        "psibdx": 50.0,
+        "thtbdx": 3.0,
+        "phibdx": 0.0,
+        "mair": 33,
+        "maero": 1,
+        "alpplimx": 21,
+        "alpnlimx": -3,
+        "strct_pos_limitx": 3,
+        "strct_neg_limitx": 2,
+        "mprop": 2,
+        "vmass0": 136077,
+        "fmass0": 81646,
+        "qhold": 50000,
+        "tq": 1,
+        "acowl": 27.87,
+        "thrtl_idle": 0.05,
+        "thrtl_max": 2,
+        "mact": 2,
+        "dlimx": 20,
+        "ddlimx": 400,
+        "wnact": 50,
+        "zetact": 0.7,
+        "maut": 44,
+        "dalimx": 20,
+        "delimx": 20,
+        "drlimx": 20,
+        "phicomx": 0,
+        "philimx": 20,
+        "wrcl": 10,
+        "zrcl": 0.9,
+        "zetlagr": 1.1,
+        "thtvdcomx": 20,
+        "pgam": 1,
+        "wgam": 1,
+        "zgam": 0.7,
+        "mins": 0
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 20
+            }
+          },
+          "set": {
+            "thtvdcomx": 10
+          }
+        }
+      ]
+    }
+  ]
+}

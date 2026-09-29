@@ -15,6 +15,8 @@ SKIP_STEMS = frozenset({"readme", "documentation", "doc", "input_copy"})
 PROGRAM_FAMILY = {
     "AIM5": "aim5", "CRUISE5": "cruise5", "MAGSIX": "magsix",
     "ROCKET6": "rocket6", "SAM6": "sam6", "SRAAM6": "sraam6", "AGM6": "agm6",
+    "SRAAM5": "sraam5",
+    "ROCKET3": "rocket3",
 }
 
 EXTRA_SOURCES: list[tuple[str, str]] = [

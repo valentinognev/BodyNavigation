@@ -1,0 +1,149 @@
+{
+  "title": "IN300.ASC:ROCKET3 LAUNCH to 300 km orbit",
+  "options": {},
+  "modules": [
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "plot_step": 0.5,
+    "scrn_step": 5.0,
+    "int_step": 0.01
+  },
+  "end_time": 0.0,
+  "vehicles": [
+    {
+      "type": "ROCKET3",
+      "name": "rocket3",
+      "params": {
+        "optmet": 1.0,
+        "opnoro": 0.0,
+        "mprop": 2,
+        "fueli": 6200.0,
+        "fuelr": 94.0,
+        "spi": 270.0,
+        "aexit": 0.5,
+        "thrtl": 1.0,
+        "maero": 11,
+        "sref": 1.5,
+        "vmassi": 10800.0,
+        "alphax": 0,
+        "phimvx": 20.0,
+        "blon": 4.877,
+        "blat": 0.4962,
+        "balt": 1.0,
+        "dvbe": 1.0,
+        "psivgx": 90.0,
+        "thtvgx": 90.0
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 10.0
+            }
+          },
+          "set": {
+            "alphax": -5.5
+          }
+        },
+        {
+          "when": {
+            "time": {
+              ">": 66.0
+            }
+          },
+          "set": {
+            "mprop": 2,
+            "fueli": 1700.0,
+            "fuelr": 30.0,
+            "spi": 280.0,
+            "aexit": 0.5,
+            "thrtl": 1.0,
+            "maero": 12,
+            "sref": 0.5,
+            "vmassi": 3200.0,
+            "alphax": 0.0,
+            "phimvx": 0.0
+          }
+        },
+        {
+          "when": {
+            "tstage": {
+              ">": 58.0
+            }
+          },
+          "set": {
+            "mprop": 2,
+            "fueli": 580.0,
+            "fuelr": 15.0,
+            "spi": 290.0,
+            "aexit": 0.1,
+            "thrtl": 1.0,
+            "maero": 13,
+            "sref": 0.5,
+            "vmassi": 1000.0,
+            "alphax": 0.0,
+            "phimvx": 0.0
+          }
+        },
+        {
+          "when": {
+            "tstage": {
+              ">": 40.0
+            }
+          },
+          "set": {}
+        },
+        {
+          "when": {
+            "time": {
+              ">": 200.0
+            }
+          },
+          "set": {}
+        }
+      ],
+      "family": "rocket3"
+    }
+  ],
+  "family": "rocket3"
+}

@@ -336,7 +336,7 @@ def test_mguidance_0_returns_without_writing():
     assert store.get("mguidance") == 0
 
 
-@pytest.mark.parametrize("mguidance", [43, 99])
+@pytest.mark.parametrize("mguidance", [99])
 def test_unknown_mguidance_raises_valueerror(mguidance):
     vehicle, guidance = _ready(mguidance=mguidance)
     with pytest.raises(ValueError):

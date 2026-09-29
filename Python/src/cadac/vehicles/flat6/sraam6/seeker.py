@@ -6,6 +6,7 @@ from cadac.constants import DEG
 from cadac.kernel.integrate import integrate
 from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr, polar_from_cart, skew
+from cadac.vehicles.flat6.sraam6.ai_radar import Sraam6AiRadar
 
 SMALL = 1e-7
 
@@ -16,6 +17,9 @@ _ZEROS33 = ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
 class Sraam6Seeker:
     name = "seeker"
+
+    def __init__(self):
+        self._ai_radar = Sraam6AiRadar()
 
     def define(self, vehicle):
         store = vehicle.store
@@ -96,9 +100,10 @@ class Sraam6Seeker:
             Field("SBTL", _ZEROS3, "vec", "diag", "seeker"),
         ):
             store.define(field)
+        self._ai_radar.define(vehicle)
 
     def initialize(self, vehicle, ctx):
-        pass
+        self._ai_radar.initialize(vehicle, ctx)
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
@@ -225,6 +230,8 @@ class Sraam6Seeker:
         store.set("thtpbx", thtpbx)
         store.set("psipbx", psipbx)
         store.set("SBTL", sbtl)
+        # Fortran S2 AI radar (Band D) — may set mnav 2→3 and bias STEL/VTEL
+        self._ai_radar.execute(vehicle, ctx)
 
     def seeker_kin(self, vehicle, sbtl, vtel, dbt):
         store = vehicle.store

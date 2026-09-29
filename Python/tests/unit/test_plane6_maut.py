@@ -399,7 +399,9 @@ def test_gamma_case_omits_mroll_defaults_to_position():
 
 
 def test_unknown_maut_raises():
-    for maut in (2, 3, 4, 5, 20, 23, 25, 34, 44, 45):
+    # Pitch 2/3/5 and already-legal pitch 4 bare codes removed from rejects.
+    # Mode 25 stays rejected (yaw digit 2 + pitch 5 not unlocked here).
+    for maut in (20, 25):
         vehicle, ctrl = _ready(maut=maut)
         with pytest.raises(ValueError, match="unknown maut"):
             ctrl.execute(vehicle, _ctx())

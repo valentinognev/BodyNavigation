@@ -1,0 +1,151 @@
+/* CRUISE5 INGPS.ASC — GPS+TF/OA look-fwd (Task 74 owns).
+   Fortran MONTE CARLO / GAUSS collapsed to means for loadability;
+   translator not edited. Round-earth Cruise5 skeleton; MGPS/S2 fields present. */
+{
+  "title": "INGPS.ASC:GPS+TF/OA,LOOK-FWD,MEDIUM TERRAIN, MC",
+  "family": "cruise5",
+  "options": {
+    "scrn": false,
+    "comscrn": false,
+    "events": true,
+    "tabout": false,
+    "plot": true,
+    "traj": false,
+    "merge": false,
+    "doc": false
+  },
+  "modules": [
+    {
+      "name": "environment",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "propulsion",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "forces",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "newton",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "gps",
+      "phases": ["def", "init", "exec"]
+    },
+    {
+      "name": "targeting",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "seeker",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "guidance",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "control",
+      "phases": ["def", "exec"]
+    },
+    {
+      "name": "intercept",
+      "phases": ["def", "exec"]
+    }
+  ],
+  "timing": {
+    "scrn_step": 5.0,
+    "plot_step": 0.5,
+    "traj_step": 0.5,
+    "int_step": 0.05,
+    "com_step": 40.0
+  },
+  "end_time": 0.0,
+  "vehicles": [
+    {
+      "type": "CRUISE3",
+      "name": "UAV",
+      "family": "cruise5",
+      "aero_deck": "cruise3_aero_deck.jsonc",
+      "prop_deck": "cruise3_prop_deck.jsonc",
+      "params": {
+        "lonx": 0.0,
+        "latx": 0.0,
+        "alt": 150.0,
+        "psivgx": -60.0,
+        "thtvgx": 0.0,
+        "dvbe": 272.0,
+        "mgps": 0,
+        "ms2prt": 0,
+        "azgex1": 60.0,
+        "azgex2": 152.0,
+        "azgex3": -14.0,
+        "azgex4": -81.0,
+        "elgex1": 48.0,
+        "elgex2": 20.0,
+        "elgex3": 8.0,
+        "elgex4": 65.0,
+        "pspos": 5.0,
+        "psvel": 0.2,
+        "pstil": 0.0005,
+        "psacc": 0.01,
+        "psgyr": 1.0e-5,
+        "pscbi": 3.0,
+        "pscfr": 1.0,
+        "frapi": 0.0,
+        "frapa": 0.0,
+        "frapg": 0.0,
+        "frapc": 0.0,
+        "tc": 100.0,
+        "brpat1": 0.0,
+        "brpat2": 0.0,
+        "brpat3": 0.0,
+        "brpat4": 0.0,
+        "rrrec1": 0.25,
+        "rrrec2": 0.25,
+        "rrrec3": 0.25,
+        "rrrec4": 0.25,
+        "rddyn1": 0.03,
+        "rddyn2": 0.03,
+        "rddyn3": 0.03,
+        "rddyn4": 0.03,
+        "cbias": 0.0,
+        "cfreq": 0.1,
+        "dtimgps": 1.0,
+        "qspos": 0.1,
+        "qsvel": 0.01,
+        "qstil": 0.0002,
+        "qsacc": 0.0004,
+        "qsgyr": 1.0e-6,
+        "qscbi": 0.5,
+        "qscfr": 0.1,
+        "fraq": 0.0,
+        "rspos": 1.0,
+        "rsvel": 0.5,
+        "frar": 0.0,
+        "mins": 1,
+        "mguidance": 30,
+        "maut": 13,
+        "mprop": 14,
+        "mseeker": 0,
+        "mturn": 1
+      },
+      "events": [
+        {
+          "when": {"time": {">": 3.0}},
+          "set": {
+            "mgps": 1,
+            "mguidance": 32
+          }
+        }
+      ]
+    }
+  ]
+}

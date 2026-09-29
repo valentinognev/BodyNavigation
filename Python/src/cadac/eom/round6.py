@@ -318,16 +318,37 @@ class Round6Environment(ModuleBase):
     def execute(self, vehicle, ctx) -> None:
         store = vehicle.store
         mair = store.get("mair")
+        # Default Round6 / ROCKET6 / C++ HYPER6: MAIR=|MATMO|MTURB|MWIND|.
         matmo = mair // 100
         mturb = (mair - matmo * 100) // 10
         mwind = (mair - matmo * 100) % 10
+        # GHAME6 Fortran packs MAIR=|MTURB|MWIND|MATMO| (MODULE.FOR G2).
+        # Codes 3/30/33 are the Fortran tabular MATMO/MWIND digits; under
+        # ROCKET6 unpack they look like illegal mturb=3, so re-decode them.
+        if mair in (3, 30, 33):
+            mturb = mair // 100
+            mwind = (mair - mturb * 100) // 10
+            matmo = mair - mturb * 100 - mwind * 10
         mair0 = matmo == 0 and mturb == 0 and mwind == 0
+        # Constant wind digit 1: atmosphere76 (mair=1) or us76_nasa2002 (mair=101).
+        mair1 = matmo in (0, 1) and mturb == 0 and mwind == 1
         mair12 = matmo == 0 and mturb == 1 and mwind == 2
         mair100 = matmo == 1 and mturb == 0 and mwind == 0
-        if not mair0 and not mair12 and not mair100:
+        # HYPER6 shear wind digit 2 alone (no turb); ROCKET6 tabular keeps mair12 / 2x2.
+        mair_shear = matmo in (0, 1) and mturb == 0 and mwind == 2
+        # matmo=2 tabular atmosphere; mturb 0/1; mwind 0/1/2 (constant or tabular).
+        mair2xx = matmo == 2 and mturb in (0, 1) and mwind in (0, 1, 2)
+        # GHAME6 MATMO=3 and/or MWIND=3 tabular (ROCKET6-packed 3xx / …3, or Fortran 3/30/33).
+        mair_tab3 = (
+            (matmo == 3 and mturb in (0, 1) and mwind in (0, 1, 2, 3))
+            or (matmo in (0, 1) and mturb in (0, 1) and mwind == 3)
+        )
+        if not mair0 and not mair1 and not mair12 and not mair100 and not mair_shear and not mair2xx and not mair_tab3:
             raise ValueError(f"unknown mair {mair}")
-        if mair12 and self.weather_deck is None:
-            raise ValueError("mair 12 requires a weather Datadeck")
+        if (mair12 or mair2xx or mair_tab3) and self.weather_deck is None:
+            if mair_tab3:
+                raise ValueError("mair tabular MATMO/MWIND=3 requires a weather Datadeck")
+            raise ValueError("mair 2xx requires a weather Datadeck" if mair2xx else "mair 12 requires a weather Datadeck")
 
         warning_flag = store.get("warning_flag")
         dvba = store.get("dvba")
@@ -352,6 +373,13 @@ class Round6Environment(ModuleBase):
                         warning_flag = 1
                 else:
                     raise ValueError("altitude is outside us76_nasa2002 atmosphere")
+        elif matmo in (2, 3):
+            # ROCKET6 matmo=2 and GHAME6 MATMO=3: tabular WEATHER_DECK atmosphere.
+            rho = self.weather_deck.look_up("density", alt)
+            press = self.weather_deck.look_up("pressure", alt)
+            tempc = self.weather_deck.look_up("temperature", alt)
+            tempk = tempc + 273.16
+            vsound = math.sqrt(1.4 * R * tempk)
         else:
             rho, press, tempk = atmosphere76(alt)
             tempc = tempk - 273.16
@@ -368,8 +396,24 @@ class Round6Environment(ModuleBase):
             int_step = ctx.int_step
             twind = store.get("twind")
             vaed3 = store.get("vaed3")
-            dvw = self.weather_deck.look_up("speed", alt)
-            psiwdx = self.weather_deck.look_up("direction", alt)
+            psiwdx = store.get("psiwdx")
+            if mwind == 1:
+                dvw = store.get("dvae")
+            elif mwind == 3 or (mwind == 2 and self.weather_deck is not None):
+                # GHAME6 MWIND=3 or ROCKET6 mwind=2 with WEATHER_DECK: tabular wind.
+                dvw = self.weather_deck.look_up("speed", alt)
+                psiwdx = self.weather_deck.look_up("direction", alt)
+            else:
+                # HYPER6 constant shear (mair …2 without WEATHER_DECK)
+                dvael = store.get("dvael")
+                waltl = store.get("waltl")
+                dvaeh = store.get("dvaeh")
+                walth = store.get("walth")
+                dvw = dvael + (dvaeh - dvael) * (alt - waltl) / (walth - waltl)
+                if alt < waltl:
+                    dvw = 0.0
+                if alt > walth:
+                    dvw = 0.0
             vaed_raw = np.array(
                 [
                     -dvw * math.cos(psiwdx * RAD),

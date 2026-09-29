@@ -1,0 +1,369 @@
+/* ROCKET6 legacy Band D fin actuator. From old Simulations_C++/ROCKET6/input.asc
+   MODULES (actuator after rcs); mact=22 (morder=2,mvehicle=2). */
+{
+  "title": "input.asc  Three-stage rocket ascent (legacy fin actuator)",
+  "iseed": 1234,
+  "options": {
+    "scrn": true,
+    "comscrn": false,
+    "events": true,
+    "doc": true,
+    "tabout": false,
+    "plot": true,
+    "merge": false,
+    "traj": true,
+    "csv": false
+  },
+  "modules": [
+    {
+      "name": "kinematics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "environment",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "propulsion",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "aerodynamics",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "gps",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "startrack",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "ins",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "guidance",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "control",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "rcs",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "actuator",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "tvc",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "forces",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    },
+    {
+      "name": "newton",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "euler",
+      "phases": [
+        "def",
+        "init",
+        "exec"
+      ]
+    },
+    {
+      "name": "intercept",
+      "phases": [
+        "def",
+        "exec"
+      ]
+    }
+  ],
+  "timing": {
+    "scrn_step": 10.0,
+    "plot_step": 0.5,
+    "traj_step": 1.0,
+    "int_step": 0.005,
+    "com_step": 20.0
+  },
+  "end_time": 0.0,
+  "vehicles": [
+    {
+      "type": "HYPER6",
+      "name": "SLV",
+      "aero_deck": "aero_deck_SLV.jsonc",
+      "weather_deck": "weather_deck_Wallops.jsonc",
+      "params": {
+        "lonx": -120.49,
+        "latx": 34.68,
+        "alt": 100,
+        "dvbe": 1,
+        "phibdx": 0,
+        "thtbdx": 90,
+        "psibdx": -83,
+        "alpha0x": 0,
+        "beta0x": 0,
+        "mair": 0,
+        "dvae": 5,
+        "twind": 1,
+        "turb_length": 100,
+        "turb_sigma": 0.5,
+        "maero": 13,
+        "xcg_ref": 8.6435,
+        "refa": 3.243,
+        "refd": 2.032,
+        "alplimx": 20,
+        "alimitx": 5,
+        "mprop": 3,
+        "vmass0": 48984,
+        "fmass0": 31175,
+        "xcg_0": 10.53,
+        "xcg_1": 6.76,
+        "moi_roll_0": 21940.0,
+        "moi_roll_1": 6950.0,
+        "moi_trans_0": 671620.0,
+        "moi_trans_1": 158830.0,
+        "spi": 279.2,
+        "fuel_flow_rate": 514.1,
+        "mins": 1,
+        "mgps": 1,
+        "almanac_time": 80000,
+        "del_rearth": 2317000,
+        "gps_acqtime": 10,
+        "gps_step": 1,
+        "ucbias_error": 0,
+        "pr1_bias": 0,
+        "pr2_bias": 0,
+        "pr3_bias": 0,
+        "pr4_bias": 0,
+        "ucfreq_noise": 0,
+        "pr1_noise": 0,
+        "pr2_noise": 0,
+        "pr3_noise": 0,
+        "pr4_noise": 0,
+        "dr1_noise": 0,
+        "dr2_noise": 0,
+        "dr3_noise": 0,
+        "dr4_noise": 0,
+        "uctime_cor": 100,
+        "ppos": 5,
+        "pvel": 0.2,
+        "pclockb": 3,
+        "pclockf": 1,
+        "qpos": 0.1,
+        "qvel": 0.01,
+        "qclockb": 0.5,
+        "qclockf": 0.1,
+        "rpos": 1,
+        "rvel": 0.1,
+        "factp": 0,
+        "factq": 0,
+        "factr": 0,
+        "mstar": 1,
+        "star_el_min": 1,
+        "startrack_alt": 30000,
+        "star_acqtime": 20,
+        "star_step": 10,
+        "az1_bias": 0,
+        "az2_bias": 0,
+        "az3_bias": 0,
+        "az1_noise": 0,
+        "az2_noise": 0,
+        "az3_noise": 0,
+        "el1_bias": 0,
+        "el2_bias": 0,
+        "el3_bias": 0,
+        "el1_noise": 0,
+        "el2_noise": 0,
+        "el3_noise": 0,
+        "mguide": 0,
+        "ltg_step": 0.01,
+        "num_stages": 2,
+        "dbi_desired": 6470000.0,
+        "dvbi_desired": 6600,
+        "thtvdx_desired": 1,
+        "delay_ignition": 0.1,
+        "amin": 3,
+        "lamd_limit": 0.01,
+        "exhaust_vel1": 2795,
+        "exhaust_vel2": 2785,
+        "burnout_epoch1": 51.5,
+        "burnout_epoch2": 126,
+        "char_time1": 81.9,
+        "char_time2": 112.2,
+        "maut": 0,
+        "delimx": 10,
+        "drlimx": 10,
+        "zaclp": 1,
+        "zacly": 1,
+        "factwaclp": 0.5,
+        "factwacly": 0.5,
+        "mtvc": 0,
+        "gtvc": 1,
+        "parm": 16.84,
+        "tvclimx": 10,
+        "dtvclimx": 200,
+        "zettvc": 0.7,
+        "wntvc": 100,
+        "mrcs_moment": 21,
+        "roll_mom_max": 100,
+        "pitch_mom_max": 200000,
+        "yaw_mom_max": 200000,
+        "dead_zone": 0.4,
+        "hysteresis": 0.1,
+        "rcs_tau": 1,
+        "thtbdcomx": 80,
+        "psibdcomx": -83,
+        "mact": 22,
+        "dlimx": 20.0,
+        "ddlimx": 100.0,
+        "wnact": 50.0,
+        "zetact": 0.7
+      },
+      "events": [
+        {
+          "when": {
+            "time": {
+              ">": 10
+            }
+          },
+          "set": {
+            "maut": 53,
+            "ancomx": -0.15,
+            "mtvc": 2,
+            "mrcs_moment": 20
+          }
+        },
+        {
+          "when": {
+            "thrust": {
+              "=": 0
+            }
+          },
+          "set": {}
+        },
+        {
+          "when": {
+            "event_time": {
+              ">": 1
+            }
+          },
+          "set": {
+            "maero": 12,
+            "xcg_ref": 5.0384,
+            "mguide": 5,
+            "mtvc": 0,
+            "maut": 0,
+            "mrcs_moment": 22,
+            "mprop": 4,
+            "vmass0": 15490,
+            "fmass0": 9552,
+            "fmasse": 0,
+            "xcg_0": 5.91,
+            "xcg_1": 4.17,
+            "moi_roll_0": 5043.0,
+            "moi_roll_1": 2047.0,
+            "moi_trans_0": 51910.0,
+            "moi_trans_1": 15530.0,
+            "spi": 285,
+            "fuel_flow_rate": 189.1
+          }
+        },
+        {
+          "when": {
+            "event_time": {
+              ">": 51.5
+            }
+          },
+          "set": {
+            "maero": 11,
+            "xcg_ref": 3.2489,
+            "roll_mom_max": 100,
+            "pitch_mom_max": 2000,
+            "yaw_mom_max": 2000,
+            "mprop": 4,
+            "vmass0": 5024,
+            "fmass0": 3291,
+            "fmasse": 0,
+            "xcg_0": 3.65,
+            "xcg_1": 2.85,
+            "moi_roll_0": 1519.0,
+            "moi_roll_1": 486.0,
+            "moi_trans_0": 5158.0,
+            "moi_trans_1": 2394.0,
+            "spi": 284,
+            "fuel_flow_rate": 44.77
+          }
+        },
+        {
+          "when": {
+            "beco_flag": {
+              "=": 1
+            }
+          },
+          "set": {
+            "mguide": 0,
+            "mprop": 0
+          }
+        }
+      ]
+    }
+  ],
+  "family": "rocket6"
+}

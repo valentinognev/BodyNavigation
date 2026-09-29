@@ -1,10 +1,10 @@
-from math import atan2, cos, sin, sqrt, tan
+from math import atan2, cos, exp, sin, sqrt, tan
 
 import numpy as np
 
-from cadac.constants import AGRAV, DEG
+from cadac.constants import AGRAV, DEG, RAD
 from cadac.kernel.state import Field
-from cadac.math.frames import polar_from_cart, skew
+from cadac.math.frames import mat2tr, polar_from_cart, skew
 
 SMALL = 1.e-7
 
@@ -89,17 +89,29 @@ class Agm6Guidance:
         store.set("STBLC", stblc)
         if mguid == 0:
             return
+        # C++ runs mid and term as independent ifs; term overwrites ACBX last.
         guid_mid = mguid // 10
         guid_term = mguid % 10
-        if guid_mid == 3 and guid_term == 0:
+        acbx = None
+        if guid_mid == 2:
+            sael = np.asarray(store.get("SAEL"), dtype=float)
+            stalc = stelc - sael
+            nl_gain_fact = store.get("nl_gain_fact")
+            vbelc = np.asarray(store.get("VBELC"), dtype=float)
+            acbx = self.guidance_mid_line(
+                vehicle, stalc, stblc, vbelc, nl_gain_fact
+            )
+        if guid_mid == 3:
             acbx = self.guidance_mid_pronav(vehicle, stblc, vtelc)
-        elif guid_mid == 4 and guid_term == 0:
+        if guid_mid == 4:
             stblc = np.asarray(store.get("STEL"), dtype=float) - sbelc
             store.set("STBLC", stblc)
             acbx = self.guidance_mid_pronav(vehicle, stblc, vtelc)
-        elif guid_mid == 0 and guid_term == 6:
+        if guid_term == 5:
+            acbx = self.guidance_term_pronav(vehicle)
+        if guid_term == 6:
             acbx = self.guidance_term_comp(vehicle)
-        else:
+        if acbx is None:
             raise ValueError(f"unknown mguid {mguid}")
         all_ = float(acbx[1])
         ann = -float(acbx[2])
@@ -115,6 +127,62 @@ class Agm6Guidance:
         store.set("ann", ann)
         store.set("alcomx", aa * cos(phi))
         store.set("ancomx", aa * sin(phi))
+
+    def guidance_mid_line(self, vehicle, STALC, STBLC, VBELC, nl_gain_fact):
+        # AGM6 C++ guidance_mid_line: LOS/LOA line guidance (Zipfel).
+        # Gravity term in algv3 is inside line_gain (unlike SAM6/plane5).
+        store = vehicle.store
+        line_gain = store.get("line_gain")
+        decrement = store.get("decrement")
+        thtflx = store.get("thtflx")
+        grav = store.get("grav")
+        tblc = np.asarray(store.get("TBLC"), dtype=float)
+        thtvlcx = store.get("thtvlcx")
+        psivlcx = store.get("psivlcx")
+        sbtl = np.asarray(store.get("SBTL"), dtype=float)
+        stalc = np.asarray(STALC, dtype=float)
+        stblc = np.asarray(STBLC, dtype=float)
+        vbelc = np.asarray(VBELC, dtype=float)
+
+        polar = polar_from_cart(stalc)
+        dtac = float(polar[0])
+        az_loa = float(polar[1])
+        el_loa = float(polar[2])
+        if thtflx == 0:
+            tfl = mat2tr(az_loa, el_loa)
+        else:
+            tfl = mat2tr(az_loa, thtflx * RAD)
+
+        polar = polar_from_cart(stblc)
+        dtbc = float(polar[0])
+        az_los = float(polar[1])
+        el_los = float(polar[2])
+        tol = mat2tr(az_los, el_los)
+
+        tvl = mat2tr(psivlcx * RAD, thtvlcx * RAD)
+        tbv = tblc @ tvl.T
+
+        vbeo = tol @ vbelc
+        vbef = tfl @ vbelc
+        nl_gain = nl_gain_fact * (1.0 - exp(-dtbc / decrement))
+
+        algv1 = grav * sin(thtvlcx * RAD) / AGRAV
+        algv2 = line_gain * (-float(vbeo[1]) + nl_gain * float(vbef[1])) / AGRAV
+        algv3 = (
+            line_gain
+            * ((-float(vbeo[2]) + nl_gain * float(vbef[2])) - grav * cos(thtvlcx * RAD))
+            / AGRAV
+        )
+        acvx = np.array([algv1, algv2, algv3], dtype=float)
+        acbx = tbv @ acvx
+        sbto = tol @ sbtl
+
+        store.set("dtac", dtac)
+        store.set("dtbc", dtbc)
+        store.set("VBEO", np.asarray(vbeo, dtype=float).reshape(3))
+        store.set("VBEF", np.asarray(vbef, dtype=float).reshape(3))
+        store.set("SBTO", np.asarray(sbto, dtype=float).reshape(3))
+        return np.asarray(acbx, dtype=float).reshape(3)
 
     def guidance_mid_pronav(self, vehicle, STBLC, VTELC):
         store = vehicle.store
@@ -151,6 +219,42 @@ class Agm6Guidance:
         store.set("psiobcx", psiobcx)
         store.set("thtobcx", thtobcx)
         return np.asarray(acbx, dtype=float).reshape(3)
+
+    def guidance_term_pronav(self, vehicle):
+        # AGM6 C++ guidance_term_pronav: kinematic LOS-rate without compensation.
+        # Uses thtpb (missile[279]), grav_bias in g's — not guidance_term_comp.
+        store = vehicle.store
+        gnav = store.get("gnav")
+        grav_bias = store.get("grav_bias")
+        sbel = np.asarray(store.get("SBEL"), dtype=float)
+        vbel = np.asarray(store.get("VBEL"), dtype=float)
+        stel = np.asarray(store.get("STEL"), dtype=float)
+        vtel = np.asarray(store.get("VTEL"), dtype=float)
+        thtpb = store.get("thtpb")
+        psipb = store.get("psipb")
+        sigdpy = store.get("sigdpy")
+        sigdpz = store.get("sigdpz")
+        tblc = np.asarray(store.get("TBLC"), dtype=float)
+        sbtl = sbel - stel
+        dbt = sqrt(
+            float(sbtl[0]) ** 2 + float(sbtl[1]) ** 2 + float(sbtl[2]) ** 2
+        )
+        dum = float(sbtl[0] * (vbel[0] - vtel[0])
+                    + sbtl[1] * (vbel[1] - vtel[1])
+                    + sbtl[2] * (vbel[2] - vtel[2]))
+        dcvel = abs(dum / dbt)
+        gravb = tblc @ np.array([0.0, 0.0, grav_bias], dtype=float)
+        gn = gnav * dcvel
+        apny = gn * sigdpz / (cos(psipb) * AGRAV)
+        apnz = gn * (
+            sigdpz * tan(thtpb) * tan(psipb) + sigdpy / cos(thtpb)
+        ) / AGRAV
+        all_ = apny - float(gravb[1])
+        ann = apnz + float(gravb[2])
+        store.set("gn", gn)
+        store.set("apny", apny)
+        store.set("apnz", apnz)
+        return np.array([0.0, all_, -ann], dtype=float)
 
     def guidance_term_comp(self, vehicle):
         store = vehicle.store

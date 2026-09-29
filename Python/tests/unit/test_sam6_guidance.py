@@ -452,14 +452,13 @@ def test_mguide_20_line_vs_cpp_replica():
     assert _approx(store.get("annx"), float(-acbx[2]))
 
 
-def test_mguide_30_raises():
-    vehicle = _Vehicle()
-    guid = Sam6Guidance()
-    guid.define(vehicle)
-    _plant_gmax(vehicle.store)
+def test_mguide_30_mid_pronav_does_not_raise():
+    vehicle, guid, ctx = _ready_line()
     vehicle.store.set("mguide", 30)
-    with pytest.raises(ValueError, match="guid_mid"):
-        guid.execute(vehicle, _ctx())
+    vehicle.store.set("gnav", GNAV)
+    guid.execute(vehicle, ctx)
+    assert np.isfinite(vehicle.store.get("ancomx"))
+    assert np.isfinite(vehicle.store.get("alcomx"))
 
 
 def test_mguide_7_seeker_kinematics_finite_commands():

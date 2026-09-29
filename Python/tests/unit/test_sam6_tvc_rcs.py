@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from cadac.kernel.executive import SimContext
-from cadac.kernel.state import StateStore
+from cadac.kernel.state import Field, StateStore
 from cadac.vehicles.flat6.sam6.rcs import Sam6Rcs
 from cadac.vehicles.flat6.sam6.tvc import Sam6Tvc
 
@@ -286,10 +286,39 @@ def _ready_tvc(*, mtvc=0):
     return vehicle, tvc
 
 
-def _ready_rcs(*, mrcs_moment=0, mrcs_force=0):
+def _plant_rcs_externals(store):
+    """Plant fields RCS reads from other modules (not defined by Sam6Rcs)."""
+    zeros3 = (0.0, 0.0, 0.0)
+    for name, typ, module in (
+        ("WBECB", "vec", "ins"),
+        ("phiblcx", "real", "ins"),
+        ("thtblcx", "real", "ins"),
+        ("psibdcx", "real", "ins"),
+        ("alphacx", "real", "ins"),
+        ("betacx", "real", "ins"),
+        ("FSPCB", "vec", "ins"),
+        ("ancomx", "real", "guidance"),
+        ("alcomx", "real", "guidance"),
+        ("UTBC", "vec", "guidance"),
+        ("alphacomx", "real", "guidance"),
+        ("betacomx", "real", "guidance"),
+        ("ai11", "real", "propulsion"),
+        ("ai33", "real", "propulsion"),
+        ("xcg", "real", "propulsion"),
+        ("pdynmc", "real", "environment"),
+    ):
+        if typ == "vec":
+            store.define(Field(name, zeros3, "vec", "out", module))
+        else:
+            store.define(Field(name, 0.0, "real", "out", module))
+
+
+def _ready_rcs(*, mrcs_moment=0, mrcs_force=0, plant_externals=False):
     vehicle = _Vehicle()
     rcs = Sam6Rcs()
     rcs.define(vehicle)
+    if plant_externals:
+        _plant_rcs_externals(vehicle.store)
     rcs.initialize(vehicle, _ctx())
     vehicle.store.set("mrcs_moment", mrcs_moment)
     vehicle.store.set("mrcs_force", mrcs_force)
@@ -364,18 +393,34 @@ def test_mtvc_zero_rewrites_dirty_fpb_to_zero():
     np.testing.assert_allclose(fmpb, np.zeros(3), rtol=RTOL, atol=ATOL)
 
 
-def test_mtvc_one_raises():
+def test_mtvc_one_without_mprop_rewrites_fpb_zero():
+    # mtvc=1 is supported; without mprop>0 the C++ gate leaves FPB/FMPB zero.
     vehicle, tvc = _ready_tvc(mtvc=1)
     vehicle.store.set("FPB", (9.0, 8.0, 7.0))
     vehicle.store.set("FMPB", (6.0, 5.0, 4.0))
-    with pytest.raises(ValueError):
-        tvc.execute(vehicle, _ctx())
-    np.testing.assert_array_equal(vehicle.store.get("FPB"), (9.0, 8.0, 7.0))
-    np.testing.assert_array_equal(vehicle.store.get("FMPB"), (6.0, 5.0, 4.0))
+    tvc.execute(vehicle, _ctx())
+    np.testing.assert_allclose(
+        vehicle.store.get("FPB"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
+    np.testing.assert_allclose(
+        vehicle.store.get("FMPB"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
 
 
-@pytest.mark.parametrize("mtvc", [2, 3, -1, 4])
-def test_mtvc_nonzero_raises(mtvc):
+@pytest.mark.parametrize("mtvc", [2, 3])
+def test_mtvc_two_three_without_mprop_do_not_raise(mtvc):
+    vehicle, tvc = _ready_tvc(mtvc=mtvc)
+    tvc.execute(vehicle, _ctx())
+    np.testing.assert_allclose(
+        vehicle.store.get("FPB"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
+    np.testing.assert_allclose(
+        vehicle.store.get("FMPB"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
+
+
+@pytest.mark.parametrize("mtvc", [-1, 4])
+def test_mtvc_unknown_raises(mtvc):
     vehicle, tvc = _ready_tvc(mtvc=mtvc)
     with pytest.raises(ValueError):
         tvc.execute(vehicle, _ctx())
@@ -461,28 +506,97 @@ def test_rcs_flags_zero_rewrite_dirty_vectors_to_zero():
     np.testing.assert_allclose(fmrcs, np.zeros(3), rtol=RTOL, atol=ATOL)
 
 
-def test_mrcs_force_one_raises():
-    vehicle, rcs = _ready_rcs(mrcs_moment=0, mrcs_force=1)
-    vehicle.store.set("FARCS", (11.0, 12.0, 13.0))
-    vehicle.store.set("FMRCS", (21.0, 22.0, 23.0))
-    with pytest.raises(ValueError):
-        rcs.execute(vehicle, _ctx())
-    np.testing.assert_array_equal(vehicle.store.get("FARCS"), (11.0, 12.0, 13.0))
-    np.testing.assert_array_equal(vehicle.store.get("FMRCS"), (21.0, 22.0, 23.0))
+def test_mrcs_force_one_writes_farcs():
+    vehicle, rcs = _ready_rcs(mrcs_moment=0, mrcs_force=1, plant_externals=True)
+    store = vehicle.store
+    store.set("acc_gain", 5.0)
+    store.set("rcs_thrust", 50.0)
+    store.set("alcomx", 2.0)
+    store.set("ancomx", 1.5)
+    store.set("FARCS", (11.0, 12.0, 13.0))
+    store.set("FMRCS", (21.0, 22.0, 23.0))
+    rcs.execute(vehicle, _ctx())
+    farcs = store.get("FARCS")
+    fmrcs = store.get("FMRCS")
+    assert np.all(np.isfinite(farcs))
+    assert np.all(np.isfinite(fmrcs))
+    np.testing.assert_allclose(fmrcs, np.zeros(3), rtol=RTOL, atol=ATOL)
+    # Dirty seed rewritten; force path may leave FARCS nonzero.
+    assert not np.array_equal(farcs, (11.0, 12.0, 13.0))
 
 
-@pytest.mark.parametrize("mrcs_moment", [1, 10, 11, 20, 24])
-def test_mrcs_moment_nonzero_raises(mrcs_moment):
+@pytest.mark.parametrize("mrcs_moment", [1])
+def test_mrcs_moment_noop_type0_writes_zeros(mrcs_moment):
+    # type digit 0 → no moment thrusters; C++ leaves FMRCS zero.
     vehicle, rcs = _ready_rcs(mrcs_moment=mrcs_moment, mrcs_force=0)
-    with pytest.raises(ValueError):
-        rcs.execute(vehicle, _ctx())
+    rcs.execute(vehicle, _ctx())
+    np.testing.assert_allclose(
+        vehicle.store.get("FMRCS"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
+    np.testing.assert_allclose(
+        vehicle.store.get("FARCS"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
 
 
-@pytest.mark.parametrize("mrcs_force", [2, -1, 3])
-def test_mrcs_force_other_nonzero_raises(mrcs_force):
+@pytest.mark.parametrize("mrcs_moment", [10, 11, 20, 24])
+def test_mrcs_moment_nonzero_writes_fmrcs(mrcs_moment):
+    vehicle, rcs = _ready_rcs(
+        mrcs_moment=mrcs_moment, mrcs_force=0, plant_externals=True
+    )
+    store = vehicle.store
+    store.set("roll_mom_max", 100.0)
+    store.set("pitch_mom_max", 200.0)
+    store.set("yaw_mom_max", 150.0)
+    store.set("rcs_zeta", 0.7)
+    store.set("rcs_freq", 10.0)
+    store.set("rcs_tau", 1.0)
+    store.set("rate_gain_rcs", 3.0)
+    store.set("dead_zone", 0.4)
+    store.set("hysteresis", 0.1)
+    store.set("ai11", 2.0)
+    store.set("ai33", 40.0)
+    store.set("phibdcomx", 5.0)
+    store.set("thtbdcomx", 8.0)
+    store.set("psibdcomx", -6.0)
+    if mrcs_moment // 10 == 2:
+        store.set("roll_save", 5.0)
+        store.set("pitch_save", 8.0)
+        store.set("yaw_save", -6.0)
+    rcs.execute(vehicle, _ctx())
+    fmrcs = store.get("FMRCS")
+    assert np.all(np.isfinite(fmrcs))
+    np.testing.assert_allclose(store.get("FARCS"), np.zeros(3), rtol=RTOL, atol=ATOL)
+
+
+@pytest.mark.parametrize("mrcs_force", [-1, 3])
+def test_mrcs_force_unknown_writes_zeros(mrcs_force):
     vehicle, rcs = _ready_rcs(mrcs_moment=0, mrcs_force=mrcs_force)
-    with pytest.raises(ValueError):
-        rcs.execute(vehicle, _ctx())
+    rcs.execute(vehicle, _ctx())
+    np.testing.assert_allclose(
+        vehicle.store.get("FMRCS"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
+    np.testing.assert_allclose(
+        vehicle.store.get("FARCS"), np.zeros(3), rtol=RTOL, atol=ATOL
+    )
+
+
+def test_mrcs_force_two_writes_farcs():
+    vehicle, rcs = _ready_rcs(mrcs_moment=0, mrcs_force=2, plant_externals=True)
+    store = vehicle.store
+    store.set("acc_gain", 5.0)
+    store.set("rcs_thrust", 50.0)
+    store.set("rcs_arm", 4.0)
+    store.set("rcs_isp", 200.0)
+    store.set("dead_zone", 0.4)
+    store.set("hysteresis", 0.1)
+    store.set("alcomx", 3.0)
+    store.set("ancomx", 2.0)
+    store.set("xcg", 2.5)
+    rcs.execute(vehicle, _ctx())
+    farcs = store.get("FARCS")
+    fmrcs = store.get("FMRCS")
+    assert np.all(np.isfinite(farcs))
+    assert np.all(np.isfinite(fmrcs))
 
 
 def test_rcs_terminate_is_pass():

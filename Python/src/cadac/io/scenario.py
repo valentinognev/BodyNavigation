@@ -48,6 +48,7 @@ class RunConfig:
     vehicles: list[VehicleSpec]
     family: str | None = None
     iseed: int = 0
+    nmonte: int = 0
 
 
 def _options(raw: dict, path: Path) -> dict[str, bool]:
@@ -103,4 +104,5 @@ def load_scenario(path) -> RunConfig:
         ],
         family=scenario_family,
         iseed=int(data.get("iseed", 0)),
+        nmonte=int(data.get("nmonte", 0)),
     )

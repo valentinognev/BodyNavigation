@@ -20,13 +20,19 @@ MODULE_ORDER = [
     "environment",
     "aerodynamics",
     "propulsion",
+    "gps",
+    "startrack",
     "ins",
+    "datalink",
+    "seeker",
     "guidance",
     "control",
     "actuator",
+    "rcs",
     "forces",
     "newton",
     "euler",
+    "intercept",
 ]
 
 

@@ -140,11 +140,14 @@ def _approx(got, want):
     return got == pytest.approx(want, rel=RTOL, abs=ATOL)
 
 
-def _plant_externals(store, *, delecx=DELECX, delrcx=DELRCX, thrust=THRUST, xcg=XCG):
+def _plant_externals(
+    store, *, delecx=DELECX, delrcx=DELRCX, thrust=THRUST, xcg=XCG, pdynmc=0.0
+):
     store.define(Field("delecx", delecx, "real", "out", "control"))
     store.define(Field("delrcx", delrcx, "real", "out", "control"))
     store.define(Field("thrust", thrust, "real", "out", "propulsion"))
     store.define(Field("xcg", xcg, "real", "out", "propulsion"))
+    store.define(Field("pdynmc", pdynmc, "real", "out", "environment"))
 
 
 def _ready(
@@ -156,16 +159,20 @@ def _ready(
     dtvclimx=DTVCLIMX,
     zettvc=ZETTVC,
     wntvc=WNTVC,
+    factgtvc=0.0,
     delecx=DELECX,
     delrcx=DELRCX,
     thrust=THRUST,
     xcg=XCG,
+    pdynmc=0.0,
     **states,
 ):
     vehicle = _Vehicle()
     tvc = Rocket6Tvc()
     tvc.define(vehicle)
-    _plant_externals(vehicle.store, delecx=delecx, delrcx=delrcx, thrust=thrust, xcg=xcg)
+    _plant_externals(
+        vehicle.store, delecx=delecx, delrcx=delrcx, thrust=thrust, xcg=xcg, pdynmc=pdynmc
+    )
     store = vehicle.store
     store.set("mtvc", mtvc)
     store.set("gtvc", gtvc)
@@ -174,6 +181,7 @@ def _ready(
     store.set("dtvclimx", dtvclimx)
     store.set("zettvc", zettvc)
     store.set("wntvc", wntvc)
+    store.set("factgtvc", factgtvc)
     for name, value in states.items():
         store.set(name, value)
     tvc.initialize(vehicle, _ctx())
@@ -220,44 +228,62 @@ def _expected(store, dt):
             "detas": store.get("detas"),
             "dzeta": store.get("dzeta"),
         }
-    if mtvc != 2:
+    if mtvc not in (1, 2, 3):
         raise ValueError(f"unknown mtvc {mtvc}")
     gtvc = store.get("gtvc")
     parm = store.get("parm")
     xcg = store.get("xcg")
     thrust = store.get("thrust")
+    if mtvc == 3:
+        pdynmc = store.get("pdynmc")
+        if pdynmc > 1e5:
+            gtvc = 0.0
+        else:
+            gtvc = (-5.0e-6 * pdynmc + 0.5) * (store.get("factgtvc") + 1)
     etac = gtvc * store.get("delecx") * RAD
     zetc = gtvc * store.get("delrcx") * RAD
-    tvclimx = store.get("tvclimx")
-    dtvclimx = store.get("dtvclimx")
-    wntvc = store.get("wntvc")
-    zettvc = store.get("zettvc")
-    etas, etasd, detas, detasd = _axis_scnd(
-        etac,
-        store.get("etasd"),
-        store.get("etas"),
-        store.get("detasd"),
-        store.get("detas"),
-        tvclimx,
-        dtvclimx,
-        wntvc,
-        zettvc,
-        dt,
-    )
-    zeta, zetad, dzeta, dzetad = _axis_scnd(
-        zetc,
-        store.get("zetad"),
-        store.get("zeta"),
-        store.get("dzetad"),
-        store.get("dzeta"),
-        tvclimx,
-        dtvclimx,
-        wntvc,
-        zettvc,
-        dt,
-    )
-    eta = etas
-    zet = zeta
+    if mtvc == 1:
+        eta = etac
+        zet = zetc
+        etasd = store.get("etasd")
+        zetad = store.get("zetad")
+        etas = store.get("etas")
+        zeta = store.get("zeta")
+        detasd = store.get("detasd")
+        dzetad = store.get("dzetad")
+        detas = store.get("detas")
+        dzeta = store.get("dzeta")
+    else:
+        tvclimx = store.get("tvclimx")
+        dtvclimx = store.get("dtvclimx")
+        wntvc = store.get("wntvc")
+        zettvc = store.get("zettvc")
+        etas, etasd, detas, detasd = _axis_scnd(
+            etac,
+            store.get("etasd"),
+            store.get("etas"),
+            store.get("detasd"),
+            store.get("detas"),
+            tvclimx,
+            dtvclimx,
+            wntvc,
+            zettvc,
+            dt,
+        )
+        zeta, zetad, dzeta, dzetad = _axis_scnd(
+            zetc,
+            store.get("zetad"),
+            store.get("zeta"),
+            store.get("dzetad"),
+            store.get("dzeta"),
+            tvclimx,
+            dtvclimx,
+            wntvc,
+            zettvc,
+            dt,
+        )
+        eta = etas
+        zet = zeta
     fpb0 = cos(eta) * cos(zet) * thrust
     fpb1 = cos(eta) * sin(zet) * thrust
     fpb2 = -sin(eta) * thrust
@@ -366,16 +392,55 @@ def test_mtvc2_delecx_step_limits_etax_and_fpb0_finite():
     assert store.get("FPB")[0] != 0.0
 
 
-def test_mtvc1_raises():
-    vehicle, tvc = _ready(mtvc=1, delecx=DELECX)
-    with pytest.raises(ValueError):
-        tvc.execute(vehicle, _ctx())
+def test_rocket6_mtvc_1():
+    # Break: mtvc=1 still raises, applies dynamics, or skips FPB.
+    vehicle, tvc = _ready(
+        mtvc=1, delecx=DELECX, delrcx=0.5, gtvc=GTVC, thrust=THRUST, etas=0.01, detas=0.5
+    )
+    want = _expected(vehicle.store, DT)
+    tvc.execute(vehicle, _ctx(DT))
+    _assert_step(vehicle.store, want)
+    assert vehicle.store.get("etas") == 0.01
+    assert vehicle.store.get("detas") == 0.5
+    assert _approx(vehicle.store.get("etax"), GTVC * DELECX)
+    assert _approx(vehicle.store.get("zetx"), GTVC * 0.5)
+    assert _approx(vehicle.store.get("etacx"), GTVC * DELECX)
+    assert _approx(vehicle.store.get("zetcx"), GTVC * 0.5)
 
 
-def test_mtvc3_raises():
-    vehicle, tvc = _ready(mtvc=3, delecx=DELECX)
-    with pytest.raises(ValueError):
-        tvc.execute(vehicle, _ctx())
+def test_rocket6_mtvc_3():
+    # Break: mtvc=3 raises, ignores online gain, or writes gtvc back to store.
+    vehicle, tvc = _ready(
+        mtvc=3,
+        gtvc=1.0,
+        factgtvc=0.0,
+        pdynmc=0.0,
+        delecx=DELECX,
+        delrcx=0.5,
+        thrust=THRUST,
+    )
+    want = _expected(vehicle.store, DT)
+    gtvc_inline = (-5.0e-6 * 0.0 + 0.5) * (0.0 + 1)
+    assert gtvc_inline != 1.0
+    assert _approx(want["etacx"], gtvc_inline * DELECX)
+    tvc.execute(vehicle, _ctx(DT))
+    _assert_step(vehicle.store, want)
+    assert vehicle.store.get("gtvc") == 1.0
+
+    vehicle_hi, tvc_hi = _ready(
+        mtvc=3,
+        gtvc=1.0,
+        factgtvc=0.0,
+        pdynmc=2.0e5,
+        delecx=DELECX,
+        delrcx=0.5,
+        thrust=THRUST,
+    )
+    want_hi = _expected(vehicle_hi.store, DT)
+    assert want_hi["etacx"] == 0.0
+    tvc_hi.execute(vehicle_hi, _ctx(DT))
+    _assert_step(vehicle_hi.store, want_hi)
+    assert vehicle_hi.store.get("gtvc") == 1.0
 
 
 def test_other_mtvc_raises():

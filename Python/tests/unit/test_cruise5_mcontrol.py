@@ -126,9 +126,120 @@ def test_mcontrol_unknown_raises():
         "tgv", ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
         "mat", "init", "newton",
     ))
-    vehicle.store.set("mcontrol", 16)
+    vehicle.store.set("mcontrol", 99)
     with pytest.raises(ValueError, match="mcontrol"):
         control.execute(vehicle, _ctx())
+
+
+def _ready(mcontrol, **overrides):
+    vehicle = type("V", (), {"store": StateStore()})()
+    control = Cruise5Control()
+    control.define(vehicle)
+    store = vehicle.store
+    store.define(Field(
+        "tgv", ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)),
+        "mat", "init", "newton",
+    ))
+    for name, value, ftype in (
+        ("FSPV", np.array([2.0, 1.0, -12.0]), "vec"),
+        ("grav", 9.81, "real"),
+        ("mass", 1000.0, "real"),
+        ("dvbe", 200.0, "real"),
+        ("pdynmc", 5000.0, "real"),
+        ("thrust", 1500.0, "real"),
+        ("area", 0.929, "real"),
+        ("cla", 0.11, "real"),
+        ("vbeg", np.array([200.0, 0.0, 0.0]), "vec"),
+        ("alt", 7000.0, "real"),
+        ("psivgx", 10.0, "real"),
+        ("thtvg", 0.0, "real"),
+    ):
+        if name not in store.names():
+            store.define(Field(name, value, ftype, "out", "test"))
+    store.set("mcontrol", mcontrol)
+    store.set("alcomx", 0.2)
+    store.set("ancomx", 1.5)
+    store.set("alphacx", 2.0)
+    store.set("phicx", 30.0)
+    store.set("psivgcx", 20.0)
+    store.set("gcp", 2.0)
+    store.set("allimx", 1.0)
+    store.set("philimx", 70.0)
+    store.set("tphi", 0.5)
+    store.set("gacp", 10.0)
+    store.set("ta", 0.8)
+    store.set("anposlimx", 3.0)
+    store.set("anneglimx", -1.0)
+    store.set("alpposlimx", 15.0)
+    store.set("alpneglimx", -10.0)
+    store.set("altcom", 7000.0)
+    store.set("gh", 0.3)
+    store.set("gv", 1.0)
+    store.set("altdlim", 50.0)
+    store.set("gain_psivg", 1.0)
+    for key, value in overrides.items():
+        store.set(key, value)
+    return vehicle, control
+
+
+def test_cruise5_mcontrol_3():
+    vehicle, control = _ready(3, alphacx=2.0, phicx=30.0)
+    control.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert store.get("alphax") == 2.0
+    assert np.isfinite(store.get("phimvx"))
+    assert store.get("phimvx") != 0.0
+    assert store.get("TBV").shape == (3, 3)
+
+
+def test_cruise5_mcontrol_4():
+    vehicle, control = _ready(4, ancomx=1.5, phimvx=12.0)
+    control.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert store.get("phimvx") == 0.0
+    assert np.isfinite(store.get("alphax"))
+    assert store.get("alphax") != 0.0
+
+
+def test_cruise5_mcontrol_6():
+    vehicle, control = _ready(6, altcom=7500.0, alt=7000.0)
+    control.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert store.get("phimvx") == 0.0
+    assert np.isfinite(store.get("ancomx"))
+    assert np.isfinite(store.get("alphax"))
+    assert store.get("altd") == pytest.approx(0.0, abs=1e-14)
+
+
+def test_cruise5_mcontrol_16():
+    vehicle, control = _ready(16, psivgcx=25.0, psivgx=10.0, altcom=7500.0)
+    control.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert np.isfinite(store.get("phimvx"))
+    assert store.get("phimvx") != 0.0
+    assert np.isfinite(store.get("ancomx"))
+    assert np.isfinite(store.get("alphax"))
+    assert store.get("TBG").shape == (3, 3)
+
+
+def test_cruise5_mcontrol_36():
+    vehicle, control = _ready(36, phicx=25.0, altcom=7500.0)
+    control.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert np.isfinite(store.get("phimvx"))
+    assert store.get("phimvx") != 0.0
+    assert np.isfinite(store.get("ancomx"))
+    assert np.isfinite(store.get("alphax"))
+
+
+def test_cruise5_mcontrol_40():
+    vehicle, control = _ready(40, alcomx=0.5)
+    control.execute(vehicle, _ctx())
+    store = vehicle.store
+    assert np.isfinite(store.get("phimvx"))
+    assert store.get("phimvx") != 0.0
+    assert store.get("alphax") == 0.0
+    assert np.isfinite(store.get("phicx"))
 
 
 def _expected_lateral(alcomx, allimx, gcp, fspv, grav, phimvx, alphax):

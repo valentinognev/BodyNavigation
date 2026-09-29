@@ -102,7 +102,6 @@ CONTROL_INS = (
     "thtvdcx",
     "psivdcx",
 )
-NO_HELPERS = ("ins_gyro", "ins_accl", "ins_grav")
 ERROR_STATES = ("RICID", "RICI", "EVBID", "EVBI", "ESBID", "ESBI")
 
 
@@ -340,8 +339,8 @@ def test_initialize_mins_zero_is_noop():
         np.testing.assert_array_equal(vehicle.store.get(name), np.zeros(3))
 
 
-def test_initialize_mins_one_raises():
-    vehicle, ins = _defined(mins=1)
+def test_initialize_mins_two_raises():
+    vehicle, ins = _defined(mins=2)
     with pytest.raises(ValueError, match="unknown mins"):
         ins.initialize(vehicle, _ctx())
 
@@ -355,12 +354,6 @@ def test_terminate_exists_and_is_pass():
     ins.terminate(vehicle, _ctx())
     assert store.get("mins") == 0
     np.testing.assert_array_equal(store.get("SBIIC"), sentinel)
-
-
-def test_no_error_ins_helpers():
-    ins = Hyper6Ins()
-    for name in NO_HELPERS:
-        assert not hasattr(ins, name)
 
 
 def test_execute_mins_zero_copies_sbii_to_sbiic():
@@ -457,9 +450,9 @@ def test_execute_mins_zero_leaves_planted_gps_star_unchanged():
     np.testing.assert_array_equal(store.get("URIC"), np.array([0.1, 0.2, 0.3]))
 
 
-def test_execute_mins_one_raises():
+def test_execute_mins_two_raises():
     vehicle, ins, truth = _ready(mins=0)
-    vehicle.store.set("mins", 1)
+    vehicle.store.set("mins", 2)
     sentinel = np.array([9.0, 8.0, 7.0])
     vehicle.store.set("SBIIC", sentinel)
     with pytest.raises(ValueError, match="unknown mins"):
@@ -468,7 +461,7 @@ def test_execute_mins_one_raises():
     np.testing.assert_array_equal(vehicle.store.get("SBII"), truth["SBII"])
 
 
-@pytest.mark.parametrize("mins", (1, 2, -1, 99))
+@pytest.mark.parametrize("mins", (2, -1, 99))
 def test_execute_unknown_mins_raises(mins):
     vehicle, ins, _truth = _ready(mins=0)
     vehicle.store.set("mins", mins)

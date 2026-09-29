@@ -1,8 +1,9 @@
 import numpy as np
 
-from cadac.eom.round3 import Round3Environment, Round3Newton
+from cadac.eom.round3 import Round3Newton
 from cadac.kernel.events import EventEngine
 from cadac.kernel.state import Field, StateStore
+from cadac.vehicles.round3.cruise5.environment import Cruise5Environment
 
 
 class Cruise5SatelliteForces:
@@ -39,7 +40,7 @@ class Cruise5Satellite:
         self.events = EventEngine(events or [])
         self.com_names = []
         self.modules = [
-            Round3Environment(),
+            Cruise5Environment(),
             Cruise5SatelliteForces(),
             Round3Newton(),
         ]
