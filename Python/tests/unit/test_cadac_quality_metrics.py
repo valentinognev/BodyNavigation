@@ -6,6 +6,8 @@ from cadac_quality.metrics import _is_typed, load_metrics, scan_cadac
 
 # Iteration over a names list (caller-supplied or store.names() as the value).
 _FOR_IN_NAMES = re.compile(r"\bfor\s+\w+\s+in\s+names\b")
+_FOR_IN_STORE_NAMES = re.compile(r"\bfor\s+\w+\s+in\s+store\.names\(\)")
+_MEMBERSHIP_STORE_NAMES = re.compile(r"\b(?:not\s+)?in\s+store\.names\(\)")
 
 ROOT = Path(__file__).resolve().parents[2] / "src" / "cadac"
 BASELINE = Path(__file__).resolve().parents[2] / "tools" / "cadac_quality" / "baseline.json"
@@ -61,6 +63,7 @@ def test_scan_matches_checked_in_baseline():
     # typed_defs rise after kernel/math/env/eom annotations (Task 12).
     # files rose when catalog.py added a module (0.170). Do not rewrite baseline.json.
     # store_get/store_set rose with the parity ports (0.175). Do not rewrite baseline.json.
+    # look_up rose with parity table lookups (abilities wave). Do not rewrite baseline.json.
     for key in base:
         if key in (
             "files",
@@ -69,6 +72,7 @@ def test_scan_matches_checked_in_baseline():
             "store_names",
             "store_get",
             "store_set",
+            "look_up",
             "untyped_defs",
             "typed_defs",
             "skew_defs",
@@ -83,6 +87,7 @@ def test_scan_matches_checked_in_baseline():
     assert data["files"] >= base["files"]
     assert data["store_get"] >= base["store_get"]
     assert data["store_set"] >= base["store_set"]
+    assert data["look_up"] >= base["look_up"]
     assert data["store_names"] < base["store_names"]
     assert data["skew_defs"] < base["skew_defs"]
     assert data["cadac_sign_defs"] < base["cadac_sign_defs"]
@@ -120,11 +125,13 @@ def test_src_membership_does_not_use_names_list():
         text = path.read_text(encoding="utf-8")
         for i, line in enumerate(text.splitlines(), 1):
             stripped = line.strip()
-            if "in store.names()" in line:
+            if _MEMBERSHIP_STORE_NAMES.search(line) and not _FOR_IN_STORE_NAMES.search(line):
                 hits.append(f"{path}:{i}:{stripped}")
             if "in names" in line and "store.names()" in text:
-                if _FOR_IN_NAMES.search(line):
+                if _FOR_IN_NAMES.search(line) or _FOR_IN_STORE_NAMES.search(line):
                     continue
+                if _MEMBERSHIP_STORE_NAMES.search(line):
+                    continue  # already recorded above
                 hits.append(f"{path}:{i}:{stripped}")
     assert hits == [], "use `name in store`:\n" + "\n".join(hits)
 

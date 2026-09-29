@@ -1,3 +1,5 @@
+/* SRAAM5 INLAR1 mturn=1 variant: bank-to-turn kinematics case.
+   Catalog overview for load_scenario / JSONC comment gate. */
 {
   "title": "INLAR1.ASC:SRAAM5-5DOF, TARGET CENTRD, ATTACK ENGMNT",
   "options": {},

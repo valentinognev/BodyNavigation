@@ -1,3 +1,5 @@
+/* SRAAM5 INLAR1 ntag variant: AI acquisition radar NTAG engagement.
+   Catalog overview for load_scenario / JSONC comment gate. */
 {
   "title": "INLAR1_NTAG derived: SRAAM5 AI radar S2 (NTAG=1)",
   "options": {},

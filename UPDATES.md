@@ -1,5 +1,10 @@
 # Updates
 
+## 0.191.2 - Suite red follow-ups after unported abilities
+- Quality: exempt rising `look_up`; allow `for name in store.names()` while banning membership.
+- Cruise5 tests expect `Cruise5Environment`; HYPER6 maut 32/42 assert pitch-rate; seeker plants STBIK/VTBIK on execute.
+- Catalog overview comments on five scenarios; SRAAM5 expects `intercept` on vehicle and `inlar1`.
+
 ## 0.191.1 - Traj/comscrn flatten length-3 packet vectors
 - `traj` and `comscrn` treat length-3 packet values (e.g. lowercase `sbii`) as vectors and emit three float columns; cruise one-step traj smoke no longer TypeErrors.
 - Tests: `test_traj_flatten_vector.py`, `test_comscrn_flatten_vector.py`; regression `test_cruise5_one_step.py`.

@@ -172,8 +172,6 @@ class Hyper6Seeker:
             Field("mupdt", 0, "int", "diag", "seeker"),
             Field("esfcta", 0.0, "real", "data", "seeker"),
             Field("esfcte", 0.0, "real", "data", "seeker"),
-            Field("STBIK", _ZEROS3, "vec", "out", "seeker"),
-            Field("VTBIK", _ZEROS3, "vec", "out", "seeker"),
             Field("SIGPOS", _ZEROS3, "vec", "diag", "seeker"),
             Field("SIGVEL", _ZEROS3, "vec", "diag", "seeker"),
             Field("semi_major", 0.0, "real", "diag", "seeker", plot),
@@ -209,6 +207,10 @@ class Hyper6Seeker:
 
     def execute(self, vehicle, ctx):
         store = vehicle.store
+        if "STBIK" not in store:
+            store.define(Field("STBIK", _ZEROS3, "vec", "out", "seeker"))
+        if "VTBIK" not in store:
+            store.define(Field("VTBIK", _ZEROS3, "vec", "out", "seeker"))
         mseek = int(store.get("mseek"))
         if mseek not in (0, 2, 3, 4, 5):
             raise ValueError(f"unknown mseek {mseek}")

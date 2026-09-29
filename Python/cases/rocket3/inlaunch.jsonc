@@ -1,3 +1,5 @@
+/* ROCKET3 INLAUNCH: launch to 300 km orbit from IN300.ASC.
+   Catalog overview for load_scenario / JSONC comment gate. */
 {
   "title": "IN300.ASC:ROCKET3 LAUNCH to 300 km orbit",
   "options": {},

@@ -19,6 +19,7 @@ EXPECTED_MODULES = [
     "forces",
     "newton",
     "rotations",
+    "intercept",
 ]
 
 

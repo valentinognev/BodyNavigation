@@ -3,10 +3,11 @@ import pathlib
 
 import numpy as np
 
-from cadac.eom.round3 import Round3Environment, Round3Newton
+from cadac.eom.round3 import Round3Newton
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
 from cadac.kernel.state import Field, StateStore
+from cadac.vehicles.round3.cruise5.environment import Cruise5Environment
 from cadac.vehicles.round3.cruise5.target import (
     Cruise5Target,
     Cruise5TargetForces,
@@ -63,7 +64,7 @@ def test_constructor_type_health_no_aero_deck():
     assert vehicle.health == 1
     assert not hasattr(vehicle, "aero_deck")
     assert [type(m) for m in vehicle.modules] == [
-        Round3Environment,
+        Cruise5Environment,
         Cruise5TargetForces,
         Round3Newton,
         Cruise5TargetIntercept,

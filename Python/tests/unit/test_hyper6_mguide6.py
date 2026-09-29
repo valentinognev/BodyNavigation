@@ -6,6 +6,7 @@ import numpy as np
 from cadac.constants import REARTH
 from cadac.kernel.combus import Packet
 from cadac.kernel.executive import SimContext
+from cadac.kernel.state import Field
 from cadac.math.frames import mat2tr
 from cadac.tables.lookup import Datadeck
 from cadac.vehicles.round6.hyper6.vehicle import Hyper6
@@ -70,6 +71,10 @@ def test_hyper6_mguide6_seeker_tracking_no_keyerror():
     store = veh.store
     _plant_pronav_kinematics(store)
     store.set("mseek", 4)
+    if "STBIK" not in store:
+        store.define(Field("STBIK", (0.0, 0.0, 0.0), "vec", "out", "seeker"))
+    if "VTBIK" not in store:
+        store.define(Field("VTBIK", (0.0, 0.0, 0.0), "vec", "out", "seeker"))
     store.set("STBIK", STBIK)
     store.set("VTBIK", VTBIK)
 

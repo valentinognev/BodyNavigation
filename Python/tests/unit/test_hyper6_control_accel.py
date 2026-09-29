@@ -54,6 +54,7 @@ def _hyper6_vehicle(**overrides):
         Field("dma", -2.0, "real", "out", "aerodynamics"),
         Field("dmq", -1.5, "real", "out", "aerodynamics"),
         Field("dmde", 8.0, "real", "out", "aerodynamics"),
+        Field("dlde", -12.0, "real", "out", "aerodynamics"),
         Field("FSPCB", (0.0, 0.0, 1.0), "vec", "out", "ins"),
         Field("grav", AGRAV, "real", "out", "environment"),
         Field("gmax", GMAX, "real", "out", "aerodynamics"),
@@ -254,11 +255,15 @@ def test_hyper6_altitude_saturates_delecx_at_delimx():
     np.testing.assert_allclose(store.get("GAINFP"), gainfp, rtol=RTOL, atol=ATOL)
 
 
-def test_hyper6_unported_pitch_digit_raises():
+def test_hyper6_maut_32_42_pitch_rate_runs():
+    """mautp=2 is ported; 32/42 must run pitch-rate SAS (not raise unknown maut)."""
+    ctrl = Hyper6Control()
     for maut in (32, 42):
         veh = _hyper6_vehicle(maut=maut, alcomx=0.5, psivdcomx=0.2, qcomx=4.0)
-        with pytest.raises(ValueError, match="unknown maut"):
-            _execute_module(veh, "control")
-        assert veh.store.get("delacx") == 0.0
-        assert veh.store.get("delecx") == 0.0
-        assert veh.store.get("delrcx") == 0.0
+        _execute_module(veh, "control")
+        store = veh.store
+        want = ctrl.control_pitch_rate(veh, store.get("qcomx"))
+        if abs(want) > DELIMX:
+            want = DELIMX * _sign(want)
+        assert _approx(store.get("delecx"), want)
+        assert store.get("delacx") != 0.0 or store.get("delrcx") != 0.0
